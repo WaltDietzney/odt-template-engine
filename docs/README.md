@@ -260,8 +260,8 @@ $template->save('output/output_table_styled.odt');
 | `upper`    | `{{upper:name}}`        | `"ANNA"`             |
 | `lower`    | `{{lower:email}}`       | `"anna@example.com"` |
 | `nl2br`    | `{{nl2br:note}}`        | `<text:line-break/>` |
-| `date`     | `{{date:birth|d.m.Y}}`  | `"01.01.1990"`       |
-| `number`   | `{{number:price|2}}`    | `"4.20"`             |
+| `date`     | `{{date:birth\|d.m.Y}}`  | `"01.01.1990"`       |
+| `number`   | `{{number:price\|2}}`    | `"4.20"`             |
 | `currency` | `{{currency:price}}`    |  `"4.20 €"`          |
 
 ---
