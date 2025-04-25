@@ -132,10 +132,17 @@ src/
 
 ## 🚀 Quick Example
 
+place your variables in a template file like {{customer_name}} or {{currency:total}} or even foreach loobps
+
+{{#foreach:items}}
+name: {{name}}
+price: {{price}}
+{{#endforeach}}
+
 ```php
 use OdtTemplateEngine\OdtTemplate;
 
-$template = new OdtTemplate('templates/invoice.odt');
+$template = new OdtTemplate('templates/example.odt');
 $template->load();
 
 $template->setValues([
