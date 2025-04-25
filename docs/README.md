@@ -132,12 +132,22 @@ src/
 
 ## 🚀 Quick Example
 
-place your variables in a template file like {{customer_name}} or {{currency:total}} or even foreach loobps
-
+Place your variables inside a template file using double curly braces, like {{customer_name}}, {{currency:total}}, or even within loops:
+<code>
 {{#foreach:items}}
-name: {{name}}
-price: {{price}}
+Name: {{name}}
+Price: {{price}}
 {{#endforeach}}
+</code>
+You can also use conditional statements:
+<code>
+{{#if:is_vip}}
+{{customer_name}}
+{{#else}}
+Nothing found
+{{#endif}}
+</code>
+
 
 ```php
 use OdtTemplateEngine\OdtTemplate;
