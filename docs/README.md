@@ -1,13 +1,36 @@
+<pre>
+       )        (
+    ( /(    (   )\ )     )
+    )\())  ))\ (()/(  ( /(   ✨
+   ((_)\  /((_) )(_)) )(_))  WaltDietzney
+    _((_)_))  ((_)_  ((_)_    ODT Template Engine
+   | || (_)_ _| | |   | | |   Document spells for .odt files 🧙‍♂️📄
+   | __ / _` | | |__ | | |__  PHP-powered, template-magic.
+   |_||_\__,_|_|____||_|____|
+
+</pre>
+
+---
 
 # 🧩 ODT Template Engine for PHP
 
-<p align="left">
-  <img src="../assets/WaltDietzney.png" alt="WaltDietzney Logo" width="200" style="margin-right:10px"/>
-  A powerful, extensible and developer-friendly templating engine for `.odt` files (OpenDocument Text). Supports variables, filters, loops, conditional logic, images, and even complex structures like formatted paragraphs, tables and tab stops.
+<table>
+<tr>
+<td width="30%">
+  <img src="../assets/WaltDietzney.png" alt="Logo" width="150"/>
+</td>
+<td>
+  <h3>WaltDietzney ODT Template Engine</h3>
+  <p>
+    A lightweight PHP library to bring magic to your LibreOffice and OpenOffice documents.  
+    Define templates once, inject variables dynamically, and generate polished ODT files effortlessly.  
+    Supports variables, filters, loops, conditional logic, images, and even complex structures like formatted paragraphs, tables and tab stops.
 
-Inspired by Smarty, optimized for modern PHP workflows.
-</p>
-
+    Inspired by Smarty, optimized for modern PHP workflows.
+  </p>
+</td>
+</tr>
+</table>
 
 
 [![License](https://img.shields.io/github/license/WaltDietzney/odt-template-engine?color=blue)](LICENSE)
