@@ -147,7 +147,7 @@ You can also use conditional statements:
 Nothing found
 {{#endif}}
 </code>
-
+You can then assign values to the template using the following methods:
 
 ```php
 use OdtTemplateEngine\OdtTemplate;
