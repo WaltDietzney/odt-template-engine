@@ -46,6 +46,14 @@ class RichText extends OdtElement implements HasStyles
         return $this;
     }
 
+    public function addImage(ImageElement $image): mixed {
+       
+        $p = new Paragraph();
+        $p->addElement($image);
+        $this->addParagraph($p);
+        return $this;
+    }
+
     /**
      * Adds one or more empty paragraphs (line breaks between blocks).
      */

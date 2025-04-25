@@ -135,8 +135,6 @@ class ImageElement extends OdtElement implements HasStyles
             return $dom->createElement('text:p'); // Bild ist deaktiviert, leeren Absatz zurückgeben
         }
 
-        error_log("[ImageElement] Generating image node for " . $this->imagePath);
-
         $frame = $dom->createElement('draw:frame');
         $styleName = $this->imageOptions['style-name'] ?? StyleMapper::generateStyleName($this->imageOptions);
         $frame->setAttribute('draw:style-name', $styleName);
@@ -148,7 +146,6 @@ class ImageElement extends OdtElement implements HasStyles
 
         // Alignment-Handling (zentriert, links, rechts, absolut etc.)
         $align = $this->rawOptions['align'] ?? null;
-        error_log("📦 Aktuelles align: " . $align);
 
         switch ($align) {
             case 'left':

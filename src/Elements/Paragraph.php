@@ -177,7 +177,7 @@ class Paragraph extends OdtElement implements HasStyles
                 }
 
                 $style = ($rowIndex === 0 && !empty($headerStyle)) ? $headerStyle : [];
-                $this->addText((string) $value, $style);
+                $this->addTab()->addText((string) $value, $style);
             }
 
             // New paragraph after each line (except last)
