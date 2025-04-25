@@ -25,8 +25,9 @@
     A lightweight PHP library to bring magic to your LibreOffice and OpenOffice documents.  
     Define templates once, inject variables dynamically, and generate polished ODT files effortlessly.  
     Supports variables, filters, loops, conditional logic, images, and even complex structures like formatted paragraphs, tables and tab stops.
-
-    Inspired by Smarty, optimized for modern PHP workflows.
+  </p>
+  <p>
+  Inspired by Smarty, optimized for modern PHP workflows.
   </p>
 </td>
 </tr>
