@@ -207,7 +207,7 @@ $template->replaceImageByName('logo', 'assets/logo.png', ['width' => '5cm']);
 ```
 
 
-## 🖊 Advanced Paragraph & RichText
+## 🖊 Advanced Paragraph & RichText Elements
 
 ---
 With  RichText elements, you can define complex structures and assign a variable a combination of different paragraphs that include various elements such as tables, tab stops, images, and styling options. This allows you to create expressive, professional-looking documents on the fly.
