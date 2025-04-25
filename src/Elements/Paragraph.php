@@ -291,13 +291,13 @@ class Paragraph extends OdtElement implements HasStyles
      * @param float $tabPosition
      * @return Paragraph
      */
-    public function addKeyValueLine(string $key, string $value, float $tabPosition = 10.0): self
+    public function addKeyValueLine(string $key, string $value, float $tabPosition = 10.0, array $style = null): self
     {
         $this->addTabStopDefinition($tabPosition, 'right');
         return $this
-            ->addText($key)
+            ->addText($key, $style)
             ->addTab()
-            ->addText($value);
+            ->addText($value, $style);
     }
 
     /**
