@@ -1,16 +1,13 @@
-<p align="center">
-  <img src="../assets/WaltDietzney.png" alt="WaltDietzney Logo" width="400"/>
-</p>
 
-
-
----
 # 🧩 ODT Template Engine for PHP
 
-
-A powerful, extensible and developer-friendly templating engine for `.odt` files (OpenDocument Text). Supports variables, filters, loops, conditional logic, images, and even complex structures like formatted paragraphs, tables and tab stops.
+<p align="left">
+  <img src="../assets/WaltDietzney.png" alt="WaltDietzney Logo" width="200" style="margin-right:10px"/>
+  A powerful, extensible and developer-friendly templating engine for `.odt` files (OpenDocument Text). Supports variables, filters, loops, conditional logic, images, and even complex structures like formatted paragraphs, tables and tab stops.
 
 Inspired by Smarty, optimized for modern PHP workflows.
+</p>
+
 
 
 [![License](https://img.shields.io/github/license/WaltDietzney/odt-template-engine?color=blue)](LICENSE)
