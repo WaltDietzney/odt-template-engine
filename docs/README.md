@@ -44,10 +44,13 @@ src/
 │   ├── RichText.php              → Rich text with formatting
 │   ├── Paragraph.php             → Paragraphs with tabs, alignment
 │   ├── RichTable.php             → Complex table creation
-|   |── RichTableCell.php         → Styling tabl cells
+|   |── RichTableCell.php         → Styling table cells
 │   ├── ImageElement.php          → Positioned images
 |── Importer/
-|   |── HtmlImport                → Imports Html structures 
+|   |── HtmlImport.php            → Imports Html elements
+|── Util
+|   |── StyleMapper.php           → Maps styles do odt-styles
+|   |── StyleWriter.php           → Writes stlyes do styles.xml
 ```
 
 ---
@@ -82,21 +85,24 @@ $template->save('output/invoice_result.odt');
 ```php
 //inserting via richText as embedded element
 $image = new ImageElement('path/to/photo.jpg');
-$image->setStyle([
+$style = [
     'width' => '5cm',
     'height' => '4cm',
     'align' => 'right',
     'anchor' => 'paragraph',
-]);
+];
+$image->setStyle($style);
+
+//create RichText element and add Image
 $rich = new RichText();
 $rich -> addElement($image);
 
-$template->setElement('logo',$image);
+$template->setElement('logo',$rich);
 
-//direct as image
+//or use direct as image
 $template -> setImage('logo','path/to/photo.jpg', $style);
 
-//or replace an existing image by its name
+//or if you want to replace an existing image by its name
 $template->replaceImageByName('logo', 'assets/logo.png', ['width' => '5cm']);
 ```
 ---
