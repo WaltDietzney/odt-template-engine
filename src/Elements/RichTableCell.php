@@ -123,13 +123,7 @@ class RichTableCell extends OdtElement implements HasStyles
     {
 
         if (!empty($this->style)) {
-            error_log("🧩 Style options before mapping:");
-            error_log(print_r($this->style, true));
-
             $mapped = StyleMapper::mapTableCellStyleOptions($this->style);
-            error_log("🧩 Mapped style options:");
-            error_log(print_r($mapped, true));
-
             $styleName = StyleMapper::generateStyleName($mapped);
             $this->styleName = $styleName;
             StyleMapper::registerTableCellStyle($styleName, $mapped);

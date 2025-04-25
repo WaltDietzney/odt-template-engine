@@ -159,9 +159,7 @@ foreach (StyleMapper::getRegisteredImageStyles() as $name => $props) {
     foreach ($props as $key => $value) {
         if (in_array($key, $allowedGraphicAttributes)) {
             $graphicProps->setAttribute($key, $value);
-            error_log("⚠️  Style $name mit Attribut in Image-Style gesetzt '$key' mit: $value");
         } else {
-            error_log("⚠️ Unzulässiges Attribut in Image-Style '$name' ignoriert: $key");
         }
     }
 

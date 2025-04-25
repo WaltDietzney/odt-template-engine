@@ -178,7 +178,6 @@ class HtmlImporter
                 $src = $node->getAttribute('src');
                 $path = realpath($src);
                 if (!$path || !file_exists($path)) {
-                    error_log("⚠️ Bild nicht gefunden oder ungültig: $src");
                     break;
                 }
 

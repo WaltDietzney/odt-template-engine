@@ -271,7 +271,6 @@ class StyleMapper
             if (in_array($options['wrap'], $validWraps)) {
                 $mapped['style:wrap'] = $options['wrap'];
             } else {
-                error_log("⚠️ Ungültiger wrap-Wert: {$options['wrap']}");
             }
         }
 
@@ -289,7 +288,6 @@ class StyleMapper
             if (in_array($options['anchor'], $validAnchors)) {
                 $mapped['text:anchor-type'] = $options['anchor'];
             } else {
-                error_log("🚨 Ungültiger anchor-Wert: {$options['anchor']}");
             }
         }
 
@@ -364,7 +362,6 @@ class StyleMapper
         if (!isset(self::$registeredTextStyles[$styleName])) {
             self::$registeredTextStyles[$styleName] = $style;
         }
-        error_log("TextStyle '{$styleName}' registered.");
         return $styleName;
     }
 
@@ -381,7 +378,6 @@ class StyleMapper
     {
         if (!isset(self::$registeredParagraphStyles[$styleName])) {
             self::$registeredParagraphStyles[$styleName] = $style;
-            error_log("ParagraphStyle '{$styleName}' registered.");
         }
     }
 

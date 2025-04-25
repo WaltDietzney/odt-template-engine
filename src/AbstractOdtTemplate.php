@@ -136,7 +136,6 @@ abstract class AbstractOdtTemplate
             $props = $this->domStyles->createElement('style:text-properties');
 
             $RawOptions = StyleMapper::mapTextStyleOptions($options);
-            error_log("ensureTextStyleExist " . print_r($RawOptions));
             foreach ($RawOptions as $key => $value) {
                 $props->setAttribute($key, $value);
             }
