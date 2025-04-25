@@ -1,9 +1,24 @@
 
 # 🧩 ODT Template Engine for PHP
 
+ __        __   _       _     _         _       
+ \ \      / /__| |_   _| |__ (_)_ __ __| | ___  
+  \ \ /\ / / _ \ | | | | '_ \| | '__/ _` |/ _ \ 
+   \ V  V /  __/ | |_| | | | | | | | (_| | (_) |
+    \_/\_/ \___|_|\__, |_| |_|_|_|  \__,_|\___/ 
+                  |___/   WaltDietzney Engine  
+                  🧩 Create magical ODT files ✨
+
+
 A powerful, extensible and developer-friendly templating engine for `.odt` files (OpenDocument Text). Supports variables, filters, loops, conditional logic, images, and even complex structures like formatted paragraphs, tables and tab stops.
 
 Inspired by Smarty, optimized for modern PHP workflows.
+
+
+[![License](https://img.shields.io/github/license/WaltDietzney/odt-template-engine?color=blue)](LICENSE)
+[![PHP Version](https://img.shields.io/badge/PHP-%5E8.0-blue.svg)](https://www.php.net/)
+[![ODF Friendly](https://img.shields.io/badge/OpenDocument-ODT-success.svg)](https://en.wikipedia.org/wiki/OpenDocument)
+[![Made with ❤️](https://img.shields.io/badge/Made%20with-%E2%9D%A4-red.svg)](#)
 
 ---
 
