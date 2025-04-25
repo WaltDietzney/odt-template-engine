@@ -40,6 +40,10 @@
 [![Made with ❤️](https://img.shields.io/badge/Made%20with-%E2%9D%A4-red.svg)](#)
 
 ---
+**Disclaimer:**  
+This project "WaltDietzney odtTemplate Engine" is an independent open-source project and is not affiliated with, endorsed by, or related to The Walt Disney Company. The name "WaltDietzney" is a playful word creation and solely refers to this software project.
+
+---
 
 ## ✨ Features
 
@@ -375,12 +379,6 @@ Created by **Walter Dietz**
 ✉️ GitHub: [@WaltDietzney](https://github.com/WaltDietzney)
 
 Feel free to contribute, fork, or drop me a message.
-
----
-
-
-**Disclaimer:**  
-This project "WaltDietzney odtTemplate Engine" is an independent open-source project and is not affiliated with, endorsed by, or related to The Walt Disney Company. The name "WaltDietzney" is a playful word creation and solely refers to this software project.
 
 ---
 
