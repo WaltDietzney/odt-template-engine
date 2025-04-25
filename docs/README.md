@@ -1,6 +1,4 @@
 
-# 🧩 ODT Template Engine for PHP
-
  __        __   _       _     _         _       
  \ \      / /__| |_   _| |__ (_)_ __ __| | ___  
   \ \ /\ / / _ \ | | | | '_ \| | '__/ _` |/ _ \ 
@@ -8,6 +6,8 @@
     \_/\_/ \___|_|\__, |_| |_|_|_|  \__,_|\___/ 
                   |___/   WaltDietzney Engine  
                   🧩 Create magical ODT files ✨
+
+# 🧩 ODT Template Engine for PHP
 
 
 A powerful, extensible and developer-friendly templating engine for `.odt` files (OpenDocument Text). Supports variables, filters, loops, conditional logic, images, and even complex structures like formatted paragraphs, tables and tab stops.
