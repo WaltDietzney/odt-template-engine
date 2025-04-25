@@ -173,7 +173,17 @@ $template->save('output/invoice_result.odt');
 
 ## 🖼 Image Handling
 
+
 ---
+
+You have several options for inserting images into your document. With `replaceImageByName`, you can replace an image in your template with another one by referencing the name of the original image.
+
+Using `setImage`, you can assign an image directly to a variable like `{{image}}` in the template. You can also set image options such as width, height, or anchor.
+
+In combination with other methods, you can assign an image to a variable using the `new ImageElement()` method together with `setElement`.
+
+---
+
 ```php
 //inserting via richText as embedded element
 $image = new ImageElement('path/to/photo.jpg');
@@ -193,9 +203,14 @@ $template -> setImage('logo','path/to/photo.jpg', $style);
 //or if you want to replace an existing image by its name
 $template->replaceImageByName('logo', 'assets/logo.png', ['width' => '5cm']);
 ```
----
+
 
 ## 🖊 Advanced Paragraph & RichText
+
+---
+With new RichText, you can define complex structures and assign a variable a combination of different paragraphs that include various elements such as tables, tab stops, images, and styling options. This allows you to create expressive, professional-looking documents on the fly.
+
+---
 
 ```php
 use OdtTemplateEngine\OdtTemplate;
@@ -220,7 +235,7 @@ $template->save('output/output_textblock.odt');
 
 ## 📐 Paragraphs with Tabs
 
-Generate complex structures by combining Paragraphs and RichText Elements
+A range of methods is available for working with tab stops. Here too, a simple variable can be replaced by a complex, composite element.
 
 ```php
 require '../vendor/autoload.php';
@@ -290,9 +305,14 @@ $template->setElement('tabular_block', $rich);
 $template->save('output/final_invoice.odt');
 ```
 
----
+
 
 ## 🌍 HTML Import
+---
+
+For easy handling of online elements, you can assign complete HTML structures to a variable. This also includes anchors, images, and inline style elements.
+
+---
 
 ```php
 use OdtTemplateEngine\Import\HtmlImporter;
@@ -301,8 +321,14 @@ $html = '<h1>Imported Title</h1><p>This comes from HTML.</p>';
 $element = HtmlImporter::fromHtml($html);
 $template->setElement('html_block', $element);
 ```
----
+
 ## 📋 Complex tables with formatted cells
+
+---
+
+By combining RichTable and RichTableCell elements, you can assign styled tables to a simple variable. This makes it easy to create compelling, visually appealing documents with tables.
+
+---
 
 ```php
 use OdtTemplateEngine\OdtTemplate;
@@ -346,6 +372,11 @@ $template->save('output/output_table_styled.odt');
 
 
 ## 🔠 Filters
+---
+
+The filter elements were inspired by the Smarty PHP template engine. They allow you to define how variables are displayed within the template and output them in the desired format.
+
+---
 
 | Filter     | Syntax                  | Output               |
 |------------|-------------------------|----------------------|
