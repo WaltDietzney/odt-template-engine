@@ -94,7 +94,7 @@ $rich -> addElement($image);
 $template->setElement('logo',$image);
 
 //direct as image
-$template -> inseertImage('logo','path/to/photo.jpg', $style);
+$template -> setImage('logo','path/to/photo.jpg', $style);
 
 //or replace an existing image by its name
 $template->replaceImageByName('logo', 'assets/logo.png', ['width' => '5cm']);
@@ -115,6 +115,7 @@ $rich = (new RichText())
     ->addText('world!', ['italic' => true])
     ->addLineBreak()
     ->addBulletList(['One', 'Two'])
+    ->addLineBreak()
     ->addNumberedList(['First', 'Second']);
 
 $template->setElement('intro', $rich);
