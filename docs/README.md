@@ -118,7 +118,7 @@ $rich = (new RichText())
     ->addLineBreak()
     ->addBulletList(['One', 'Two'])
     ->addLineBreak()
-    ->addNumberedList(['First', 'Second']);
+
 
 $template->setElement('intro', $rich);
 $template->save('output/output_textblock.odt');
@@ -203,7 +203,7 @@ $template->save('output/final_invoice.odt');
 ## 🌍 HTML Import
 
 ```php
-use OdtTemplateEngine\HtmlImporter;
+use OdtTemplateEngine\Import\HtmlImporter;
 
 $html = '<h1>Imported Title</h1><p>This comes from HTML.</p>';
 $element = HtmlImporter::fromHtml($html);
