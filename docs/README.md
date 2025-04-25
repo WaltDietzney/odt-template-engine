@@ -1,4 +1,16 @@
+<pre>
+ __        __   _       _     _         _       
+ \ \      / /__| |_   _| |__ (_)_ __ __| | ___  
+  \ \ /\ / / _ \ | | | | '_ \| | '__/ _` |/ _ \ 
+   \ V  V /  __/ | |_| | | | | | | | (_| | (_) |
+    \_/\_/ \___|_|\__, |_| |_|_|_|  \__,_|\___/ 
+                  |___/   WaltDietzney Engine  
+                  🧩 Create magical ODT files ✨
 
+</pre>
+
+
+---
 # 🧩 ODT Template Engine for PHP
 
 
@@ -348,6 +360,12 @@ Created by **Walter Dietz**
 ✉️ GitHub: [@WaltDietzney](https://github.com/WaltDietzney)
 
 Feel free to contribute, fork, or drop me a message.
+
+---
+
+
+**Disclaimer:**  
+This project "WaltDietzney odtTemplate Engine" is an independent open-source project and is not affiliated with, endorsed by, or related to The Walt Disney Company. The name "WaltDietzney" is a playful word creation and solely refers to this software project.
 
 ---
 
