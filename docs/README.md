@@ -1,4 +1,7 @@
-<pre> __ __ _ _ _ _ _ _ \ \ / /_ _| (_) |_ | || |__ (_) __ _ _ __ \ \ /\ / / _` | | | __| | || '_ \| |/ _` | '_ \ \ V V / (_| | | | |_ | || | | | | (_| | | | | \_/\_/ \__,_|_|_|\__| |_||_| |_|_|\__,_|_| |_| WaltDietzney ODT Template Engine ✨ </pre>
+<p align="center">
+  <img src="../assets/WaltDietzney.png" alt="WaltDietzney Logo" width="400"/>
+</p>
+
 
 
 ---
