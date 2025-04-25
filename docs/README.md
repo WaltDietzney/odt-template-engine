@@ -214,7 +214,7 @@ $element = HtmlImporter::fromHtml($html);
 $template->setElement('html_block', $element);
 ```
 ---
-## 📋 Complex tables with formated cells
+## 📋 Complex tables with formatted cells
 
 ```php
 use OdtTemplateEngine\OdtTemplate;
