@@ -93,10 +93,6 @@ $style = [
 ];
 $image->setStyle($style);
 
-//create RichText element and add Image
-$rich = new RichText();
-$rich -> addElement($image);
-
 $template->setElement('logo',$rich);
 
 //or use direct as image
