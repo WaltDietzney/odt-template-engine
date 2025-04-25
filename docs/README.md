@@ -1,3 +1,4 @@
+---
 <pre>
        )        (
     ( /(    (   )\ )     )
@@ -13,7 +14,7 @@
 ---
 
 # 🧩 ODT Template Engine for PHP
-
+---
 <table>
 <tr>
 <td width="30%">
@@ -131,7 +132,7 @@ src/
 ---
 
 ## 🚀 Quick Example
-
+---
 Place your variables inside a template file using double curly braces, like {{customer_name}}, {{currency:total}}, or even within loops:
 <code>
 {{#foreach:items}}
@@ -148,6 +149,7 @@ Nothing found
 {{#endif}}
 </code>
 You can then assign values to the template using the following methods:
+---
 
 ```php
 use OdtTemplateEngine\OdtTemplate;
@@ -234,8 +236,10 @@ $template->save('output/output_textblock.odt');
 ---
 
 ## 📐 Paragraphs with Tabs
-
+---
 A range of methods is available for working with tab stops. Here too, a simple variable can be replaced by a complex, composite element.
+
+---
 
 ```php
 require '../vendor/autoload.php';
@@ -390,6 +394,7 @@ The filter elements were inspired by the Smarty PHP template engine. They allow 
 ---
 
 ## 🤖 Conditional Logic
+---
 
 ```text
 {{#if:is_vip}}
