@@ -93,7 +93,7 @@ $style = [
 ];
 $image->setStyle($style);
 
-$template->setElement('logo',$rich);
+$template->setElement('logo',$image);
 
 //or use direct as image
 $template -> setImage('logo','path/to/photo.jpg', $style);
