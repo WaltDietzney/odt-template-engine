@@ -132,7 +132,7 @@ src/
 ---
 
 ## 🚀 Quick Example
----
+
 Place your variables inside a template file using double curly braces, like {{customer_name}}, {{currency:total}}, or even within loops:
 <code>
 {{#foreach:items}}
@@ -149,7 +149,7 @@ Nothing found
 {{#endif}}
 </code>
 You can then assign values to the template using the following methods:
----
+
 
 ```php
 use OdtTemplateEngine\OdtTemplate;
