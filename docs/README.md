@@ -154,25 +154,44 @@ You can then assign values to the template using the following methods:
 ```php
 use OdtTemplateEngine\OdtTemplate;
 
+// Create a new template instance from an ODT file
 $template = new OdtTemplate('templates/example.odt');
+
+// Load the template into memory
 $template->load();
 
-$template->setValues([
+// Assign simple placeholder values
+$template->assign([
     'customer_name' => 'Jane Smith',
     'total' => '129.90',
     'is_vip' => true
 ]);
 
-$template->setRepeating('items', [
+// Assign repeating data for tables or lists
+$template->assignRepeating('items', [
     ['name' => 'Tea', 'price' => '3.50'],
     ['name' => 'Coffee', 'price' => '4.20'],
 ]);
 
-$template->replaceImageByName('logo', 'assets/logo.png', ['width' => '5cm']);
+// Replace an image inside the template (by name)
+$template->replaceImageByName('logo', 'assets/logo.png', [
+    'width' => '5cm'  // optional resizing
+]);
 
+// Process all assigned data and apply it to the template
+$template->render();
+
+// Save the final document to a new file
 $template->save('output/invoice_result.odt');
-```
 
+```
+Method | Purpose
+load() | Loads the ODT template into memory for processing.
+assign(array $values) | Collects all placeholder values to be inserted later (e.g., simple text or booleans).
+assignRepeating(string $key, array $rows) | Prepares repeating blocks (e.g., tables or lists) with multiple items.
+replaceImageByName(string $name, string $path, array $options) | Replaces an embedded image by its template name.
+render() | Processes all collected assignments and replaces placeholders, loops, logic blocks etc.
+save(string $path) | Exports the filled document to a file.
 ## 🖼 Image Handling
 
 
