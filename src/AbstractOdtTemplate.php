@@ -626,43 +626,48 @@ abstract class AbstractOdtTemplate
      * }
      */
     public function extractTemplateVariables(): array
-    {
-        $xmlContents = [
-            $this->domContent,
-            $this->domStyles
-        ];
+{
+    $xmlContents = [
+        $this->domContent,
+        $this->domStyles
+    ];
 
-        $result = [
-            'variables' => [],
-            'loops' => [],
-            'conditions' => [],
-            'negated_conditions' => [],
-            'filters' => [],
-            'filter_options' => [],
-        ];
+    $result = [
+        'variables' => [],
+        'loops' => [],
+        'conditions' => [],
+        'negated_conditions' => [],
+        'filters' => [],
+        'filter_options' => [],
+    ];
 
-        foreach ($xmlContents as $content) {
-            if (empty($content)) {
-                continue;
-            }
+    foreach ($xmlContents as $content) {
+        if (empty($content)) {
+            continue;
+        }
 
-            $parsed = $this->parseTemplateContent($content);
+        // Convert DOMDocument to XML string
+        $xmlString = $content->saveXML();
 
-            foreach ($parsed as $key => $values) {
-                if (is_array($values)) {
-                    if ($key === 'filter_options') {
-                        foreach ($values as $var => $opts) {
-                            $result['filter_options'][$var] = array_unique(array_merge($result['filter_options'][$var] ?? [], $opts));
-                        }
-                    } else {
-                        $result[$key] = array_unique(array_merge($result[$key], $values));
+        // Now parse it
+        $parsed = $this->parseTemplateContent($xmlString);
+
+        foreach ($parsed as $key => $values) {
+            if (is_array($values)) {
+                if ($key === 'filter_options') {
+                    foreach ($values as $var => $opts) {
+                        $result['filter_options'][$var] = array_unique(array_merge($result['filter_options'][$var] ?? [], $opts));
                     }
+                } else {
+                    $result[$key] = array_unique(array_merge($result[$key], $values));
                 }
             }
         }
-
-        return $result;
     }
+
+    return $result;
+}
+
 
 
     /**
