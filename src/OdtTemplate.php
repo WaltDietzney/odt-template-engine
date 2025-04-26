@@ -66,6 +66,21 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
     protected DOMDocument $domMeta;
 
     /**
+     * Summary of valueStack
+     * @var array
+     */
+    protected array $valueStack = [];    // Normal values (like name, address, etc.)
+
+    /**
+     * Summary of repeatStack
+     * @var array
+     */
+    protected array $repeatStack = [];   // Repeating structures (foreach data)
+
+
+
+
+    /**
      * Constructor – prepares the temporary working directory and loads the ODT template.
      *
      * @param string $templatePath Path to the ODT template file.
@@ -177,24 +192,15 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      *
      * @return void
      */
+    /**
+     * Assigns values to be replaced later in the template.
+     *
+     * @param array<string, mixed> $values
+     * @return void
+     */
     public function setValues(array $values): void
     {
-        $this->values = array_merge($this->values, $values);
-
-        $this->fixBrokenVariables($this->domContent);
-        $this->fixBrokenVariables($this->domStyles);
-
-        // Platzhalter & Filter
-        $this->setValuesInDom($this->domContent, $this->values);
-        $this->setValuesInDom($this->domStyles, $this->values);
-
-        // Sonderfall: Zeilenumbrüche
-        $this->replaceNl2brInDom($this->domContent, $this->values);
-        $this->replaceNl2brInDom($this->domStyles, $this->values);
-
-        // Logikverarbeitung
-        $this->applyConditionalsInDom($this->domContent, $this->values);
-        $this->applyConditionalsInDom($this->domStyles, $this->values);
+        $this->valueStack = array_merge($this->valueStack, $values);
     }
 
 
@@ -422,13 +428,23 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      *
      * @return void
      */
+    /**
+     * Old-style direct assignment for repeating data.
+     *
+     * @deprecated Use assignRepeating() and render() instead.
+     */
+    /**
+     * Assigns a repeating block (e.g., a table) to be processed later.
+     *
+     * @param string $key
+     * @param array<int, array<string, mixed>> $rows
+     * @return void
+     */
     public function setRepeating(string $key, array $rows): void
     {
-        $this->fixBrokenVariables($this->domContent);
-        $this->fixBrokenVariables($this->domStyles);
-        $this->applyRepeatingInDom($this->domContent, $key, $rows);
-        $this->applyRepeatingInDom($this->domStyles, $key, $rows);
+        $this->repeatStack[$key] = $rows;
     }
+
 
     /**
      * Joins all repeating blocks.
@@ -437,6 +453,8 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     public function setRepeatingData(array $data): void
     {
+        $this->fixBrokenVariables($this->domContent);
+        $this->fixBrokenVariables($this->domStyles);
         $this->applyAllRepeatingBlocksInDom($this->domContent, $data);
         $this->applyAllRepeatingBlocksInDom($this->domStyles, $data);
     }
@@ -1160,5 +1178,68 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
     }
 
 
+    /**
+     * Processes all assigned values and repeaters into the DOM.
+     *
+     * @return void
+     */
+    /**
+     * Processes all assigned values and repeaters into the DOM.
+     *
+     * This method ensures that broken template variables are repaired before applying values and repeats.
+     *
+     * @return void
+     */
+    public function render(): void
+    {
+        $this->fixBrokenVariables($this->domContent);
+        $this->fixBrokenVariables($this->domStyles);
+
+        $this->setValuesInDom($this->domContent, $this->valueStack);
+        $this->setValuesInDom($this->domStyles, $this->valueStack);
+
+        foreach ($this->repeatStack as $key => $rows) {
+            $this->applyRepeatingInDom($this->domContent, $key, $rows);
+            $this->applyRepeatingInDom($this->domStyles, $key, $rows);
+        }
+
+        // Sonderbehandlung Zeilenumbrüche
+        $this->replaceNl2brInDom($this->domContent, $this->valueStack);
+        $this->replaceNl2brInDom($this->domStyles, $this->valueStack);
+
+        // Logik (if/else/elseif)
+        $this->applyConditionalsInDom($this->domContent, $this->valueStack);
+        $this->applyConditionalsInDom($this->domStyles, $this->valueStack);
+    }
+
+
+    /**
+     * Assigns one or more values to the internal value stack.
+     *
+     * @param array<string, mixed> $values
+     * @return void
+     */
+    public function assign(array $values): void
+    {
+        $this->valueStack = array_merge($this->valueStack, $values);
+    }
+
+    /**
+     * Assigns repeating data for foreach templates.
+     *
+     * @param string $key
+     * @param array<int, array<string, mixed>> $rows
+     * @return void
+     */
+    public function assignRepeating(string $key, array $rows): void
+    {
+        $this->repeatStack[$key] = $rows;
+    }
+
+    /**
+     * Processes all assigned values and repeaters into the DOM.
+     *
+     * @return void
+     */
 
 }

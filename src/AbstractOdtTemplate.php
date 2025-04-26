@@ -61,7 +61,6 @@ abstract class AbstractOdtTemplate
     protected DOMDocument $domStyles;
 
 
-
     /**
      * Registers the required XML namespaces for the DOMXPath object.
      * These namespaces are necessary to correctly apply XPath expressions to ODT-specific XML elements.
@@ -757,7 +756,6 @@ abstract class AbstractOdtTemplate
             }
         }
     }
-
 
 
 }
