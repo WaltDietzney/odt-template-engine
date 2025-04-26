@@ -162,22 +162,25 @@ class Paragraph extends OdtElement implements HasStyles
      * @param array $headerStyle   Optional style array for the first row (bold, etc.)
      */
     public function addTabularLines(array $lines, array $tabDefs, array $headerStyle = []): self
-    {
+    {   $noFirstTab = false;
         // Tab definitions (applied once)
         foreach ($tabDefs as $tab) {
             $this->addTabStopDefinition($tab['position'], $tab['alignment'] ?? 'left');
+            
         }
 
         // Loop through lines
         foreach ($lines as $rowIndex => $columns) {
+            $this->addTab();
             // Add each value + tab
             foreach ($columns as $i => $value) {
                 if ($i > 0) {
                     $this->addTab();
                 }
-
-                $style = ($rowIndex === 0 && !empty($headerStyle)) ? $headerStyle : [];
-                $this->addTab()->addText((string) $value, $style);
+                
+                    $style = ($rowIndex === 0 && !empty($headerStyle)) ? $headerStyle : [];
+                    $this->addText((string) $value, $style);
+                
             }
 
             // New paragraph after each line (except last)
