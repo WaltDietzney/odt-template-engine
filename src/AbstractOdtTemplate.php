@@ -529,15 +529,22 @@ abstract class AbstractOdtTemplate
     protected function replacePlaceholdersInNode(DOMNode $node, array $data): void
     {
         if ($node->nodeType === XML_TEXT_NODE) {
-            $node->nodeValue = $this->replaceInText($node->nodeValue, $data);
+            $replaced = $this->replaceInText($node->nodeValue, $data);
+
+            // Nur ersetzen, wenn sich etwas geändert hat
+            if ($replaced !== $node->nodeValue) {
+                $node->nodeValue = $replaced;
+            }
         }
 
+        // Klonen, um die Iteration stabil zu halten
         if ($node->hasChildNodes()) {
             foreach (iterator_to_array($node->childNodes) as $child) {
                 $this->replacePlaceholdersInNode($child, $data);
             }
         }
     }
+
 
     /**
      * Helper to replace placeholders in a text string.
@@ -551,9 +558,17 @@ abstract class AbstractOdtTemplate
     {
         return preg_replace_callback('/{{(.*?)}}/', function ($matches) use ($data) {
             $key = trim($matches[1]);
-            return array_key_exists($key, $data) ? (string) $data[$key] : '';
+
+            // Optional: Debug-Warnung für fehlende Keys
+            if (!array_key_exists($key, $data)) {
+                // error_log("Placeholder {{$key}} not found in data."); // aktivieren für Debugging
+                return ''; // oder ggf. $matches[0] beibehalten
+            }
+
+            return (string) $data[$key];
         }, $text);
     }
+
 
 
 
@@ -700,6 +715,49 @@ abstract class AbstractOdtTemplate
             'filter_options' => $filterOptions,
         ];
     }
+
+    protected function fixBrokenVariables(DOMNode $node): void
+    {
+        if (!$node->hasChildNodes()) {
+            return;
+        }
+
+        $children = iterator_to_array($node->childNodes);
+        $buffer = '';
+        $inPlaceholder = false;
+        $nodesToRemove = [];
+
+        foreach ($children as $child) {
+            if ($child->nodeType === XML_TEXT_NODE) {
+                $text = $child->nodeValue;
+
+                if ($inPlaceholder) {
+                    $buffer .= $text;
+                    $nodesToRemove[] = $child;
+
+                    if (str_contains($text, '}}')) {
+                        $inPlaceholder = false;
+                        $firstNode = array_shift($nodesToRemove);
+                        $firstNode->nodeValue = $buffer;
+                        foreach ($nodesToRemove as $remove) {
+                            if ($remove->parentNode) {
+                                $remove->parentNode->removeChild($remove);
+                            }
+                        }
+                        $buffer = '';
+                        $nodesToRemove = [];
+                    }
+                } elseif (preg_match('/{{[^}]*$/', $text)) { // Text endet mit offenen {{
+                    $inPlaceholder = true;
+                    $buffer = $text;
+                    $nodesToRemove[] = $child;
+                }
+            } elseif ($child->nodeType === XML_ELEMENT_NODE && $child->nodeName === 'text:span') {
+                $this->fixBrokenVariables($child);
+            }
+        }
+    }
+
 
 
 }

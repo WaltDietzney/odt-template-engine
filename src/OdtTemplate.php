@@ -181,6 +181,9 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
     {
         $this->values = array_merge($this->values, $values);
 
+        $this->fixBrokenVariables($this->domContent);
+        $this->fixBrokenVariables($this->domStyles);
+
         // Platzhalter & Filter
         $this->setValuesInDom($this->domContent, $this->values);
         $this->setValuesInDom($this->domStyles, $this->values);
@@ -421,6 +424,8 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     public function setRepeating(string $key, array $rows): void
     {
+        $this->fixBrokenVariables($this->domContent);
+        $this->fixBrokenVariables($this->domStyles);
         $this->applyRepeatingInDom($this->domContent, $key, $rows);
         $this->applyRepeatingInDom($this->domStyles, $key, $rows);
     }
