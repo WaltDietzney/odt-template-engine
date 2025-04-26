@@ -425,20 +425,31 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         $this->applyRepeatingInDom($this->domStyles, $key, $rows);
     }
 
+    /**
+     * Joins all repeating blocks.
+     *
+     * @param array<string, array<int, array<string, mixed>>> $data
+     */
+    public function setRepeatingData(array $data): void
+    {
+        $this->applyAllRepeatingBlocksInDom($this->domContent, $data);
+        $this->applyAllRepeatingBlocksInDom($this->domStyles, $data);
+    }
+
 
     protected function applyRepeatingInDom(DOMDocument $dom, string $key, array $rows): void
     {
         $xpath = new DOMXPath($dom);
-    
+
         while (true) {
             // Suche nach einem Start- und End-Block für die Schleife
             $startNodeList = $xpath->query("//text:p[contains(text(), '{{#foreach:$key}}')]");
             if ($startNodeList->length === 0) {
                 break; // Keine weiteren foreach-Blöcke vorhanden
             }
-    
+
             $startNode = $startNodeList->item(0);
-    
+
             // Suche den dazugehörigen End-Block
             $endNode = null;
             $current = $startNode->nextSibling;
@@ -449,15 +460,15 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
                 }
                 $current = $current->nextSibling;
             }
-    
+
             if (!$endNode) {
                 // Fehler: Kein passendes #endforeach gefunden, Abbruch
                 break;
             }
-    
+
             $parent = $startNode->parentNode;
             $referenceNode = $endNode->nextSibling;
-    
+
             // Sammle alle Knoten zwischen start und end
             $templateNodes = [];
             $current = $startNode->nextSibling;
@@ -467,11 +478,11 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
                 $parent->removeChild($current);
                 $current = $next;
             }
-    
+
             // Entferne Start- und End-Marker
             $parent->removeChild($startNode);
             $parent->removeChild($endNode);
-    
+
             // Jetzt für jede Zeile neue Knoten einfügen
             foreach ($rows as $rowData) {
                 foreach ($templateNodes as $template) {
@@ -482,7 +493,65 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
             }
         }
     }
-    
+
+
+    protected function applyAllRepeatingBlocksInDom(DOMDocument $dom, array $repeatingData): void
+    {
+        $xpath = new DOMXPath($dom);
+
+        foreach ($repeatingData as $key => $rows) {
+            while (true) {
+                $startNodeList = $xpath->query("//text:p[contains(text(), '{{#foreach:$key}}')]");
+                if ($startNodeList->length === 0)
+                    break;
+
+                $startNode = $startNodeList->item(0);
+
+                // Finde zugehöriges {{#endforeach}}
+                $endNode = null;
+                $current = $startNode->nextSibling;
+                while ($current) {
+                    if ($current->nodeType === XML_ELEMENT_NODE && strpos($current->textContent, '{{#endforeach}}') !== false) {
+                        $endNode = $current;
+                        break;
+                    }
+                    $current = $current->nextSibling;
+                }
+
+                if (!$endNode)
+                    break; // Fehlerhafte Struktur
+
+                $parent = $startNode->parentNode;
+                $referenceNode = $endNode->nextSibling;
+
+                // Inhalte zwischen Start- und Endknoten sammeln
+                $templateNodes = [];
+                $current = $startNode->nextSibling;
+                while ($current && $current !== $endNode) {
+                    $templateNodes[] = $current;
+                    $next = $current->nextSibling;
+                    $parent->removeChild($current);
+                    $current = $next;
+                }
+
+                // Entferne Start/Ende
+                $parent->removeChild($startNode);
+                $parent->removeChild($endNode);
+
+                // Füge neue Knoten ein
+                foreach ($rows as $rowData) {
+                    foreach ($templateNodes as $template) {
+                        $clone = $template->cloneNode(true);
+                        $this->replacePlaceholdersInNode($clone, $rowData);
+                        $parent->insertBefore($clone, $referenceNode);
+                    }
+                }
+
+                // XPath aktualisieren
+                $xpath = new DOMXPath($dom);
+            }
+        }
+    }
 
     /**
      * Sets metadata fields for the ODT document (e.g. title, author, description).
