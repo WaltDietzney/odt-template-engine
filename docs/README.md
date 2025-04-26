@@ -184,13 +184,13 @@ $template->render();
 // Save the final document to a new file
 $template->save('output/invoice_result.odt');
 
-Method | Purpose
-load() | Loads the ODT template into memory for processing.
-assign(array $values) | Collects all placeholder values to be inserted later (e.g., simple text or booleans).
-assignRepeating(string $key, array $rows) | Prepares repeating blocks (e.g., tables or lists) with multiple items.
+Method                                                          | Purpose
+load()                                                          | Loads the ODT template into memory for processing.
+assign(array $values)                                           | Collects all placeholder values to be inserted later (e.g., simple text or booleans).
+assignRepeating(string $key, array $rows)                       | Prepares repeating blocks (e.g., tables or lists) with multiple items.
 replaceImageByName(string $name, string $path, array $options) | Replaces an embedded image by its template name.
-render() | Processes all collected assignments and replaces placeholders, loops, logic blocks etc.
-save(string $path) | Exports the filled document to a file.
+render()                                                        | Processes all collected assignments and replaces placeholders, loops, logic blocks etc.
+save(string $path)                                              | Exports the filled document to a file.
 
 ```
 
