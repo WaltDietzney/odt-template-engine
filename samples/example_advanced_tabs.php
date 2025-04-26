@@ -165,7 +165,7 @@ $rich->addParagraph($title)
 
 // 7️⃣ Inject rich content and logo into the template
 $template->setElement('tabular_block', $rich);
-$template->setImage('logo', '../assets/Logo-2.png', [
+$template->setImage('logo', '../assets/WaltDietzney.png', [
     'width' => '2cm',
     'anchor' => 'as-char',
     'wrap' => 'none',
