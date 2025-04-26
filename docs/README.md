@@ -416,6 +416,86 @@ LibreOffice often splits placeholders across `<text:span>` tags. This engine aut
 
 ---
 
+## Best Practices for Creating Templates
+
+To ensure reliable and consistent document generation with `odtTemplate`, please follow these recommendations when designing your ODT templates:
+
+### ✅ Use Tables Instead of Tabs
+- Use **tables** to create structured layouts, such as columns and aligned sections.
+- Avoid using manual **tab characters (`Tab` key)** inside areas where placeholders or control structures (`{{...}}`) are placed.
+
+### ✅ Keep Placeholders Intact
+- Make sure that placeholders like `{{name}}`, `{{#if:gender == "female"}}`, etc. **are not broken across multiple text spans or styles**.
+- Apply formatting (bold, italic, font changes) **around entire placeholders**, not inside them.
+
+### ✅ Minimize Complex Styling Inside Variables
+- Avoid changing fonts, sizes, colors, or inserting manual line breaks directly inside placeholders.
+- Format the paragraph or table cell containing the placeholder instead.
+
+### ✅ Prefer Simple and Clean Structures
+- Stick to **plain text** or **simple table layouts** for dynamic sections like loops (`{{#foreach}}`) or conditions (`{{#if}}`).
+- Avoid heavy nested styling (multiple layers of formatting) around dynamic content.
+
+---
+
+> ⚠️ Important: Some editors like LibreOffice Writer may automatically insert `<text:span>` or `<text:tab/>` elements inside the ODT file structure, even if it looks fine visually. Following these best practices ensures that `odtTemplate` can reliably replace placeholders and control structures without losing formatting or breaking layouts.
+
+---
+
+### Example: Good vs Bad Template Design
+
+| ✅ Good | ❌ Bad |
+|:-------|:------|
+| Table with columns | Manual tabs between texts |
+| Full formatting around `{{name}}` | Split formatting inside `{{na<b>me</b>}}` |
+| Simple, clean text blocks | Multiple nested formatting elements |
+
+---
+
+Following these simple guidelines will make your templates much more robust, future-proof, and easier to maintain when generating dynamic ODT documents.
+
+### ✅ Template Design Checklist
+
+**DO:**
+- ✅ Use tables for layout — especially in repeating or dynamic sections
+- ✅ Keep full placeholders like `{{variable}}` inside single formatting blocks
+- ✅ Apply bold/italic **around** placeholders, not inside them
+- ✅ Test the template with realistic sample data
+
+**DON’T:**
+- ❌ Don’t use tab characters (`Tab`) for alignment — use tables instead
+- ❌ Don’t split placeholder text across styles or `<text:span>` tags
+- ❌ Don’t insert line breaks inside dynamic structures like `{{#if}}...{{#endif}}`
+
+### 📄 Good vs. Bad Template Design
+
+Here’s a quick visual guide:
+
+| Good Example                                      | Bad Example                                          |
+|---------------------------------------------------|------------------------------------------------------|
+| `<text:p>Fruit: {{name}} - Price: {{price}}</text:p>` | `<text:p>Fruit: <text:span>{{name}}</text:span> - Price: <text:span>{{price}}</text:span></text:p>` |
+| Use tables for repeating rows                    | Use tabs (`\t`) for aligning columns (⚠️ fragile)    |
+| Keep the entire placeholder together             | Split a placeholder across formatting spans         |
+| Apply styles (bold, color) **around** placeholders | Apply styles **inside** placeholders                 |
+
+---
+
+### 🎨 Template Best Practices
+
+- Always use **tables** for any structured data (invoices, lists, price tables, etc.).
+- Avoid **tab stops** for layout — they may not survive template processing.
+- Never split placeholders (like `{{variable}}`) across multiple `<text:span>` elements.
+- Keep template text **clean and minimal** without unnecessary formatting.
+- Prefer designing your template using **OpenOffice Writer** for best results.
+
+> **Tip:**  
+> Test your template after every major edit by generating a small sample document.  
+> Small formatting errors can cause unexpected issues later!
+
+---
+
+
+
 ## 🛠 Roadmap
 
 - [ ] Nested logic/loops
