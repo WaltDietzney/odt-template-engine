@@ -194,7 +194,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         $this->applyConditionalsInDom($this->domStyles, $this->values);
     }
 
- 
+
     /**
      * Replaces `{{nl2br:placeholder}}` tags with text content and <text:line-break/> elements.
      *
@@ -302,7 +302,8 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
                 $keepStart = null;
                 $keepEnd = null;
 
-                foreach ($conditions as $cond) {
+                for ($c = 0; $c < count($conditions); $c++) {
+                    $cond = $conditions[$c];
                     $result = $this->evaluateCondition($cond['expr'], $values);
                     if ($cond['type'] === 'ifnot') {
                         $result = !$result;
@@ -310,11 +311,13 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 
                     if ($result) {
                         $keepStart = $cond['start'] + 1;
-                        $next = next($conditions);
-                        $keepEnd = ($next ? $next['start'] - 1 : ($else ?? $end) - 1);
+                        $keepEnd = isset($conditions[$c + 1])
+                            ? $conditions[$c + 1]['start'] - 1
+                            : ($else ?? $end) - 1;
                         break;
                     }
                 }
+
 
                 if ($keepStart === null && $else !== null) {
                     $keepStart = $else + 1;
