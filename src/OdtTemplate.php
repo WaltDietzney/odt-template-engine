@@ -426,65 +426,63 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
     }
 
 
-    /**
-     * Internal helper method that processes a foreach block in a given DOMDocument.
-     *
-     * It detects the block between {{#foreach:key}} and {{#endforeach}}, removes the original nodes,
-     * and duplicates the inner content for each entry in the provided data array.
-     * Each iteration receives its own set of placeholder replacements.
-     *
-     * Note: This method directly manipulates the DOM and should only be used internally.
-     *
-     * Example template structure:
-     *   <text:p>{{#foreach:products}}</text:p>
-     *   <text:p>{{name}} – {{price}}</text:p>
-     *   <text:p>{{#endforeach}}</text:p>
-     *
-     * @param DOMDocument $dom  The XML document (typically content.xml or styles.xml).
-     * @param string $key       The name of the foreach block to replace.
-     * @param array<int, array<string, mixed>> $rows An array of associative arrays used for placeholder substitution.
-     *
-     * @return void
-     */
     protected function applyRepeatingInDom(DOMDocument $dom, string $key, array $rows): void
     {
         $xpath = new DOMXPath($dom);
-        $startNode = null;
-        $endNode = null;
-
-        foreach ($xpath->query("//text:p[contains(text(), '{{#foreach:$key}}')]") as $node) {
-            $startNode = $node;
-        }
-        foreach ($xpath->query("//text:p[contains(text(), '{{#endforeach}}')]") as $node) {
-            $endNode = $node;
-        }
-
-        if (!$startNode || !$endNode)
-            return;
-
-        $parent = $startNode->parentNode;
-        $current = $startNode->nextSibling;
-        $templateNodes = [];
-
-        while ($current && $current !== $endNode) {
-            $templateNodes[] = $current;
-            $next = $current->nextSibling;
-            $parent->removeChild($current);
-            $current = $next;
-        }
-
-        $parent->removeChild($startNode);
-        $parent->removeChild($endNode);
-
-        foreach ($rows as $rowData) {
-            foreach ($templateNodes as $template) {
-                $clone = $template->cloneNode(true);
-                $this->replacePlaceholdersInNode($clone, $rowData);
-                $parent->appendChild($clone);
+    
+        while (true) {
+            // Suche nach einem Start- und End-Block für die Schleife
+            $startNodeList = $xpath->query("//text:p[contains(text(), '{{#foreach:$key}}')]");
+            if ($startNodeList->length === 0) {
+                break; // Keine weiteren foreach-Blöcke vorhanden
+            }
+    
+            $startNode = $startNodeList->item(0);
+    
+            // Suche den dazugehörigen End-Block
+            $endNode = null;
+            $current = $startNode->nextSibling;
+            while ($current) {
+                if ($current->nodeType === XML_ELEMENT_NODE && strpos($current->textContent, '{{#endforeach}}') !== false) {
+                    $endNode = $current;
+                    break;
+                }
+                $current = $current->nextSibling;
+            }
+    
+            if (!$endNode) {
+                // Fehler: Kein passendes #endforeach gefunden, Abbruch
+                break;
+            }
+    
+            $parent = $startNode->parentNode;
+            $referenceNode = $endNode->nextSibling;
+    
+            // Sammle alle Knoten zwischen start und end
+            $templateNodes = [];
+            $current = $startNode->nextSibling;
+            while ($current && $current !== $endNode) {
+                $templateNodes[] = $current;
+                $next = $current->nextSibling;
+                $parent->removeChild($current);
+                $current = $next;
+            }
+    
+            // Entferne Start- und End-Marker
+            $parent->removeChild($startNode);
+            $parent->removeChild($endNode);
+    
+            // Jetzt für jede Zeile neue Knoten einfügen
+            foreach ($rows as $rowData) {
+                foreach ($templateNodes as $template) {
+                    $clone = $template->cloneNode(true); // Deep Clone
+                    $this->replacePlaceholdersInNode($clone, $rowData);
+                    $parent->insertBefore($clone, $referenceNode); // An der richtigen Stelle einfügen
+                }
             }
         }
     }
-
+    
 
     /**
      * Sets metadata fields for the ODT document (e.g. title, author, description).
