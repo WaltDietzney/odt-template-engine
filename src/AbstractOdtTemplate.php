@@ -519,28 +519,42 @@ abstract class AbstractOdtTemplate
 
 
     /**
-     * Recursively replaces placeholders within the entire node tree.
-     * This method performs a recursive replacement of placeholders (e.g., {{key}}) in the provided DOM node and its child nodes.
-     * 
-     * @param DOMNode $node The DOM node to process
-     * @param array $data The placeholder data for replacement
+     * Recursively replaces placeholders within the node tree without breaking XML structure.
+     *
+     * @param DOMNode $node The DOM node to process.
+     * @param array<string, mixed> $data Placeholder key-value pairs.
      * 
      * @return void
      */
     protected function replacePlaceholdersInNode(DOMNode $node, array $data): void
     {
         if ($node->nodeType === XML_TEXT_NODE) {
-            foreach ($data as $key => $value) {
-                $node->nodeValue = str_replace('{{' . $key . '}}', $value, $node->nodeValue);
-            }
+            $node->nodeValue = $this->replaceInText($node->nodeValue, $data);
         }
 
         if ($node->hasChildNodes()) {
-            foreach ($node->childNodes as $child) {
+            foreach (iterator_to_array($node->childNodes) as $child) {
                 $this->replacePlaceholdersInNode($child, $data);
             }
         }
     }
+
+    /**
+     * Helper to replace placeholders in a text string.
+     *
+     * @param string $text Input text possibly containing placeholders.
+     * @param array<string, mixed> $data Placeholder key-value pairs.
+     * 
+     * @return string Text with placeholders replaced.
+     */
+    protected function replaceInText(string $text, array $data): string
+    {
+        return preg_replace_callback('/{{(.*?)}}/', function ($matches) use ($data) {
+            $key = trim($matches[1]);
+            return array_key_exists($key, $data) ? (string) $data[$key] : '';
+        }, $text);
+    }
+
 
 
     /**
@@ -600,10 +614,8 @@ abstract class AbstractOdtTemplate
     public function extractTemplateVariables(): array
     {
         $xmlContents = [
-            $this->getContentXml(),
-            $this->getStylesXml(),
-            $this->getHeaderXml(),     // falls vorhanden
-            $this->getFooterXml(),     // falls vorhanden
+            $this->domContent,
+            $this->domStyles
         ];
 
         $result = [
@@ -638,7 +650,7 @@ abstract class AbstractOdtTemplate
         return $result;
     }
 
-    
+
     /**
      * Summary of parseTemplateContent
      * @param string $content
