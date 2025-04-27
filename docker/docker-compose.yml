@@ -1,0 +1,10 @@
+
+services:
+  phpodt:
+    build:
+      dockerfile: ./Dockerfile
+    ports:
+      - "8095:8095"
+      #Change directory here
+    volumes:
+      - ./path-of-your-working-directory:/var/www/html
