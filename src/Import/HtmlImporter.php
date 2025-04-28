@@ -125,26 +125,17 @@ class HtmlImporter
             case 'a':
                 $href = $node->getAttribute('href');
                 $label = trim($node->textContent);
-                $style = self::parseStyleAttribute($node);
-
-                // Setze Standardwerte, falls nicht überschrieben
-                if (empty($style['color'])) {
-                    $style['color'] = '#0000ff';
-                }
-                if (!isset($style['underline'])) {
-                    $style['underline'] = true;
-                }
+                $style['color'] = '#0000ff';
+                $style['underline'] = true;
+                $style['href'] = $href;
 
                 if (!$currentParagraph) {
                     $currentParagraph = new Paragraph();
                     $rich->addParagraph($currentParagraph);
                 }
 
-                // ✅ Hyperlink einfügen
-                $currentParagraph->addHyperlink($label, $href, $style);
+                $currentParagraph->addText($label, $style);
                 break;
-
-
 
             case 'h1':
             case 'h2':
@@ -166,12 +157,8 @@ class HtmlImporter
                     if (strtolower($liNode->nodeName) === 'li') {
                         $para = new Paragraph();
                         $para->setBulleted();
+                        $para->addText(trim($liNode->textContent));
                         $rich->addParagraph($para);
-
-                        // Wichtig: verarbeite den Inhalt rekursiv und nicht nur als Text
-                        foreach ($liNode->childNodes as $child) {
-                            self::processNode($child, $rich, $para);
-                        }
                     }
                 }
                 break;
@@ -181,16 +168,11 @@ class HtmlImporter
                     if (strtolower($liNode->nodeName) === 'li') {
                         $para = new Paragraph();
                         $para->setNumbered();
+                        $para->addText(trim($liNode->textContent));
                         $rich->addParagraph($para);
-
-                        // Auch hier rekursiv arbeiten
-                        foreach ($liNode->childNodes as $child) {
-                            self::processNode($child, $rich, $para);
-                        }
                     }
                 }
                 break;
-
 
             case 'img':
                 $src = $node->getAttribute('src');
@@ -280,12 +262,6 @@ class HtmlImporter
                 $styles[trim($key)] = trim($value);
             }
         }
-
-        // Farbe berücksichtigen
-        if (!empty($styles['color'])) {
-            $options['color'] = $styles['color'];
-        }
-
 
         // 🔕 Display none → Bild ignorieren
         if (!empty($styles['display']) && strtolower($styles['display']) === 'none') {
