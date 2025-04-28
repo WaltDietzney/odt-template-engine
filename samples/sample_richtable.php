@@ -1,61 +1,49 @@
 <?php
-require_once '../vendor/autoload.php';
 
 use OdtTemplateEngine\OdtTemplate;
-use OdtTemplateEngine\OdtElement;
 use OdtTemplateEngine\Elements\RichTable;
 use OdtTemplateEngine\Elements\RichText;
 use OdtTemplateEngine\Elements\Paragraph;
 
-// Load the template
+// Template laden
 $template = new OdtTemplate('templates/template_table.odt');
 $template->load();
 
-// Helper function for creating checkboxes (✔ or ☐)
+// Checkbox-Helfer (✔ oder ☐)
 function checkbox(bool $checked): string {
     return $checked ? '✔' : '☐';
 }
 
-// Create a RichText cell with a title and a checkbox
+// Zelle mit RichText
 function makeRichCell(string $title, bool $checked): RichText {
     $rich = new RichText();
     $rich->addParagraph((new Paragraph())
-        ->addText($title, ['bold' => true]) // Title text with bold
-        ->addLineBreak() // Add a line break
-        ->addText('Done: ' . checkbox($checked), ['italic' => true]) // "Done" status in italics
+        ->addText($title, ['bold' => true])
+        ->addLineBreak()
+        ->addText('Erledigt: ' . checkbox($checked), ['italic' => true])
     );
     return $rich;
 }
 
-// Build the table
+// Tabelle aufbauen
 $table = new RichTable();
-
-// Add headers
-$table->addRow(['Task', 'Status']);
-
-// Add rows with rich text and checkboxes
+$table->addRow(['Aufgabe', 'Status']);
 $table->addRow([
     makeRichCell('HTML Importer', true),
-    makeRichCell('Checkbox Logic', true)
+    makeRichCell('Checkbox Logik', true)
 ]);
-
 $table->addRow([
-    makeRichCell('Table Functions', true),
-    makeRichCell('Test Successful', true)
+    makeRichCell('Tabellenfunktionen', true),
+    makeRichCell('Test erfolgreich', true)
 ]);
-
 $table->addRow([
-    makeRichCell('Colors & Formatting', false),
-    makeRichCell('Still Pending', false)
+    makeRichCell('Farben & Format', false),
+    makeRichCell('Noch offen', false)
 ]);
 
-// Set the table element in the template
-$template->setElement('table', $table);
+$template->setElement('tabelle', $table);
 
-// Set dynamic values (optional)
-$template->setValues(['is_done' => true]);
+$template->setValues(['is_done'=>true]);
 
-// Save the generated document
 $template->save('output/output_table_test.odt');
-
-echo "✅ Table successfully added\n";
+echo "✅ Tabelle erfolgreich eingefügt\n";

@@ -62,13 +62,24 @@
                         $template = new OdtTemplate($templateFile);
                         $template->load();
                         $variables = $template->extractTemplateVariables();
+                        $metadata = $template->getMeta();
+
+                        // Display metadata
+                        echo '<h4>Excerpt of the Document Metadata of <b>' . basename($templateFile) . '</b> </h2>';
+                        echo '<ul>';
+                        foreach ($metadata as $key => $value) {
+                           if ($key == 'title' || $key == 'description'  || $key == 'subject' || $key == 'keywords') {
+                                echo '<li><strong>' . htmlspecialchars($key) . ':</strong> ' . htmlspecialchars($value) . '</li>';
+                            }
+                        }
+                        echo '</ul>';
 
                         echo '<button onclick="toggleVisibility(\'vars-' . $sampleName . '\')" class="w3-button w3-small w3-teal w3-margin">Show/Hide Variables</button>';
                         echo '<div id="vars-' . $sampleName . '" class="w3-hide variables-block">';
                         foreach ($variables as $type => $vars) {
                             echo '<h4>' . ucfirst(str_replace('_', ' ', $type)) . '</h4>';
                             if (is_array($vars)) {
-                                echo '<ul class="w3-ul">';
+                                echo '<ul class="">';
                                 foreach ($vars as $var => $opts) {
                                     if (is_array($opts)) {
                                         echo '<li><strong>' . htmlspecialchars($var) . ':</strong> ' . htmlspecialchars(implode(", ", $opts)) . '</li>';

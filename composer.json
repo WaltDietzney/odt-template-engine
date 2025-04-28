@@ -16,5 +16,13 @@
       "email": "deine@email.de"
     }
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "require-dev": {
+    "phpdocumentor/phpdocumentor": "^3.3"
+  },
+  "config": {
+    "allow-plugins": {
+      "symfony/flex": true
+    }
+  }
 }
