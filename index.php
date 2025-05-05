@@ -25,17 +25,24 @@
         .download-button {
             margin-top: 10px;
         }
+
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
     </style>
 </head>
 
-<body class="w3-light-grey">
+<body class="w3-light-grey" style="font-family: Arial, Helvetica, sans-serif;">
 
-    <header class="w3-container w3-teal w3-padding">
+    <header class="w3-container w3-indigo w3-padding w3-center">
         <img src="assets/WaltDietzney.png" alt="Logo" style="height:50px; vertical-align: middle;">
         <span class="w3-xlarge" style="margin-left: 10px;">Walt Dietzneys ODT Template Engine - Sample Explorer</span>
+        <br />
+        <span>Programmable ODT Generation with Paragraph Styling and Dynamic Content</span>
     </header>
 
-    <div class="w3-container w3-padding">
+    <div class="w3-container w3-padding w3-hide-small w3-hide-medium" style="margin-left:300px;margin-right:300px;">
         <input class="w3-input w3-border w3-margin-bottom" id="searchInput" type="text" placeholder="Search samples..."
             onkeyup="filterSamples()">
 
@@ -53,9 +60,9 @@
                 $sampleName = basename($sampleFile, '.php');
                 $templateFile = $templateDir . '/' . str_replace('sample_', 'template_', basename($sampleFile, '.php')) . '.odt';
 
-                echo '<div class="w3-card-4 w3-white sample-card" data-sample="' . htmlspecialchars($sampleName) . '">';
-                echo '<div class="w3-container">';
-                echo '<h3>' . htmlspecialchars($sampleName) . '</h3>';
+                echo '<div class="w3-card-4 w3-white sample-card w3-round-large" data-sample="' . htmlspecialchars($sampleName) . '">';
+                echo '<div class="w3-container sample-card">';
+                echo '<h3 class="w3-text-indigo"><u><b>' . htmlspecialchars($sampleName) . '</b></u></h3>';
 
                 if (file_exists($templateFile)) {
                     try {
@@ -65,17 +72,17 @@
                         $metadata = $template->getMeta();
 
                         // Display metadata
-                        echo '<h4>Excerpt of the Document Metadata of <b>' . basename($templateFile) . '</b> </h2>';
-                        echo '<ul>';
+                        echo '<h4 class="">Metadata Overview for <b>' . basename($templateFile) . '</b> </h2>';
+                        echo '<ul class="w3-ul">';
                         foreach ($metadata as $key => $value) {
-                           if ($key == 'title' || $key == 'description'  || $key == 'subject' || $key == 'keywords') {
+                            if ($key == 'title' || $key == 'coverage' || $key == 'subject' || $key == 'keywords') {
                                 echo '<li><strong>' . htmlspecialchars($key) . ':</strong> ' . htmlspecialchars($value) . '</li>';
                             }
                         }
                         echo '</ul>';
 
-                        echo '<button onclick="toggleVisibility(\'vars-' . $sampleName . '\')" class="w3-button w3-small w3-teal w3-margin">Show/Hide Variables</button>';
-                        echo '<div id="vars-' . $sampleName . '" class="w3-hide variables-block">';
+                        echo '<button onclick="toggleVisibility(\'vars-' . $sampleName . '\')" class="w3-button w3-small w3-indigo w3-margin">Show/Hide Variables</button>';
+                        echo '<div id="vars-' . $sampleName . '" class="w3-hide variables-block w3-border">';
                         foreach ($variables as $type => $vars) {
                             echo '<h4>' . ucfirst(str_replace('_', ' ', $type)) . '</h4>';
                             if (is_array($vars)) {
@@ -98,7 +105,7 @@
                     echo '<div class="w3-pale-yellow w3-padding">No template available for this sample.</div>';
                 }
 
-                echo '<button onclick="toggleVisibility(\'script-' . $sampleName . '\')" class="w3-button w3-small w3-teal w3-margin">Show/Hide Script</button>';
+                echo '<button onclick="toggleVisibility(\'script-' . $sampleName . '\')" class="w3-button w3-small w3-indigo w3-margin">Show/Hide Script</button>';
                 echo '<div id="script-' . $sampleName . '" class="w3-hide script-block" style="position: relative;">';
 
                 // Der neue Copy-Button
@@ -110,7 +117,7 @@
 
                 echo '</div>';
 
-                echo '<button class="w3-button w3-green w3-margin download-button" onclick="generateSample(\'' . $sampleName . '\')">Generate & Download ODT</button>';
+                echo '<button class="w3-button w3-light-blue w3-margin download-button" onclick="generateSample(\'' . $sampleName . '\')">Generate & Download ODT</button>';
                 echo '</div>';
                 echo '</div>';
 
@@ -129,21 +136,74 @@
             }
         }
 
-        function filterSamples() {
-            var input, filter, cards, card, i;
-            input = document.getElementById("searchInput");
-            filter = input.value.toUpperCase();
-            cards = document.getElementById("sampleList").getElementsByClassName("sample-card");
+        document.addEventListener("DOMContentLoaded", function () {
+            const cards = document.getElementsByClassName("sample-card");
 
-            for (i = 0; i < cards.length; i++) {
-                card = cards[i];
-                if (card.getAttribute('data-sample').toUpperCase().indexOf(filter) > -1) {
+            // Merke dir den Originalzustand jedes ULs
+            for (let card of cards) {
+                let ul = card.querySelector("ul");
+                if (ul) {
+                    ul.dataset.original = ul.innerHTML;
+                }
+            }
+        });
+
+        function filterSamples() {
+            var input = document.getElementById("searchInput");
+            var filter = input.value.toLowerCase();
+            var cards = document.getElementsByClassName("sample-card");
+
+            for (var i = 0; i < cards.length; i++) {
+                var card = cards[i];
+                var ul = card.querySelector("ul");
+
+                if (ul) {
+                    ul.innerHTML = ul.dataset.original; // <<< Immer in Originalzustand zurücksetzen!
+                }
+
+                var text = ul ? ul.innerText.toLowerCase() : "";
+
+                if (text.indexOf(filter) > -1) {
                     card.style.display = "";
+                    if (ul && filter.trim() !== "") {
+                        highlightMatches(ul, filter);
+                    }
                 } else {
                     card.style.display = "none";
                 }
             }
         }
+
+        function highlightMatches(element, term) {
+            if (!term) return;
+
+            var regex = new RegExp('(' + escapeRegExp(term) + ')', 'gi');
+
+            // Gehe jedes Kind durch
+            Array.from(element.childNodes).forEach(function (node) {
+                if (node.nodeType === 3) { // Text Node
+                    if (node.nodeValue.toLowerCase().includes(term)) {
+                        const spanHTML = node.nodeValue.replace(regex, '<span class="highlight">$1</span>');
+                        const temp = document.createElement('span');
+                        temp.innerHTML = spanHTML;
+
+                        node.parentNode.replaceChild(temp, node);
+                    }
+                } else if (node.nodeType === 1) {
+                    // Rekursiv falls elemente innerhalb von UL sind (zB <li>)
+                    highlightMatches(node, term);
+                }
+            });
+        }
+
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+
+
+
+
 
         function generateSample(sampleName) {
             console.log("Generating sample:", sampleName);

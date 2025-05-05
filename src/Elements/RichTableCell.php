@@ -4,62 +4,76 @@ namespace OdtTemplateEngine\Elements;
 
 use DOMDocument;
 use DOMNode;
+use DOMElement;
+use OdtTemplateEngine\AbstractOdtTemplate;
 use OdtTemplateEngine\Contracts\HasStyles;
 use OdtTemplateEngine\Utils\StyleMapper;
 
 /**
- * Represents a cell within a rich table element in an ODT document.
- * 
- * This class defines a table cell that can contain text, paragraphs, or rich text.
- * It also manages the styles for the cell and ensures the correct mapping and registration of those styles.
+ * Represents a single cell within a rich table structure in an ODT document.
  */
 class RichTableCell extends OdtElement implements HasStyles
 {
     /**
-     * @var mixed The content of the table cell, which can be a string, Paragraph, or RichText.
+     * Summary of content
+     * @var mixed
      */
     protected mixed $content;
 
     /**
-     * @var array The styles applied to the table cell.
+     * Summary of style
+     * @var array
      */
     protected array $style = [];
 
     /**
-     * @var string The name of the style applied to the table cell.
+     * Summary of styleName
+     * @var string
      */
     protected string $styleName = '';
 
     /**
-     * RichTableCell constructor.
-     * 
-     * Initializes the table cell with content and optional style.
-     * The style is mapped and registered using the StyleMapper utility.
-     * 
-     * @param string|Paragraph|RichText $content The content to be placed in the cell.
-     * @param array $style Optional style to be applied to the cell.
+     * Summary of forceParagraph
+     * @var bool
+     */
+    protected bool $forceParagraph = false;
+
+    /**
+     * Summary of colspan
+     * @var int
+     */
+    protected int $colspan = 1;
+
+    /**
+     * Summary of rowspan
+     * @var int
+     */
+    protected int $rowspan = 1;
+
+    /**
+     * Constructor.
+     *
+     * @param string|Paragraph|RichText $content Cell content.
+     * @param array $style Optional style array for the cell.
      */
     public function __construct(string|Paragraph|RichText $content, array $style = [])
     {
-        $this->content = $content;
-        $this->style = $style;
-
-        if (!empty($this->style)) {
-            $this->style = StyleMapper::mapTableCellStyleOptions($style);
-            $styleName = StyleMapper::generateStyleName($this->style);
-            $this->styleName = $styleName;
-
-            StyleMapper::registerTableCellStyle($styleName, $this->style);
-
-            return $this;
+        if (is_string($content)) {
+            $paragraph = new Paragraph();
+            $paragraph->addText($content);
+            $this->content = $paragraph;
+        } else {
+            $this->content = $content;
         }
+
+        $this->setStyle($style);
     }
 
     /**
      * Sets the content of the table cell.
-     * 
-     * @param mixed $content The new content to set for the cell.
-     * @return self The current instance of RichTableCell.
+     *
+     * @param mixed $content
+     * @return self
      */
     public function setContent(mixed $content): self
     {
@@ -69,34 +83,67 @@ class RichTableCell extends OdtElement implements HasStyles
 
     /**
      * Gets the content of the table cell.
-     * 
-     * @return mixed The content of the table cell.
+     *
+     * @return mixed
      */
     public function getContent(): mixed
     {
         return $this->content;
     }
 
+    /**
+     * Sets the table cell style.
+     *
+     * @param array $style
+     * @return self
+     */
     public function setStyle(array $style): self
     {
-        // 1. Style-Array mappen (falls nötig)
         $this->style = StyleMapper::mapTableCellStyleOptions($style);
-
-        // 2. Generiere einen einzigartigen Style-Namen
-        $styleName = StyleMapper::generateStyleName($this->style);
-        $this->styleName = $styleName;
-
-        // 3. Registriere den Style im StyleMapper
-        StyleMapper::registerTableCellStyle($styleName, $this->style);
-
+        $this->styleName = StyleMapper::generateStyleName($this->style);
+        StyleMapper::registerTableCellStyle($this->styleName, $this->style);
         return $this;
+    }
+
+    /**
+     * Setzt die Colspan (Spalten-Übergreifung).
+     */
+    public function setColspan(int $colspan): self
+    {
+        $this->colspan = max(1, $colspan);
+        return $this;
+    }
+
+    /**
+     * Setzt die Rowspan (Zeilen-Übergreifung).
+     */
+    public function setRowspan(int $rowspan): self
+    {
+        $this->rowspan = max(1, $rowspan);
+        return $this;
+    }
+
+    /**
+     * Gibt die Colspan zurück.
+     */
+    public function getColspan(): int
+    {
+        return $this->colspan;
+    }
+
+    /**
+     * Gibt die Rowspan zurück.
+     */
+    public function getRowspan(): int
+    {
+        return $this->rowspan;
     }
 
 
     /**
-     * Gets the style of the table cell.
-     * 
-     * @return array The style options for the table cell.
+     * Returns the cell style as an array.
+     *
+     * @return array
      */
     public function getStyle(): array
     {
@@ -104,39 +151,29 @@ class RichTableCell extends OdtElement implements HasStyles
     }
 
     /**
-     * Gets the name of the style applied to the table cell.
-     * 
-     * @return string The style name.
+     * Gets the generated style name.
+     *
+     * @return string
      */
     public function getStyleName(): string
     {
-        return $this->styleName ?? '';
+        return $this->styleName;
     }
 
     /**
-     * Registers the style for the table cell, mapping the style options 
-     * and ensuring it is registered using the StyleMapper utility.
-     * 
-     * @return void
+     * Registers the current style to the global style registry.
      */
     public function registerStyles(): void
     {
-
         if (!empty($this->style)) {
-            $mapped = StyleMapper::mapTableCellStyleOptions($this->style);
-            $styleName = StyleMapper::generateStyleName($mapped);
-            $this->styleName = $styleName;
-            StyleMapper::registerTableCellStyle($styleName, $mapped);
+            $this->setStyle($this->style);
         }
     }
 
     /**
-     * Gets the style definitions for the table cell.
-     * 
-     * If the cell has a style, it returns the style definitions associated with the cell.
-     * Otherwise, it returns an empty array.
-     * 
-     * @return array An array of style definitions for the table cell.
+     * Returns the required style definitions.
+     *
+     * @return array
      */
     public function getStyleDefinitions(): array
     {
@@ -144,29 +181,33 @@ class RichTableCell extends OdtElement implements HasStyles
             return [];
         }
 
-        return [
-            $this->getStyleName() => $this->style
-        ];
+        return [$this->styleName => $this->style];
     }
 
     /**
-     * Converts the RichTableCell object to a DOM node.
-     * 
-     * This method creates a table cell element in ODT format, inserts the content (text, paragraph, etc.),
-     * and applies the associated style to the cell element.
-     * 
-     * @param DOMDocument $dom The DOM document to append the table cell to.
-     * @return DOMNode The resulting table cell node.
+     * Converts the table cell into a DOMNode.
+     *
+     * @param DOMDocument $dom
+     * @return DOMNode
      */
     public function toDomNode(DOMDocument $dom): DOMNode
     {
         $cell = $dom->createElement('table:table-cell');
 
-        // 📦 Insert content into the cell
-        $content = $this->getContent();
+        if ($this->colspan > 1) {
+            $cell->setAttribute('table:number-columns-spanned', (string) $this->colspan);
+        }
 
-        if ($content instanceof Paragraph || $content instanceof RichText) {
-            $child = $content->toDomNode($dom);
+        if ($this->rowspan > 1) {
+            $cell->setAttribute('table:number-rows-spanned', (string) $this->rowspan);
+        }
+
+        if (!empty($this->styleName)) {
+            $cell->setAttribute('table:style-name', $this->styleName);
+        }
+
+        if ($this->content instanceof Paragraph || $this->content instanceof RichText) {
+            $child = $this->content->toDomNode($dom);
             if ($child instanceof \DOMDocumentFragment) {
                 foreach ($child->childNodes as $node) {
                     $cell->appendChild($node->cloneNode(true));
@@ -174,33 +215,21 @@ class RichTableCell extends OdtElement implements HasStyles
             } else {
                 $cell->appendChild($child);
             }
-        } else {
-            $p = $dom->createElement('text:p');
-            $p->appendChild($dom->createTextNode((string) $content));
-            $cell->appendChild($p);
-        }
-
-        // 🎨 Apply style to the cell and ensure it is registered
-        if (!empty($this->style)) {
-            $styleName = $this->getStyleName();
-            $cell->setAttribute('table:style-name', $styleName);
-
-            // Ensure style registration (if not done in the constructor)
-            StyleMapper::registerTableCellStyle($styleName, $this->style);
         }
 
         return $cell;
     }
 
+
     /**
-     * Generates a <style:style> DOM node for the table-cell style.
+     * Converts the style into a DOMElement.
      *
-     * @param DOMDocument $dom The DOM document to create the style node in.
-     * @return \DOMElement|null The resulting style node or null if no style is defined.
+     * @param DOMDocument $dom
+     * @return DOMElement|null
      */
-    public function toStyleDomNode(DOMDocument $dom): ?\DOMElement
+    public function toStyleDomNode(DOMDocument $dom): ?DOMElement
     {
-        if (empty($this->style) || !$this->styleName) {
+        if (empty($this->style) || empty($this->styleName)) {
             return null;
         }
 
@@ -220,33 +249,200 @@ class RichTableCell extends OdtElement implements HasStyles
         return $styleNode;
     }
 
-
-    public function getRequiredTableCellStyleNodes(): array
+    /**
+     * Forces the cell content to be wrapped into a Paragraph if necessary.
+     *
+     * @param bool $force
+     * @return self
+     */
+    public function forceParagraphAlignment(bool $force = true): self
     {
-        if (empty($this->styleName)) {
-            return [];
-        }
-
-        $styleProps = StyleMapper::getRegisteredTableCellStyles()[$this->styleName] ?? null;
-
-        if (!$styleProps) {
-            return [];
-        }
-
-        $dom = new DOMDocument();
-        $style = $dom->createElement('style:style');
-        $style->setAttribute('style:name', $this->styleName);
-        $style->setAttribute('style:family', 'table-cell');
-        $style->setAttribute('style:parent-style-name', 'Default');
-
-        $props = $dom->createElement('style:table-cell-properties');
-        foreach ($styleProps as $key => $value) {
-            $props->setAttribute($key, $value);
-        }
-
-        $style->appendChild($props);
-
-        return [$style];
+        $this->forceParagraph = $force;
+        return $this;
     }
 
+    /**
+     * Aligns the text inside the cell to center.
+     *
+     * @return self
+     */
+    public function alignCenter(): self
+    {
+        if ($this->content instanceof Paragraph) {
+            $this->content->setParagraphStyle('CenterPara');
+        }
+        return $this;
+    }
+
+    /**
+     * Aligns the text inside the cell to the left.
+     *
+     * @return self
+     */
+    public function alignLeft(): self
+    {
+        if ($this->content instanceof Paragraph) {
+            $this->content->setParagraphStyle('LeftPara');
+        }
+        return $this;
+    }
+
+    /**
+     * Aligns the text inside the cell to the right.
+     *
+     * @return self
+     */
+    public function alignRight(): self
+    {
+        if ($this->content instanceof Paragraph) {
+            $this->content->setParagraphStyle('RightPara');
+        }
+        return $this;
+    }
+
+    /**
+     * Sets background color of the cell.
+     *
+     * @param string $color
+     * @return self
+     */
+    public function setBackground(string $color): self
+    {
+        $this->style['fo:background-color'] = $color;
+        return $this->registerStylesAndRefresh();
+    }
+
+    /**
+     * Sets a border around the cell.
+     *
+     * @param string $border
+     * @return self
+     */
+    public function setBorder(string $border): self
+    {
+        $this->style['fo:border'] = $border;
+        return $this->registerStylesAndRefresh();
+    }
+
+    public function setBorderTop(string $border): self
+    {
+        $this->style['fo:border-top'] = $border;
+        return $this->registerStylesAndRefresh();
+    }
+
+    public function setBorderBottom(string $border): self
+    {
+        $this->style['fo:border-bottom'] = $border;
+        return $this->registerStylesAndRefresh();
+    }
+
+    public function setBorderLeft(string $border): self
+    {
+        $this->style['fo:border-left'] = $border;
+        return $this->registerStylesAndRefresh();
+    }
+
+    public function setBorderRight(string $border): self
+    {
+        $this->style['fo:border-right'] = $border;
+        return $this->registerStylesAndRefresh();
+    }
+
+
+    /**
+     * Sets padding inside the cell.
+     *
+     * @param string $value
+     * @return self
+     */
+    public function setPadding(string $padding): self
+    {
+        $this->style['fo:padding'] = $padding;
+        return $this->registerStylesAndRefresh();
+    }
+
+    public function setPaddingTop(string $padding): self
+    {
+        $this->style['fo:padding-top'] = $padding;
+        return $this->registerStylesAndRefresh();
+    }
+
+    public function setPaddingBottom(string $padding): self
+    {
+        $this->style['fo:padding-bottom'] = $padding;
+        return $this->registerStylesAndRefresh();
+    }
+
+    public function setPaddingLeft(string $padding): self
+    {
+        $this->style['fo:padding-left'] = $padding;
+        return $this->registerStylesAndRefresh();
+    }
+
+    public function setPaddingRight(string $padding): self
+    {
+        $this->style['fo:padding-right'] = $padding;
+        return $this->registerStylesAndRefresh();
+    }
+
+
+
+    /**
+     * Internal: Ensures the content is wrapped into a Paragraph.
+     */
+    protected function ensureParagraph(): void
+    {
+        if (!($this->content instanceof Paragraph)) {
+            $paragraph = new Paragraph();
+            $paragraph->addText((string) $this->content);
+            $this->content = $paragraph;
+        }
+    }
+
+    /**
+     * Internal: Refreshes style registration.
+     *
+     * @return self
+     */
+    protected function registerStylesAndRefresh(): self
+    {
+        $this->style = StyleMapper::mapTableCellStyleOptions($this->style);
+        $this->styleName = StyleMapper::generateStyleName($this->style);
+        StyleMapper::registerTableCellStyle($this->styleName, $this->style);
+        return $this;
+    }
+
+    public static function create(string|Paragraph|RichText $content, array $style = []): self
+    {
+        return new self($content, $style);
+    }
+
+
+    /** 🎨 Direkt Style setzen */
+    public function style(string $styleNameOrDefinition): self
+    {
+        if (str_contains($styleNameOrDefinition, ':') || str_contains($styleNameOrDefinition, ';')) {
+            // Ist wohl ein CSS-Stil → parsen und zuweisen
+            $this->setStyle(StyleMapper::parseInlineStyle($styleNameOrDefinition));
+        } else {
+            // Ist ein direkter Stilname
+            $this->styleName = $styleNameOrDefinition;
+        }
+        return $this;
+    }
+
+
+    /** ↔️ Spalten übergreifen */
+    public function colspan(int $count): self
+    {
+        $this->colspan = $count;
+        return $this;
+    }
+
+    /** ↕️ Zeilen übergreifen */
+    public function rowspan(int $count): self
+    {
+        $this->rowspan = $count;
+        return $this;
+    }
 }

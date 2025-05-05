@@ -144,7 +144,6 @@ abstract class AbstractOdtTemplate
         }
     }
 
-
     /**
      * Ensures that the necessary paragraph styles are defined in the styles.xml document.
      * For each style in the provided map, if the style does not already exist, it will be created and added to the styles section.
@@ -247,12 +246,11 @@ abstract class AbstractOdtTemplate
      */
     protected function ensureTableCellStyleNodesExist(array $styleNodes): void
     {
+        $this->ensureXmlnsAttributes();
         $xpath = new DOMXPath($this->domContent);
-        $xpath->registerNamespace("style", "urn:oasis:names:tc:opendocument:xmlns:style:1.0");
-        $xpath->registerNamespace("office", "urn:oasis:names:tc:opendocument:xmlns:office:1.0");
+        $this->prepareNamespaces($xpath);
 
         $automaticStyles = $xpath->query('//office:automatic-styles')->item(0);
-
         if (!$automaticStyles) {
             $automaticStyles = $this->domContent->createElement('office:automatic-styles');
             $this->domContent->documentElement->insertBefore(
@@ -261,18 +259,24 @@ abstract class AbstractOdtTemplate
             );
         }
 
-        foreach ($styleNodes as $styleNode) {
-            if (!$styleNode instanceof DOMElement) {
+        foreach ($styleMap as $name => $rawOptions) {
+            if ($xpath->query("//style:style[@style:name='$name']")->length > 0)
                 continue;
+
+            $style = $this->domContent->createElement('style:style');
+            $style->setAttribute('style:name', $name);
+            $style->setAttribute('style:family', 'table-cell');
+            $style->setAttribute('style:parent-style-name', 'Default');
+
+            $options = StyleMapper::mapTableCellStyleOptions($rawOptions);
+            $cellProps = $this->domContent->createElement('style:table-cell-properties');
+
+            foreach ($options as $key => $value) {
+                $cellProps->setAttribute($key, $value);
             }
 
-            $styleName = $styleNode->getAttribute('style:name');
-            $exists = $xpath->query("//style:style[@style:name='$styleName']")->length > 0;
-
-            if (!$exists) {
-                $imported = $this->domContent->importNode($styleNode, true);
-                $automaticStyles->appendChild($imported);
-            }
+            $style->appendChild($cellProps);
+            $automaticStyles->appendChild($style);
         }
     }
 
@@ -378,6 +382,17 @@ abstract class AbstractOdtTemplate
 
             $officeStylesNode->appendChild($style);
         }
+        $this->ensureParagraphStylesExist([
+            'CenterPara' => [
+                'text-align' => 'center'
+            ],
+            'LeftPara' => [
+                'text-align' => 'left'
+            ],
+            'RightPara' => [
+                'text-align' => 'right'
+            ]
+        ]);
     }
 
 
@@ -626,47 +641,47 @@ abstract class AbstractOdtTemplate
      * }
      */
     public function extractTemplateVariables(): array
-{
-    $xmlContents = [
-        $this->domContent,
-        $this->domStyles
-    ];
+    {
+        $xmlContents = [
+            $this->domContent,
+            $this->domStyles
+        ];
 
-    $result = [
-        'variables' => [],
-        'loops' => [],
-        'conditions' => [],
-        'negated_conditions' => [],
-        'filters' => [],
-        'filter_options' => [],
-    ];
+        $result = [
+            'variables' => [],
+            'loops' => [],
+            'conditions' => [],
+            'negated_conditions' => [],
+            'filters' => [],
+            'filter_options' => [],
+        ];
 
-    foreach ($xmlContents as $content) {
-        if (empty($content)) {
-            continue;
-        }
+        foreach ($xmlContents as $content) {
+            if (empty($content)) {
+                continue;
+            }
 
-        // Convert DOMDocument to XML string
-        $xmlString = $content->saveXML();
+            // Convert DOMDocument to XML string
+            $xmlString = $content->saveXML();
 
-        // Now parse it
-        $parsed = $this->parseTemplateContent($xmlString);
+            // Now parse it
+            $parsed = $this->parseTemplateContent($xmlString);
 
-        foreach ($parsed as $key => $values) {
-            if (is_array($values)) {
-                if ($key === 'filter_options') {
-                    foreach ($values as $var => $opts) {
-                        $result['filter_options'][$var] = array_unique(array_merge($result['filter_options'][$var] ?? [], $opts));
+            foreach ($parsed as $key => $values) {
+                if (is_array($values)) {
+                    if ($key === 'filter_options') {
+                        foreach ($values as $var => $opts) {
+                            $result['filter_options'][$var] = array_unique(array_merge($result['filter_options'][$var] ?? [], $opts));
+                        }
+                    } else {
+                        $result[$key] = array_unique(array_merge($result[$key], $values));
                     }
-                } else {
-                    $result[$key] = array_unique(array_merge($result[$key], $values));
                 }
             }
         }
-    }
 
-    return $result;
-}
+        return $result;
+    }
 
 
 

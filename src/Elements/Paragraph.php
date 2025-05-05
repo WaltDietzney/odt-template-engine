@@ -202,7 +202,7 @@ class Paragraph extends OdtElement implements HasStyles
      * @param array $style Optional link text styling.
      * @return $this
      */
-    public function addHyperlink(string $text, string $href, array $style = []): self
+    public function aderlink(string $text, string $href, array $style = []): self
     {
         $this->parts[] = [
             'type' => 'hyperlink',
@@ -315,6 +315,17 @@ class Paragraph extends OdtElement implements HasStyles
             $this->addTab();
             $this->addText($entry['text'] ?? '', $entry['style'] ?? []);
         }
+        return $this;
+    }
+
+    public function addHyperlink(string $text, string $href, array $style = []): self
+    {
+        $this->parts[] = [
+            'type' => 'hyperlink',
+            'content' => $text,
+            'href' => $href,
+            'style' => $style
+        ];
         return $this;
     }
 
@@ -514,4 +525,6 @@ class Paragraph extends OdtElement implements HasStyles
 
         return $p;
     }
+
+    
 }

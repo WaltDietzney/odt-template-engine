@@ -36,6 +36,13 @@ class StyleMapper
     protected static array $registeredImageStyles = [];
 
     /**
+     * Summary of registeredFonts
+     * @var array
+     */
+    private static array $registeredFonts = [];
+
+
+    /**
      * Maps a set of paragraph style options to their corresponding ODF attributes.
      * 
      * This method maps paragraph-specific properties, such as 'text-align', 'margin-top', 'line-height', etc.,
@@ -86,8 +93,32 @@ class StyleMapper
                 case 'writing-mode':
                     $mapped['style:writing-mode'] = $value;
                     break;
+                case 'padding-left':
+                    $mapped['fo:padding-left'] = $value;
+                    break;
+                case 'padding-right':
+                    $mapped['fo:padding-right'] = $value;
+                    break;
+                case 'padding-top':
+                    $mapped['fo:padding-top'] = $value;
+                    break;
+                case 'padding-bottom':
+                    $mapped['fo:padding-bottom'] = $value;
+                    break;
                 case 'padding':
                     $mapped['fo:padding'] = $value;
+                    break;
+                case 'border-left':
+                    $mapped['fo:border-left'] = $value;
+                    break;
+                case 'border-right':
+                    $mapped['fo:border-right'] = $value;
+                    break;
+                case 'border-top':
+                    $mapped['fo:border-top'] = $value;
+                    break;
+                case 'border-bottom':
+                    $mapped['fo:border-bottom'] = $value;
                     break;
                 case 'border':
                     $mapped['fo:border'] = $value;
@@ -193,11 +224,28 @@ class StyleMapper
         }
 
         if (!empty($options['font-family'])) {
-            $mapped['style:font-name'] = $options['font-family'];
+            $fontName = $options['font-family'];
+            $mapped['style:font-name'] = $fontName;
+
+            // Register the font for later output
+            self::$registeredFonts[$fontName] = true;
         }
+
 
         return $mapped;
     }
+
+    public static function getRegisteredFontsXml(): string
+    {
+        $xml = '';
+
+        foreach (array_keys(self::$registeredFonts) as $fontName) {
+            $xml .= '<style:font-face style:name="' . htmlspecialchars($fontName) . '" svg:font-family="' . htmlspecialchars($fontName) . '"/>' . "\n";
+        }
+
+        return $xml;
+    }
+
 
     /**
      * Maps additional table-cell style options to their corresponding ODF attributes.
@@ -213,13 +261,11 @@ class StyleMapper
         $mapped = [];
 
         foreach ($options as $key => $value) {
-            // LibreOffice-konforme Keys direkt übernehmen
             if (preg_match('/^(fo:|style:)/', $key)) {
                 $mapped[$key] = $value;
                 continue;
             }
 
-            // Alias-Mapping für menschenfreundliche Namen
             switch ($key) {
                 case 'background':
                     $mapped['fo:background-color'] = $value;
@@ -227,8 +273,36 @@ class StyleMapper
                 case 'padding':
                     $mapped['fo:padding'] = $value;
                     break;
-                case 'text-align':
+                case 'padding-left':
+                    $mapped['fo:padding-left'] = $value;
+                    break;
+                case 'padding-right':
+                    $mapped['fo:padding-right'] = $value;
+                    break;
+                case 'padding-top':
+                    $mapped['fo:padding-top'] = $value;
+                    break;
+                case 'padding-bottom':
+                    $mapped['fo:padding-bottom'] = $value;
+                    break;
+                case 'border':
+                    $mapped['fo:border'] = $value;
+                    break;
+                case 'border-left':
+                    $mapped['fo:border-left'] = $value;
+                    break;
+                case 'border-right':
+                    $mapped['fo:border-right'] = $value;
+                    break;
+                case 'border-top':
+                    $mapped['fo:border-top'] = $value;
+                    break;
+                case 'border-bottom':
+                    $mapped['fo:border-bottom'] = $value;
+                    break;
                 case 'align':
+                case 'text-align':
+                    // Achtung: wird bei Absatzstilen später nochmal extra behandelt!
                     $mapped['fo:text-align'] = $value;
                     break;
                 case 'weight':
@@ -237,15 +311,12 @@ class StyleMapper
                 case 'color':
                     $mapped['fo:color'] = $value;
                     break;
-                case 'border':
-                    $mapped['fo:border'] = $value;
-                    break;
-                // Weitere Aliase hier ergänzen
             }
         }
 
         return $mapped;
     }
+
 
 
     /**
@@ -492,4 +563,25 @@ class StyleMapper
     {
         return self::$registeredImageStyles;
     }
+
+    /**
+     * Summary of parseInlineStyle
+     * @param string $css
+     * @return string[]
+     */
+    public static function parseInlineStyle(string $css): array
+    {
+        $styleArray = [];
+        $rules = explode(';', $css);
+
+        foreach ($rules as $rule) {
+            if (str_contains($rule, ':')) {
+                [$key, $value] = explode(':', $rule, 2);
+                $styleArray['fo:' . trim($key)] = trim($value);
+            }
+        }
+
+        return $styleArray;
+    }
+
 }

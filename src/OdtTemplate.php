@@ -113,6 +113,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         $this->tempDir = $tmpDir;
         $this->templatePath = $templatePath;
         $this->load();
+
         // Automatische Aufräumaktion beim Scriptende
         register_shutdown_function([$this, 'cleanup']);
     }
@@ -613,6 +614,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
             'title' => ['dc:title'],
             'subject' => ['dc:subject'],
             'description' => ['dc:description'],
+            'coverage' => ['dc:coverage'],
             'keywords' => ['meta:keyword'],
             'initial_author' => ['meta:initial-creator'],
             'author' => ['dc:creator'],
@@ -680,6 +682,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
             'title' => 'dc:title',
             'subject' => 'dc:subject',
             'description' => 'dc:description',
+            'coverage' => 'dc:coverage',
             'keywords' => 'meta:keyword',
             'initial_author' => 'meta:initial-creator',
             'author' => 'dc:creator',
@@ -1120,6 +1123,20 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         }
 
         $zip->close();
+    }
+
+    public function refresh()
+    {
+        // ✅ StyleWriter einbinden und Styles eintragen
+        StyleWriter::writeAllStyles($this->domStyles);
+
+
+        // 💾 Minifizierte XML-Dateien speichern
+        $this->saveMinifiedXml($this->domContent, $this->tempDir . '/content.xml');
+        $this->saveMinifiedXml($this->domStyles, $this->tempDir . '/styles.xml');
+        $this->saveMinifiedXml($this->domMeta, $this->tempDir . '/meta.xml');
+
+        $this->load();
     }
 
 
