@@ -162,11 +162,12 @@ class Paragraph extends OdtElement implements HasStyles
      * @param array $headerStyle   Optional style array for the first row (bold, etc.)
      */
     public function addTabularLines(array $lines, array $tabDefs, array $headerStyle = []): self
-    {   $noFirstTab = false;
+    {
+        $noFirstTab = false;
         // Tab definitions (applied once)
         foreach ($tabDefs as $tab) {
             $this->addTabStopDefinition($tab['position'], $tab['alignment'] ?? 'left');
-            
+
         }
 
         // Loop through lines
@@ -177,10 +178,10 @@ class Paragraph extends OdtElement implements HasStyles
                 if ($i > 0) {
                     $this->addTab();
                 }
-                
-                    $style = ($rowIndex === 0 && !empty($headerStyle)) ? $headerStyle : [];
-                    $this->addText((string) $value, $style);
-                
+
+                $style = ($rowIndex === 0 && !empty($headerStyle)) ? $headerStyle : [];
+                $this->addText((string) $value, $style);
+
             }
 
             // New paragraph after each line (except last)
@@ -439,11 +440,14 @@ class Paragraph extends OdtElement implements HasStyles
      * @param DOMDocument $dom
      * @return DOMNode
      */
-    public function toDomNode(DOMDocument $dom): DOMNode
+    public function toDomNode(DOMDocument $dom, bool $insideTextBox = false): DOMNode
     {
         $style = $this->paragraphStyle ?? 'Standard';
         $p = $dom->createElement('text:p');
-        $p->setAttribute('text:style-name', $style);
+
+        if (!$insideTextBox) {
+            $p->setAttribute('text:style-name', $style);
+        }
 
         foreach ($this->parts as $part) {
             switch ($part['type']) {
@@ -485,11 +489,8 @@ class Paragraph extends OdtElement implements HasStyles
                     break;
 
                 case 'tab':
-                    $p->appendChild($dom->createElement('text:tab'));
-                    break;
                 case 'tab-stop':
                     $p->appendChild($dom->createElement('text:tab'));
-
                     if (!empty($part['text'])) {
                         $node = $dom->createTextNode($part['text']);
                         if (!empty($part['style'])) {
@@ -503,10 +504,12 @@ class Paragraph extends OdtElement implements HasStyles
                         }
                     }
                     break;
-                case 'paragraph-break':
-                    $p->appendChild($dom->createElement('text:p'));
-                    break;
 
+                case 'paragraph-break':
+                    if (!$insideTextBox) {
+                        $p->appendChild($dom->createElement('text:p'));
+                    } // In Textboxen keine neuen Paragraphen erzeugen!
+                    break;
             }
         }
 
@@ -514,7 +517,7 @@ class Paragraph extends OdtElement implements HasStyles
             $p->appendChild($element->toDomNode($dom));
         }
 
-        if ($this->isList()) {
+        if (!$insideTextBox && $this->isList()) {
             $list = $dom->createElement('text:list');
             $list->setAttribute('text:style-name', $this->listStyle);
             $item = $dom->createElement('text:list-item');
@@ -526,5 +529,5 @@ class Paragraph extends OdtElement implements HasStyles
         return $p;
     }
 
-    
+
 }

@@ -6,6 +6,8 @@ use DOMDocument;
 use DOMNode;
 use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Contracts\HasStyles;
+use OdtTemplateEngine\Elements\NumberedList;
+use OdtTemplateEngine\Elements\OdtElement;
 
 /**
  * Class RichText
@@ -152,11 +154,11 @@ class RichText extends OdtElement implements HasStyles
      */
     public function addBulletList(array $items, array $style = []): self
     {
-        foreach ($items as $item) {
-            $p = (new Paragraph())->addText($item, $style);
-            $p->setBulleted();
-            $this->elements[] = $p;
+        $list = new ListElement('bullet');
+        foreach ($items as $text) {
+            $list->addItem((new Paragraph())->addText($text));
         }
+        $this->elements[] = $list;
         return $this;
     }
 
@@ -169,13 +171,14 @@ class RichText extends OdtElement implements HasStyles
      */
     public function addNumberedList(array $items, array $style = []): self
     {
-        foreach ($items as $item) {
-            $p = (new Paragraph())->addText($item, $style);
-            $p->setNumbered();
-            $this->elements[] = $p;
+        $list = new ListElement('numbered');
+        foreach ($items as $text) {
+            $list->addItem((new Paragraph())->addText($text));
         }
+        $this->elements[] = $list;
         return $this;
     }
+
 
     /**
      * Convert the RichText into a DOM node (fragment).
@@ -183,14 +186,15 @@ class RichText extends OdtElement implements HasStyles
      * @param DOMDocument $dom
      * @return DOMNode
      */
-    public function toDomNode(DOMDocument $dom): DOMNode
+    public function toDomNode(DOMDocument $dom, bool $insideTextBox = false): DOMNode
     {
         $fragment = $dom->createDocumentFragment();
         foreach ($this->elements as $element) {
-            $fragment->appendChild($element->toDomNode($dom));
+            $fragment->appendChild($element->toDomNode($dom, $insideTextBox));
         }
         return $fragment;
     }
+
 
     /**
      * Get all required text styles (e.g., font styles, text properties).

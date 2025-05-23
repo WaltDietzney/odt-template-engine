@@ -22,6 +22,19 @@ class ComposerStaticInit70e521ee8aa68d72150f8c8ebef9c1e1
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'OdtTemplateEngine\\AbstractOdtTemplate' => __DIR__ . '/../..' . '/src/AbstractOdtTemplate.php',
+        'OdtTemplateEngine\\Contracts\\HasStyles' => __DIR__ . '/../..' . '/src/Contracts/HasStyles.php',
+        'OdtTemplateEngine\\Elements\\ImageElement' => __DIR__ . '/../..' . '/src/Elements/ImageElement.php',
+        'OdtTemplateEngine\\Elements\\OdtElement' => __DIR__ . '/../..' . '/src/Elements/OdtElement.php',
+        'OdtTemplateEngine\\Elements\\Paragraph' => __DIR__ . '/../..' . '/src/Elements/Paragraph.php',
+        'OdtTemplateEngine\\Elements\\RichTable' => __DIR__ . '/../..' . '/src/Elements/RichTable.php',
+        'OdtTemplateEngine\\Elements\\RichTableCell' => __DIR__ . '/../..' . '/src/Elements/RichTableCell.php',
+        'OdtTemplateEngine\\Elements\\RichText' => __DIR__ . '/../..' . '/src/Elements/RichText.php',
+        'OdtTemplateEngine\\Elements\\TableExampleGenerator' => __DIR__ . '/../..' . '/src/Elements/TableExampleGenerator.php',
+        'OdtTemplateEngine\\Import\\HtmlImporter' => __DIR__ . '/../..' . '/src/Import/HtmlImporter.php',
+        'OdtTemplateEngine\\OdtTemplate' => __DIR__ . '/../..' . '/src/OdtTemplate.php',
+        'OdtTemplateEngine\\Utils\\StyleMapper' => __DIR__ . '/../..' . '/src/Utils/StyleMapper.php',
+        'OdtTemplateEngine\\Utils\\StyleWriter' => __DIR__ . '/../..' . '/src/Utils/StyleWriter.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

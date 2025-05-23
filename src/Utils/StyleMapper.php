@@ -41,6 +41,8 @@ class StyleMapper
      */
     private static array $registeredFonts = [];
 
+    public static array $frameStyles = [];
+
 
     /**
      * Maps a set of paragraph style options to their corresponding ODF attributes.
@@ -235,6 +237,113 @@ class StyleMapper
         return $mapped;
     }
 
+
+    /**
+     * Mappt Eingabeoptionen auf ODT-kompatible Frame-Properties.
+     */
+    public static function mapFrameStyleOptions(array $options): array
+    {
+        $mapped = [];
+
+        foreach ($options as $key => $value) {
+            switch ($key) {
+                // Hintergrund
+                case 'background-color':
+                case 'fo:background-color':
+                    $mapped['fo:background-color'] = $value;
+                    if (!isset($mapped['draw:fill'])) {
+                        $mapped['draw:fill'] = 'solid';
+                    }
+                    if (!isset($mapped['draw:fill-color'])) {
+                        $mapped['draw:fill-color'] = $value;
+                    }
+                    break;
+
+                // Rahmen
+                case 'border':
+                    $mapped['fo:border'] = $value;
+                    break;
+                case 'border-top':
+                    $mapped['fo:border-top'] = $value;
+                    break;
+                case 'border-right':
+                    $mapped['fo:border-right'] = $value;
+                    break;
+                case 'border-bottom':
+                    $mapped['fo:border-bottom'] = $value;
+                    break;
+                case 'border-left':
+                    $mapped['fo:border-left'] = $value;
+                    break;
+
+                // Abrundung der Ecken (SVG rx/ry)
+                case 'corner-radius-x':
+                case 'rx':
+                    $mapped['svg:rx'] = $value;
+                    break;
+                case 'corner-radius-y':
+                case 'ry':
+                    $mapped['svg:ry'] = $value;
+                    break;
+
+                // Padding (Innenabstand)
+                case 'padding':
+                    // alle Seiten
+                    $mapped['fo:padding'] = $value;
+                    break;
+                case 'padding-top':
+                    $mapped['fo:padding-top'] = $value;
+                    break;
+                case 'padding-right':
+                    $mapped['fo:padding-right'] = $value;
+                    break;
+                case 'padding-bottom':
+                    $mapped['fo:padding-bottom'] = $value;
+                    break;
+                case 'padding-left':
+                    $mapped['fo:padding-left'] = $value;
+                    break;
+
+                // Position & Layout
+                case 'fill':
+                case 'draw:fill':
+                    $mapped['draw:fill'] = $value;
+                    break;
+                case 'fill-color':
+                case 'draw:fill-color':
+                    $mapped['draw:fill-color'] = $value;
+                    break;
+                case 'wrap-influence':
+                    $mapped['draw:wrap-influence-on-position'] = $value;
+                    break;
+                case 'allow-overlap':
+                    $mapped['loext:allow-overlap'] = $value;
+                    break;
+                case 'vertical-pos':
+                    $mapped['style:vertical-pos'] = $value;
+                    break;
+                case 'vertical-rel':
+                    $mapped['style:vertical-rel'] = $value;
+                    break;
+                case 'horizontal-pos':
+                    $mapped['style:horizontal-pos'] = $value;
+                    break;
+                case 'horizontal-rel':
+                    $mapped['style:horizontal-rel'] = $value;
+                    break;
+
+                default:
+                    // alles andere direkt übernehmen
+                    $mapped[$key] = $value;
+                    break;
+            }
+        }
+
+        return $mapped;
+    }
+
+
+
     public static function getRegisteredFontsXml(): string
     {
         $xml = '';
@@ -414,11 +523,13 @@ class StyleMapper
      * @param array $style The paragraph style array.
      * @return string The generated unique paragraph style name.
      */
-    public static function generateParagraphStyleName(array $style): string
+    public static function generateParagraphStyleName(): string
     {
-        //return 'para_' . substr(md5(json_encode($style)), 0, 6);
+        // return 'para_' . substr(md5(json_encode($style)), 0, 6);
         return 'para_' . bin2hex(random_bytes(4));
     }
+
+
 
     /**
      * Registers a new text style.
@@ -583,5 +694,31 @@ class StyleMapper
 
         return $styleArray;
     }
+
+
+
+    /**
+     * Gibt alle Frame-Styles (für draw:frame etc.) zurück.
+     */
+    public static function getFrameStyles(): array
+    {
+        return self::$frameStyles;
+    }
+
+
+    /**
+     * Registriert einen neuen Frame-Style.
+     */
+    public static function addFrameStyle(string $name, array $properties): void
+    {
+        // Doppelte Styles vermeiden
+        if (!isset(self::$frameStyles[$name])) {
+            self::$frameStyles[$name] = $properties;
+        } else {
+            // Optional: bestehende Styles zusammenführen (wenn sinnvoll)
+            self::$frameStyles[$name] = array_merge(self::$frameStyles[$name], $properties);
+        }
+    }
+
 
 }

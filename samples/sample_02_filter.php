@@ -30,6 +30,8 @@ $template->assign(['name' => 'Anna Beispiel']);
 // {{lower:email}} → converts "ANNA@EXAMPLE.COM" to "anna@example.com"
 $template->assign(['email' => 'ANNA@EXAMPLE.COM']);
 
+$template->assign(['kommentar' => "This is line 1\nAnd this is line 2."]);
+
 // {{date:geburtstag|d.m.Y}} → formats '1995-08-15' as '15.08.1995'
 $template->assign(['geburtstag' => '1995-08-15']);
 

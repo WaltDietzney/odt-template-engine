@@ -150,6 +150,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 
         $this->ensureDefaultParagraphStyles();
         $this->ensureDefaultListStyles();
+        $this->ensureDefaultListStylesForContentXml($this->domContent);
 
     }
 
@@ -224,28 +225,100 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
     protected function replaceNl2brInDom(DOMDocument $dom, array $values): void
     {
         $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('text', 'urn:oasis:names:tc:opendocument:xmlns:text:1.0'); // für <text:line-break>
         $nodes = $xpath->query('//text()');
 
         foreach ($nodes as $textNode) {
             $text = $textNode->nodeValue;
+
             if (preg_match('/{{nl2br:(\w+)}}/', $text, $match)) {
                 $key = $match[1];
                 $original = $values[$key] ?? '';
                 $parts = preg_split('/\r\n|\n|\r/', $original);
 
                 $parent = $textNode->parentNode;
+
+                // Neue Knoten erzeugen
+                $newNodes = [];
                 foreach ($parts as $i => $part) {
                     if ($i > 0) {
-                        $lineBreak = $dom->createElement('text:line-break');
-                        $parent->appendChild($lineBreak);
+                        $newNodes[] = $dom->createElement('text:line-break');
                     }
-                    $parent->appendChild($dom->createTextNode($part));
+                    if ($part !== '') {
+                        $newNodes[] = $dom->createTextNode($part);
+                    }
                 }
 
+                // Neue Knoten VOR dem Platzhalter einfügen
+                foreach ($newNodes as $newNode) {
+                    $parent->insertBefore($newNode, $textNode);
+                }
+
+                // Platzhalterknoten entfernen
                 $parent->removeChild($textNode);
             }
         }
     }
+
+    /**
+     * Replaces placeholders like {{ul:fieldname}} or {{ol:fieldname}} in an ODT DOMDocument
+     * with properly formatted bullet or numbered lists. The method scans text nodes in the document
+     * and replaces the entire <text:p> node containing the placeholder with a <text:list> structure
+     * containing the corresponding list items.
+     *
+     * Supported placeholders:
+     *   - {{ul:fieldname}} for unordered (bulleted) lists
+     *   - {{ol:fieldname}} for ordered (numbered) lists
+     *
+     * The values must be provided in the $values array under the specified 'fieldname' key
+     * and should be separated by newlines (\n or \r\n).
+     *
+     * @param DOMDocument $dom The ODT document as a DOM structure
+     * @param array<string, string> $values Associative array mapping field names to the replacement text
+     */
+    protected function replaceListsInDom(DOMDocument $dom, array $values): void
+    {
+        $xpath = new DOMXPath($dom);
+        $nodes = $xpath->query('//text()');
+
+        foreach ($nodes as $textNode) {
+            $text = $textNode->nodeValue;
+
+            if (preg_match('/{{(ul|ol):(\w+)}}/', $text, $match)) {
+                $listType = $match[1];  // ul oder ol
+                $key = $match[2];
+                $original = $values[$key] ?? '';
+
+                // Text in Zeilen aufsplitten
+                $lines = preg_split('/\r\n|\r|\n/', $original);
+
+                // Liste erstellen
+                $list = $dom->createElement('text:list');
+                $styleName = ($listType === 'ol') ? 'Numbering_20_Symbol' : 'Bullet_20_Symbol';
+                $list->setAttribute('text:style-name', $styleName);
+
+                foreach ($lines as $line) {
+                    $listItem = $dom->createElement('text:list-item');
+                    $p = $dom->createElement('text:p');
+                    $p->appendChild($dom->createTextNode($line));
+                    $listItem->appendChild($p);
+                    $list->appendChild($listItem);
+                }
+
+                // Den <text:p> Knoten komplett ersetzen, nicht nur den Textknoten!
+                $pNode = $textNode->parentNode;
+                $pParent = $pNode->parentNode;
+
+                if ($pParent && $pNode->nodeName === 'text:p') {
+                    $pParent->replaceChild($list, $pNode);
+                }
+            }
+        }
+    }
+
+
+
+
 
 
     /**
@@ -997,6 +1070,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
             'lower' => mb_strtolower($value),
             'trim' => trim($value),
             'nl2br' => $value, // von replaceNl2brInDom separat behandelt
+            'ul' => $value, // von  separat behandelt
             'date' => date($option ?: 'd.m.Y', strtotime($value)),
             'number' => number_format((float) str_replace(',', '.', $value), (int) ($option ?? 2), ',', '.'),
             default => $value,
@@ -1033,27 +1107,44 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      * @param DOMDocument $dom The ODT XML DOM to normalize (usually content.xml or styles.xml)
      */
     protected function normalizeTemplateDom(DOMDocument $dom): void
-    {
-        $xpath = new DOMXPath($dom);
-        $paragraphs = $xpath->query('//text:p');
+{
+    $xpath = new \DOMXPath($dom);
 
-        foreach ($paragraphs as $p) {
-            $merged = '';
-            foreach ($p->childNodes as $node) {
-                if ($node->nodeType === XML_TEXT_NODE || $node->nodeName === 'text:span') {
-                    $merged .= $node->textContent;
-                }
-            }
+    // Alle Textabsätze finden (normale Absätze + in Textboxen)
+    $paragraphs = $xpath->query('//text:p');
 
-            if ($merged !== '') {
-                // alten Inhalt löschen und durch neuen Text ersetzen
-                while ($p->firstChild) {
-                    $p->removeChild($p->firstChild);
+    foreach ($paragraphs as $p) {
+        if (!($p instanceof \DOMElement)) {
+            continue;
+        }
+
+        $buffer = '';
+        $nodesToRemove = [];
+
+        foreach (iterator_to_array($p->childNodes) as $child) {
+            if ($child->nodeType === XML_TEXT_NODE || $child->nodeName === 'text:span') {
+                $buffer .= $child->textContent;
+                $nodesToRemove[] = $child;
+
+                // Wenn der Platzhalter abgeschlossen ist (genug geschlossene Klammern), dann zusammenfügen
+                if (substr_count($buffer, '{{') > 0 && substr_count($buffer, '{{') === substr_count($buffer, '}}')) {
+                    // Alte Nodes entfernen
+                    foreach ($nodesToRemove as $n) {
+                        $p->removeChild($n);
+                    }
+
+                    // Neuen Text-Node einfügen
+                    $p->appendChild($dom->createTextNode($buffer));
+
+                    // Reset
+                    $buffer = '';
+                    $nodesToRemove = [];
                 }
-                $p->appendChild($dom->createTextNode($merged));
             }
         }
     }
+}
+
 
 
     /**
@@ -1196,14 +1287,14 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 
 
     /**
-     * Processes all assigned values and repeaters into the DOM.
+     * Applies all assigned values, repeaters, and conditional logic into the DOM structure.
      *
-     * @return void
-     */
-    /**
-     * Processes all assigned values and repeaters into the DOM.
-     *
-     * This method ensures that broken template variables are repaired before applying values and repeats.
+     * - Repairs broken placeholders.
+     * - Applies nl2br (newline-to-linebreak) transformations.
+     * - Replaces normal {{key}} placeholders.
+     * - Executes repeating blocks ({{#foreach}} ... {{#endforeach}}).
+     * - Evaluates conditional blocks ({{#if}}, {{#ifnot}}, {{#else}}, {{#endif}}).
+     * - Ensures full text and format preservation (tabs, styling, spans, etc.).
      *
      * @return void
      */
@@ -1212,22 +1303,49 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         $this->fixBrokenVariables($this->domContent);
         $this->fixBrokenVariables($this->domStyles);
 
+        // Sonderbehandlungen zuerst
+        $this->replaceNl2brInDom($this->domContent, $this->valueStack);
+        $this->replaceNl2brInDom($this->domStyles, $this->valueStack);
+
+        $this->replaceListsInDom($this->domContent, $this->valueStack);
+        $this->replaceListsInDom($this->domStyles, $this->valueStack);
+
+        // Normale Werte ersetzen
         $this->setValuesInDom($this->domContent, $this->valueStack);
         $this->setValuesInDom($this->domStyles, $this->valueStack);
+
+        // Textboxen separat behandeln
+        $this->renderTextBoxes($this->domContent, $this->valueStack);
+        $this->renderTextBoxes($this->domStyles, $this->valueStack);
 
         foreach ($this->repeatStack as $key => $rows) {
             $this->applyRepeatingInDom($this->domContent, $key, $rows);
             $this->applyRepeatingInDom($this->domStyles, $key, $rows);
         }
 
-        // Sonderbehandlung Zeilenumbrüche
-        $this->replaceNl2brInDom($this->domContent, $this->valueStack);
-        $this->replaceNl2brInDom($this->domStyles, $this->valueStack);
-
-        // Logik (if/else/elseif)
         $this->applyConditionalsInDom($this->domContent, $this->valueStack);
         $this->applyConditionalsInDom($this->domStyles, $this->valueStack);
     }
+
+
+    protected function renderTextBoxes(DOMDocument $dom, array $valueStack): void
+    {
+        $xpath = new \DOMXPath($dom);
+        $xpath->registerNamespace('draw', 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0');
+        $xpath->registerNamespace('text', 'urn:oasis:names:tc:opendocument:xmlns:text:1.0');
+
+        $textBoxes = $xpath->query('//draw:text-box//text:p');
+
+        foreach ($textBoxes as $pNode) {
+            foreach ($valueStack as $key => $value) {
+                if (strpos($pNode->textContent, '{{' . $key . '}}') !== false) {
+                    $pNode->nodeValue = str_replace('{{' . $key . '}}', $value, $pNode->nodeValue);
+                }
+            }
+        }
+    }
+
+
 
 
     /**
@@ -1254,9 +1372,142 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
     }
 
     /**
-     * Processes all assigned values and repeaters into the DOM.
+     * Processes conditionals (if/ifnot/else/endif) in the template based on text nodes.
      *
-     * @return void
+     * @param DOMDocument $dom The XML DOM to modify
+     * @param array<string, mixed> $values Key-value pairs used for evaluating conditions
      */
+    protected function applyConditionalsInDomTextBased(DOMDocument $dom, array $values): void
+    {
+        $xpath = new \DOMXPath($dom);
+        $xpath->registerNamespace('text', 'urn:oasis:names:tc:opendocument:xmlns:text:1.0');
+
+        // Alle Text-Nodes durchlaufen
+        $textNodes = iterator_to_array($xpath->query('//text()'));
+        $insideCondition = false;
+        $keepBlock = false;
+
+        foreach ($textNodes as $textNode) {
+            $text = $textNode->nodeValue;
+
+            if (preg_match('/{{#(if|ifnot):([^}]+)}}/', $text, $match)) {
+                $insideCondition = true;
+                $conditionType = $match[1];
+                $conditionKey = trim($match[2]);
+                $keepBlock = $this->evaluateCondition($conditionKey, $values);
+                if ($conditionType === 'ifnot') {
+                    $keepBlock = !$keepBlock;
+                }
+                // Marker löschen
+                $textNode->nodeValue = str_replace($match[0], '', $text);
+                continue;
+            }
+
+            if (strpos($text, '{{#else}}') !== false) {
+                $keepBlock = !$keepBlock;
+                $textNode->nodeValue = str_replace('{{#else}}', '', $text);
+                continue;
+            }
+
+            if (strpos($text, '{{#endif}}') !== false) {
+                $insideCondition = false;
+                $keepBlock = true;
+                $textNode->nodeValue = str_replace('{{#endif}}', '', $text);
+                continue;
+            }
+
+            if ($insideCondition && !$keepBlock) {
+                $textNode->parentNode->removeChild($textNode);
+            }
+        }
+    }
+
+    /**
+     * Processes foreach loops in the template based on text nodes.
+     *
+     * @param DOMDocument $dom The XML DOM to modify
+     * @param string $key The key for the foreach block
+     * @param array<int, array<string, mixed>> $rows The data rows to repeat
+     */
+    protected function applyRepeatingInDomTextBased(DOMDocument $dom, string $key, array $rows): void
+    {
+        $xpath = new \DOMXPath($dom);
+        $xpath->registerNamespace('text', 'urn:oasis:names:tc:opendocument:xmlns:text:1.0');
+
+        $textNodes = iterator_to_array($xpath->query('//text()'));
+        $collecting = false;
+        $templateNodes = [];
+        $parent = null;
+        $afterNode = null;
+
+        foreach ($textNodes as $textNode) {
+            $text = $textNode->nodeValue;
+
+            if (strpos($text, '{{#foreach:' . $key . '}}') !== false) {
+                $collecting = true;
+                $parent = $textNode->parentNode;
+                $afterNode = $textNode->nextSibling;
+                $textNode->parentNode->removeChild($textNode);
+                continue;
+            }
+
+            if (strpos($text, '{{#endforeach}}') !== false) {
+                $collecting = false;
+                $textNode->parentNode->removeChild($textNode);
+
+                foreach ($rows as $rowData) {
+                    foreach ($templateNodes as $templateNode) {
+                        $clone = $templateNode->cloneNode(true);
+                        $this->replacePlaceholdersInNode($clone, $rowData);
+                        $parent->insertBefore($clone, $afterNode);
+                    }
+                }
+
+                $templateNodes = [];
+                continue;
+            }
+
+            if ($collecting) {
+                $templateNodes[] = $textNode;
+            }
+        }
+    }
+    protected function splitConditionalsInTextNodes(DOMDocument $dom): void
+    {
+        $xpath = new \DOMXPath($dom);
+
+        foreach ($xpath->query('//text()') as $textNode) {
+            $text = $textNode->nodeValue;
+
+            if (preg_match_all('/({{#(if|ifnot|elseif|else|endif):?.*?}})/', $text, $matches, PREG_OFFSET_CAPTURE)) {
+                $parent = $textNode->parentNode;
+                $ref = $textNode;
+
+                $parts = [];
+                $lastPos = 0;
+
+                foreach ($matches[0] as [$matchText, $pos]) {
+                    if ($pos > $lastPos) {
+                        $parts[] = substr($text, $lastPos, $pos - $lastPos);
+                    }
+                    $parts[] = $matchText;
+                    $lastPos = $pos + strlen($matchText);
+                }
+                if ($lastPos < strlen($text)) {
+                    $parts[] = substr($text, $lastPos);
+                }
+
+                foreach ($parts as $part) {
+                    if (trim($part) !== '') {
+                        $newTextNode = $dom->createTextNode($part);
+                        $parent->insertBefore($newTextNode, $ref);
+                    }
+                }
+
+                $parent->removeChild($ref);
+            }
+        }
+    }
+
 
 }

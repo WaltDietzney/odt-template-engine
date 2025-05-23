@@ -169,6 +169,6 @@ $rich
 $template->setElement('table1', $rich);
 
 // ➡️ Save the output document
-$template->save('samples/output/output_13_settingCells.odt');
+$template->save('output/output_13_settingCells.odt');
 
-echo "✔️ Successfully created test ODT: samples/output/output_13_settingCells.odt\n";
+echo "✔️ Successfully created test ODT: output/output_13_settingCells.odt\n";

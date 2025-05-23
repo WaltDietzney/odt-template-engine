@@ -60,6 +60,17 @@ abstract class AbstractOdtTemplate
      */
     protected DOMDocument $domStyles;
 
+    /**
+     * Summary of log
+     * @var array
+     */
+    protected array $log = [];
+    /**
+     * Summary of debugMode
+     * @var bool
+     */
+    protected bool $debugMode = false;
+
 
     /**
      * Registers the required XML namespaces for the DOMXPath object.
@@ -335,6 +346,60 @@ abstract class AbstractOdtTemplate
         }
     }
 
+    public function ensureDefaultListStylesForContentXml(DOMDocument $contentDom): void
+    {
+        $xpath = new DOMXPath($contentDom);
+        $xpath->registerNamespace("office", "urn:oasis:names:tc:opendocument:xmlns:office:1.0");
+        $xpath->registerNamespace("text", "urn:oasis:names:tc:opendocument:xmlns:text:1.0");
+        $xpath->registerNamespace("style", "urn:oasis:names:tc:opendocument:xmlns:style:1.0");
+        $xpath->registerNamespace("loext", "urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0");
+        $xpath->registerNamespace("fo", "urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0");
+
+        // Hole oder erzeuge <office:automatic-styles>
+        $automaticStyles = $xpath->query('//office:automatic-styles')->item(0);
+        if (!$automaticStyles) {
+            $office = $xpath->query('//office:document-content')->item(0);
+            if (!$office) {
+                throw new RuntimeException('No <office:document-content> found.');
+            }
+            $automaticStyles = $contentDom->createElement('office:automatic-styles');
+            $office->insertBefore($automaticStyles, $office->firstChild);
+        }
+
+        // Prüfe, ob der Stil bereits existiert
+        foreach ($automaticStyles->getElementsByTagName('list-style') as $style) {
+            if ($style->getAttribute('style:name') === 'Numbering_20_Symbol') {
+                return; // Bereits vorhanden
+            }
+        }
+
+        // Baue neuen Stil
+        $listStyle = $contentDom->createElement('text:list-style');
+        $listStyle->setAttribute('style:name', 'Numbering_20_Symbol');
+
+        $level = $contentDom->createElement('text:list-level-style-number');
+        $level->setAttribute('text:level', '1');
+        $level->setAttribute('style:num-format', '1');
+        $level->setAttribute('style:num-suffix', '.');
+        $level->setAttribute('loext:num-list-format', '%1%.');
+
+        $props = $contentDom->createElement('style:list-level-properties');
+        $props->setAttribute('text:list-level-position-and-space-mode', 'label-alignment');
+
+        $align = $contentDom->createElement('style:list-level-label-alignment');
+        $align->setAttribute('text:label-followed-by', 'listtab');
+        $align->setAttribute('text:list-tab-stop-position', '1.27cm');
+        $align->setAttribute('fo:text-indent', '-0.635cm');
+        $align->setAttribute('fo:margin-left', '1.27cm');
+
+        $props->appendChild($align);
+        $level->appendChild($props);
+        $listStyle->appendChild($level);
+        $automaticStyles->appendChild($listStyle);
+    }
+
+
+
 
     /**
      * Ensures that the default paragraph styles (Heading 1 to Heading 6) exist in the document's style section.
@@ -493,12 +558,15 @@ abstract class AbstractOdtTemplate
             }
         }
 
+        $this->fixBrokenVariables($this->domContent);
         // 6. 🪄 Replace placeholder with DOM node in content.xml
         $this->replacePlaceholderWithDom(
             $this->domContent,
             $placeholder,
             $element->toDomNode($this->domContent)
         );
+
+        $this->fixBrokenVariables($this->domStyles);
         // 6. 🪄 Replace placeholder with DOM node in styles.xml
         $this->replacePlaceholderWithDom(
             $this->domStyles,
@@ -521,15 +589,71 @@ abstract class AbstractOdtTemplate
     protected function replacePlaceholderWithDom(DOMDocument $dom, string $key, DOMNode $replacement): void
     {
         $xpath = new DOMXPath($dom);
-        $query = "//text:p[contains(text(), '{{{$key}}}')]";
 
-        foreach ($xpath->query($query) as $pNode) {
-            $parent = $pNode->parentNode;
-            if ($parent) {
-                $parent->replaceChild($replacement, $pNode);
+        foreach ($xpath->query('//text()') as $textNode) {
+            if (strpos($textNode->nodeValue, '{{' . $key . '}}') !== false) {
+                $parent = $textNode->parentNode;
+                if (!$parent) {
+                    continue;
+                }
+
+                // Entscheide: Einfacher Text oder komplexe Struktur?
+                if (in_array($replacement->nodeName, ['text:span', 'text:s', 'text:line-break'])) {
+                    // Inline-Ersetzung innerhalb von Text
+                    $parts = explode('{{' . $key . '}}', $textNode->nodeValue);
+                    $refNode = $textNode;
+
+                    foreach ($parts as $index => $part) {
+                        if ($index > 0) {
+                            $imported = $dom->importNode($replacement, true);
+                            $parent->insertBefore($imported, $refNode);
+                        }
+
+                        if ($part !== '') {
+                            $newText = $dom->createTextNode($part);
+                            $parent->insertBefore($newText, $refNode);
+                        }
+                    }
+
+                    $parent->removeChild($refNode);
+                } else {
+                    // Komplexer Node (z.B. text:p, draw:frame, rich structures)
+                    // Aber ACHTUNG: Befindet sich der Text innerhalb einer Textbox?
+                    $pNode = $textNode;
+                    while ($pNode && $pNode->nodeName !== 'text:p') {
+                        $pNode = $pNode->parentNode;
+                    }
+
+                    if ($pNode) {
+                        // Ist der Absatz in einer draw:text-box?
+                        $insideTextBox = false;
+                        $ancestor = $pNode->parentNode;
+                        while ($ancestor) {
+                            if ($ancestor->nodeName === 'draw:text-box') {
+                                $insideTextBox = true;
+                                break;
+                            }
+                            $ancestor = $ancestor->parentNode;
+                        }
+
+                        $imported = $dom->importNode($replacement, true);
+
+                        if ($insideTextBox) {
+                            // ❗ Nur Inhalt ersetzen, nicht ganze Textbox kaputt machen
+                            $pNode->parentNode->insertBefore($imported, $pNode);
+                            $pNode->parentNode->removeChild($pNode);
+                        } else {
+                            // ❗ Normale Ersetzung
+                            $pNode->parentNode->replaceChild($imported, $pNode);
+                        }
+                    }
+                }
+
+                break; // Nur den ersten Match ersetzen
             }
         }
     }
+
 
 
     /**
@@ -775,6 +899,35 @@ abstract class AbstractOdtTemplate
                 $this->fixBrokenVariables($child);
             }
         }
+    }
+    /**
+     * Summary of enableDebugMode
+     * @return void
+     */
+    public function enableDebugMode(): void
+    {
+        $this->debugMode = true;
+    }
+
+    /**
+     * Summary of log
+     * @param string $message
+     * @return void
+     */
+    protected function log(string $message): void
+    {
+        if ($this->debugMode) {
+            $this->log[] = $message;
+        }
+    }
+
+    /**
+     * Summary of getDebugLog
+     * @return array
+     */
+    public function getDebugLog(): array
+    {
+        return $this->log;
     }
 
 

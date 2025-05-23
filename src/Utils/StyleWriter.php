@@ -19,65 +19,88 @@ class StyleWriter
      * Writes all necessary styles and font declarations.
      */
     public static function writeAllStyles(DOMDocument $domStyles): void
-{
-    $xpath = new DOMXPath($domStyles);
-    $xpath->registerNamespace('office', 'urn:oasis:names:tc:opendocument:xmlns:office:1.0');
-    $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
+    {
+        $xpath = new DOMXPath($domStyles);
+        $xpath->registerNamespace('office', 'urn:oasis:names:tc:opendocument:xmlns:office:1.0');
+        $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
 
-    // --- 1) Ensure <office:styles> exists ---
-    $officeStyles = $xpath->query('//office:styles')->item(0)
-                 ?? $domStyles->createElementNS('urn:oasis:names:tc:opendocument:xmlns:office:1.0','office:styles');
-    if (!$officeStyles->parentNode) {
-        $domStyles->documentElement->appendChild($officeStyles);
-    }
-
-    // --- 2) Write text-styles and collect fonts ---
-    $fontsUsed = [];
-    foreach (StyleMapper::getTextStyles() as $name => $props) {
-        if (self::styleAlreadyExists($domStyles, $name, 'text')) {
-            continue;
+        $officeStyles = $xpath->query('//office:styles')->item(0)
+            ?? $domStyles->createElementNS('urn:oasis:names:tc:opendocument:xmlns:office:1.0', 'office:styles');
+        if (!$officeStyles->parentNode) {
+            $domStyles->documentElement->appendChild($officeStyles);
         }
-        $style = $domStyles->createElement('style:style');
-        $style->setAttribute('style:name', $name);
-        $style->setAttribute('style:family', 'text');
-        $style->setAttribute('style:parent-style-name', 'Standard');
 
-        $textProps = $domStyles->createElement('style:text-properties');
-        foreach ($props as $key => $value) {
-            $textProps->setAttribute($key, $value);
-            if ($key === 'style:font-name') {
-                $textProps->setAttribute('fo:font-family', $value);
-                $fontsUsed[$value] = true;
+        // === 1) TEXT Styles ===
+        foreach (StyleMapper::getTextStyles() as $name => $props) {
+            if (self::styleAlreadyExists($domStyles, $name, 'text')) {
+                continue;
             }
+            $style = $domStyles->createElement('style:style');
+            $style->setAttribute('style:name', $name);
+            $style->setAttribute('style:family', 'text');
+            $style->setAttribute('style:parent-style-name', 'Standard');
+
+            $textProps = $domStyles->createElement('style:text-properties');
+            foreach ($props as $key => $value) {
+                $textProps->setAttribute($key, $value);
+                if ($key === 'style:font-name') {
+                    $textProps->setAttribute('fo:font-family', $value);
+                    self::$fontsUsed[$value] = true;
+                }
+            }
+            $style->appendChild($textProps);
+            $officeStyles->appendChild($style);
         }
-        $style->appendChild($textProps);
-        $officeStyles->appendChild($style);
+
+        // === 2) GRAPHIC Styles (neu) ===
+// Nach den Text-Styles ➔ Frame-Styles schreiben
+        foreach (StyleMapper::getFrameStyles() as $name => $props) {
+            if (self::styleAlreadyExists($domStyles, $name, 'graphic')) {
+                continue;
+            }
+
+            $style = $domStyles->createElement('style:style');
+            $style->setAttribute('style:name', $name);
+            $style->setAttribute('style:family', 'graphic');
+            $style->setAttribute('style:parent-style-name', 'Frame'); // 🔥 Wichtig: parent "Frame"
+
+            $graphicProps = $domStyles->createElement('style:graphic-properties');
+
+            // 🛠 Automatische Ergänzung, falls nur fo:background-color gesetzt wurde
+            if (
+                isset($props['fo:background-color']) &&
+                !isset($props['draw:fill']) &&
+                !isset($props['draw:fill-color'])
+            ) {
+                $props['draw:fill'] = 'solid';
+                $props['draw:fill-color'] = $props['fo:background-color'];
+            }
+
+            foreach ($props as $key => $value) {
+                $graphicProps->setAttribute($key, $value);
+            }
+
+            $style->appendChild($graphicProps);
+            $officeStyles->appendChild($style);
+        }
+
+
+        // === 3) Fonts (wie bisher) ===
+        $decls = $domStyles->createElement('office:font-face-decls');
+        foreach (array_keys(self::$fontsUsed) as $fontName) {
+            $fontName = trim($fontName, "'\" ");
+            if ($fontName === '' || $fontName === '0') {
+                continue;
+            }
+            $fontFace = $domStyles->createElement('style:font-face');
+            $fontFace->setAttribute('style:name', $fontName);
+            $fontFace->setAttribute('svg:font-family', $fontName);
+            $fontFace->setAttribute('style:font-pitch', 'variable');
+            $decls->appendChild($fontFace);
+        }
+        $officeStyles->appendChild($decls);
     }
 
-    // --- 3) Write font-face-decls under office:styles ---
-    $decls = $domStyles->createElement('office:font-face-decls');
-    foreach (array_keys($fontsUsed) as $fontName) {
-        $fontName = trim($fontName, "'\" ");
-        if ($fontName === '' || $fontName === '0') {
-            continue;
-        }
-        $fontFace = $domStyles->createElement('style:font-face');
-        $fontFace->setAttribute('style:name', $fontName);
-        $fontFace->setAttribute('svg:font-family', $fontName);
-        $fontFace->setAttribute('style:font-pitch', 'variable');
-
-        $lower = strtolower($fontName);
-        if (str_contains($lower, 'sans')||str_contains($lower,'arial')||str_contains($lower,'ubuntu')) {
-            $fontFace->setAttribute('style:font-family-generic','swiss');
-        } elseif (str_contains($lower,'serif')||str_contains($lower,'times')) {
-            $fontFace->setAttribute('style:font-family-generic','roman');
-        } else {
-            $fontFace->setAttribute('style:font-family-generic','system');
-        }
-        $decls->appendChild($fontFace);
-    }
-    $officeStyles->appendChild($decls);
-}
 
 
     /**
@@ -174,4 +197,22 @@ class StyleWriter
             $dom->documentElement->appendChild($fontFaceDecls);
         }
     }
+
+    /**
+     * Prüft, ob ein Stil mit dem gegebenen Namen und Stilfamilie bereits existiert.
+     *
+     * @param DOMDocument $domStyles
+     * @param string $styleName
+     * @param string $family 'text', 'paragraph', 'graphic' usw.
+     * @return bool
+     */
+    private static function styleAlreadyExists(DOMDocument $domStyles, string $styleName, string $family): bool
+    {
+        $xpath = new \DOMXPath($domStyles);
+        $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
+
+        $query = sprintf('//style:style[@style:name="%s" and @style:family="%s"]', $styleName, $family);
+        return $xpath->query($query)->length > 0;
+    }
+
 }

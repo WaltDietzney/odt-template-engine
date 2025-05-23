@@ -19,7 +19,6 @@ class TableExampleGenerator
             default => '#cccccc',
         };
 
-
         $paragraph->addText($status, [
             'background-color' => $color,
             'font-weight' => 'bold',
