@@ -44,7 +44,7 @@ $html = <<<HTML
   <li>Introduction
     <ul>
       <li><strong>Goals</strong> of the project</li>
-      <li>Initial <em>approach</em> and planning</li>
+      <li>Initial <em>approach</em> and <u>planning</u></li>
     </ul>
   </li>
   <li>Analysis

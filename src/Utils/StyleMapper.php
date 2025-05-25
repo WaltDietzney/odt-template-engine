@@ -688,7 +688,13 @@ class StyleMapper
         foreach ($rules as $rule) {
             if (str_contains($rule, ':')) {
                 [$key, $value] = explode(':', $rule, 2);
-                $styleArray['fo:' . trim($key)] = trim($value);
+                if (trim($key) == 'text-decoration') {
+                    $styleArray['style:text-underline-style'] = 'solid';
+                    $styleArray['style:text-underline-type'] = 'single';
+                    $styleArray['style:text-underline-width'] = 'auto';
+                } else {
+                    $styleArray['fo:' . trim($key)] = trim($value);
+                }
             }
         }
 

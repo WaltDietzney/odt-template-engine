@@ -111,7 +111,8 @@ class HtmlImporter
                 break;
 
             case 'u':
-                $style['underline'] = true;
+                $option['underline'] = true;
+                $style = StyleMapper::mapTextStyleOptions($option);
                 foreach ($node->childNodes as $child) {
                     self::processStyledNode($child, $rich, $currentParagraph, $style);
                 }
@@ -140,9 +141,6 @@ class HtmlImporter
                     }
                 }
                 break;
-
-
-
 
 
             case 'a':
