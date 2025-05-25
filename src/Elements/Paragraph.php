@@ -101,6 +101,7 @@ class Paragraph extends OdtElement implements HasStyles
         return $this;
     }
 
+
     /**
      * Adds a line break.
      *
@@ -203,7 +204,7 @@ class Paragraph extends OdtElement implements HasStyles
      * @param array $style Optional link text styling.
      * @return $this
      */
-    public function aderlink(string $text, string $href, array $style = []): self
+    public function addPHyperLink(string $text, string $href, array $style = []): self
     {
         $this->parts[] = [
             'type' => 'hyperlink',
@@ -453,13 +454,23 @@ class Paragraph extends OdtElement implements HasStyles
             switch ($part['type']) {
                 case 'text':
                     $node = $dom->createTextNode($part['content']);
-                    if (!empty($part['style'])) {
-                        $styleName = StyleMapper::generateStyleName($part['style']);
+
+                    if (!empty($part['styleName'])) {
+                        $span = $dom->createElement('text:span');
+                        $span->setAttribute('text:style-name', $part['styleName']);
+                        $span->appendChild($node);
+                        $p->appendChild($span);
+
+                    } elseif (!empty($part['style'])) {
+                        // 🛟 Fallback: styleName nachträglich generieren
+                        $styleName = StyleMapper::registerTextStyle($part['style']);
                         $span = $dom->createElement('text:span');
                         $span->setAttribute('text:style-name', $styleName);
                         $span->appendChild($node);
                         $p->appendChild($span);
+
                     } else {
+                        // kein Stil – Text direkt einfügen
                         $p->appendChild($node);
                     }
                     break;

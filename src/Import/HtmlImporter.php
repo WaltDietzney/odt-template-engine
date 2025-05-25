@@ -10,6 +10,8 @@ use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Elements\RichText;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\ImageElement;
+use OdtTemplateEngine\Elements\ListElement;
+use OdtTemplateEngine\Utils\StyleMapper;
 use OdtTemplateEngine\OdtTemplate;
 
 /**
@@ -59,7 +61,6 @@ class HtmlImporter
         // 🧱 Textknoten verarbeiten
         if ($node instanceof DOMText) {
             $text = $node->wholeText;
-
             if (trim($text) !== '') {
                 if (!$currentParagraph) {
                     $currentParagraph = new Paragraph();
@@ -117,33 +118,48 @@ class HtmlImporter
                 break;
 
             case 'span':
+                // 1. CSS lesen
+                $rawStyle = $node->getAttribute('style');
+
+                // 2. CSS parsen → ['fo:color' => '#FF0000', ...]
+                $odtStyle = StyleMapper::parseInlineStyle($rawStyle);
+
+                // 3. Stil registrieren (für automatic-styles)
+                StyleMapper::registerTextStyle($odtStyle);
+
+                // 4. Verarbeite Kinder mit Style-Array
                 foreach ($node->childNodes as $child) {
-                    self::processStyledNode($child, $rich, $currentParagraph, $style);
+                    if ($child instanceof DOMText) {
+                        if (!$currentParagraph) {
+                            $currentParagraph = new Paragraph();
+                            $rich->addParagraph($currentParagraph);
+                        }
+                        $currentParagraph->addText($child->wholeText, $odtStyle); // ✅ Style als Array übergeben
+                    } else {
+                        self::processStyledNode($child, $rich, $currentParagraph, $odtStyle);
+                    }
                 }
                 break;
+
+
+
+
 
             case 'a':
                 $href = $node->getAttribute('href');
                 $label = trim($node->textContent);
-                $style = self::parseStyleAttribute($node);
-
-                // Setze Standardwerte, falls nicht überschrieben
                 if (empty($style['color'])) {
                     $style['color'] = '#0000ff';
                 }
                 if (!isset($style['underline'])) {
                     $style['underline'] = true;
                 }
-
                 if (!$currentParagraph) {
                     $currentParagraph = new Paragraph();
                     $rich->addParagraph($currentParagraph);
                 }
-
-                // ✅ Hyperlink einfügen
                 $currentParagraph->addHyperlink($label, $href, $style);
                 break;
-
 
             case 'h1':
             case 'h2':
@@ -151,9 +167,8 @@ class HtmlImporter
             case 'h4':
             case 'h5':
             case 'h6':
-                $level = (int) substr($tag, 1); // aus "h2" → 2
-                $styleName = "Heading $level";  // z. B. "Heading 2"
-
+                $level = (int) substr($tag, 1);
+                $styleName = "Heading $level";
                 $heading = new Paragraph();
                 $heading->setParagraphStyle($styleName);
                 $heading->addText(trim($node->textContent));
@@ -161,56 +176,38 @@ class HtmlImporter
                 break;
 
             case 'ul':
-                foreach ($node->childNodes as $liNode) {
-                    if (strtolower($liNode->nodeName) === 'li') {
-                        $para = new Paragraph();
-                        $para->setBulleted();
-                        $rich->addParagraph($para);
-
-                        foreach ($liNode->childNodes as $child) {
-                            self::processNode($child, $rich, $para);
-                        }
-                    }
-                }
-                break;
-
             case 'ol':
+                $isOrdered = ($tag === 'ol');
+                $listType = $isOrdered ? 'numbered' : 'bullet';
+                $list = new ListElement($listType);
+
                 foreach ($node->childNodes as $liNode) {
                     if (strtolower($liNode->nodeName) === 'li') {
                         $para = new Paragraph();
-                        $para->setNumbered();
-                        $rich->addParagraph($para);
+                        $sublist = null;
 
                         foreach ($liNode->childNodes as $child) {
-                            self::processNode($child, $rich, $para);
+                            if ($child->nodeName === 'ul' || $child->nodeName === 'ol') {
+                                // rekursiv verschachtelte Liste extrahieren
+                                ob_start(); // optional zur Fehlervermeidung
+                                self::processNode($child, $rich, null);
+                                ob_end_clean(); // nur für Sicherheit, wenn Liste oben hinzugefügt wird
+                            } else {
+                                self::processNode($child, $rich, $para);
+                            }
+                        }
+
+                        $list->addItem($para);
+
+                        // Jetzt prüfen, ob Liste direktes Kind war → wurde oben in $rich eingefügt, also "ausschneiden" und wieder zuordnen
+                        $lastElement = $rich->popLastElementIfList();
+                        if ($lastElement instanceof ListElement) {
+                            $list->addItem($lastElement); // nested
                         }
                     }
                 }
-                break;
 
-
-            case 'img':
-                $src = $node->getAttribute('src');
-                $path = realpath($src);
-                if (!$path || !file_exists($path)) {
-                    break;
-                }
-
-                $width = $node->getAttribute('width') ?: '5cm';
-                $height = $node->getAttribute('height') ?: '3cm';
-
-                $styleOptions = self::parseStyleAttribute($node);
-
-                $imageOptions = array_merge([
-                    'width' => $width,
-                    'height' => $height,
-                ], $styleOptions);
-
-                $image = new ImageElement($path, $imageOptions);
-
-                $para = new Paragraph();
-                $para->addElement($image);
-                $rich->addParagraph($para);
+                $rich->addElement($list);
                 break;
 
             case 'blockquote':
@@ -220,12 +217,33 @@ class HtmlImporter
                 $rich->addParagraph($para);
                 break;
 
+            case 'img':
+                $src = $node->getAttribute('src');
+                $path = realpath($src);
+                if (!$path || !file_exists($path))
+                    break;
+
+                $width = $node->getAttribute('width') ?: '5cm';
+                $height = $node->getAttribute('height') ?: '3cm';
+
+                $imageOptions = array_merge([
+                    'width' => $width,
+                    'height' => $height,
+                ], self::parseStyleAttribute($node));
+
+                $image = new ImageElement($path, $imageOptions);
+                $para = new Paragraph();
+                $para->addElement($image);
+                $rich->addParagraph($para);
+                break;
+
             default:
                 foreach ($node->childNodes as $child) {
                     self::processNode($child, $rich, $currentParagraph);
                 }
         }
     }
+
 
     /**
      * Verarbeitet einen stilisierten Knoten und fügt den Text dem RichText mit den angegebenen Stil-Optionen hinzu.
@@ -347,4 +365,22 @@ class HtmlImporter
 
         return $options;
     }
+
+    protected static function parseInlineCss(DOMElement $node): array
+    {
+        $styleAttr = $node->getAttribute('style');
+        $styles = [];
+
+        foreach (explode(';', $styleAttr) as $item) {
+            if (strpos($item, ':') !== false) {
+                [$key, $value] = explode(':', $item, 2);
+                $styles[trim(strtolower($key))] = trim($value);
+            }
+        }
+
+        return $styles;
+    }
+
+
+
 }

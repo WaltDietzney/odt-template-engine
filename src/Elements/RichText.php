@@ -190,7 +190,7 @@ class RichText extends OdtElement implements HasStyles
     {
         $fragment = $dom->createDocumentFragment();
         foreach ($this->elements as $element) {
-            $fragment->appendChild($element->toDomNode($dom, $insideTextBox));
+            $fragment->appendChild($element->toDomNode($dom));
         }
         return $fragment;
     }
@@ -258,6 +258,13 @@ class RichText extends OdtElement implements HasStyles
         return $styles;
     }
 
+    public function addElement($element): self
+    {
+        $this->elements[] = $element;
+        return $this;
+    }
+
+
     /**
      * Collect all embedded images.
      *
@@ -295,4 +302,20 @@ class RichText extends OdtElement implements HasStyles
         }
         return $this->elements[array_key_last($this->elements)];
     }
+
+    public function popLastElementIfList(): ?ListElement
+    {
+        if (empty($this->elements)) {
+            return null;
+        }
+
+        $last = end($this->elements);
+        if ($last instanceof ListElement) {
+            array_pop($this->elements);
+            return $last;
+        }
+
+        return null;
+    }
+
 }
