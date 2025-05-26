@@ -14,6 +14,8 @@ class StyleMapper
      */
     protected static array $registeredTextStyles = [];
 
+    private static array $textStyles = [];
+
     /**
      * @var array Holds registered paragraph styles.
      */
@@ -199,43 +201,70 @@ class StyleMapper
     {
         $mapped = [];
 
+        // Fett
         if (!empty($options['bold'])) {
             $mapped['fo:font-weight'] = 'bold';
         }
 
+        // Kursiv
         if (!empty($options['italic'])) {
             $mapped['fo:font-style'] = 'italic';
         }
 
+        // Unterstrichen
         if (!empty($options['underline'])) {
             $mapped['style:text-underline-style'] = 'solid';
             $mapped['style:text-underline-type'] = 'single';
             $mapped['style:text-underline-width'] = 'auto';
         }
 
+        // Farbe (Text)
         if (!empty($options['color'])) {
             $mapped['fo:color'] = $options['color'];
         }
 
+        // Hintergrundfarbe
         if (!empty($options['background-color'])) {
             $mapped['fo:background-color'] = $options['background-color'];
         }
 
+        // Schriftgröße
         if (!empty($options['font-size'])) {
             $mapped['fo:font-size'] = $options['font-size'];
         }
 
+        // Schriftart
         if (!empty($options['font-family'])) {
-            $fontName = $options['font-family'];
-            $mapped['style:font-name'] = $fontName;
-
-            // Register the font for later output
-            self::$registeredFonts[$fontName] = true;
+            $mapped['style:font-name'] = $options['font-family'];
+            $mapped['fo:font-family'] = $options['font-family'];
+            self::$registeredFonts[$options['font-family']] = true;
         }
 
+        // Durchgestrichen (<del>, <s>)
+        if (!empty($options['text-line-through']) || (!empty($options['text-decoration']) && $options['text-decoration'] === 'line-through')) {
+            $mapped['style:text-line-through-style'] = 'solid';
+        }
+
+        // Hoch- oder tiefgestellt
+        if (!empty($options['style:text-position'])) {
+            $mapped['style:text-position'] = $options['style:text-position']; // 'sub' oder 'super'
+        }
+
+        // Klein (z. B. <small>) – optional, 80 %
+        if (!empty($options['font-variant']) && $options['font-variant'] === 'small-caps') {
+            $mapped['fo:font-variant'] = 'small-caps';
+        }
+
+        // Großbuchstaben (<tt>, <code>) – Schriftart optional setzen
+        if (!empty($options['monospace']) && $options['monospace'] === true) {
+            $mapped['style:font-name'] = 'Courier New';
+            $mapped['fo:font-family'] = 'Courier New';
+            self::$registeredFonts['Courier New'] = true;
+        }
 
         return $mapped;
     }
+
 
 
     /**
@@ -543,8 +572,16 @@ class StyleMapper
         $styleName = self::generateStyleName($style);
         if (!isset(self::$registeredTextStyles[$styleName])) {
             self::$registeredTextStyles[$styleName] = $style;
+            self::$textStyles[$styleName] = $style; // <- wenn getTextStyles() das benutzt
         }
         return $styleName;
+    }
+
+    public static function setTextStyle(string $styleName, array $style)
+    {
+        if (!isset(self::$registeredTextStyles[$styleName])) {
+            self::$registeredTextStyles[$styleName] = $style;
+        }
     }
 
 

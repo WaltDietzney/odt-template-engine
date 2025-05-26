@@ -96,23 +96,16 @@ class HtmlImporter
 
             case 'strong':
             case 'b':
-                $style['bold'] = true;
-                foreach ($node->childNodes as $child) {
-                    self::processStyledNode($child, $rich, $currentParagraph, $style);
-                }
-                break;
-
             case 'em':
             case 'i':
-                $style['italic'] = true;
-                foreach ($node->childNodes as $child) {
-                    self::processStyledNode($child, $rich, $currentParagraph, $style);
-                }
-                break;
-
             case 'u':
-                $option['underline'] = true;
+            case 'mark':
+            case 'del':
+            case 'sub':
+            case 'sup':
+                $option = self::getRawStyleForTag($tag);
                 $style = StyleMapper::mapTextStyleOptions($option);
+                StyleMapper::registerTextStyle($style);
                 foreach ($node->childNodes as $child) {
                     self::processStyledNode($child, $rich, $currentParagraph, $style);
                 }
@@ -217,13 +210,45 @@ class HtmlImporter
 
             case 'img':
                 $src = $node->getAttribute('src');
-                $path = realpath($src);
-                if (!$path || !file_exists($path))
-                    break;
+                $path = null;
 
+                // 📦 1. Base64 Data URL
+                if (preg_match('#^data:image/(\w+);base64,#i', $src, $match)) {
+                    $ext = strtolower($match[1]);
+                    $data = substr($src, strpos($src, ',') + 1);
+                    $binary = base64_decode($data);
+                    $ext = in_array($ext, ['png', 'jpg', 'jpeg', 'gif']) ? $ext : 'png'; // convert if needed
+                    $tempPath = sys_get_temp_dir() . '/odt_img_' . uniqid() . '.' . $ext;
+                    file_put_contents($tempPath, $binary);
+                    $path = $tempPath;
+                }
+
+                // 🌐 2. Remote URL
+                elseif (preg_match('/^https?:\/\//i', $src)) {
+                    $imgContent = @file_get_contents($src);
+                    if ($imgContent !== false) {
+                        $ext = pathinfo(parse_url($src, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'png';
+                        if (!in_array(strtolower($ext), ['png', 'jpg', 'jpeg', 'gif', 'bmp'])) {
+                            $ext = 'png'; // fallback
+                        }
+                        $tempPath = sys_get_temp_dir() . '/odt_img_' . uniqid() . '.' . $ext;
+                        file_put_contents($tempPath, $imgContent);
+                        $path = $tempPath;
+                    }
+                }
+
+                // 📁 3. Local File
+                elseif (file_exists($src)) {
+                    $path = realpath($src);
+                }
+
+                if (!$path || !file_exists($path)) {
+                    break;
+                }
+
+                // 📏 Maße (aus Attributen oder Styles)
                 $width = $node->getAttribute('width') ?: '5cm';
                 $height = $node->getAttribute('height') ?: '3cm';
-
                 $imageOptions = array_merge([
                     'width' => $width,
                     'height' => $height,
@@ -255,17 +280,20 @@ class HtmlImporter
     {
         if ($node instanceof DOMText) {
             $text = $node->wholeText;
-            if ($text !== '') {
+            if (trim($text) !== '') {
                 if (!$currentParagraph) {
                     $currentParagraph = new Paragraph();
                     $rich->addParagraph($currentParagraph);
                 }
                 $currentParagraph->addText($text, $style);
             }
-        } else {
-            self::processNode($node, $rich, $currentParagraph);
+        } elseif ($node instanceof DOMElement) {
+            foreach ($node->childNodes as $child) {
+                self::processStyledNode($child, $rich, $currentParagraph, $style);
+            }
         }
     }
+
 
     /**
      * Parst das Style-Attribut eines HTML-Elements und gibt die entsprechenden Stil-Optionen zurück.
@@ -378,6 +406,21 @@ class HtmlImporter
 
         return $styles;
     }
+
+    private static function getRawStyleForTag(string $tag): array
+    {
+        return match ($tag) {
+            'b', 'strong' => ['bold' => true],
+            'i', 'em' => ['italic' => true],
+            'u' => ['underline' => true],
+            'mark' => ['background-color' => '#ffff99'],
+            'del' => ['text-line-through' => true], // Spezialfall
+            'sub' => ['style:text-position' => 'sub'],
+            'sup' => ['style:text-position' => 'super'],
+            default => [],
+        };
+    }
+
 
 
 

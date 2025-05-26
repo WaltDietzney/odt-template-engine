@@ -32,9 +32,12 @@ $html = <<<HTML
 <p>Supported elements include:</p>
 
 <ul>
-    <li><strong>Styled text</strong> with <span style="color: #FF0000;">colors</span>, <span style="font-style: italic;">italics</span>, <span style="text-decoration: underline;">underlining</span>, and more</li>
+    <li><strong>Styled text</strong> with <span style="color: #FF0000;">colors</span>, <span style="font-style: italic;">italics</span>, <span style="text-decoration: underline;">underlining</span>, and <mark>highlighting</mark></li>
+    <li>Text can be <del>removed</del> or annotated with <sub>subscripts</sub> and <sup>superscripts</sup></li>
     <li>Clickable <a href="https://example.com" style="color: #0000FF;">hyperlinks</a> to external resources</li>
     <li>Local image embedding from your project files</li>
+    <li>Remote image loading from the web</li>
+    <li>Embedded base64 images (if enabled)</li>
     <li>Structured lists with nested items</li>
 </ul>
 
@@ -62,8 +65,14 @@ $html = <<<HTML
 </ol>
 
 <h2>Image Showcase</h2>
-<p>An example of an embedded image:</p>
+<p>Embedded local image:</p>
 <p><img src="assets/banner.png" width="6cm" height="3cm" style="display: block; margin: auto;"></p>
+
+<p>Remote image (web-hosted):</p>
+<p><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/PHP_Logo.svg/320px-PHP_Logo.svg.png" width="4cm"></p>
+
+<p>Base64-encoded image (small placeholder):</p>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAMAAABhvppWAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAJUExURQAAAFVVVZqamgAAAJUjkLIAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAHdElNRQflDBgSKQfQ9Zn1AAAAMElEQVQI12NgQAX/GQgYGBgZ+f///3DwxGRkYHiEkhRCR8RQzMeQBNVCHDADqF8IAAzXWAgWYI0RQAAAAASUVORK5CYII=" width="1.2cm" height="1.2cm" /></p>
 
 <h2 id="contact" style="color: #2F4F4F;">Contact</h2>
 
@@ -71,6 +80,7 @@ $html = <<<HTML
 
 <p style="font-size: small;">© 2025 OdtTemplateEngine — Automatically generated with ❤️.</p>
 HTML;
+
 
 
 // 2️⃣ Import the HTML into a RichText object
