@@ -230,8 +230,20 @@ class StyleMapper
 
         // Schriftgröße
         if (!empty($options['font-size'])) {
-            $mapped['fo:font-size'] = $options['font-size'];
+            $value = strtolower($options['font-size']);
+            $mappedSize = match ($value) {
+                'xx-small' => '6pt',
+                'x-small' => '7pt',
+                'small' => '9pt',
+                'medium' => '11pt',
+                'large' => '13pt',
+                'x-large' => '15pt',
+                'xx-large' => '17pt',
+                default => $value, // z. B. "12pt", "1.2em", etc.
+            };
+            $mapped['fo:font-size'] = $mappedSize;
         }
+
 
         // Schriftart
         if (!empty($options['font-family'])) {
@@ -405,6 +417,7 @@ class StyleMapper
             }
 
             switch ($key) {
+                case 'background-color':
                 case 'background':
                     $mapped['fo:background-color'] = $value;
                     break;
@@ -725,18 +738,17 @@ class StyleMapper
         foreach ($rules as $rule) {
             if (str_contains($rule, ':')) {
                 [$key, $value] = explode(':', $rule, 2);
-                if (trim($key) == 'text-decoration') {
-                    $styleArray['style:text-underline-style'] = 'solid';
-                    $styleArray['style:text-underline-type'] = 'single';
-                    $styleArray['style:text-underline-width'] = 'auto';
-                } else {
-                    $styleArray['fo:' . trim($key)] = trim($value);
-                }
+                $key = trim(strtolower($key));
+                $value = trim($value);
+
+                // 💡 direkt neutral speichern – Zuweisung zu fo:* macht mapParagraphStyle()
+                $styleArray[$key] = $value;
             }
         }
 
         return $styleArray;
     }
+
 
 
 
@@ -762,6 +774,52 @@ class StyleMapper
             self::$frameStyles[$name] = array_merge(self::$frameStyles[$name], $properties);
         }
     }
+
+    public static function splitCssProperties(array $rawCss): array
+    {
+        $textStyle = [];
+        $paragraphStyle = [];
+
+        foreach ($rawCss as $key => $value) {
+            switch (trim($key)) {
+                // Textbezogene Stile
+                case 'color':
+                case 'background-color':
+                case 'font-weight':
+                case 'font-style':
+                case 'text-decoration':
+                case 'font-size':
+                case 'font-family':
+                    $textStyle[$key] = $value;
+                    break;
+
+                // Absatzbezogene Stile
+                case 'margin':
+                case 'margin-top':
+                case 'margin-bottom':
+                case 'margin-left':
+                case 'margin-right':
+                case 'padding':
+                case 'padding-top':
+                case 'padding-bottom':
+                case 'padding-left':
+                case 'padding-right':
+                case 'align':
+                case 'text-align':
+                case 'line-height':
+                case 'border':
+                case 'border-left':
+                case 'border-top':
+                case 'border-right':
+                case 'border-bottom':
+                    $paragraphStyle[$key] = $value;
+                    break;
+            }
+        }
+
+        return [$textStyle, $paragraphStyle];
+    }
+
 
 
 }

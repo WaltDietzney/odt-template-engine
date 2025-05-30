@@ -11,6 +11,8 @@ use OdtTemplateEngine\Elements\RichText;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\ImageElement;
 use OdtTemplateEngine\Elements\ListElement;
+use OdtTemplateEngine\Elements\RichTable;
+use OdtTemplateEngine\Elements\RichTableCell;
 use OdtTemplateEngine\Utils\StyleMapper;
 use OdtTemplateEngine\OdtTemplate;
 
@@ -80,18 +82,84 @@ class HtmlImporter
         $style = self::parseStyleAttribute($node);
 
         switch ($tag) {
-            case 'p':
-                $para = new Paragraph();
-                $rich->addParagraph($para);
-                foreach ($node->childNodes as $child) {
-                    self::processNode($child, $rich, $para);
+            case 'table':
+                $tableStyle = StyleMapper::parseInlineStyle($node->getAttribute('style'));
+                $table = new RichTable();
+                $tableCellDefaultStyle = $tableStyle;
+
+                foreach ($node->getElementsByTagName('tr') as $trNode) {
+                    $row = [];
+
+                    foreach ($trNode->childNodes as $cellNode) {
+                        if (!in_array($cellNode->nodeName, ['td', 'th'])) {
+                            continue;
+                        }
+
+                        // Zell-Stil (ohne Text/Absatzstil)
+                        $cellStyle = array_merge(
+                            $tableCellDefaultStyle,
+                            StyleMapper::parseInlineStyle($cellNode->getAttribute('style'))
+                        );
+
+
+
+                        // Text/Absatz-Stil
+                        $paragraph = self::buildStyledParagraphFromCellNode($cellNode);
+                        $allowedKeys = [
+                            'background',
+                            'background-color',
+                            'border',
+                            'padding',
+                            'padding-left',
+                            'padding-right',
+                            'padding-top',
+                            'padding-bottom',
+                            'border-left',
+                            'border-right',
+                            'border-top',
+                            'border-bottom'
+                        ];
+
+                        $filtered = array_filter(
+                            $cellStyle,
+                            fn($k) => in_array($k, $allowedKeys, true),
+                            ARRAY_FILTER_USE_KEY
+                        );
+                        
+                        $cell = (new RichTableCell($paragraph))->setStyle($filtered); // paragraph + zellenstil
+                        $cell->registerStylesAndRefresh();
+
+                        if ($cellNode->hasAttribute('colspan')) {
+                            $cell->colspan((int) $cellNode->getAttribute('colspan'));
+                        }
+                        if ($cellNode->hasAttribute('rowspan')) {
+                            $cell->rowspan((int) $cellNode->getAttribute('rowspan'));
+                        }
+
+                        $row[] = $cell;
+                    }
+
+                    $table->addRow($row);
                 }
+
+                $rich->addTable($table);
                 break;
+
 
             case 'br':
                 if ($currentParagraph) {
                     $currentParagraph->addLineBreak();
                 }
+                break;
+
+            case 'p':
+            case 'div':
+            case 'article':
+            case 'section':
+            case 'header':
+            case 'footer':
+            case 'main':
+                self::handleStyledBlockElement($node, $rich);
                 break;
 
             case 'strong':
@@ -103,6 +171,11 @@ class HtmlImporter
             case 'del':
             case 'sub':
             case 'sup':
+            case 'code':
+            case 'tt':
+            case 'kbd':
+            case 'samp':
+            case 'pre':
                 $option = self::getRawStyleForTag($tag);
                 $style = StyleMapper::mapTextStyleOptions($option);
                 StyleMapper::registerTextStyle($style);
@@ -115,25 +188,31 @@ class HtmlImporter
                 // 1. CSS lesen
                 $rawStyle = $node->getAttribute('style');
 
-                // 2. CSS parsen → ['fo:color' => '#FF0000', ...]
-                $odtStyle = StyleMapper::parseInlineStyle($rawStyle);
+                // 2. CSS parsen → ['color' => '#FF0000', ...]
+                $styleOptions = StyleMapper::parseInlineStyle($rawStyle);
 
-                // 3. Stil registrieren (für automatic-styles)
-                StyleMapper::registerTextStyle($odtStyle);
+                // 3. Mapping auf ODT-kompatible Keys → ['fo:color' => '#FF0000', ...]
+                $odtStyle = StyleMapper::mapTextStyleOptions($styleOptions);
 
-                // 4. Verarbeite Kinder mit Style-Array
+                // 4. Stil registrieren (für automatic-styles in styles.xml)
+                if (!empty($odtStyle)) {
+                    StyleMapper::registerTextStyle($odtStyle);
+                }
+
+                // 5. Kinder verarbeiten mit registriertem Stil
                 foreach ($node->childNodes as $child) {
                     if ($child instanceof DOMText) {
                         if (!$currentParagraph) {
                             $currentParagraph = new Paragraph();
                             $rich->addParagraph($currentParagraph);
                         }
-                        $currentParagraph->addText($child->wholeText, $odtStyle); // ✅ Style als Array übergeben
+                        $currentParagraph->addText($child->wholeText, $odtStyle); // ✅ ODT-kompatibles Array
                     } else {
                         self::processStyledNode($child, $rich, $currentParagraph, $odtStyle);
                     }
                 }
                 break;
+
 
 
             case 'a':
@@ -160,9 +239,23 @@ class HtmlImporter
             case 'h6':
                 $level = (int) substr($tag, 1);
                 $styleName = "Heading $level";
+
                 $heading = new Paragraph();
                 $heading->setParagraphStyle($styleName);
-                $heading->addText(trim($node->textContent));
+
+                // 🔸 parse "style" attribute (e.g. color) → as text style
+                $inlineStyle = $node->getAttribute('style');
+                $styleOptions = StyleMapper::parseInlineStyle($inlineStyle);
+                $textStyle = StyleMapper::mapTextStyleOptions($styleOptions);
+
+                // ✅ Register the style (if needed)
+                if (!empty($textStyle)) {
+                    StyleMapper::registerTextStyle($textStyle);
+                }
+
+                // Add the heading text with style
+                $heading->addText(trim($node->textContent), $textStyle);
+
                 $rich->addParagraph($heading);
                 break;
 
@@ -417,8 +510,90 @@ class HtmlImporter
             'del' => ['text-line-through' => true], // Spezialfall
             'sub' => ['style:text-position' => 'sub'],
             'sup' => ['style:text-position' => 'super'],
+            'code', 'tt', 'kbd', 'samp', 'pre' => [
+                'monospace' => true,
+                'background-color' => '#f4f4f4'
+            ],
             default => [],
         };
+    }
+
+    protected static function handleStyledBlockElement(DOMElement $node, RichText $rich): void
+    {
+        $inlineStyle = $node->getAttribute('style');
+        $rawCss = StyleMapper::parseInlineStyle($inlineStyle);
+        [$textCss, $paraCss] = StyleMapper::splitCssProperties($rawCss);
+
+        // ➕ Map to ODT styles
+        $textStyle = StyleMapper::mapTextStyleOptions($textCss);
+        //$paraStyle = StyleMapper::mapParagraphStyle($paraCss); // falls du das hast
+
+        if (!empty($textStyle)) {
+            StyleMapper::registerTextStyle($textStyle);
+        }
+
+        if (!empty($paraCss)) {
+            $styleName = StyleMapper::generateParagraphStyleName();
+            StyleMapper::registerParagraphStyle($styleName, $paraCss);
+
+            $para = new Paragraph($styleName, $paraCss);
+        } else {
+            $para = new Paragraph();
+        }
+
+        $rich->addParagraph($para);
+
+
+        $previousWasText = false;
+
+        foreach ($node->childNodes as $child) {
+            if ($child instanceof DOMText) {
+                $text = $child->wholeText;
+
+                if (trim($text) !== '') {
+                    // automatischer Leerzeichen-Einwurf
+                    if ($previousWasText === false && !str_starts_with($text, ' ')) {
+                        $text = ' ' . $text;
+                    }
+                    $para->addText($text, $textStyle);
+                    $previousWasText = true;
+                }
+            } else {
+                self::processNode($child, $rich, $para);
+                $previousWasText = false;
+            }
+        }
+    }
+
+    protected static function buildStyledParagraphFromCellNode(DOMElement $cellNode): Paragraph
+    {
+        $inlineStyle = $cellNode->getAttribute('style');
+        $rawCss = StyleMapper::parseInlineStyle($inlineStyle);
+        [$textCss, $paraCss] = StyleMapper::splitCssProperties($rawCss);
+
+        // Absatz erzeugen mit Absatzstil
+        $paragraph = new Paragraph(null, $paraCss);
+
+        // Optional: bekannte text-align Styles als ODT-Styles benennen
+        $align = strtolower($paraCss['text-align'] ?? '');
+        if ($align === 'center') {
+            $paragraph->setParagraphStyle('CenterPara');
+        } elseif ($align === 'right') {
+            $paragraph->setParagraphStyle('RightPara');
+        }
+
+        foreach ($cellNode->childNodes as $child) {
+            if ($child instanceof DOMText) {
+                $text = trim($child->wholeText);
+                if ($text !== '') {
+                    $paragraph->addText($text, $textCss);
+                }
+            } elseif ($child instanceof DOMElement) {
+                self::processStyledNode($child, $paragraph, null, $textCss);
+            }
+        }
+
+        return $paragraph;
     }
 
 

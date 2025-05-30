@@ -85,7 +85,29 @@ class StyleWriter
         }
 
 
-        // === 3) Fonts (wie bisher) ===
+        // === 3) TABLE-CELL Styles ===
+        foreach (StyleMapper::getRegisteredTableCellStyles() as $name => $props) {
+            if (self::styleAlreadyExists($domStyles, $name, 'table-cell')) {
+                continue;
+            }
+
+            $style = $domStyles->createElement('style:style');
+            $style->setAttribute('style:name', $name);
+            $style->setAttribute('style:family', 'table-cell');
+            $style->setAttribute('style:parent-style-name', 'Default');
+
+            $cellProps = $domStyles->createElement('style:table-cell-properties');
+            foreach ($props as $key => $value) {
+                $cellProps->setAttribute($key, $value);
+            }
+
+            $style->appendChild($cellProps);
+            $officeStyles->appendChild($style);
+        }
+
+
+
+        // === 4) Fonts (wie bisher) ===
         $decls = $domStyles->createElement('office:font-face-decls');
         foreach (array_keys(self::$fontsUsed) as $fontName) {
             $fontName = trim($fontName, "'\" ");

@@ -67,6 +67,7 @@ class RichTableCell extends OdtElement implements HasStyles
         }
 
         $this->setStyle($style);
+        $this->registerStylesAndRefresh();
     }
 
     /**
@@ -404,7 +405,7 @@ class RichTableCell extends OdtElement implements HasStyles
      *
      * @return self
      */
-    protected function registerStylesAndRefresh(): self
+    public function registerStylesAndRefresh(): self
     {
         $this->style = StyleMapper::mapTableCellStyleOptions($this->style);
         $this->styleName = StyleMapper::generateStyleName($this->style);
@@ -445,4 +446,5 @@ class RichTableCell extends OdtElement implements HasStyles
         $this->rowspan = $count;
         return $this;
     }
+    
 }

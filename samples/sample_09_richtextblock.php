@@ -38,12 +38,12 @@ $rich = new RichText();
 // 2.1 A paragraph mixing italic, bold, colored text, a line break and a tab
 $para1 = new Paragraph();
 $para1
-    ->addText("Lorem ipsum dolor sit amet, ", ['italic' => true])
+    ->addText("Lorem ipsum dolor sit amet, ", ['italic' => true, 'font-family'=>'Ubuntu'])
     ->addText("consectetur adipisicing elit", ['bold' => true, 'color' => '#c0392b'])
     ->addLineBreak() // inserts <text:line-break/>
     ->addText("Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.", ['color' => '#2980b9'])
     ->addTab()       // inserts <text:tab/>
-    ->addText("— after a tab —", ['lower' => true]);
+    ->addText("— after a tab —", ['font-size' => "x-small"]);
 $rich->addParagraph($para1);
 
 // 2.2 A paragraph with an embedded hyperlink
