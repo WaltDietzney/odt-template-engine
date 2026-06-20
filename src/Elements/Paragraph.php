@@ -89,7 +89,6 @@ class Paragraph extends OdtElement implements HasStyles
         if (!empty($style)) {
             // ✅ Registriere den Stil zentral (wichtig für styles.xml export!)
             $styleName = StyleMapper::generateStyleName($style);
-
             // ✅ Speichere ihn auch lokal (z. B. zum Nachschlagen oder Debug)
             $this->textStyleMap[$styleName] = $style;
         }

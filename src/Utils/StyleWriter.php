@@ -86,7 +86,16 @@ class StyleWriter
 
 
         // === 3) TABLE-CELL Styles ===
-        foreach (StyleMapper::getRegisteredTableCellStyles() as $name => $props) {
+        $cellStyles = StyleMapper::getRegisteredTableCellStyles();
+
+        // Breiten aus Zell-Stilen entfernen (damit Spaltenstile greifen können)
+        foreach ($cellStyles as &$props) {
+            foreach (['style:column-width', 'fo:width'] as $forbidden) {
+                unset($props[$forbidden]);
+            }
+        }
+
+        foreach ($cellStyles as $name => $props) {
             if (self::styleAlreadyExists($domStyles, $name, 'table-cell')) {
                 continue;
             }
@@ -105,7 +114,55 @@ class StyleWriter
             $officeStyles->appendChild($style);
         }
 
+        // === 4) TABLE Styles (neu!)
+        $cellStyles = StyleMapper::getRegisteredTableCellStyles();
 
+        // Breiten aus Zell-Stilen entfernen (damit Spaltenstile greifen können)
+        foreach ($cellStyles as &$props) {
+            foreach (['style:column-width', 'fo:width'] as $forbidden) {
+                unset($props[$forbidden]);
+            }
+        }
+
+        foreach ($cellStyles as $name => $props) {
+            if (self::styleAlreadyExists($domStyles, $name, 'table-cell')) {
+                continue;
+            }
+
+            $style = $domStyles->createElement('style:style');
+            $style->setAttribute('style:name', $name);
+            $style->setAttribute('style:family', 'table-cell');
+            $style->setAttribute('style:parent-style-name', 'Default');
+
+            $cellProps = $domStyles->createElement('style:table-cell-properties');
+            foreach ($props as $key => $value) {
+                $cellProps->setAttribute($key, $value);
+            }
+
+            $style->appendChild($cellProps);
+            $officeStyles->appendChild($style);
+        }
+
+        // === 4) TABLE Styles (neu!)
+        $tableStyles = StyleMapper::getRegisteredTableStyles();
+
+        foreach ($tableStyles as $name => $props) {
+            if (self::styleAlreadyExists($domStyles, $name, 'table')) {
+                continue;
+            }
+
+            $style = $domStyles->createElement('style:style');
+            $style->setAttribute('style:name', $name);
+            $style->setAttribute('style:family', 'table');
+
+            $tableProps = $domStyles->createElement('style:table-properties');
+            foreach ($props as $key => $value) {
+                $tableProps->setAttribute($key, $value);
+            }
+
+            $style->appendChild($tableProps);
+            $officeStyles->appendChild($style);
+        }
 
         // === 4) Fonts (wie bisher) ===
         $decls = $domStyles->createElement('office:font-face-decls');
@@ -236,5 +293,35 @@ class StyleWriter
         $query = sprintf('//style:style[@style:name="%s" and @style:family="%s"]', $styleName, $family);
         return $xpath->query($query)->length > 0;
     }
+
+    public static function writeColumnStyles(DOMDocument $doc, array $columnWidths): array
+    {
+        $styleNames = [];
+
+        $automaticStyles = $doc->getElementsByTagName('office:automatic-styles')->item(0);
+        if (!$automaticStyles) {
+            $automaticStyles = $doc->createElement('office:automatic-styles');
+            $doc->documentElement->insertBefore($automaticStyles, $doc->documentElement->firstChild);
+        }
+
+        foreach ($columnWidths as $i => $width) {
+            $styleName = 'co' . $i;
+
+            $styleElement = $doc->createElement('style:style');
+            $styleElement->setAttribute('style:name', $styleName);
+            $styleElement->setAttribute('style:family', 'table-column');
+
+            $columnProps = $doc->createElement('style:table-column-properties');
+            $columnProps->setAttribute('style:column-width', $width);
+
+            $styleElement->appendChild($columnProps);
+            $automaticStyles->appendChild($styleElement);
+
+            $styleNames[] = $styleName;
+        }
+
+        return $styleNames;
+    }
+
 
 }

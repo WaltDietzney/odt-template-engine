@@ -6,43 +6,123 @@ use OdtTemplateEngine\Utils\StyleMapper;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Elements\RichTableCell;
 use OdtTemplateEngine\Contracts\HasStyles;
+use OdtTemplateEngine\Utils\StyleWriter;
 use DOMDocument;
 use DOMNode;
 use DOMElement;
 
 /**
- * Represents a rich table element in an ODT document.
+ * Represents a rich, styleable table element in an ODT document.
+ *
+ * Supports cell and row styling, column width definitions, header row grouping,
+ * style presets, and ratio-based virtual column spans.
  */
 class RichTable extends OdtElement implements HasStyles
 {
-    protected static int $tableCounter = 1; // Counter für automatische Tabellennamen
+    /**
+     * Global counter to auto-generate unique table names.
+     *
+     * @var int
+     */
+    protected static int $tableCounter = 1;
+
+    /**
+     * Collection of rows. Each row is an array with 'cells' and optional 'style'.
+     *
+     * @var array<int, array{cells: array, style: array}>
+     */
     protected array $rows = [];
+
+    /**
+     * Optional style name applied to the table as a whole.
+     *
+     * @var string|null
+     */
     protected ?string $tableStyleName = null;
+
+    /**
+     * Number of header rows that will be wrapped in `<table:table-header-rows>`.
+     *
+     * @var int
+     */
     protected int $headerRowCount = 0;
+
+    /**
+     * Internal name for the table (used in ODT DOM).
+     *
+     * @var string
+     */
     protected string $tableName;
 
+    /**
+     * User-defined named style presets (e.g., "finance", "report").
+     *
+     * @var array<string, array>
+     */
     private array $customStyles = [];
 
-    // In RichTable (oben bei den Eigenschaften)
+    /**
+     * Keywords to match for highlighting summary rows (e.g., "Total", "Summe").
+     *
+     * @var array<string>
+     */
     private array $summaryKeywords = ['summe', 'gesamt', 'total'];
 
+    /**
+     * Fixed widths for columns in the table (e.g., "5cm", "3.5cm").
+     *
+     * @var array<int, string>
+     */
+    private array $columnWidths = [];
+
+    /**
+     * Relative width ratios for columns. Used to compute colspan.
+     *
+     * @var array<int, int>
+     */
+    private array $columnWidthRatios = [];
 
 
+    /**
+     * Constructor: initializes a table with an auto-generated name.
+     */
     public function __construct()
     {
         $this->tableName = 'Table_' . self::$tableCounter++;
     }
-
+    /**
+     * Adds a row to the table.
+     *
+     * Accepts RichTableCell instances or plain strings, Paragraphs, or RichText.
+     * Automatically wraps non-cell content into a RichTableCell.
+     *
+     * If column ratios are defined, colspans will be applied accordingly.
+     *
+     * @param array $cells Array of cell content or RichTableCell instances.
+     * @param array $style Optional row-level style (currently unused).
+     * @return self
+     */
     public function addRow(array $cells, array $style = []): self
     {
-        if (!is_array($cells)) {
-            throw new \InvalidArgumentException("Cells must be an array");
-        }
-
-        // Automatisch Inhalte in RichTableCell wrappen, wenn nötig
         foreach ($cells as &$cell) {
             if (!$cell instanceof RichTableCell && !$cell instanceof Paragraph && !$cell instanceof RichText) {
                 $cell = new RichTableCell($cell);
+            }
+        }
+
+        if (!empty($this->columnWidthRatios)) {
+            $sum = array_sum($this->columnWidthRatios);
+            $virtualColCount = 12;
+            $colspans = [];
+
+            foreach ($this->columnWidthRatios as $ratio) {
+                $colspans[] = max(1, round($virtualColCount * ($ratio / $sum)));
+            }
+
+            foreach ($cells as $i => $cell) {
+                if ($cell instanceof RichTableCell && isset($colspans[$i])) {
+                    $cell->setColspan($colspans[$i]);
+                }
             }
         }
 
@@ -50,18 +130,49 @@ class RichTable extends OdtElement implements HasStyles
         return $this;
     }
 
+    private function calculateColspansFromRatios(int $virtualColCount): array
+    {
+        $sum = array_sum($this->columnWidthRatios);
+        $colspans = [];
+
+        foreach ($this->columnWidthRatios as $ratio) {
+            $colspans[] = max(1, round($virtualColCount * ($ratio / $sum)));
+        }
+
+        return $colspans;
+    }
+
+
+    /**
+     * Defines how many rows should be treated as table headers.
+     *
+     * @param int $count
+     * @return self
+     */
     public function setHeaderRowCount(int $count): self
     {
         $this->headerRowCount = $count;
         return $this;
     }
 
+    /**
+     * Assigns a style name to the table element.
+     *
+     * @param string $styleName
+     * @return self
+     */
     public function setTableStyleName(string $styleName): self
     {
         $this->tableStyleName = $styleName;
         return $this;
     }
 
+    /**
+     * Sets the internal name of the table.
+     *
+     * @param string $name
+     * @return self
+     */
     public function setTableName(string $name): self
     {
         $this->tableName = $name;
@@ -71,6 +182,13 @@ class RichTable extends OdtElement implements HasStyles
     public function toDomNode(DOMDocument $dom): DOMNode
     {
         $styles = [];
+
+        $columnWidths = $this->getColumnWidths(); // falls vorhanden
+        $columnStyleNames = [];
+        if (!empty($columnWidths)) {
+            $columnStyleNames = StyleWriter::writeColumnStyles($dom, $columnWidths);
+        }
+
 
         foreach ($this->rows as $row) {
             foreach ($row['cells'] as $cell) {
@@ -100,15 +218,36 @@ class RichTable extends OdtElement implements HasStyles
             $table->setAttribute('table:style-name', $this->tableStyleName);
         }
 
-        $columnCount = 0;
-        foreach ($this->rows as $row) {
-            if (isset($row['cells']) && is_array($row['cells'])) {
-                $columnCount = max($columnCount, count($row['cells']));
+        if (!empty($this->columnWidthRatios)) {
+            // Option C: Verhältnisse in virtuelle Spalten umrechnen
+            $virtualColCount = 12;
+            $sum = array_sum($this->columnWidthRatios);
+            foreach ($this->columnWidthRatios as $ratio) {
+                $repeat = max(1, round($virtualColCount * ($ratio / $sum)));
+                $col = $dom->createElement('table:table-column');
+                $col->setAttribute('table:number-columns-repeated', $repeat);
+                $table->appendChild($col);
             }
+        } elseif (!empty($columnStyleNames)) {
+            foreach ($columnStyleNames as $styleName) {
+                $col = $dom->createElement('table:table-column');
+                $col->setAttribute('table:style-name', $styleName);
+                $table->appendChild($col);
+            }
+        } else {
+            $columnCount = 0;
+            foreach ($this->rows as $row) {
+                if (isset($row['cells']) && is_array($row['cells'])) {
+                    $columnCount = max($columnCount, count($row['cells']));
+                }
+            }
+            $col = $dom->createElement('table:table-column');
+            $col->setAttribute('table:number-columns-repeated', $columnCount);
+            $table->appendChild($col);
         }
-        $col = $dom->createElement('table:table-column');
-        $col->setAttribute('table:number-columns-repeated', $columnCount);
-        $table->appendChild($col);
+
+
+
 
         $tableHeaderRows = null;
         $currentRow = 0;
@@ -237,63 +376,63 @@ class RichTable extends OdtElement implements HasStyles
     }
 
     public function buildTableFromArray(array $tableData, string $styleName = 'default'): self
-{
-    $styleSet = $this->customStyles[$styleName] ?? $this->getPredefinedStyles($styleName);
+    {
+        $styleSet = $this->customStyles[$styleName] ?? $this->getPredefinedStyles($styleName);
 
-    foreach ($tableData as $rowIndex => $row) {
-        $cells = [];
+        foreach ($tableData as $rowIndex => $row) {
+            $cells = [];
 
-        $isSummaryRow = isset($row[0]) && $this->matchesSummaryKeywords($row[0]);
+            $isSummaryRow = isset($row[0]) && $this->matchesSummaryKeywords($row[0]);
 
-        foreach ($row as $cellContent) {
-            $paragraph = $cellContent instanceof Paragraph ? $cellContent : (new Paragraph())->addText((string) $cellContent);
-            $cell = new RichTableCell($paragraph);
+            foreach ($row as $cellContent) {
+                $paragraph = $cellContent instanceof Paragraph ? $cellContent : (new Paragraph())->addText((string) $cellContent);
+                $cell = new RichTableCell($paragraph);
 
-            $currentStyle = null;
-            if ($rowIndex === 0 && isset($styleSet['header'])) {
-                $currentStyle = $styleSet['header'];
-            } elseif ($isSummaryRow && isset($styleSet['summary'])) {
-                $currentStyle = $styleSet['summary'];
-            } elseif ($isSummaryRow && isset($styleSet['highlight'])) {
-                $currentStyle = $styleSet['highlight'];
-            } elseif ($rowIndex % 2 === 0 && isset($styleSet['row'])) {
-                $currentStyle = $styleSet['row'];
-            } elseif (isset($styleSet['row-alt'])) {
-                $currentStyle = $styleSet['row-alt'];
-            }
-
-            if ($currentStyle) {
-                $cell->setStyle($currentStyle);
-
-                if (isset($currentStyle['text-align']) && $cell->getContent() instanceof Paragraph) {
-                    $cell->getContent()->setParagraphStyle(
-                        $this->getAlignParagraphStyle($currentStyle['text-align'])
-                    );
+                $currentStyle = null;
+                if ($rowIndex === 0 && isset($styleSet['header'])) {
+                    $currentStyle = $styleSet['header'];
+                } elseif ($isSummaryRow && isset($styleSet['summary'])) {
+                    $currentStyle = $styleSet['summary'];
+                } elseif ($isSummaryRow && isset($styleSet['highlight'])) {
+                    $currentStyle = $styleSet['highlight'];
+                } elseif ($rowIndex % 2 === 0 && isset($styleSet['row'])) {
+                    $currentStyle = $styleSet['row'];
+                } elseif (isset($styleSet['row-alt'])) {
+                    $currentStyle = $styleSet['row-alt'];
                 }
+
+                if ($currentStyle) {
+                    $cell->setStyle($currentStyle);
+
+                    if (isset($currentStyle['text-align']) && $cell->getContent() instanceof Paragraph) {
+                        $cell->getContent()->setParagraphStyle(
+                            $this->getAlignParagraphStyle($currentStyle['text-align'])
+                        );
+                    }
+                }
+
+                $cells[] = $cell;
             }
 
-            $cells[] = $cell;
+            $this->addRow($cells);
         }
 
-        $this->addRow($cells);
+        return $this;
     }
 
-    return $this;
-}
-
-/**
- * Check if a cell matches any summary keyword
- */
-private function matchesSummaryKeywords($cellContent): bool
-{
-    $text = strtolower(trim((string) $cellContent));
-    foreach ($this->summaryKeywords as $keyword) {
-        if (strpos($text, strtolower($keyword)) !== false) {
-            return true;
+    /**
+     * Check if a cell matches any summary keyword
+     */
+    private function matchesSummaryKeywords($cellContent): bool
+    {
+        $text = strtolower(trim((string) $cellContent));
+        foreach ($this->summaryKeywords as $keyword) {
+            if (strpos($text, strtolower($keyword)) !== false) {
+                return true;
+            }
         }
+        return false;
     }
-    return false;
-}
 
 
 
@@ -451,6 +590,42 @@ private function matchesSummaryKeywords($cellContent): bool
     {
         $this->summaryKeywords = array_map('strtolower', $keywords);
         return $this;
+    }
+
+    public function setColumnWidths(array $widths): void
+    {
+        $this->columnWidths = $widths;
+
+        // Sofort auf erste Zeile anwenden, falls vorhanden
+        if (!empty($this->rows[0]['cells'])) {
+            foreach ($this->rows[0]['cells'] as $i => $cell) {
+                if ($cell instanceof RichTableCell && isset($widths[$i])) {
+                    $cell->setWidth($widths[$i]); // nutzt deine neue setWidth()-Methode
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Gets the defined column widths.
+     *
+     * @return array<int, string>
+     */
+    public function getColumnWidths(): array
+    {
+        return $this->columnWidths;
+    }
+
+    public function getTableStyleName(): ?string
+    {
+        return $this->tableStyleName;
+    }
+
+
+    public function setColumnWidthRatios(array $ratios): void
+    {
+        $this->columnWidthRatios = $ratios;
     }
 
 

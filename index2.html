@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Bewerberprofil erstellen</title>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .nav-button {
+            margin-right: 8px;
+        }
+
+        .repeater-group {
+            margin-bottom: 16px;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+
+<body class="w3-container w3-light-grey">
+    <div class="w3-card w3-white w3-padding w3-margin">
+        <h2>Bewerberprofil Formular</h2>
+
+        <div>
+            <button type="button" class="w3-button w3-black nav-button w3-round"
+                onclick="showSection('personal')">Persönliche Daten</button>
+            <button type="button" class="w3-button w3-black nav-button w3-round"
+                onclick="showSection('skills')">Skills</button>
+            <button type="button" class="w3-button w3-black nav-button w3-round"
+                onclick="showSection('experience')">Erfahrungen</button>
+        </div>
+
+        <form action="makeProfile.php" method="post" enctype="multipart/form-data">
+
+            <div id="section-personal" class="form-section">
+                <h3>Persönliche Daten</h3>
+                <div class="w3-row-padding">
+                    <div class="w3-half">
+                        <label>Vorname</label>
+                        <input class="w3-input w3-border" name="vorname" required>
+                    </div>
+                    <div class="w3-half">
+                        <label>Nachname</label>
+                        <input class="w3-input w3-border" name="nachname" required>
+                    </div>
+                </div>
+                <div class="w3-row-padding">
+                    <div class="w3-half">
+                        <label>Telefon</label>
+                        <input class="w3-input w3-border" name="telefon">
+                    </div>
+                    <div class="w3-half">
+                        <label>E-Mail</label>
+                        <input type="email" class="w3-input w3-border" name="email">
+                    </div>
+                </div>
+                <label>Straße & Nr.</label>
+                <input class="w3-input w3-border" name="strasse">
+                <label>PLZ & Ort</label>
+                <input class="w3-input w3-border" name="ort">
+                <h3>Bewerbungsfoto</h3>
+                <input class="w3-input w3-border" type="file" name="photo" accept="image/*">
+            </div>
+
+            <div id="section-skills" class="form-section hidden w3-row">
+                <div class="w3-third">
+                    <p><button type="button" class="w3-button w3-blue nav-button w3-round"
+                            onclick="showContainer('softskills')">Softskills</button></p>
+                    <p><button type="button" class="w3-button w3-blue nav-button w3-round"
+                            onclick="showContainer('it')">It</button></p>
+                    <p><button type="button" class="w3-button w3-blue nav-button w3-round"
+                            onclick="showContainer('sprachen')">Sprachen</button></p>
+                    <p><button type="button" class="w3-button w3-blue nav-button w3-round"
+                            onclick="showContainer('lizenzen')">Lizenzen/Zertifikate</button></p>
+                </div>
+                <div class="w3-twothird">
+                    <div id="container-softskills" class="hidden skill-container">
+                        <h3>Softskills</h3>
+                        <div id="softskills-container"></div>
+                        <button type="button" class="w3-button w3-blue w3-margin-top"
+                            onclick="addRepeater('softskills-container', 'softskills', 'Softskill')">+
+                            Softskill</button>
+                    </div>
+                    <div id="container-it" class="hidden skill-container">
+                        <h3>IT-Erfahrungen</h3>
+                        <div id="it-container"></div>
+                        <button type="button" class="w3-button w3-blue w3-margin-top"
+                            onclick="addSkillRepeater('it-container', 'it', 'IT-Fähigkeit')">+ IT-Fähigkeit</button>
+                    </div>
+                    <div id="container-sprachen" class="hidden skill-container">
+                        <h3>Sprachen</h3>
+                        <div id="languages-container"></div>
+                        <button type="button" class="w3-button w3-blue w3-margin-top"
+                            onclick="addSkillRepeater('languages-container', 'languages', 'Sprache')">+ Sprache</button>
+                    </div>
+                    <div id="container-lizenzen" class="hidden skill-container">
+                        <h3>Lizenzen & Zertifikate</h3>
+                        <div id="certs-container"></div>
+                        <button type="button" class="w3-button w3-blue w3-margin-top"
+                            onclick="addRepeater('certs-container', 'certs', 'Lizenz/Zertifikat')">+ Zertifikat</button>
+
+                    </div>
+                </div>
+            </div>
+
+
+            <div id="section-experience" class="form-section hidden w3-row">
+                <div class="w3-third">
+                    <p><button type="button" class="w3-button w3-blue nav-button w3-round"
+                            onclick="showContainer('highlights')">Highlights</button></p>
+                    <p><button type="button" class="w3-button w3-blue nav-button w3-round"
+                            onclick="showContainer('jobs')">Berufserfahrungen</button></p>
+                    <p><button type="button" class="w3-button w3-blue nav-button w3-round"
+                            onclick="showContainer('ausbildung')">Ausbildungen</button></p>
+                    <p><button type="button" class="w3-button w3-blue nav-button w3-round"
+                            onclick="showContainer('studium')">Studium</button></p>
+                    <p><button type="button" class="w3-button w3-blue nav-button w3-round"
+                            onclick="showContainer('quali')">Qualifikationen</button></p>
+                </div>
+                <div class="w3-twothird">
+                    <div id="container-highlights" class="hidden skill-container">
+                        <h3>Highlights</h3>
+                        <div id="highlights-container"></div>
+                        <button type="button" class="w3-button w3-blue w3-margin-top"
+                            onclick="addTextRepeater('highlights-container', 'highlights')">+ Highlight</button>
+                    </div>
+                    <div id="container-jobs" class="hidden skill-container">
+                        <h3>Berufserfahrungen</h3>
+                        <div id="jobs-container"></div>
+                        <button type="button" class="w3-button w3-blue w3-margin-top"
+                            onclick="addTextRepeater('jobs-container', 'jobs')">+ Berufserfahrung</button>
+                    </div>
+                    <div id="container-ausbildung" class="hidden skill-container">
+                        <h3>Ausbildung</h3>
+                        <div id="ausbildung-container"></div>
+                        <button type="button" class="w3-button w3-blue w3-margin-top"
+                            onclick="addTextRepeater('ausbildung-container', 'ausbildung')">+ Ausbildung</button>
+                    </div>
+                    <div id="container-studium" class="hidden skill-container">
+                        <h3>Studium</h3>
+                        <div id="studium-container"></div>
+                        <button type="button" class="w3-button w3-blue w3-margin-top"
+                            onclick="addTextRepeater('studium-container', 'studium')">+ Studium</button>
+                    </div>
+                    <div id="container-quali" class="hidden skill-container">
+                        <h3>Qualifikationen</h3>
+                        <div id="quali-container"></div>
+                        <button type="button" class="w3-button w3-blue w3-margin-top"
+                            onclick="addTextRepeater('quali-container', 'quali')">+ Qualifikation</button>
+                    </div>
+                </div>
+            </div>
+    </div>
+    <br>
+    <button type="submit" class="w3-button w3-green w3-xlarge">Profil generieren</button>
+    </form>
+    </div>
+
+    <script>
+        function showSection(section) {
+            document.querySelectorAll('.form-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById('section-' + section).classList.remove('hidden');
+        }
+        function showContainer(container) {
+            document.querySelectorAll('.skill-container').forEach(el => el.classList.add('hidden'));
+            document.getElementById('container-' + container).classList.remove('hidden');
+        }
+
+        function addRepeater(containerId, inputName, placeholder) {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = 'repeater-group';
+            div.innerHTML = `
+            <button type="button" class="delete-btn" onclick="this.parentElement.remove()">✖</button>
+            <input class="w3-input w3-border" name="${inputName}[]" placeholder="${placeholder}">`;
+            container.appendChild(div);
+        }
+
+        function addSkillRepeater(containerId, inputName, placeholder) {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = 'repeater-group';
+            div.innerHTML = `
+            <button type="button" class="delete-btn" onclick="this.parentElement.remove()">✖</button>
+            <input class="w3-input w3-border" name="${inputName}[name][]" placeholder="${placeholder}">
+            <label>Kompetenz (1–10):</label>
+            <input type="number" class="w3-input w3-border" name="${inputName}[level][]" min="1" max="10">
+            `;
+            container.appendChild(div);
+        }
+
+        function addTextRepeater(containerId, inputName) {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = 'repeater-group';
+            div.innerHTML = `
+            <label>Titel</label>
+            <button type="button" class="delete-btn" onclick="this.parentElement.remove()">✖</button>
+            <input class="w3-input w3-border" name="${inputName}[title][]" placeholder="Titel">
+            <label>Beschreibung</label>
+            <textarea class="w3-input w3-border" name="${inputName}[desc][]" rows="3"></textarea>
+            `;
+            container.appendChild(div);
+        }
+    </script>
+</body>
+
+</html>

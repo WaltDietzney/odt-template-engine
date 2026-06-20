@@ -19,6 +19,15 @@ $template->load();
 
 // Create a new RichTable instance
 $table = new RichTable();
+StyleMapper::registerTableStyle('MyFixedTableStyle', [
+    'table:width' => '15cm',
+    'table:align' => 'left',
+    'style:rel-width' => '100%',
+]);
+
+
+$table->setTableStyleName('MyFixedTableStyle');
+
 
 // 🔴 First cell: Red background, bold and centered text
 $cell1 = (new RichTableCell('Important Notice'))
@@ -63,7 +72,11 @@ $table
     ->addRow([$cell1, $cell2])
     ->addRow([$cell3, $cell4])
     ->addRow([$cell5, $cell6])
-    ->addRow([$cell7, $cell8]);
+    ->addRow([$cell7, $cell8])
+    ->setColumnWidths(['2cm', '10cm']);
+ // 💡 Neu hinzugefügt
+
+
 
 // 🔄 Replace the {{tableblock}} placeholder in the template with the generated table
 $template->setElement('tableblock', $table);

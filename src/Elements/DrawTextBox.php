@@ -24,7 +24,7 @@ class DrawTextBox extends OdtElement implements HasStyles
         $this->frameOptions = $options;
         // register frame style immediately
         $this->registerFrameStyle();
-         $this->frameStyleProps = StyleMapper::mapFrameStyleOptions($options);
+        $this->frameStyleProps = StyleMapper::mapFrameStyleOptions($options);
 
     }
 
@@ -60,17 +60,19 @@ class DrawTextBox extends OdtElement implements HasStyles
     /**
      * Converts this element into a DOMElement (draw:frame).
      */
-    public function toDomNode(DOMDocument $dom): DOMElement
+    public function toDomNode(DOMDocument $dom): DOMNode
     {
         $this->registerFrameStyle();
 
+        $anchor = $this->frameOptions['anchor'] ?? 'paragraph';
+
         $frame = $dom->createElement('draw:frame');
         $frame->setAttribute('draw:name', $this->name);
-        $frame->setAttribute('text:anchor-type', $this->frameOptions['anchor'] ?? 'paragraph');
+        $frame->setAttribute('text:anchor-type', $anchor);
         $frame->setAttribute('draw:z-index', '0');
         $frame->setAttribute('draw:style-name', $this->frameStyleName);
 
-        // size attributes
+        // Größe setzen
         if (!empty($this->frameOptions['width'])) {
             $frame->setAttribute('svg:width', $this->frameOptions['width']);
         }
@@ -78,6 +80,21 @@ class DrawTextBox extends OdtElement implements HasStyles
             $frame->setAttribute('svg:height', $this->frameOptions['height']);
         }
 
+        if (!empty($this->frameOptions['horizontal-pos'])) {
+            $frame->setAttribute('style:horizontal-pos', $this->frameOptions['horizontal-pos']);
+        }
+        if (!empty($this->frameOptions['horizontal-rel'])) {
+            $frame->setAttribute('style:horizontal-rel', $this->frameOptions['horizontal-rel']);
+        }
+        if (!empty($this->frameOptions['vertical-pos'])) {
+            $frame->setAttribute('style:vertical-pos', $this->frameOptions['vertical-pos']);
+        }
+        if (!empty($this->frameOptions['vertical-rel'])) {
+            $frame->setAttribute('style:vertical-rel', $this->frameOptions['vertical-rel']);
+        }
+
+
+        // Textbox-Inhalt
         $textBox = $dom->createElement('draw:text-box');
         foreach ($this->paragraphs as $element) {
             $child = $element->toDomNode($dom);
@@ -90,8 +107,20 @@ class DrawTextBox extends OdtElement implements HasStyles
             }
         }
         $frame->appendChild($textBox);
-        return $frame;
+
+        // 💡 Einbettung: inline = direkt, alle anderen brauchen eigenen Absatz
+        if ($anchor === 'as-char') {
+            return $frame;
+        }
+
+        // Sonst in <text:p> einbetten
+        $p = $dom->createElement('text:p');
+        $p->appendChild($frame);
+        return $p;
     }
+
+
+
 
     /**
      * Inserts the style definition into styles.xml
@@ -161,21 +190,16 @@ class DrawTextBox extends OdtElement implements HasStyles
      */
     public function setHorizontalPosition(string $pos, string $rel = 'page'): self
     {
-        $this->frameOptions['style:horizontal-pos'] = $pos;
-        $this->frameOptions['style:horizontal-rel'] = $rel;
-        $this->registerFrameStyle();
-        return $this;
+        return $this->setHorizontalPos($pos, $rel);
     }
+
 
     /**
      * Set vertical position properties (e.g. style:vertical-pos and style:vertical-rel).
      */
     public function setVerticalPosition(string $pos, string $rel = 'page'): self
     {
-        $this->frameOptions['style:vertical-pos'] = $pos;
-        $this->frameOptions['style:vertical-rel'] = $rel;
-        $this->registerFrameStyle();
-        return $this;
+        return $this->setVerticalPos($pos, $rel);
     }
 
     /**

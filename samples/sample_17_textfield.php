@@ -54,7 +54,7 @@ $textbox2 = (new DrawTextBox('Box2', [
 )
 ->addElement(
     (new Paragraph())
-        ->addText('Dieser Rahmen steht genau in der Mitte der Seite,', ['italic' => true])
+        ->addText('Dieser Rahmen steht genau in der Mitte der Seite,', ['bold' => true, 'italic' => true])
         ->addLineBreak()
         ->addText('mit oben und unten umfließendem Text.')
 );
@@ -78,7 +78,7 @@ $inlineBox = (new DrawTextBox('Inline', [
 $para = new Paragraph();
 $para->addText('Hier kommt eine Inline-Textbox: ')
      ->addElement($inlineBox)      // direkt in Paragraph einfügen
-     ->addText(' und weiter geht’s mit normalem Text.');
+     ->addText(' und weiter geht’s mit normalem Text.',['bold' => true, 'italic' => true]);
 
 $tpl->setElement('INLINE_BOX', $para);
 $tpl->save('samples/output/output_17_textfield.odt');

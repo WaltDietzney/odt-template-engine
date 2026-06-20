@@ -45,6 +45,8 @@ class StyleMapper
 
     public static array $frameStyles = [];
 
+    public static array $tableStyles = [];
+
 
     /**
      * Maps a set of paragraph style options to their corresponding ODF attributes.
@@ -209,6 +211,20 @@ class StyleMapper
         // Kursiv
         if (!empty($options['italic'])) {
             $mapped['fo:font-style'] = 'italic';
+        }
+        if (!empty($options['font-weight'])) {
+            $mapped['fo:font-weight'] = $options['font-weight'];
+        }
+
+        // Kursiv
+        if (!empty($options['font-style'])) {
+            $mapped['fo:font-style'] = $options['font-style'];
+        }
+
+        if (!empty($options['text-decoration'])) {
+            $mapped['style:text-underline-style'] = 'solid';
+            $mapped['style:text-underline-type'] = 'single';
+            $mapped['style:text-underline-width'] = 'auto';
         }
 
         // Unterstrichen
@@ -820,6 +836,13 @@ class StyleMapper
         return [$textStyle, $paragraphStyle];
     }
 
-
+    public static function registerTableStyle(string $name, array $properties): void
+    {
+        self::$tableStyles[$name] = $properties;
+    }
+    public static function getRegisteredTableStyles(): array
+    {
+        return self::$tableStyles;
+    }
 
 }
