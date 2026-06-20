@@ -110,6 +110,132 @@ abstract class AbstractOdtTemplate
         }
     }
 
+    /**
+     * Injects registered image frame styles (graphic styles) into the document's
+     * <office:automatic-styles> section, and <draw:fill-image> elements into
+     * <office:styles> for bitmap-filled shapes.
+     */
+    protected function injectImageStyles(): void
+    {
+        $xpath = new \DOMXPath($this->domStyles);
+        $xpath->registerNamespace('office', 'urn:oasis:names:tc:opendocument:xmlns:office:1.0');
+        $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
+        $xpath->registerNamespace('draw', 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0');
+        $xpath->registerNamespace('xlink', 'http://www.w3.org/1999/xlink');
+        $xpath->registerNamespace('text', 'urn:oasis:names:tc:opendocument:xmlns:text:1.0');
+
+        // ── 1. <draw:fill-image> elements in <office:styles> ──
+        $fillImages = \OdtTemplateEngine\Utils\StyleMapper::getRegisteredFillImages();
+        if ($fillImages !== []) {
+            $officeStyles = $xpath->query('//office:styles')->item(0);
+            if ($officeStyles) {
+                foreach ($fillImages as $name => $fi) {
+                    // Check if already exists
+                    $existing = $xpath->query("//draw:fill-image[@draw:name='$name']");
+                    if ($existing->length > 0) {
+                        continue;
+                    }
+                    $el = $this->domStyles->createElement('draw:fill-image');
+                    $el->setAttribute('draw:name', $fi['name']);
+                    $el->setAttribute('xlink:href', 'Pictures/' . $fi['filename']);
+                    $el->setAttribute('xlink:type', 'simple');
+                    $el->setAttribute('xlink:show', 'embed');
+                    $el->setAttribute('xlink:actuate', 'onLoad');
+                    $officeStyles->insertBefore($el, $officeStyles->firstChild);
+                }
+            }
+        }
+
+        // ── 2. Graphic styles in <office:automatic-styles> ──
+        $imageStyles = \OdtTemplateEngine\Utils\StyleMapper::getRegisteredImageStyles();
+        if ($imageStyles !== []) {
+            $automaticStyles = $xpath->query('//office:automatic-styles')->item(0);
+            if ($automaticStyles) {
+                foreach ($imageStyles as $styleName => $options) {
+                    $existing = $xpath->query("//style:style[@style:name='$styleName']");
+                    if ($existing->length > 0) {
+                        $style = $existing->item(0);
+                        $propsList = $style->getElementsByTagName('style:graphic-properties');
+                        if ($propsList->length > 0) {
+                            $props = $propsList->item(0);
+                            if (!$props->hasAttributes()) {
+                                $this->applyImageStyleProps($props, $options);
+                            }
+                        }
+                        continue;
+                    }
+                    $style = $this->domStyles->createElement('style:style');
+                    $style->setAttribute('style:name', $styleName);
+                    $style->setAttribute('style:family', 'graphic');
+                    $style->setAttribute('style:parent-style-name', 'Standard');
+                    $props = $this->domStyles->createElement('style:graphic-properties');
+                    $this->applyImageStyleProps($props, $options);
+                    $style->appendChild($props);
+                    $automaticStyles->appendChild($style);
+                }
+            }
+        }
+
+
+    }
+
+    /**
+     * Adjusts bullet list indentation to be more compact (further left).
+     * Runs after all styles have been written.
+     */
+    protected function adjustBulletIndentation(): void
+    {
+        // Use regex on serialized XML to add margin-left / text-indent
+        // to <style:list-level-label-alignment> elements.
+        $xml = $this->domStyles->saveXML();
+        if ($xml === false) {
+            return;
+        }
+        // Remove any existing fo:margin-left / fo:text-indent first
+        $xml = preg_replace(
+            '/\s+fo:(margin-left|text-indent)="[^"]*"/',
+            '',
+            $xml
+        );
+        // Add indentation attributes to each list-level-label-alignment
+        $xml = preg_replace(
+            '/(<style:list-level-label-alignment\b)/',
+            '$1 fo:margin-left="0.35cm" fo:text-indent="-0.25cm"',
+            $xml
+        );
+        $this->domStyles->loadXML($xml);
+    }
+
+    /**
+     * Applies image style properties from options to a style:graphic-properties element.
+     */
+    private function applyImageStyleProps(\DOMElement $props, array $options): void
+    {
+        $attrMap = [
+            'style:wrap' => 'style:wrap',
+            'style:horizontal-pos' => 'style:horizontal-pos',
+            'style:horizontal-rel' => 'style:horizontal-rel',
+            'style:vertical-pos' => 'style:vertical-pos',
+            'style:vertical-rel' => 'style:vertical-rel',
+            'fo:margin-left' => 'fo:margin-left',
+            'fo:margin-right' => 'fo:margin-right',
+            'fo:margin-top' => 'fo:margin-top',
+            'fo:margin-bottom' => 'fo:margin-bottom',
+            'draw:fill' => 'draw:fill',
+            'draw:fill-image-name' => 'draw:fill-image-name',
+            'draw:fill-image-width' => 'draw:fill-image-width',
+            'draw:fill-image-height' => 'draw:fill-image-height',
+            'style:repeat' => 'style:repeat',
+            'draw:stroke' => 'draw:stroke',
+        ];
+
+        foreach ($attrMap as $optKey => $attrName) {
+            if (isset($options[$optKey])) {
+                $props->setAttribute($attrName, (string)$options[$optKey]);
+            }
+        }
+    }
+
 
     /**
      * Ensures that the necessary text styles are defined in the styles.xml document.
@@ -567,12 +693,16 @@ abstract class AbstractOdtTemplate
         );
 
         $this->fixBrokenVariables($this->domStyles);
-        // 6. 🪄 Replace placeholder with DOM node in styles.xml
-        $this->replacePlaceholderWithDom(
-            $this->domStyles,
-            $placeholder,
-            $element->toDomNode($this->domStyles)
-        );
+        // 6. 🪄 Replace ALL occurrences in styles.xml (e.g. {{cv_header}} in
+        //    page 1 AND page 2 headers). Build a fresh replacement for each
+        //    occurrence by cloning from the element directly (fresh toDomNode).
+        while ($this->hasPlaceholder($this->domStyles, $placeholder)) {
+            $this->replacePlaceholderWithDom(
+                $this->domStyles,
+                $placeholder,
+                $element->toDomNode($this->domStyles)
+            );
+        }
     }
 
 
@@ -591,67 +721,68 @@ abstract class AbstractOdtTemplate
         $xpath = new DOMXPath($dom);
 
         foreach ($xpath->query('//text()') as $textNode) {
-            if (strpos($textNode->nodeValue, '{{' . $key . '}}') !== false) {
-                $parent = $textNode->parentNode;
-                if (!$parent) {
-                    continue;
-                }
+            if (strpos($textNode->nodeValue, '{{' . $key . '}}') === false) {
+                continue;
+            }
 
-                // Entscheide: Einfacher Text oder komplexe Struktur?
-                if (in_array($replacement->nodeName, ['text:span', 'text:s', 'text:line-break'])) {
-                    // Inline-Ersetzung innerhalb von Text
-                    $parts = explode('{{' . $key . '}}', $textNode->nodeValue);
-                    $refNode = $textNode;
+            $parent = $textNode->parentNode;
+            if (!$parent) {
+                continue;
+            }
 
-                    foreach ($parts as $index => $part) {
-                        if ($index > 0) {
-                            $imported = $dom->importNode($replacement, true);
-                            $parent->insertBefore($imported, $refNode);
-                        }
-
-                        if ($part !== '') {
-                            $newText = $dom->createTextNode($part);
-                            $parent->insertBefore($newText, $refNode);
-                        }
+            if (in_array($replacement->nodeName, ['text:span', 'text:s', 'text:line-break'])) {
+                $parts = explode('{{' . $key . '}}', $textNode->nodeValue);
+                $refNode = $textNode;
+                foreach ($parts as $index => $part) {
+                    if ($index > 0) {
+                        $cloned = $replacement->cloneNode(true);
+                        $parent->insertBefore($cloned, $refNode);
                     }
-
-                    $parent->removeChild($refNode);
-                } else {
-                    // Komplexer Node (z.B. text:p, draw:frame, rich structures)
-                    // Aber ACHTUNG: Befindet sich der Text innerhalb einer Textbox?
-                    $pNode = $textNode;
-                    while ($pNode && $pNode->nodeName !== 'text:p') {
-                        $pNode = $pNode->parentNode;
-                    }
-
-                    if ($pNode) {
-                        // Ist der Absatz in einer draw:text-box?
-                        $insideTextBox = false;
-                        $ancestor = $pNode->parentNode;
-                        while ($ancestor) {
-                            if ($ancestor->nodeName === 'draw:text-box') {
-                                $insideTextBox = true;
-                                break;
-                            }
-                            $ancestor = $ancestor->parentNode;
-                        }
-
-                        $imported = $dom->importNode($replacement, true);
-
-                        if ($insideTextBox) {
-                            // ❗ Nur Inhalt ersetzen, nicht ganze Textbox kaputt machen
-                            $pNode->parentNode->insertBefore($imported, $pNode);
-                            $pNode->parentNode->removeChild($pNode);
-                        } else {
-                            // ❗ Normale Ersetzung
-                            $pNode->parentNode->replaceChild($imported, $pNode);
-                        }
+                    if ($part !== '') {
+                        $newText = $dom->createTextNode($part);
+                        $parent->insertBefore($newText, $refNode);
                     }
                 }
-
-                break; // Nur den ersten Match ersetzen
+                $parent->removeChild($refNode);
+            } else {
+                $pNode = $textNode;
+                while ($pNode && $pNode->nodeName !== 'text:p') {
+                    $pNode = $pNode->parentNode;
+                }
+                if ($pNode) {
+                    $insideTextBox = false;
+                    $ancestor = $pNode->parentNode;
+                    while ($ancestor) {
+                        if ($ancestor->nodeName === 'draw:text-box') {
+                            $insideTextBox = true;
+                            break;
+                        }
+                        $ancestor = $ancestor->parentNode;
+                    }
+                    $cloned = $replacement->cloneNode(true);
+                    if ($insideTextBox) {
+                        $pNode->parentNode->insertBefore($cloned, $pNode);
+                        $pNode->parentNode->removeChild($pNode);
+                    } else {
+                        $pNode->parentNode->replaceChild($cloned, $pNode);
+                    }
+                }
             }
         }
+    }
+
+    /**
+     * Checks whether a placeholder still exists in the DOM.
+     */
+    protected function hasPlaceholder(DOMDocument $dom, string $key): bool
+    {
+        $xpath = new DOMXPath($dom);
+        foreach ($xpath->query('//text()') as $textNode) {
+            if (strpos($textNode->nodeValue, '{{' . $key . '}}') !== false) {
+                return true;
+            }
+        }
+        return false;
     }
 
 

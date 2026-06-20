@@ -965,10 +965,10 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         $width = $options['width'] ?? '5cm';
         $height = $options['height'] ?? '3cm';
 
-        if ($width && !$options['height']) {
+        if ($width && !$height) {
             $cm = (float) rtrim($width, 'cm');
             $height = round($cm * $imgHeight / $imgWidth, 3) . 'cm';
-        } elseif (!$options['width'] && $height) {
+        } elseif (!$width && $height) {
             $cm = (float) rtrim($height, 'cm');
             $width = round($cm * $imgWidth / $imgHeight, 3) . 'cm';
         }
@@ -1170,9 +1170,17 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     public function save(string $outputPath): void
     {
+        // ✅ Inject registered image styles (graphic styles + fill-image elements)
+        $this->injectImageStyles();
+
         // ✅ StyleWriter einbinden und Styles eintragen
         StyleWriter::writeAllStyles($this->domStyles);
 
+        // ✅ Bullet list indentation anpassen (weiter links)
+        $this->adjustBulletIndentation();
+
+        // ✅ Manifest um Bild-Einträge ergänzen
+        $this->addImagesToManifest();
 
         // 💾 Minifizierte XML-Dateien speichern
         $this->saveMinifiedXml($this->domContent, $this->tempDir . '/content.xml');
@@ -1256,6 +1264,67 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         file_put_contents($path, $xml);
     }
 
+    /**
+     * Fügt fehlende Einträge für Bilder im Pictures/-Verzeichnis zum Manifest hinzu.
+     * ODF erfordert, dass jede Datei im Archiv im META-INF/manifest.xml deklariert ist.
+     */
+    protected function addImagesToManifest(): void
+    {
+        $manifestPath = $this->tempDir . '/META-INF/manifest.xml';
+        $picturesDir = $this->tempDir . '/Pictures';
+
+        if (!file_exists($manifestPath) || !is_dir($picturesDir)) {
+            return;
+        }
+
+        $manifest = file_get_contents($manifestPath);
+
+        // Existierende Einträge ermitteln
+        $existingEntries = [];
+        preg_match_all('/manifest:full-path="([^"]+)"/', $manifest, $matches);
+        foreach ($matches[1] as $path) {
+            $existingEntries[$path] = true;
+        }
+
+        $imageMimeTypes = [
+            'png' => 'image/png',
+            'jpg'  => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'gif'  => 'image/gif',
+            'svg'  => 'image/svg+xml',
+            'bmp'  => 'image/bmp',
+            'webp' => 'image/webp',
+        ];
+
+        $changed = false;
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($picturesDir, \RecursiveDirectoryIterator::SKIP_DOTS)
+        );
+
+        foreach ($iterator as $file) {
+            if ($file->isDir()) continue;
+
+            $localPath = 'Pictures/' . $file->getFilename();
+
+            if (isset($existingEntries[$localPath])) continue;
+
+            $ext = strtolower(pathinfo($file->getFilename(), PATHINFO_EXTENSION));
+            $mime = $imageMimeTypes[$ext] ?? 'application/octet-stream';
+
+            // Vor </manifest:manifest> einfügen
+            $entry = sprintf(
+                "\n <manifest:file-entry manifest:full-path=\"%s\" manifest:media-type=\"%s\"/>",
+                $localPath,
+                $mime
+            );
+            $manifest = str_replace('</manifest:manifest>', $entry . "\n</manifest:manifest>", $manifest);
+            $changed = true;
+        }
+
+        if ($changed) {
+            file_put_contents($manifestPath, $manifest);
+        }
+    }
 
     /**
      * Removes the temporary working directory and all its contents.

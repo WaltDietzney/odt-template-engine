@@ -38,6 +38,12 @@ class StyleMapper
     protected static array $registeredImageStyles = [];
 
     /**
+     * Maps fill-image names to their file paths for draw:fill="bitmap".
+     * @var array<string, array{name: string, path: string, filename: string}>
+     */
+    protected static array $registeredFillImages = [];
+
+    /**
      * Summary of registeredFonts
      * @var array
      */
@@ -739,6 +745,32 @@ class StyleMapper
     public static function getRegisteredImageStyles(): array
     {
         return self::$registeredImageStyles;
+    }
+
+    /**
+     * Registers a fill-image for use with draw:fill="bitmap".
+     *
+     * @param string $name The unique name (referenced by draw:fill-image-name).
+     * @param string $imagePath Absolute path to the image file.
+     * @return void
+     */
+    public static function registerFillImage(string $name, string $imagePath): void
+    {
+        self::$registeredFillImages[$name] = [
+            'name' => $name,
+            'path' => $imagePath,
+            'filename' => basename($imagePath),
+        ];
+    }
+
+    /**
+     * Returns all registered fill-images.
+     *
+     * @return array<string, array{name: string, path: string, filename: string}>
+     */
+    public static function getRegisteredFillImages(): array
+    {
+        return self::$registeredFillImages;
     }
 
     /**

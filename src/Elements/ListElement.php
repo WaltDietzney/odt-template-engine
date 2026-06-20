@@ -68,4 +68,51 @@ class ListElement extends OdtElement implements HasStyles
 
     public function registerStyles(): void{}
 
+    /**
+     * Collect text styles from all list items.
+     *
+     * @return array<string, array>
+     */
+    public function getRequiredStyles(): array
+    {
+        $styles = [];
+        foreach ($this->items as $item) {
+            if ($item instanceof HasStyles) {
+                $styles = array_merge($styles, $item->getRequiredStyles());
+            }
+        }
+        return $styles;
+    }
+
+    /**
+     * Collect paragraph styles from all list items.
+     *
+     * @return array<string, array>
+     */
+    public function getRequiredParagraphStyles(): array
+    {
+        $styles = [];
+        foreach ($this->items as $item) {
+            if ($item instanceof Paragraph) {
+                $styles += $item->getRequiredParagraphStyles();
+            }
+        }
+        return $styles;
+    }
+
+    /**
+     * Collect image assets from all list items.
+     *
+     * @return array
+     */
+    public function getImageAssets(): array
+    {
+        $assets = [];
+        foreach ($this->items as $item) {
+            if (method_exists($item, 'getImageAssets')) {
+                $assets = array_merge($assets, $item->getImageAssets());
+            }
+        }
+        return $assets;
+    }
 }
