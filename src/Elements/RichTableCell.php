@@ -518,7 +518,7 @@ class RichTableCell extends OdtElement implements HasStyles
         $this->styleName = StyleMapper::generateStyleName($this->style);
         StyleMapper::registerTableCellStyle($this->styleName, $this->style);
         return $this;
-    i}
+    }
 
     /**
      * Creates a new RichTableCell using a fluent interface.
