@@ -55,11 +55,11 @@ src/
 ├── Import/
 └── Utils/
 
+tests/                      Unit and integration tests
 samples/                    Example scripts and ODT templates
 demo/sample-explorer/       Optional local sample browser
 docs/                       Project documentation
 docker/                     Development container setup
-tests/                      PHPUnit regression tests
 ```
 
 The Composer library API lives under `src/`. Demo applications are kept separately under `demo/` and are not part of the core package API.
@@ -205,14 +205,19 @@ LibreOffice and other editors can split text into multiple `<text:span>` nodes i
 
 ## 🧪 Tests
 
-Development dependencies include PHPUnit. Run the regression suite with:
+Install development dependencies and run:
 
 ```bash
 composer install
 composer test
 ```
 
-The first regression tests cover `Paragraph` DOM rendering, hyperlinks, list styles, and style tracking. GitHub Actions executes the suite on PHP 8.2, 8.3, and 8.4.
+The test suite currently contains two layers:
+
+- focused unit/regression tests for ODT elements such as `Paragraph`;
+- an ODT package integration test that loads a real sample template, renders data, saves the result, reopens the generated `.odt` as ZIP, checks required package entries, validates `content.xml`, `styles.xml`, and `meta.xml` as well-formed XML, and verifies rendered content.
+
+GitHub Actions runs the test suite on PHP 8.2, 8.3, and 8.4.
 
 ## 🧪 Samples and Demo
 
@@ -232,7 +237,7 @@ Please report vulnerabilities according to [`SECURITY.md`](../SECURITY.md). Do n
 
 ## 🛠 Roadmap
 
-- [ ] Expand automated test coverage
+- [ ] Expand automated integration coverage across representative ODT features
 - [ ] Nested logic and loops
 - [ ] Style presets and style exporting
 - [ ] Additional RichText capabilities
