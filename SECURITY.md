@@ -2,20 +2,17 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+Until the project reaches a stable 1.0 release, security fixes are provided for the current `master` branch only.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| Version | Supported |
+| --- | --- |
+| `master` | :white_check_mark: |
+| Older snapshots and branches | :x: |
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+Please do not disclose security vulnerabilities in a public issue.
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+Use GitHub's private vulnerability reporting feature for this repository when available. Include enough information to reproduce and assess the issue, such as the affected code path, expected and actual behavior, and a minimal proof of concept where appropriate.
+
+Security reports will be reviewed as soon as practical. Confirmed vulnerabilities will be addressed on the supported branch and documented with the corresponding fix or advisory when appropriate.
