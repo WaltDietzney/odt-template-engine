@@ -1,6 +1,5 @@
 /vendor/
 /output/
-/samples/output/
 /qrcode/images/
 
 composer.lock
