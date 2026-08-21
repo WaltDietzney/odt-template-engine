@@ -59,6 +59,7 @@ samples/                    Example scripts and ODT templates
 demo/sample-explorer/       Optional local sample browser
 docs/                       Project documentation
 docker/                     Development container setup
+tests/                      PHPUnit regression tests
 ```
 
 The Composer library API lives under `src/`. Demo applications are kept separately under `demo/` and are not part of the core package API.
@@ -201,6 +202,17 @@ For reliable processing:
 - test templates with realistic sample data after significant layout changes.
 
 LibreOffice and other editors can split text into multiple `<text:span>` nodes in `content.xml`. The engine includes normalization logic to make placeholder processing more robust, but simple template structures remain easier to maintain.
+
+## 🧪 Tests
+
+Development dependencies include PHPUnit. Run the regression suite with:
+
+```bash
+composer install
+composer test
+```
+
+The first regression tests cover `Paragraph` DOM rendering, hyperlinks, list styles, and style tracking. GitHub Actions executes the suite on PHP 8.2, 8.3, and 8.4.
 
 ## 🧪 Samples and Demo
 
