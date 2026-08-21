@@ -13,17 +13,29 @@
         "ext-dom": "*",
         "ext-zip": "*"
     },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5"
+    },
     "autoload": {
         "psr-4": {
             "OdtTemplateEngine\\": "src/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "OdtTemplateEngine\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
     },
     "archive": {
         "exclude": [
             "/demo",
             "/docker",
             "/output",
-            "/qrcode"
+            "/qrcode",
+            "/tests"
         ]
     },
     "support": {
