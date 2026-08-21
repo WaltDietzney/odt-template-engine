@@ -1,6 +1,6 @@
 {
     "name": "waltdietzney/odt-template-engine",
-    "description": "A lightweight PHP template engine for generating and modifying OpenDocument Text (ODT) files.",
+    "description": "A lightweight PHP template engine for generating and manipulating OpenDocument Text (ODT) files.",
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -17,6 +17,14 @@
         "psr-4": {
             "OdtTemplateEngine\\": "src/"
         }
+    },
+    "archive": {
+        "exclude": [
+            "/demo",
+            "/docker",
+            "/output",
+            "/qrcode"
+        ]
     },
     "support": {
         "issues": "https://github.com/WaltDietzney/odt-template-engine/issues",
