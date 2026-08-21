@@ -38,5 +38,8 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: Lint source files
-        run: find src -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Lint PHP files
+        run: find src tests -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Run test suite
+        run: composer test
