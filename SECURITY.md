@@ -2,17 +2,14 @@
 
 ## Supported Versions
 
-Until the project reaches a stable 1.0 release, security fixes are provided for the current `master` branch only.
-
-| Version | Supported |
-| --- | --- |
-| `master` | :white_check_mark: |
-| Older snapshots and branches | :x: |
+Until the project reaches a stable 1.0 release, security fixes are applied to the current `master` branch only.
 
 ## Reporting a Vulnerability
 
-Please do not disclose security vulnerabilities in a public issue.
+Please report suspected vulnerabilities privately through GitHub's security reporting features when available. Do not open a public issue containing exploit details or sensitive information before the report has been reviewed.
 
-Use GitHub's private vulnerability reporting feature for this repository when available. Include enough information to reproduce and assess the issue, such as the affected code path, expected and actual behavior, and a minimal proof of concept where appropriate.
+Include a clear description, affected component, reproduction steps, and the potential impact where possible.
 
-Security reports will be reviewed as soon as practical. Confirmed vulnerabilities will be addressed on the supported branch and documented with the corresponding fix or advisory when appropriate.
+## Demo Code
+
+Files under `demo/` are intended for local development and controlled test environments. They are not production-ready web applications and should not be exposed publicly without appropriate authentication, rate limiting, logging, and web-server hardening.
