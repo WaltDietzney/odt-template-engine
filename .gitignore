@@ -1,0 +1,17 @@
+/vendor/
+/output/
+/samples/output/
+/qrcode/images/
+
+composer.lock
+
+.phpunit.cache/
+.phpunit.result.cache
+/coverage/
+
+.idea/
+.vscode/
+
+*.log
+.DS_Store
+Thumbs.db
