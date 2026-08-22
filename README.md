@@ -154,11 +154,11 @@ ODT Template Engine is developed alongside real document-generation use cases ra
 
 ### Bewerbungstools.de
 
-[Bewerbungstools.de](https://bewerbungstools.de/) uses ODT-based document workflows for application tooling and document generation.
+[Bewerbungstools.de](https://www.bewerbungstools.de/) uses ODT-based document workflows for application tooling and document generation.
 
 ### CV Generator
 
-The CV Generator project uses the engine as a document-rendering layer for editable CVs with structured sections, layouts, rich text, images and styles. It serves as an important real-world consumer for the engine's richer document features.
+The [CV Generator](https://www.bewerbungstools.de/lebenslauf-erstellen) uses the engine as a document-rendering layer for editable CVs with structured sections, layouts, rich text, images and styles. It serves as an important real-world consumer for the engine's richer document features.
 
 ## Tests and quality
 
@@ -221,7 +221,7 @@ A dedicated contribution guide will be added as the public release process is fo
 
 ODT Template Engine is free and open source. If the project is useful to you, starring the repository helps other developers discover it.
 
-Additional ways to support development, including PayPal and Bitcoin Lightning, are planned for the public project site.
+You can also support continued development via [PayPal](https://www.paypal.com/donate/?hosted_button_id=RVFJUELPFMXQW). Bitcoin Lightning support is planned for the public project site.
 
 ## Author
 
