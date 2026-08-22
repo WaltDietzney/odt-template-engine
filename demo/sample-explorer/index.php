@@ -9,7 +9,18 @@ use OdtTemplateEngine\OdtTemplate;
 $projectRoot = dirname(__DIR__, 2);
 $sampleDir = $projectRoot . '/samples';
 $templateDir = $sampleDir . '/templates';
-$sampleFiles = glob($sampleDir . '/sample_*.php') ?: [];
+$sampleFiles = array_values(array_filter(
+    glob($sampleDir . '/sample_*.php') ?: [],
+    static function (string $sampleFile): bool {
+        if (preg_match('/^sample_(\d{2})_/', basename($sampleFile), $matches) !== 1) {
+            return false;
+        }
+
+        $sampleNumber = (int) $matches[1];
+
+        return $sampleNumber >= 1 && $sampleNumber <= 21;
+    }
+));
 
 /**
  * Convert a sample filename into a human-readable title.
