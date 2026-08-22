@@ -352,29 +352,6 @@ class RichTable extends OdtElement implements HasStyles
         }
     }
 
-    public function getRequiredTableCellStyleNodes(): array
-    {
-        $nodes = [];
-        $names = [];
-
-        foreach ($this->rows as $row) {
-            foreach ($row['cells'] as $cell) {
-                if ($cell instanceof RichTableCell) {
-                    $styleName = $cell->getStyleName();
-                    if ($styleName && !in_array($styleName, $names, true)) {
-                        $styleNode = $cell->toStyleDomNode(new DOMDocument());
-                        if ($styleNode instanceof DOMElement) {
-                            $nodes[] = $styleNode;
-                            $names[] = $styleName;
-                        }
-                    }
-                }
-            }
-        }
-
-        return $nodes;
-    }
-
     public function buildTableFromArray(array $tableData, string $styleName = 'default'): self
     {
         $styleSet = $this->customStyles[$styleName] ?? $this->getPredefinedStyles($styleName);
