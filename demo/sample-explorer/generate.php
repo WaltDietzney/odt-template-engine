@@ -8,6 +8,8 @@ $projectRoot = dirname(__DIR__, 2);
 $sampleDir = $projectRoot . '/samples';
 $outputDir = $sampleDir . '/output';
 
+require $projectRoot . '/vendor/autoload.php';
+
 $sample = $_GET['sample'] ?? '';
 
 if (!is_string($sample) || !preg_match('/^sample_[A-Za-z0-9_-]+$/', $sample)) {
@@ -24,7 +26,13 @@ if (!is_file($samplePath)) {
     exit;
 }
 
+$previousWorkingDirectory = getcwd();
+
 try {
+    if (!chdir($projectRoot)) {
+        throw new RuntimeException('Could not switch to project root.');
+    }
+
     ob_start();
     require $samplePath;
     ob_end_clean();
@@ -49,4 +57,8 @@ try {
 
     http_response_code(500);
     echo json_encode(['status' => 'error', 'message' => 'Sample generation failed.']);
+} finally {
+    if (is_string($previousWorkingDirectory) && $previousWorkingDirectory !== '') {
+        chdir($previousWorkingDirectory);
+    }
 }
