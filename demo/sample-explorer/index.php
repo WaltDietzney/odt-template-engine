@@ -9,94 +9,272 @@ use OdtTemplateEngine\OdtTemplate;
 $projectRoot = dirname(__DIR__, 2);
 $sampleDir = $projectRoot . '/samples';
 $templateDir = $sampleDir . '/templates';
+$sampleFiles = glob($sampleDir . '/sample_*.php') ?: [];
+
+/**
+ * Convert a sample filename into a human-readable title.
+ */
+function sampleTitle(string $sampleName): string
+{
+    $title = preg_replace('/^sample_[0-9]+[a-z]?_?/i', '', $sampleName) ?? $sampleName;
+    $title = preg_replace('/([a-z])([A-Z])/', '$1 $2', $title) ?? $title;
+    $title = str_replace(['_', '-'], ' ', $title);
+
+    return ucwords(trim($title));
+}
+
+/**
+ * Assign a presentation category based on the feature demonstrated by a sample.
+ *
+ * @return array{slug: string, label: string}
+ */
+function sampleCategory(string $sampleName): array
+{
+    $name = strtolower($sampleName);
+
+    if (str_contains($name, 'table')) {
+        return ['slug' => 'tables', 'label' => 'Tables'];
+    }
+
+    if (str_contains($name, 'image') || str_contains($name, 'picture')) {
+        return ['slug' => 'images', 'label' => 'Images'];
+    }
+
+    if (str_contains($name, 'html')) {
+        return ['slug' => 'html', 'label' => 'HTML Import'];
+    }
+
+    if (
+        str_contains($name, 'richtext')
+        || str_contains($name, 'paragraph')
+        || str_contains($name, 'list')
+        || str_contains($name, 'tab')
+    ) {
+        return ['slug' => 'rich-content', 'label' => 'Rich Content'];
+    }
+
+    if (str_contains($name, 'metadata')) {
+        return ['slug' => 'metadata', 'label' => 'Metadata'];
+    }
+
+    return ['slug' => 'core', 'label' => 'Core'];
+}
+
+/**
+ * Provide concise showcase copy without coupling the demo to sample internals.
+ */
+function sampleDescription(string $sampleName): string
+{
+    $name = strtolower($sampleName);
+
+    return match (true) {
+        str_contains($name, 'variable') => 'Replace template placeholders and repeat structured data inside a real ODT document.',
+        str_contains($name, 'filter') => 'Transform values with built-in template filters before they are written to the document.',
+        str_contains($name, 'logic') || str_contains($name, 'smart') => 'Use conditions and template logic to control which document content is rendered.',
+        str_contains($name, 'metadata') => 'Write document metadata such as title, author, description, dates and custom values.',
+        str_contains($name, 'image') => 'Insert or replace images with sizing, anchoring and wrapping options.',
+        str_contains($name, 'html') && str_contains($name, 'table') => 'Import structured HTML table content and render it as native ODT table markup.',
+        str_contains($name, 'html') => 'Convert HTML fragments into native ODT rich text, paragraphs, lists and styles.',
+        str_contains($name, 'richtext') => 'Compose styled text runs, paragraphs and mixed rich content programmatically.',
+        str_contains($name, 'table') => 'Build native ODT tables with styled cells, headers, spans and layout options.',
+        str_contains($name, 'list') => 'Create numbered and bulleted lists, including nested list structures.',
+        str_contains($name, 'tab') => 'Control paragraph tab stops and precise text alignment inside ODT content.',
+        str_contains($name, 'contact') => 'Combine structured data and rich document elements in a practical document example.',
+        default => 'Explore this feature using a real template, inspect the PHP source and generate the resulting ODT file.',
+    };
+}
+
+$categories = [];
+foreach ($sampleFiles as $sampleFile) {
+    $sampleName = basename($sampleFile, '.php');
+    $category = sampleCategory($sampleName);
+    $categories[$category['slug']] = $category['label'];
+}
+asort($categories);
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ODT Template Engine - Sample Explorer</title>
-    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <meta name="description" content="Interactive examples for the PHP ODT Template Engine: variables, tables, images, rich text, lists, metadata and HTML import.">
+    <title>ODT Template Engine · Interactive Samples</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body class="w3-light-grey" style="font-family: Arial, Helvetica, sans-serif;">
-<header class="w3-container w3-indigo w3-padding w3-center">
-    <span class="w3-xlarge">ODT Template Engine - Sample Explorer</span>
+<body>
+<header class="site-header">
+    <nav class="nav" aria-label="Main navigation">
+        <a class="brand" href="./" aria-label="ODT Template Engine home">
+            <span class="brand-mark">ODT</span>
+            <span>ODT Template Engine</span>
+        </a>
+        <div class="nav-links">
+            <a href="#samples">Samples</a>
+            <a href="https://github.com/WaltDietzney/odt-template-engine" target="_blank" rel="noreferrer">GitHub</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div>
+            <span class="eyebrow">PHP 8.2+ · OpenDocument Text</span>
+            <h1>Build real ODT documents from PHP.</h1>
+            <p class="hero-copy">
+                An open-source template engine for generating editable OpenDocument files with variables,
+                conditions, loops, images, rich text, lists, tables, styles and metadata.
+            </p>
+            <div class="hero-actions">
+                <a class="button button-primary" href="#samples">Explore the samples</a>
+                <a class="button button-secondary" href="https://github.com/WaltDietzney/odt-template-engine" target="_blank" rel="noreferrer">View source on GitHub</a>
+            </div>
+        </div>
+
+        <aside class="hero-panel" aria-label="Project overview">
+            <p class="hero-panel-title">Live repository showcase</p>
+            <div class="stat-grid">
+                <div class="stat">
+                    <strong><?= count($sampleFiles) ?></strong>
+                    <span>interactive samples</span>
+                </div>
+                <div class="stat">
+                    <strong><?= count($categories) ?></strong>
+                    <span>feature areas</span>
+                </div>
+                <div class="stat">
+                    <strong>ODT</strong>
+                    <span>editable output</span>
+                </div>
+                <div class="stat">
+                    <strong>MIT</strong>
+                    <span>open-source license</span>
+                </div>
+            </div>
+        </aside>
+    </section>
 </header>
 
-<main class="w3-content w3-padding" style="max-width:1200px;">
-    <input class="w3-input w3-border w3-margin-bottom" id="searchInput" type="search" placeholder="Search samples...">
+<main class="main" id="samples">
+    <section class="intro">
+        <div>
+            <h2>Interactive feature samples</h2>
+            <p>
+                Inspect template variables and PHP source, then generate the actual ODT file.
+                The examples use the same engine code and templates that ship with the repository.
+            </p>
+        </div>
+        <div><strong id="resultCount"><?= count($sampleFiles) ?></strong> samples shown</div>
+    </section>
 
-    <div id="sampleList">
-        <?php foreach (glob($sampleDir . '/sample_*.php') ?: [] as $sampleFile): ?>
+    <section class="toolbar" aria-label="Sample filters">
+        <label class="search-wrap" for="searchInput">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="7"></circle>
+                <path d="m20 20-3.5-3.5"></path>
+            </svg>
+            <input class="search-input" id="searchInput" type="search" placeholder="Search variables, tables, images, HTML…" autocomplete="off">
+        </label>
+
+        <div class="filters" role="group" aria-label="Filter samples by category">
+            <button class="filter-button is-active" type="button" data-filter="all">All</button>
+            <?php foreach ($categories as $slug => $label): ?>
+                <button class="filter-button" type="button" data-filter="<?= htmlspecialchars($slug, ENT_QUOTES, 'UTF-8') ?>">
+                    <?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>
+                </button>
+            <?php endforeach; ?>
+        </div>
+    </section>
+
+    <section class="sample-grid" id="sampleList">
+        <?php foreach ($sampleFiles as $sampleFile): ?>
             <?php
             $sampleName = basename($sampleFile, '.php');
             $templateFile = $templateDir . '/' . str_replace('sample_', 'template_', $sampleName) . '.odt';
-            $searchText = $sampleName;
+            $category = sampleCategory($sampleName);
+            $variables = null;
+            $templateAvailable = is_file($templateFile);
+
+            if ($templateAvailable) {
+                try {
+                    $template = new OdtTemplate($templateFile);
+                    $template->load();
+                    $variables = $template->extractTemplateVariables();
+                } catch (Throwable) {
+                    $variables = null;
+                }
+            }
+
+            $searchText = strtolower(implode(' ', [
+                $sampleName,
+                sampleTitle($sampleName),
+                $category['label'],
+                sampleDescription($sampleName),
+            ]));
             ?>
-            <section class="w3-card-4 w3-white w3-margin-bottom w3-padding sample-card" data-search="<?= htmlspecialchars(strtolower($searchText), ENT_QUOTES, 'UTF-8') ?>">
-                <h3 class="w3-text-indigo"><?= htmlspecialchars($sampleName, ENT_QUOTES, 'UTF-8') ?></h3>
+            <article
+                class="sample-card"
+                data-category="<?= htmlspecialchars($category['slug'], ENT_QUOTES, 'UTF-8') ?>"
+                data-search="<?= htmlspecialchars($searchText, ENT_QUOTES, 'UTF-8') ?>"
+            >
+                <div class="card-main">
+                    <div class="card-topline">
+                        <span class="category"><?= htmlspecialchars($category['label'], ENT_QUOTES, 'UTF-8') ?></span>
+                        <span class="sample-id"><?= htmlspecialchars($sampleName, ENT_QUOTES, 'UTF-8') ?></span>
+                    </div>
+                    <h3><?= htmlspecialchars(sampleTitle($sampleName), ENT_QUOTES, 'UTF-8') ?></h3>
+                    <p class="description"><?= htmlspecialchars(sampleDescription($sampleName), ENT_QUOTES, 'UTF-8') ?></p>
+                    <div class="meta-row">
+                        <span class="meta-pill <?= $templateAvailable ? 'ok' : '' ?>">
+                            <?= $templateAvailable ? '✓ Template available' : 'Template not matched' ?>
+                        </span>
+                        <?php if (is_array($variables)): ?>
+                            <span class="meta-pill"><?= count($variables) ?> template entries</span>
+                        <?php endif; ?>
+                    </div>
+                </div>
 
-                <?php if (is_file($templateFile)): ?>
-                    <?php try { ?>
-                        <?php
-                        $template = new OdtTemplate($templateFile);
-                        $template->load();
-                        $variables = $template->extractTemplateVariables();
-                        ?>
-                        <details>
-                            <summary>Template variables</summary>
-                            <pre><?= htmlspecialchars(print_r($variables, true), ENT_QUOTES, 'UTF-8') ?></pre>
-                        </details>
-                    <?php } catch (Throwable $exception) { ?>
-                        <p class="w3-pale-yellow w3-padding">Template could not be loaded.</p>
-                    <?php } ?>
-                <?php else: ?>
-                    <p class="w3-pale-yellow w3-padding">No matching template available.</p>
-                <?php endif; ?>
+                <div class="card-details">
+                    <details>
+                        <summary>Template variables</summary>
+                        <div class="detail-content">
+                            <?php if (is_array($variables)): ?>
+                                <pre><?= htmlspecialchars(print_r($variables, true), ENT_QUOTES, 'UTF-8') ?></pre>
+                            <?php elseif ($templateAvailable): ?>
+                                <p>Template variables could not be extracted.</p>
+                            <?php else: ?>
+                                <p>No matching template file was found for this sample.</p>
+                            <?php endif; ?>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>View PHP source</summary>
+                        <div class="detail-content">
+                            <pre><code><?= htmlspecialchars((string) file_get_contents($sampleFile), ENT_QUOTES, 'UTF-8') ?></code></pre>
+                        </div>
+                    </details>
+                </div>
 
-                <details>
-                    <summary>Sample source</summary>
-                    <pre><code class="language-php"><?= htmlspecialchars((string) file_get_contents($sampleFile), ENT_QUOTES, 'UTF-8') ?></code></pre>
-                </details>
-
-                <button class="w3-button w3-light-blue w3-margin-top" type="button" data-sample="<?= htmlspecialchars($sampleName, ENT_QUOTES, 'UTF-8') ?>">
-                    Generate &amp; Download ODT
-                </button>
-            </section>
+                <div class="card-actions">
+                    <button class="button generate-button" type="button" data-sample="<?= htmlspecialchars($sampleName, ENT_QUOTES, 'UTF-8') ?>">
+                        Generate &amp; download ODT
+                    </button>
+                </div>
+            </article>
         <?php endforeach; ?>
+    </section>
+
+    <div class="empty-state" id="emptyState">
+        <strong>No matching samples.</strong><br>
+        Try another search term or select a different feature category.
     </div>
 </main>
 
-<script>
-    hljs.highlightAll();
+<footer class="site-footer">
+    <div class="footer-inner">
+        <span>ODT Template Engine · PHP library for native OpenDocument generation</span>
+        <a href="https://github.com/WaltDietzney/odt-template-engine" target="_blank" rel="noreferrer">GitHub repository →</a>
+    </div>
+</footer>
 
-    document.getElementById('searchInput').addEventListener('input', function () {
-        const term = this.value.toLowerCase().trim();
-        document.querySelectorAll('.sample-card').forEach((card) => {
-            card.hidden = term !== '' && !card.textContent.toLowerCase().includes(term);
-        });
-    });
-
-    document.querySelectorAll('[data-sample]').forEach((button) => {
-        if (button.tagName !== 'BUTTON') {
-            return;
-        }
-
-        button.addEventListener('click', async () => {
-            const sample = button.dataset.sample;
-            const response = await fetch('generate.php?sample=' + encodeURIComponent(sample));
-            const data = await response.json();
-
-            if (!response.ok || data.status !== 'success') {
-                alert(data.message || 'Sample generation failed.');
-                return;
-            }
-
-            window.location.href = 'download.php?file=' + encodeURIComponent(data.file);
-        });
-    });
-</script>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="app.js"></script>
 </body>
 </html>
