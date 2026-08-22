@@ -1,4 +1,9 @@
 (() => {
+    const showcaseStyles = document.createElement('link');
+    showcaseStyles.rel = 'stylesheet';
+    showcaseStyles.href = 'showcase.css';
+    document.head.appendChild(showcaseStyles);
+
     const searchInput = document.getElementById('searchInput');
     const filterButtons = Array.from(document.querySelectorAll('[data-filter]'));
     const cards = Array.from(document.querySelectorAll('.sample-card'));
