@@ -1,0 +1,78 @@
+name: Feature request
+description: Suggest an improvement or new ODT generation capability
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve ODT Template Engine.
+
+        The project is focused on practical generation and manipulation of editable OpenDocument Text files. Concrete document-generation use cases are especially useful when evaluating new features.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Feature area
+      options:
+        - Template syntax
+        - RichText / paragraphs
+        - Lists
+        - Tables / table cells
+        - Images
+        - HTML import
+        - Styles
+        - Metadata
+        - ODT package / XML handling
+        - Developer experience / API
+        - Samples / documentation
+        - Sample Explorer
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What document-generation problem are you trying to solve? Describe the use case before the proposed implementation.
+      placeholder: I need to generate an editable ODT document that...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How would you like the engine to support this use case? API sketches or template syntax examples are welcome.
+    validations:
+      required: true
+
+  - type: textarea
+    id: odt-context
+    attributes:
+      label: ODT / LibreOffice context
+      description: If relevant, describe the expected ODT structure, LibreOffice behavior or existing template setup.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Are you currently solving this another way, or is there a workaround in the engine?
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Add examples, screenshots, links to ODF concepts or other useful information.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues for a similar request.
+          required: true
+        - label: This request is related to generating or manipulating editable ODT documents.
+          required: true
