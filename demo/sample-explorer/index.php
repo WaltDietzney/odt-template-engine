@@ -110,6 +110,8 @@ asort($categories);
         </a>
         <div class="nav-links">
             <a href="#samples">Samples</a>
+            <a href="#projects">Projects</a>
+            <a href="#support">Support</a>
             <a href="https://github.com/WaltDietzney/odt-template-engine" target="_blank" rel="noreferrer">GitHub</a>
         </div>
     </nav>
@@ -265,12 +267,72 @@ asort($categories);
         <strong>No matching samples.</strong><br>
         Try another search term or select a different feature category.
     </div>
+
+    <section class="showcase-section" id="projects" aria-labelledby="projects-title">
+        <div class="section-heading">
+            <span class="section-kicker">Real-world usage</span>
+            <h2 id="projects-title">Built with ODT Template Engine</h2>
+            <p>The engine is not only a collection of samples. It powers document generation in real application projects.</p>
+        </div>
+
+        <div class="project-grid">
+            <a class="project-card" href="https://bewerbungstools.de/" target="_blank" rel="noreferrer">
+                <div class="project-icon">BT</div>
+                <div>
+                    <div class="project-status"><span></span> Live project</div>
+                    <h3>Bewerbungstools.de</h3>
+                    <p>Tools for creating and processing application documents, using native ODT generation as part of the document workflow.</p>
+                    <span class="project-link">Visit project →</span>
+                </div>
+            </a>
+
+            <a class="project-card" href="https://bewerbungstools.de/" target="_blank" rel="noreferrer">
+                <div class="project-icon project-icon-alt">CV</div>
+                <div>
+                    <div class="project-status"><span></span> Product integration</div>
+                    <h3>CV Generator</h3>
+                    <p>A practical consumer of the engine for generating editable CV documents with structured sections, layouts, rich text and styles.</p>
+                    <span class="project-link">Part of the application tools ecosystem →</span>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <section class="support-section" id="support" aria-labelledby="support-title">
+        <div class="support-copy">
+            <span class="section-kicker section-kicker-light">Open source · MIT licensed</span>
+            <h2 id="support-title">Support further development</h2>
+            <p>
+                ODT Template Engine is free and open source. If the library saves you time or you simply like the project,
+                you can help by starring the repository or, in the future, supporting development directly.
+            </p>
+        </div>
+
+        <div class="support-actions">
+            <a class="support-button support-button-github" href="https://github.com/WaltDietzney/odt-template-engine" target="_blank" rel="noreferrer">
+                <strong>★ Star on GitHub</strong>
+                <span>Visibility helps the project grow</span>
+            </a>
+            <div class="support-button support-button-disabled" aria-label="PayPal support coming soon">
+                <strong>PayPal</strong>
+                <span>Support link coming soon</span>
+            </div>
+            <div class="support-button support-button-lightning" aria-label="Bitcoin Lightning support coming soon">
+                <strong>⚡ Bitcoin Lightning</strong>
+                <span>Lightning support coming soon</span>
+            </div>
+        </div>
+    </section>
 </main>
 
 <footer class="site-footer">
     <div class="footer-inner">
         <span>ODT Template Engine · PHP library for native OpenDocument generation</span>
-        <a href="https://github.com/WaltDietzney/odt-template-engine" target="_blank" rel="noreferrer">GitHub repository →</a>
+        <div class="footer-links">
+            <a href="#projects">Projects</a>
+            <a href="#support">Support</a>
+            <a href="https://github.com/WaltDietzney/odt-template-engine" target="_blank" rel="noreferrer">GitHub repository →</a>
+        </div>
     </div>
 </footer>
 
