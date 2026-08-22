@@ -1,6 +1,15 @@
 {
     "name": "waltdietzney/odt-template-engine",
-    "description": "A lightweight PHP template engine for generating and manipulating OpenDocument Text (ODT) files.",
+    "description": "A PHP template engine for generating editable OpenDocument Text (ODT) files with variables, conditions, loops, images, rich text, tables and styles.",
+    "keywords": [
+        "odt",
+        "opendocument",
+        "template",
+        "document-generation",
+        "libreoffice",
+        "office",
+        "php"
+    ],
     "type": "library",
     "license": "MIT",
     "authors": [
