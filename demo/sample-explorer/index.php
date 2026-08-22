@@ -22,8 +22,7 @@ $templateDir = $sampleDir . '/templates';
 </head>
 <body class="w3-light-grey" style="font-family: Arial, Helvetica, sans-serif;">
 <header class="w3-container w3-indigo w3-padding w3-center">
-    <img src="../../assets/WaltDietzney.png" alt="Logo" style="height:50px; vertical-align: middle;">
-    <span class="w3-xlarge" style="margin-left:10px;">ODT Template Engine - Sample Explorer</span>
+    <span class="w3-xlarge">ODT Template Engine - Sample Explorer</span>
 </header>
 
 <main class="w3-content w3-padding" style="max-width:1200px;">
