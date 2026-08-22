@@ -84,5 +84,32 @@
         });
     });
 
+    const paypalPlaceholder = document.querySelector('.support-button-disabled');
+    if (paypalPlaceholder) {
+        const paypalLink = document.createElement('a');
+        paypalLink.className = 'support-button';
+        paypalLink.href = 'https://www.paypal.com/donate/?hosted_button_id=RVFJUELPFMXQW';
+        paypalLink.target = '_blank';
+        paypalLink.rel = 'noreferrer';
+        paypalLink.setAttribute('aria-label', 'Support ODT Template Engine via PayPal');
+        paypalLink.innerHTML = `
+            <strong>PayPal</strong>
+            <span>Support via PayPal →</span>
+            <img
+                src="assets/paypal-qr.svg"
+                width="112"
+                height="112"
+                alt="QR code for PayPal support"
+                style="margin-top: 10px; padding: 6px; border-radius: 10px; background: #fff;"
+            >
+        `;
+        paypalPlaceholder.replaceWith(paypalLink);
+
+        const supportCopy = document.querySelector('.support-copy p');
+        if (supportCopy) {
+            supportCopy.textContent = 'ODT Template Engine is free and open source. If the library saves you time or helps with your project, you can support its continued development here. Thank you!';
+        }
+    }
+
     updateVisibleCards();
 })();
