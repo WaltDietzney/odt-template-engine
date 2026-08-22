@@ -84,6 +84,23 @@
         });
     });
 
+    const projectCards = Array.from(document.querySelectorAll('.project-card'));
+    projectCards.forEach((projectCard) => {
+        const title = projectCard.querySelector('h3')?.textContent?.trim();
+
+        if (title === 'Bewerbungstools.de') {
+            projectCard.href = 'https://www.bewerbungstools.de/';
+        }
+
+        if (title === 'CV Generator') {
+            projectCard.href = 'https://www.bewerbungstools.de/lebenslauf-erstellen';
+            const projectLink = projectCard.querySelector('.project-link');
+            if (projectLink) {
+                projectLink.textContent = 'Try the CV Generator →';
+            }
+        }
+    });
+
     const paypalPlaceholder = document.querySelector('.support-button-disabled');
     if (paypalPlaceholder) {
         const paypalLink = document.createElement('a');
