@@ -1,0 +1,230 @@
+.showcase-section {
+    margin-top: 96px;
+    padding-top: 8px;
+}
+
+.section-heading {
+    max-width: 760px;
+    margin-bottom: 28px;
+}
+
+.section-heading h2,
+.support-copy h2 {
+    margin: 8px 0 10px;
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    letter-spacing: -0.04em;
+}
+
+.section-heading p,
+.support-copy p {
+    margin: 0;
+    color: var(--muted);
+}
+
+.section-kicker {
+    display: inline-block;
+    color: var(--brand);
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.project-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.project-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 18px;
+    padding: 26px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    text-decoration: none;
+    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.project-card:hover {
+    transform: translateY(-3px);
+    border-color: #bac6ef;
+    box-shadow: 0 20px 48px rgba(31, 45, 78, 0.12);
+}
+
+.project-icon {
+    display: grid;
+    width: 52px;
+    height: 52px;
+    place-items: center;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #3758d6, #6d4ee8);
+    color: #fff;
+    font-size: 0.86rem;
+    font-weight: 850;
+    letter-spacing: 0.04em;
+    box-shadow: 0 9px 22px rgba(55, 88, 214, 0.22);
+}
+
+.project-icon-alt {
+    background: linear-gradient(135deg, #172449, #3758d6);
+}
+
+.project-status {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 8px;
+    color: var(--success);
+    font-size: 0.76rem;
+    font-weight: 750;
+}
+
+.project-status span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #35b77b;
+    box-shadow: 0 0 0 4px rgba(53, 183, 123, 0.12);
+}
+
+.project-card h3 {
+    margin: 0 0 7px;
+    font-size: 1.3rem;
+    letter-spacing: -0.025em;
+}
+
+.project-card p {
+    margin: 0 0 14px;
+    color: var(--muted);
+    font-size: 0.93rem;
+}
+
+.project-link {
+    color: var(--brand);
+    font-size: 0.84rem;
+    font-weight: 750;
+}
+
+.support-section {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(380px, 1.1fr);
+    gap: 42px;
+    align-items: center;
+    margin-top: 72px;
+    padding: 42px;
+    border-radius: 26px;
+    background:
+        radial-gradient(circle at 90% 10%, rgba(124, 58, 237, 0.36), transparent 23rem),
+        linear-gradient(135deg, #11192f 0%, #172449 70%, #202c5d 100%);
+    color: #fff;
+    box-shadow: 0 24px 62px rgba(18, 31, 65, 0.18);
+}
+
+.section-kicker-light {
+    color: #9fb5ff;
+}
+
+.support-copy p {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.support-actions {
+    display: grid;
+    gap: 10px;
+}
+
+.support-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 16px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.07);
+    color: #fff;
+    text-decoration: none;
+}
+
+.support-button strong {
+    font-size: 0.94rem;
+}
+
+.support-button span {
+    color: rgba(255, 255, 255, 0.58);
+    font-size: 0.78rem;
+    text-align: right;
+}
+
+.support-button-github {
+    background: #fff;
+    color: #172033;
+    transition: transform 140ms ease;
+}
+
+.support-button-github:hover {
+    transform: translateY(-1px);
+}
+
+.support-button-github span {
+    color: #6c768b;
+}
+
+.support-button-disabled,
+.support-button-lightning {
+    cursor: default;
+}
+
+.support-button-lightning strong {
+    color: #ffd965;
+}
+
+.footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+}
+
+@media (max-width: 900px) {
+    .project-grid,
+    .support-section {
+        grid-template-columns: 1fr;
+    }
+
+    .support-section {
+        gap: 28px;
+    }
+}
+
+@media (max-width: 640px) {
+    .showcase-section {
+        margin-top: 68px;
+    }
+
+    .project-card {
+        grid-template-columns: 1fr;
+    }
+
+    .support-section {
+        margin-top: 54px;
+        padding: 28px 22px;
+    }
+
+    .support-button {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .support-button span {
+        text-align: left;
+    }
+
+    .footer-links {
+        gap: 12px;
+    }
+}
