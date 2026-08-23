@@ -4,7 +4,7 @@
  *
  * Description:
  * This script loads an ODT template, constructs a paragraph that includes tabbed text,
- * multiple lines, styled text, and an image. It also demonstrates how to add tabular data 
+ * multiple lines, styled text, and an image. It also demonstrates how to add tabular data
  * with custom alignment and colors. Finally, it saves the generated document to a new file.
  *
  * Author: Walter Dietz
@@ -15,8 +15,6 @@ use OdtTemplateEngine\Elements\ImageElement;
 use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\RichText;
-
-//require '../vendor/autoload.php';
 
 // Load the ODT template
 $tpl = new OdtTemplate('samples/templates/template_16_tabsBasic.odt');
@@ -80,7 +78,7 @@ $para2->addTabularLines(
     [
         // First sub-array defines the headers: Name, Position, Salary
         ['Name', 'Position', 'Salary'],
-        
+
         // Following arrays define the content rows
         ['Anna', 'Developer', '3,000 €'],
         ['Ben', 'Designer', '2,800 €']
@@ -102,16 +100,14 @@ $para2->addTabularLines(
     ]
 );
 
-// Add an additional styled text to the second paragraph (optional example)
-$para2->addLineBreak(2) // Add 2 line breaks for spacing
+// Add an additional styled text to the second paragraph
+$para2->addLineBreak(2)
     ->addText('Employee overview created successfully.', [
         'italic' => true,
         'color' => '#004488',
         'font-size' => '10pt',
         'font-family' => 'Arial'
     ]);
-
-// Optionally you could add more dynamic content or elements (like images, other paragraphs, etc.)
 
 // Combine the paragraphs into a RichText element
 $rich = (new RichText())
@@ -124,4 +120,3 @@ $tpl->setElement('product_table', $rich);
 
 // Save the modified document
 $tpl->save('samples/output/output_16_tabsBasic.odt');
-

@@ -1,16 +1,26 @@
 <?php
-//require_once 'vendor/autoload.php';
 
 use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Elements\RichText;
 use OdtTemplateEngine\Elements\Paragraph;
 
-// Lade Template
+// Load the template.
 $template = new OdtTemplate('samples/templates/template_21_cvProfile.odt');
 $template->load();
 
-// ==== Beispiel-Daten ====
-$contact=['Vorname' => 'Max','Nachname' => 'Mustermann', 'strasse'   => 'Musterstr. 122','ort'   => '32456 Musterhausen','mail' => 'Max@Muster.de','telefon' => '01234 5678910'];
+// Example data.
+$address = 'Musterstr. 122, 32456 Musterhausen';
+$contact = [
+    'Vorname' => 'Max',
+    'Nachname' => 'Mustermann',
+    'strasse' => 'Musterstr. 122',
+    'ort' => '32456 Musterhausen',
+    'adresse' => $address,
+    'adress' => $address,
+    'address' => $address,
+    'mail' => 'Max@Muster.de',
+    'telefon' => '01234 5678910',
+];
 
 $data = [
     'softskills' => ['Teamfähigkeit', 'Kommunikationsstärke', 'Problemlösung', 'Eigeninitiative'],
@@ -45,9 +55,8 @@ $data['career'] = [
     ],
     'qualifikationen' => [
         ['title' => 'Scrum Advanced Training', 'desc' => 'Zertifiziert nach SCRUM@Scale.'],
-    ]
+    ],
 ];
-
 
 function addBullet(array $data, string $replace, $element)
 {
@@ -60,15 +69,6 @@ $template->assign($contact);
 
 addBullet($data['softskills'], 'softskills', $template);
 addBullet($data['certs'], 'certs', $template);
-// === Softskills (Bullet-Liste) ===
-// $rtSoftskills = new RichText();
-// $rtSoftskills->addBulletList($data['softskills']);
-// $template->setElement('softskills', $rtSoftskills);
-
-// === Zertifikate (Bullet-Liste) ===
-// $rtCerts = new RichText();
-// $rtCerts->addBulletList($data['certs']);
-// $template->setElement('certs', $rtCerts);
 
 function addSkillsValues($data, $replace, $element)
 {
@@ -84,108 +84,85 @@ function addSkillsValues($data, $replace, $element)
             ['position' => 8.0, 'alignment' => 'right', 'text' => $filled . $empty, 'style' => ['color' => '#00B050']],
         ];
 
-        $par -> addTabsWithTexts($tabStops);
-
-        // $par->addText($skill['name'])
-        //     ->addTab()->addTab()->addTab()
-        //     ->addText($filled, ['color' => '#00B050'])
-        //     ->addText($empty, ['color' => '#CCCCCC'])
-        //     ->addLineBreak();
+        $par->addTabsWithTexts($tabStops);
     }
+
     $rtIT->addParagraph($par);
     $element->setElement($replace, $rtIT);
-
 }
 
 addSkillsValues($data['languages'], 'languages', $template);
 addSkillsValues($data['it'], 'it-skills', $template);
 
-// === Sprachen mit Level als Bullet-Liste ===
-// $rtLanguages = new RichText();
-// $langItems = array_map(fn($lang) => "{$lang['name']} ({$lang['level']}/10)", $data['languages']);
-// $rtLanguages->addBulletList($langItems);
-// $template->setElement('languages', $rtLanguages);
-
-// // === IT-Kenntnisse mit farbiger Bewertung ===
-// $rtIT = new RichText();
-// $par = new Paragraph();
-
-// foreach ($data['it'] as $skill) {
-//     $level = (int) $skill['level'];
-//     $filled = str_repeat('◘', $level);
-//     $empty = str_repeat('○', 10 - $level);
-
-//     $par->addText($skill['name'])
-//         ->addTab()->addTab()->addTab()
-//         ->addText($filled, ['color' => '#00B050'])
-//         ->addText($empty, ['color' => '#CCCCCC'])
-//         ->addLineBreak();
-// }
-
-// $rtIT->addParagraph($par);
-// $template->setElement('it-skills', $rtIT);
-
 $rtCareer = new RichText();
-$opt = ['background-color' => '#f0f8ff','margin-top' => '0.5cm','margin-bottom' => '0.5cm','padding' => '0.2cm'];
-// === HIGHLIGHTS
+$opt = [
+    'background-color' => '#f0f8ff',
+    'margin-top' => '0.5cm',
+    'margin-bottom' => '0.5cm',
+    'padding' => '0.2cm',
+];
+
+// Add the highlights section.
 if (!empty($data['career']['highlights'])) {
-    $rtCareer->addParagraph((new Paragraph('standard',$opt))->addText('✨ Highlights', ['bold' => true]));
+    $rtCareer->addParagraph((new Paragraph('standard', $opt))->addText('✨ Highlights', ['bold' => true]));
     $rtCareer->addBulletList($data['career']['highlights'], ['color' => '#007700']);
     $rtCareer->addParagraphBreak();
 }
 
-// Helper-Funktion für Abschnitt (Titel + Liste von [title, desc])
-function addSection($symbol,RichText $rt, string $heading, array $entries)
+// Helper for a career section consisting of a heading and [title, description] entries.
+function addSection($symbol, RichText $rt, string $heading, array $entries)
 {
-    $opt = ['background-color' => '#f0f8ff','margin-top' => '0.5cm','margin-bottom' => '0.5cm','padding' => '0.2cm'];
-    if (empty($entries))
+    $opt = [
+        'background-color' => '#f0f8ff',
+        'margin-top' => '0.5cm',
+        'margin-bottom' => '0.5cm',
+        'padding' => '0.2cm',
+    ];
+
+    if (empty($entries)) {
         return;
-    $rt->addParagraph((new Paragraph('standard',$opt))->addText("$symbol {$heading}", ['bold' => true]));
+    }
+
+    $rt->addParagraph((new Paragraph('standard', $opt))->addText("$symbol {$heading}", ['bold' => true]));
     $par = new Paragraph();
-    $c=count($entries);
-    $z=0;
-    foreach ($entries as $item) {
+    $count = count($entries);
+
+    foreach ($entries as $index => $item) {
         $par->addText($item['title'], ['bold' => true])
             ->addLineBreak()
-            ->addText($item['desc'],['font-size'=>'small']);
-            ($z<$c)?$par->addLineBreak():'';
-            $z++;
+            ->addText($item['desc'], ['font-size' => 'small']);
+
+        if ($index < $count - 1) {
+            $par->addLineBreak();
+        }
     }
+
     $rt->addParagraph($par);
-   // $rt->addParagraphBreak();
 }
 
-// === Weitere Abschnitte
+// Add the remaining career sections.
+addSection('💼', $rtCareer, 'Berufserfahrung', $data['career']['berufserfahrung']);
+addSection('🎓', $rtCareer, 'Studium', $data['career']['studium']);
+addSection('🏫', $rtCareer, 'Ausbildung', $data['career']['ausbildung']);
+addSection('📜', $rtCareer, 'Qualifikationen', $data['career']['qualifikationen']);
 
-$data['career']['berufserfahrung']?addSection('💼',$rtCareer, 'Berufserfahrung', $data['career']['berufserfahrung']):'';
-$data['career']['berufserfahrung']?addSection('🎓',$rtCareer, 'Studium', $data['career']['studium']):'';
-$data['career']['berufserfahrung']?addSection('🏫 ',$rtCareer, 'Ausbildung', $data['career']['ausbildung']):'';
-$data['career']['berufserfahrung']?addSection('📜',$rtCareer, 'Qualifikationen', $data['career']['qualifikationen']):'';
-
-// === Ins Template einfügen
+// Insert the career block into the template.
 $template->setElement('berufserfahrungen', $rtCareer);
 
 $template->setImage('foto', 'assets/Logo-2.png', [
     'width' => '3.5cm',
     'anchor' => 'paragraph',
-    'align' => 'left'
+    'align' => 'left',
 ]);
 
-// === QR-Code via Google API ===
-$vcard = rawurlencode(<<<EOT
-BEGIN:VCARD
-VERSION:3.0
-N:$nachname;$vorname;;;
-FN:$vorname $nachname
-TEL:$telefon
-EMAIL:$email
-ADR;TYPE=home:;;$adresse;;;;
-END:VCARD
-EOT);
+$template->setImage('qrCode', 'assets/sample_21_vcard_qr.png', [
+    'width' => '2.8cm',
+    'anchor' => 'as-char',
+    'wrap' => 'none',
+]);
 
-
-// ==== Generieren ====
+// Render and save the document.
 $template->render();
 $template->save('samples/output/output_21_cvProfile.odt');
 
-echo "Dokument erfolgreich generiert: output/output_21_cvProfile.odt\n";
+echo "Document generated successfully: output/output_21_cvProfile.odt\n";

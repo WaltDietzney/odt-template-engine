@@ -11,7 +11,6 @@
 use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Elements\ImageElement;
 
-
 // [1] Initialize template
 $template = new OdtTemplate('samples/templates/template_06_imageSettings.odt');
 
@@ -28,7 +27,7 @@ $img = new ImageElement($logoPath, [
     'height' => '3cm',            // Set height
 ]);
 
-// Alternative: Set styles separately if needed
+// Alternative: set styles separately when the element already exists.
 // $img->setStyle([
 //     'align'  => 'right',
 //     'anchor' => 'paragraph',
@@ -49,7 +48,3 @@ $template->setImage('image', $imagePath, [
 
 // [6] Save the final document
 $template->save('samples/output/output_06_imageSettings.odt');
-
-// Optional Debug Output
-// echo "✅ ODT with images successfully generated.\n";
-

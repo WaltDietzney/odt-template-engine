@@ -10,7 +10,6 @@
  * This sample builds a structured "Contacts List" using RichText and multiple Paragraph elements.
  */
 
-
 use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\RichText;
@@ -29,7 +28,7 @@ $para = new Paragraph('Custom', [
     'text-align'    => 'center',
 ]);
 
-// (Optional) Ensure the paragraph style exists before using it
+// Optional: ensure the named paragraph style exists before using it.
 // $template->ensureParagraphStylesExist([
 //     'Custom' => [
 //         'margin-top' => '1cm',
@@ -102,5 +101,3 @@ $template->setElement('contacts_block', $rich);
 
 // 9️⃣ Save the final document
 $template->save('samples/output/output_07_contactList.odt');
-
-//echo "✅ contacts_list.odt created successfully.\n";

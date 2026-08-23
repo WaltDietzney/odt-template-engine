@@ -7,8 +7,6 @@
  * everything into a rich, well-structured document using the OdtTemplateEngine.
  */
 
-//require_once '../vendor/autoload.php';
-
 use OdtTemplateEngine\Elements\ImageElement;
 use OdtTemplateEngine\Elements\RichTable;
 use OdtTemplateEngine\Elements\RichText;
@@ -172,5 +170,3 @@ $template->setElement('table1', $rich);
 $template->save('samples/output/output_13_settingCells.odt');
 
 echo "✔️ Successfully created test ODT: samples/output/output_13_settingCells.odt\n";
-
-
