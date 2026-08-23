@@ -45,4 +45,31 @@ composer install
 composer test
 ```
 
-The repository test suite is separate from the documentation toolchain and validates the PHP library itself.
+The repository test suite validates the PHP library itself.
+
+## Preview the developer documentation
+
+The developer documentation is built with [Zensical](https://zensical.org/). Install it in a separate Python virtual environment so that documentation dependencies remain isolated from the PHP project.
+
+On Debian or Ubuntu, install Python virtual-environment support if necessary:
+
+```bash
+sudo apt install python3-venv python3-pip
+```
+
+Then, from the repository root:
+
+```bash
+python3 -m venv .venv-docs
+source .venv-docs/bin/activate
+pip install zensical
+zensical serve
+```
+
+The local preview is available at `http://localhost:8000/` by default.
+
+To verify that the static documentation builds without warnings, run:
+
+```bash
+zensical build --strict
+```
