@@ -85,9 +85,9 @@ declare(strict_types=1);
         stabilen und funktionsfähigen Betrieb dieser Website.
     </p>
     <p>
-        Die Apache-Logdateien werden täglich rotiert. Es werden 14 ältere Rotationen vorgehalten; ältere
-        Logdateien werden im Rahmen dieser Rotation automatisch entfernt. Eine darüber hinausgehende Nutzung
-        der Logdaten zu Werbe- oder Trackingzwecken findet nicht statt.
+        Die Apache-Logdateien werden täglich rotiert und für bis zu 14 Tage als ältere Rotationen vorgehalten.
+        Ältere Logdateien werden im Rahmen dieser Rotation automatisch entfernt. Eine darüber hinausgehende
+        Nutzung der Logdaten zu Werbe- oder Trackingzwecken findet nicht statt.
     </p>
 
     <h2>3. Cookies, Tracking und externe Ressourcen</h2>
