@@ -1,3 +1,181 @@
+.cv-showcase {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(330px, 0.95fr);
+    gap: 48px;
+    align-items: center;
+    padding: 38px;
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    background: linear-gradient(135deg, #fff 0%, #f7f9ff 100%);
+    box-shadow: var(--shadow);
+}
+
+.cv-showcase h2 {
+    margin: 8px 0 12px;
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    letter-spacing: -0.04em;
+}
+
+.cv-showcase-copy > p {
+    max-width: 680px;
+    margin: 0;
+    color: var(--muted);
+}
+
+.cv-showcase-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 20px 0;
+}
+
+.cv-showcase-features span {
+    padding: 7px 10px;
+    border: 1px solid #dce3f5;
+    border-radius: 999px;
+    background: #fff;
+    color: #46516b;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.cv-showcase-code {
+    margin: 0;
+    padding: 18px;
+    border-radius: 14px;
+    background: #111827;
+    color: #dbe4f3;
+    font: 0.76rem/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    overflow: auto;
+}
+
+.cv-showcase-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.cv-document-preview {
+    position: relative;
+    display: grid;
+    grid-template-columns: 38% 62%;
+    width: min(100%, 430px);
+    aspect-ratio: 0.707;
+    justify-self: center;
+    overflow: hidden;
+    border: 1px solid #cbd3e5;
+    background: #fff;
+    box-shadow: 0 24px 54px rgba(31, 45, 78, 0.18);
+}
+
+.cv-preview-sidebar {
+    padding: 12% 11%;
+    background: #123b54;
+    color: #fff;
+}
+
+.cv-preview-sidebar strong {
+    display: block;
+    margin-bottom: 8%;
+    font-size: clamp(0.72rem, 1.4vw, 1rem);
+}
+
+.cv-preview-photo {
+    display: grid;
+    width: 62%;
+    aspect-ratio: 1;
+    place-items: center;
+    margin-bottom: 10%;
+    background: #dcecf6;
+    color: #123b54;
+    font-size: 0.72rem;
+    font-weight: 850;
+}
+
+.cv-preview-sidebar small {
+    display: block;
+    margin: 10% 0 4%;
+    font-size: 0.48rem;
+    font-weight: 850;
+}
+
+.cv-preview-sidebar i,
+.cv-preview-content i {
+    display: block;
+    width: 100%;
+    height: 3px;
+    margin: 4px 0;
+    border-radius: 2px;
+    background: currentColor;
+    opacity: 0.38;
+}
+
+.cv-preview-sidebar i.short,
+.cv-preview-content i.short {
+    width: 68%;
+}
+
+.cv-preview-content {
+    padding: 12% 8%;
+    color: #182133;
+}
+
+.cv-preview-content strong {
+    display: inline-block;
+    margin-top: 7%;
+    font-size: clamp(0.58rem, 1.15vw, 0.84rem);
+}
+
+.cv-preview-content strong:first-child {
+    margin-top: 0;
+}
+
+.cv-preview-content b {
+    display: block;
+    height: 2px;
+    margin: 2px 0 7px;
+    background: #123b54;
+}
+
+.cv-preview-content em {
+    display: block;
+    margin-top: 8px;
+    font-size: 0.46rem;
+    font-style: normal;
+    font-weight: 700;
+    color: #536078;
+}
+
+.cv-preview-content h3 {
+    margin: 1px 0 5px;
+    font-size: clamp(0.52rem, 1vw, 0.72rem);
+}
+
+.cv-preview-badge {
+    position: absolute;
+    right: 14px;
+    bottom: 14px;
+    padding: 7px 10px;
+    border-radius: 999px;
+    background: #fff;
+    color: #24435c;
+    font-size: 0.68rem;
+    font-weight: 800;
+    box-shadow: 0 6px 18px rgba(31, 45, 78, 0.16);
+}
+
+#sample-21-showcase {
+    border-color: #aebce8;
+    box-shadow: 0 16px 40px rgba(55, 88, 214, 0.12);
+}
+
+#sample-21-showcase .category {
+    background: #e8edff;
+    color: #354da8;
+}
+
 .showcase-section {
     margin-top: 96px;
     padding-top: 8px;
@@ -192,9 +370,14 @@
 }
 
 @media (max-width: 900px) {
+    .cv-showcase,
     .project-grid,
     .support-section {
         grid-template-columns: 1fr;
+    }
+
+    .cv-document-preview {
+        width: min(100%, 380px);
     }
 
     .support-section {
@@ -207,6 +390,16 @@
 }
 
 @media (max-width: 640px) {
+    .cv-showcase {
+        padding: 26px 20px;
+        gap: 30px;
+    }
+
+    .cv-showcase-actions {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
     .showcase-section {
         margin-top: 68px;
     }
