@@ -2,23 +2,22 @@
 /**
  * Sample 19: HTML Table Import
  *
- * Demonstrates how to convert an HTML table into a RichTable using HtmlImporter
+ * Demonstrates how to convert an HTML table into rich ODT content using HtmlImporter
  * and inject it into an ODT template.
  */
-//require '../vendor/autoload.php';
 
-use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Import\HtmlImporter;
+use OdtTemplateEngine\OdtTemplate;
 
-// 1️⃣ Lade das ODT-Template
+// Load the ODT template.
 $template = new OdtTemplate('samples/templates/template_19_htmlTable.odt');
 $template->load();
 
-// 2️⃣ HTML-Quelltext mit Tabelle
+// Define HTML containing a styled table and supporting text.
 $html = <<<HTML
 <h2 style="font-family: Georgia, serif; color: #2c3e50;">Team Overview Table</h2>
 <p style="font-size: 11pt; font-family: Georgia, serif;">
-    This styled table provides a quick overview of team members, their roles, and current status. Colors and font styles are used 
+    This styled table provides a quick overview of team members, their roles, and current status. Colors and font styles are used
     to enhance readability and highlight important information at a glance.
 </p>
 <p><p>
@@ -52,13 +51,11 @@ $html = <<<HTML
 </p>
 HTML;
 
-
-// 3️⃣ Verwandle HTML in eine RichText-Struktur
+// Convert the HTML fragment into rich ODT content.
 $richText = HtmlImporter::fromHtml($html);
-
 $template->setElement('tableblock', $richText);
 
-// 6️⃣ Speichere das fertige ODT-Dokument
+// Save the generated ODT document.
 $template->save('samples/output/output_19_htmlTable.odt');
 
-echo "✅ Fertig: output_19_html_table.odt\n";
+echo "✅ HTML table sample generated successfully.\n";
