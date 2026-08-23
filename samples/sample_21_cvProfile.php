@@ -156,7 +156,7 @@ function addSidebarList(RichText $rich, string $title, array $items): void
 /**
  * Add a section heading to the main content column.
  */
-function addMainHeading(RichText $rich, string $title, string $marginTop = '0.35cm'): void
+function addMainHeading(RichText $rich, string $title, string $marginTop = '0.45cm'): void
 {
     $rich->addParagraph(cvParagraph($title, [
         'bold' => true,
@@ -252,13 +252,13 @@ $content->addParagraph(cvParagraph($cv['profile'], [
 ]));
 
 addMainHeading($content, 'BERUFSERFAHRUNG');
-foreach ($cv['experience'] as $entry) {
+foreach ($cv['experience'] as $index => $entry) {
     $content->addParagraph(cvParagraph($entry['period'], [
         'bold' => true,
         'font-size' => '8.5pt',
         'color' => '#444444',
     ], [
-        'margin-top' => '0.14cm',
+        'margin-top' => $index === 0 ? '0.05cm' : '0.14cm',
         'margin-bottom' => '0.01cm',
         'line-height' => '100%',
     ]));
@@ -294,13 +294,13 @@ foreach ($cv['experience'] as $entry) {
 }
 
 addMainHeading($content, 'AUSBILDUNG');
-foreach ($cv['education'] as $entry) {
+foreach ($cv['education'] as $index => $entry) {
     $content->addParagraph(cvParagraph($entry['period'], [
         'bold' => true,
         'font-size' => '8.5pt',
         'color' => '#444444',
     ], [
-        'margin-top' => '0.14cm',
+        'margin-top' => $index === 0 ? '0.05cm' : '0.14cm',
         'margin-bottom' => '0.01cm',
         'line-height' => '100%',
     ]));
