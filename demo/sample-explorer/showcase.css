@@ -138,9 +138,9 @@
 }
 
 .support-button {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(140px, 1fr) minmax(130px, 1fr) 124px minmax(150px, 1fr);
     align-items: center;
-    justify-content: space-between;
     gap: 18px;
     padding: 16px 18px;
     border: 1px solid rgba(255, 255, 255, 0.15);
@@ -160,7 +160,14 @@
     text-align: right;
 }
 
+.support-button img {
+    grid-column: 3;
+    justify-self: center;
+}
+
 .support-button-github {
+    display: flex;
+    justify-content: space-between;
     background: #fff;
     color: #172033;
     transition: transform 140ms ease;
@@ -214,10 +221,16 @@
         padding: 28px 22px;
     }
 
-    .support-button {
+    .support-button,
+    .support-button-github {
+        display: flex;
         align-items: flex-start;
         flex-direction: column;
-        gap: 4px;
+        gap: 8px;
+    }
+
+    .support-button img {
+        align-self: flex-start;
     }
 
     .support-button span {
