@@ -9,7 +9,7 @@ use OdtTemplateEngine\Elements\RichText;
 use OdtTemplateEngine\PageLayoutOdtTemplate;
 
 $template = new PageLayoutOdtTemplate('samples/templates/template_21_cvProfile.odt');
-$template->setPageMargins('0cm', '0cm', '0cm', '0cm');
+$template->setPageMargins('0cm', '0.8cm', '0cm', '0cm');
 
 $cv = [
     'personal' => [
@@ -60,6 +60,24 @@ $cv = [
             'tasks' => [
                 'Backend-Entwicklung mit PHP und SQL.',
                 'Integration externer Dienste und Datenquellen.',
+            ],
+        ],
+        [
+            'period' => '2015 – 2018',
+            'position' => 'Junior Softwareentwickler',
+            'company' => 'Muster Software GmbH · Dortmund',
+            'tasks' => [
+                'Entwicklung interner Webanwendungen und Schnittstellen.',
+                'Pflege bestehender PHP-Anwendungen und Datenbanken.',
+            ],
+        ],
+        [
+            'period' => '2014 – 2015',
+            'position' => 'Softwareentwickler',
+            'company' => 'Digital Services OHG · Münster',
+            'tasks' => [
+                'Umsetzung kleiner Webprojekte mit PHP, HTML und JavaScript.',
+                'Technische Dokumentation und Anwendersupport.',
             ],
         ],
     ],
@@ -138,7 +156,7 @@ function addSidebarList(RichText $rich, string $title, array $items): void
 /**
  * Add a section heading to the main content column.
  */
-function addMainHeading(RichText $rich, string $title, string $marginTop = '0.20cm'): void
+function addMainHeading(RichText $rich, string $title, string $marginTop = '0.35cm'): void
 {
     $rich->addParagraph(cvParagraph($title, [
         'bold' => true,
@@ -240,7 +258,7 @@ foreach ($cv['experience'] as $entry) {
         'font-size' => '8.5pt',
         'color' => '#444444',
     ], [
-        'margin-top' => '0.05cm',
+        'margin-top' => '0.14cm',
         'margin-bottom' => '0.01cm',
         'line-height' => '100%',
     ]));
@@ -282,7 +300,7 @@ foreach ($cv['education'] as $entry) {
         'font-size' => '8.5pt',
         'color' => '#444444',
     ], [
-        'margin-top' => '0.05cm',
+        'margin-top' => '0.14cm',
         'margin-bottom' => '0.01cm',
         'line-height' => '100%',
     ]));
