@@ -1,168 +1,343 @@
 <?php
 
-use OdtTemplateEngine\OdtTemplate;
-use OdtTemplateEngine\Elements\RichText;
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
+use OdtTemplateEngine\Elements\ImageElement;
+use OdtTemplateEngine\Elements\ListElement;
 use OdtTemplateEngine\Elements\Paragraph;
+use OdtTemplateEngine\Elements\RichText;
+use OdtTemplateEngine\PageLayoutOdtTemplate;
 
-// Load the template.
-$template = new OdtTemplate('samples/templates/template_21_cvProfile.odt');
-$template->load();
+$template = new PageLayoutOdtTemplate('samples/templates/template_21_cvProfile.odt');
+$template->setPageMargins('0cm', '0.8cm', '0cm', '0cm');
 
-// Example data.
-$address = 'Musterstr. 122, 32456 Musterhausen';
-$contact = [
-    'Vorname' => 'Max',
-    'Nachname' => 'Mustermann',
-    'strasse' => 'Musterstr. 122',
-    'ort' => '32456 Musterhausen',
-    'adresse' => $address,
-    'adress' => $address,
-    'address' => $address,
-    'mail' => 'Max@Muster.de',
-    'telefon' => '01234 5678910',
-];
-
-$data = [
-    'softskills' => ['Teamfähigkeit', 'Kommunikationsstärke', 'Problemlösung', 'Eigeninitiative'],
-    'certs' => ['SCRUM Master', 'ITIL Foundation', 'AWS Certified Developer'],
+$cv = [
+    'personal' => [
+        'name' => 'Max Mustermann',
+        'birth' => '01.10.1990, Musterstadt',
+        'email' => 'max.mustermann@example.de',
+        'phone' => '+49 123 456789',
+        'city' => '32456 Musterhausen',
+        'photo' => 'assets/WaltDietzney.png',
+    ],
+    'profile' => 'Erfahrener Softwareentwickler mit Schwerpunkt auf PHP, Webanwendungen und dokumentenbasierten Workflows. '
+        . 'Strukturierte, wartbare Lösungen und eine verständliche technische Kommunikation stehen im Mittelpunkt.',
+    'plus_points' => [
+        'Mehrjährige Projekterfahrung',
+        'Strukturierte Arbeitsweise',
+        'Technische Kommunikation',
+    ],
+    'soft_skills' => [
+        'Teamfähigkeit',
+        'Eigeninitiative',
+        'Problemlösung',
+    ],
+    'skills' => [
+        ['name' => 'PHP', 'level' => 5],
+        ['name' => 'ODT / XML', 'level' => 5],
+        ['name' => 'JavaScript', 'level' => 4],
+        ['name' => 'SQL', 'level' => 4],
+    ],
     'languages' => [
-        ['name' => 'Deutsch', 'level' => 10],
-        ['name' => 'Englisch', 'level' => 9],
-        ['name' => 'Französisch', 'level' => 6],
+        'Deutsch – Muttersprache',
+        'Englisch – sehr gut',
     ],
-    'it' => [
-        ['name' => 'PHP', 'level' => 9],
-        ['name' => 'JavaScript', 'level' => 8],
-        ['name' => 'SQL', 'level' => 7],
-        ['name' => 'Python', 'level' => 6],
+    'experience' => [
+        [
+            'period' => '2022 – heute',
+            'position' => 'Senior Softwareentwickler',
+            'company' => 'Example Solutions GmbH · Bielefeld',
+            'tasks' => [
+                'Entwicklung und Wartung PHP-basierter Fachanwendungen.',
+                'Automatisierte Erzeugung editierbarer Office-Dokumente.',
+                'Konzeption wiederverwendbarer Komponenten und Schnittstellen.',
+            ],
+        ],
+        [
+            'period' => '2018 – 2022',
+            'position' => 'Softwareentwickler',
+            'company' => 'Acme Digital AG · Hannover',
+            'tasks' => [
+                'Backend-Entwicklung mit PHP und SQL.',
+                'Integration externer Dienste und Datenquellen.',
+            ],
+        ],
+        [
+            'period' => '2015 – 2018',
+            'position' => 'Junior Softwareentwickler',
+            'company' => 'Muster Software GmbH · Dortmund',
+            'tasks' => [
+                'Entwicklung interner Webanwendungen und Schnittstellen.',
+                'Pflege bestehender PHP-Anwendungen und Datenbanken.',
+            ],
+        ],
+        [
+            'period' => '2014 – 2015',
+            'position' => 'Softwareentwickler',
+            'company' => 'Digital Services OHG · Münster',
+            'tasks' => [
+                'Umsetzung kleiner Webprojekte mit PHP, HTML und JavaScript.',
+                'Technische Dokumentation und Anwendersupport.',
+            ],
+        ],
+    ],
+    'education' => [
+        [
+            'period' => '2014 – 2018',
+            'title' => 'B.Sc. Informatik',
+            'institution' => 'Technische Universität Musterstadt',
+        ],
+        [
+            'period' => '2011 – 2014',
+            'title' => 'Fachinformatiker Anwendungsentwicklung',
+            'institution' => 'IHK Musterstadt',
+        ],
+    ],
+    'qualifications' => [
+        'Scrum Advanced Training',
+        'ITIL Foundation',
     ],
 ];
 
-$data['career'] = [
-    'highlights' => [
-        'Erfolgreiche Einführung von DevOps-Prozessen',
-        'Migration auf cloud-native Architektur',
-    ],
-    'berufserfahrung' => [
-        ['title' => 'Senior Developer – Acme GmbH', 'desc' => 'Leitung von Backend-Architektur und API-Design.'],
-        ['title' => 'Consultant – Example AG', 'desc' => 'Beratung zur digitalen Transformation.'],
-    ],
-    'studium' => [
-        ['title' => 'B.Sc. Informatik – TU Berlin', 'desc' => 'Schwerpunkt: Software Engineering.'],
-    ],
-    'ausbildung' => [
-        ['title' => 'Fachinformatiker – IHK Berlin', 'desc' => 'Dual bei CodeCorp GmbH.'],
-    ],
-    'qualifikationen' => [
-        ['title' => 'Scrum Advanced Training', 'desc' => 'Zertifiziert nach SCRUM@Scale.'],
-    ],
-];
-
-function addBullet(array $data, string $replace, $element)
+/**
+ * Create a styled paragraph while keeping the sample code compact.
+ */
+function cvParagraph(string $text, array $textStyle = [], array $paragraphStyle = []): Paragraph
 {
-    $rich = new RichText();
-    $rich->addBulletList($data);
-    $element->setElement($replace, $rich);
+    $styleName = 'cv_' . substr(md5(json_encode($paragraphStyle)), 0, 8);
+    $paragraph = new Paragraph($styleName, $paragraphStyle);
+    $paragraph->addText($text, array_merge([
+        'font-family' => 'Arial',
+    ], $textStyle));
+
+    return $paragraph;
 }
 
-$template->assign($contact);
-
-addBullet($data['softskills'], 'softskills', $template);
-addBullet($data['certs'], 'certs', $template);
-
-function addSkillsValues($data, $replace, $element)
+/**
+ * Add a heading to the dark sidebar.
+ */
+function addSidebarHeading(RichText $rich, string $title): void
 {
-    $rtIT = new RichText();
-    $par = new Paragraph();
+    $rich->addParagraph(cvParagraph($title, [
+        'bold' => true,
+        'font-size' => '10pt',
+        'color' => '#ffffff',
+    ], [
+        'margin-top' => '0.16cm',
+        'margin-bottom' => '0.04cm',
+        'line-height' => '100%',
+    ]));
+}
 
-    foreach ($data as $skill) {
-        $level = (int) $skill['level'];
-        $filled = str_repeat('◘', $level);
-        $empty = str_repeat('○', 10 - $level);
-        $tabStops = [
-            ['position' => 0.2, 'alignment' => 'left', 'text' => $skill['name'], 'style' => ['bold' => true]],
-            ['position' => 8.0, 'alignment' => 'right', 'text' => $filled . $empty, 'style' => ['color' => '#00B050']],
-        ];
+/**
+ * Add a native ODF bullet list to the sidebar.
+ *
+ * @param list<string> $items
+ */
+function addSidebarList(RichText $rich, string $title, array $items): void
+{
+    addSidebarHeading($rich, $title);
 
-        $par->addTabsWithTexts($tabStops);
+    $list = new ListElement('bullet');
+    foreach ($items as $item) {
+        $paragraph = new Paragraph();
+        $paragraph->addText($item, [
+            'font-family' => 'Arial',
+            'font-size' => '8.5pt',
+            'color' => '#ffffff',
+        ]);
+        $list->addItem($paragraph);
     }
 
-    $rtIT->addParagraph($par);
-    $element->setElement($replace, $rtIT);
+    $rich->addElement($list);
+    $rich->addParagraph(cvParagraph('', [], ['margin-bottom' => '0.05cm']));
 }
 
-addSkillsValues($data['languages'], 'languages', $template);
-addSkillsValues($data['it'], 'it-skills', $template);
-
-$rtCareer = new RichText();
-$opt = [
-    'background-color' => '#f0f8ff',
-    'margin-top' => '0.5cm',
-    'margin-bottom' => '0.5cm',
-    'padding' => '0.2cm',
-];
-
-// Add the highlights section.
-if (!empty($data['career']['highlights'])) {
-    $rtCareer->addParagraph((new Paragraph('standard', $opt))->addText('✨ Highlights', ['bold' => true]));
-    $rtCareer->addBulletList($data['career']['highlights'], ['color' => '#007700']);
-    $rtCareer->addParagraphBreak();
-}
-
-// Helper for a career section consisting of a heading and [title, description] entries.
-function addSection($symbol, RichText $rt, string $heading, array $entries)
+/**
+ * Add a section heading to the main content column.
+ */
+function addMainHeading(RichText $rich, string $title, string $marginTop = '0.45cm'): void
 {
-    $opt = [
-        'background-color' => '#f0f8ff',
-        'margin-top' => '0.5cm',
-        'margin-bottom' => '0.5cm',
-        'padding' => '0.2cm',
-    ];
-
-    if (empty($entries)) {
-        return;
-    }
-
-    $rt->addParagraph((new Paragraph('standard', $opt))->addText("$symbol {$heading}", ['bold' => true]));
-    $par = new Paragraph();
-    $count = count($entries);
-
-    foreach ($entries as $index => $item) {
-        $par->addText($item['title'], ['bold' => true])
-            ->addLineBreak()
-            ->addText($item['desc'], ['font-size' => 'small']);
-
-        if ($index < $count - 1) {
-            $par->addLineBreak();
-        }
-    }
-
-    $rt->addParagraph($par);
+    $rich->addParagraph(cvParagraph($title, [
+        'bold' => true,
+        'font-size' => '13pt',
+        'color' => '#111111',
+    ], [
+        'margin-top' => $marginTop,
+        'margin-bottom' => '0.10cm',
+        'padding-bottom' => '0.03cm',
+        'line-height' => '100%',
+        'border-bottom' => '1.5pt solid #12324a',
+    ]));
 }
 
-// Add the remaining career sections.
-addSection('💼', $rtCareer, 'Berufserfahrung', $data['career']['berufserfahrung']);
-addSection('🎓', $rtCareer, 'Studium', $data['career']['studium']);
-addSection('🏫', $rtCareer, 'Ausbildung', $data['career']['ausbildung']);
-addSection('📜', $rtCareer, 'Qualifikationen', $data['career']['qualifikationen']);
+// Build the dark sidebar as one rich ODT content block.
+$sidebar = new RichText();
 
-// Insert the career block into the template.
-$template->setElement('berufserfahrungen', $rtCareer);
+$sidebar->addParagraph(cvParagraph($cv['personal']['name'], [
+    'bold' => true,
+    'font-size' => '16pt',
+    'color' => '#ffffff',
+], [
+    'margin-bottom' => '0.10cm',
+    'line-height' => '100%',
+]));
 
-$template->setImage('foto', 'assets/Logo-2.png', [
-    'width' => '3.5cm',
-    'anchor' => 'paragraph',
-    'align' => 'left',
-]);
-
-$template->setImage('qrCode', 'assets/sample_21_vcard_qr.png', [
-    'width' => '2.8cm',
+$sidebar->addImage(new ImageElement($cv['personal']['photo'], [
+    'width' => '3.4cm',
+    'height' => '3.4cm',
     'anchor' => 'as-char',
-    'wrap' => 'none',
-]);
+    'align' => 'left',
+]));
 
-// Render and save the document.
-$template->render();
+$sidebar->addParagraph(cvParagraph('° ' . $cv['personal']['birth'], [
+    'font-size' => '8.5pt',
+    'color' => '#ffffff',
+], [
+    'margin-top' => '0.05cm',
+    'margin-bottom' => '0.10cm',
+]));
+
+addSidebarHeading($sidebar, 'KONTAKT');
+foreach ([
+    'E-Mail: ' . $cv['personal']['email'],
+    'Telefon: ' . $cv['personal']['phone'],
+    'Ort: ' . $cv['personal']['city'],
+] as $line) {
+    $sidebar->addParagraph(cvParagraph($line, [
+        'font-size' => '8.5pt',
+        'color' => '#ffffff',
+    ], [
+        'margin-bottom' => '0.02cm',
+        'line-height' => '105%',
+    ]));
+}
+
+addSidebarList($sidebar, 'PLUSPUNKTE', $cv['plus_points']);
+addSidebarList($sidebar, 'SOFT SKILLS', $cv['soft_skills']);
+
+addSidebarHeading($sidebar, 'FACHKOMPETENZEN');
+foreach ($cv['skills'] as $skill) {
+    $rating = str_repeat('★', $skill['level']) . str_repeat('☆', 5 - $skill['level']);
+    $paragraph = new Paragraph('cv_skill', [
+        'margin-bottom' => '0.02cm',
+        'line-height' => '105%',
+    ]);
+    $paragraph->addText($skill['name'] . '  ', [
+        'font-family' => 'Arial',
+        'font-size' => '8.5pt',
+        'bold' => true,
+        'color' => '#ffffff',
+    ]);
+    $paragraph->addText($rating, [
+        'font-family' => 'Arial',
+        'font-size' => '8.5pt',
+        'color' => '#ffffff',
+    ]);
+    $sidebar->addParagraph($paragraph);
+}
+
+addSidebarList($sidebar, 'SPRACHEN', $cv['languages']);
+
+// Build the main CV column independently from the template layout.
+$content = new RichText();
+
+addMainHeading($content, 'PROFIL', '0cm');
+$content->addParagraph(cvParagraph($cv['profile'], [
+    'font-size' => '9pt',
+    'color' => '#333333',
+], [
+    'margin-bottom' => '0.10cm',
+    'line-height' => '110%',
+]));
+
+addMainHeading($content, 'BERUFSERFAHRUNG');
+foreach ($cv['experience'] as $index => $entry) {
+    $content->addParagraph(cvParagraph($entry['period'], [
+        'bold' => true,
+        'font-size' => '8.5pt',
+        'color' => '#444444',
+    ], [
+        'margin-top' => $index === 0 ? '0.05cm' : '0.14cm',
+        'margin-bottom' => '0.01cm',
+        'line-height' => '100%',
+    ]));
+
+    $content->addParagraph(cvParagraph($entry['position'], [
+        'bold' => true,
+        'font-size' => '10.5pt',
+        'color' => '#111111',
+    ], [
+        'margin-bottom' => '0.01cm',
+        'line-height' => '100%',
+    ]));
+
+    $content->addParagraph(cvParagraph($entry['company'], [
+        'font-size' => '8.5pt',
+        'color' => '#666666',
+    ], [
+        'margin-bottom' => '0.03cm',
+        'line-height' => '100%',
+    ]));
+
+    $tasks = new ListElement('bullet');
+    foreach ($entry['tasks'] as $task) {
+        $paragraph = new Paragraph();
+        $paragraph->addText($task, [
+            'font-family' => 'Arial',
+            'font-size' => '8.5pt',
+            'color' => '#333333',
+        ]);
+        $tasks->addItem($paragraph);
+    }
+    $content->addElement($tasks);
+}
+
+addMainHeading($content, 'AUSBILDUNG');
+foreach ($cv['education'] as $index => $entry) {
+    $content->addParagraph(cvParagraph($entry['period'], [
+        'bold' => true,
+        'font-size' => '8.5pt',
+        'color' => '#444444',
+    ], [
+        'margin-top' => $index === 0 ? '0.05cm' : '0.14cm',
+        'margin-bottom' => '0.01cm',
+        'line-height' => '100%',
+    ]));
+
+    $content->addParagraph(cvParagraph($entry['title'], [
+        'bold' => true,
+        'font-size' => '10pt',
+    ], [
+        'margin-bottom' => '0.01cm',
+        'line-height' => '100%',
+    ]));
+
+    $content->addParagraph(cvParagraph($entry['institution'], [
+        'font-size' => '8.5pt',
+        'color' => '#666666',
+    ], [
+        'margin-bottom' => '0.04cm',
+        'line-height' => '100%',
+    ]));
+}
+
+addMainHeading($content, 'ZUSATZQUALIFIKATIONEN');
+$qualifications = new ListElement('bullet');
+foreach ($cv['qualifications'] as $qualification) {
+    $paragraph = new Paragraph();
+    $paragraph->addText($qualification, [
+        'font-family' => 'Arial',
+        'font-size' => '8.5pt',
+        'color' => '#333333',
+    ]);
+    $qualifications->addItem($paragraph);
+}
+$content->addElement($qualifications);
+
+// The LibreOffice template defines the columns; PHP controls page geometry and structured content.
+$template->setElement('cv_sidebar', $sidebar);
+$template->setElement('cv_content', $content);
 $template->save('samples/output/output_21_cvProfile.odt');
 
 echo "Document generated successfully: output/output_21_cvProfile.odt\n";
