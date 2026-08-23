@@ -11,6 +11,10 @@ ODT Template Engine is an open-source PHP library for turning existing ODT templ
 
 > Use familiar LibreOffice/ODT documents as templates and keep the generated result editable instead of limiting document generation to PDF output.
 
+### 🚀 Try it online
+
+**[Open the live Sample Explorer](https://odt.walter-dietz.de/)** — inspect real PHP sample code, explore template variables and generate downloadable `.odt` documents directly in your browser. No installation required.
+
 ## Why ODT Template Engine?
 
 Many document-generation workflows start with HTML and end with PDF. That is useful when the final document is meant to be fixed, but it is less convenient when users need to continue editing the result in an office application.
@@ -128,9 +132,11 @@ The repository also contains elements and helpers for tables, table cells, image
 
 ## Interactive samples
 
-The repository ships with a growing collection of real ODT templates and executable examples under [`samples/`](samples/).
+Want to see what the engine actually produces before installing it? **[Try the live Sample Explorer](https://odt.walter-dietz.de/)**. You can open the PHP source behind each example, inspect the template variables and generate the real editable ODT output yourself.
 
-A browser-based Sample Explorer is available under [`demo/sample-explorer/`](demo/sample-explorer/). It lets you:
+The same Sample Explorer is included in the repository under [`demo/sample-explorer/`](demo/sample-explorer/), while the growing collection of real ODT templates and executable examples lives under [`samples/`](samples/).
+
+The explorer lets you:
 
 - browse examples by feature area;
 - search the sample collection;
@@ -146,7 +152,7 @@ php -S localhost:8085 -t demo/sample-explorer
 
 Then open `http://localhost:8085` in your browser.
 
-> The Sample Explorer is currently intended for local development and controlled environments. See [`demo/README.md`](demo/README.md) before exposing it publicly.
+> Before exposing your own Sample Explorer deployment publicly, review [`demo/README.md`](demo/README.md) and apply appropriate server and deployment controls.
 
 ## Used in real projects
 
@@ -221,7 +227,7 @@ A dedicated contribution guide will be added as the public release process is fo
 
 ODT Template Engine is free and open source. If the project is useful to you, starring the repository helps other developers discover it.
 
-You can also support continued development via [PayPal](https://www.paypal.com/donate/?hosted_button_id=RVFJUELPFMXQW). Bitcoin Lightning support is planned for the public project site.
+You can also support continued development via [PayPal](https://www.paypal.com/donate/?hosted_button_id=RVFJUELPFMXQW) or visit the [official project site](https://odt.walter-dietz.de/) for PayPal and Bitcoin Lightning support.
 
 ## Author
 
