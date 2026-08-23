@@ -170,6 +170,7 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
             <a href="#how-it-works">How it works</a>
             <a href="#samples">Live samples</a>
             <a href="#projects">Projects</a>
+            <a href="#support">Support</a>
             <a href="<?= $githubUrl ?>" target="_blank" rel="noreferrer">GitHub</a>
         </div>
     </nav>
@@ -383,12 +384,21 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
     <section class="support-section" id="support" aria-labelledby="support-title">
         <div class="support-copy">
             <span class="section-kicker section-kicker-light">Open source · MIT licensed</span>
-            <h2 id="support-title">Source, package and support</h2>
-            <p>Inspect the implementation, install the Composer package or support continued development of the project.</p>
+            <h2 id="support-title">Support further development</h2>
+            <p>ODT Template Engine is free and open source. If the library saves you time or helps with your project, you can support its continued development via PayPal or Bitcoin Lightning. Thank you!</p>
         </div>
         <div class="support-actions">
-            <a class="support-button support-button-github" href="<?= $githubUrl ?>" target="_blank" rel="noreferrer"><strong>★ GitHub</strong><span>Source, issues and tests</span></a>
-            <a class="support-button" href="<?= $packagistUrl ?>" target="_blank" rel="noreferrer"><strong>Packagist</strong><span>Composer package</span></a>
+            <a class="support-button support-button-github" href="<?= $githubUrl ?>" target="_blank" rel="noreferrer">
+                <strong>★ Star on GitHub</strong>
+            </a>
+            <div class="support-button support-button-disabled" aria-label="PayPal support">
+                <strong>PayPal</strong>
+                <span>Support via PayPal →</span>
+            </div>
+            <div class="support-button support-button-lightning" aria-label="Bitcoin Lightning support">
+                <strong>⚡ Bitcoin Lightning</strong>
+                <span>Support via Lightning →</span>
+            </div>
         </div>
     </section>
 </main>
