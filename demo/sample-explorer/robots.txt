@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://odt.walter-dietz.de/sitemap.xml
