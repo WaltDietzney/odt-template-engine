@@ -18,7 +18,6 @@
  * Output:        samples/output/output_10_smarties.odt
  */
 
-
 use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Elements\RichText;
 use OdtTemplateEngine\Elements\Paragraph;
@@ -26,11 +25,10 @@ use OdtTemplateEngine\Elements\Paragraph;
 $template = new OdtTemplate('samples/templates/template_10_smarties.odt');
 $template->load();
 
-
 // Set document metadata (project-related and descriptive)
 $template->setMeta([
     'title' => 'ODT Template Engine Demo Document',
-    'subtitle' => 'Smart Template-Based Business Letter Generation', // ← hinzugefügt
+    'subtitle' => 'Smart Template-Based Business Letter Generation',
     'subject' => 'Demonstration of control structures, filters and foreach elements',
     'description' => 'This document was auto-generated using the WaltDietzney ODT Template Engine for PHP.',
     'keywords' => 'ODT, template, filter, template foreach, template if, document automation',
@@ -46,7 +44,6 @@ $template->setMeta([
     'project_version' => 'v1.2.0',
     'client' => 'Acme Corp.',
 ]);
-
 
 // Insert a sample image
 $template->setImage('image', 'assets/WaltDietzney.png', [
@@ -104,17 +101,14 @@ $template->assignRepeating('fruits', [
 // Create a complex RichText block for {{rich1}}
 $rich1 = new RichText();
 
-
-
 // Paragraph 1: Introduction
 $par1 = new Paragraph();
 $par1->addText('Thank you for choosing us! We are delighted to have you as part of our community.');
 
-// Paragraph 2 Best practice hints as bullet list
+// Paragraph 2: Best practice hints as a bullet list
 $par2 = new Paragraph();
 $par2->addText('🔎 Best Practices for Template Design:', ['bold' => true]);
 
-// bullet List
 $bList = [
     'Use tables for precise layout (e.g., for tabular data or multiple columns.)',
     'Avoid placing variables across multiple tags (e.g., {{name}} inside a <text:span>).',
@@ -122,7 +116,6 @@ $bList = [
     'Keep logical conditions simple and readable.',
     'Insert tabulators only inside clean table cells for best results.'
 ];
-
 
 // Paragraph 3: Tabular fresh fruits offer
 $tabularRows = [
@@ -141,12 +134,11 @@ $par3->addTabularLines($tabularRows, [
     'class' => 'InvoiceTable'
 ]);
 
-// Paragraph 4: Key-Value summary
+// Paragraph 4: Key-value summary
 $par4 = new Paragraph();
 $par4->addKeyValueLine('Subtotal', '€20.76', 11.0, ['italic' => true, 'bold' => true]);
 
-
-// Now assemble the full rich text
+// Assemble the first rich text block
 $rich1->addParagraph($par1)
     ->addParagraphBreak(1)
     ->addParagraph($par2)
@@ -154,7 +146,6 @@ $rich1->addParagraph($par1)
     ->addBulletList($bList, ['italic' => true])
     ->addParagraphBreak(2)
     ->addParagraph($par3)
-
     ->addParagraph($par4);
 
 $template->setElement('rich1', $rich1);
@@ -175,18 +166,15 @@ $par6->addText('Best regards,')
     ->addLineBreak(1)
     ->addText("\nDate: {{datum}}");
 
-// Now assemble the full rich text
+// Assemble the second rich text block
 $rich2->addParagraphBreak(2)
     ->addParagraph($par5)
     ->addParagraphBreak(2)
     ->addParagraph($par6);
 
-
-// Assign the RichText block to the template
 $template->setElement('rich2', $rich2);
 
 // Render and save
 $template->render();
 $template->save('samples/output/output_10_smarties.odt');
 ;
-
