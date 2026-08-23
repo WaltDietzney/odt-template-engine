@@ -182,7 +182,7 @@ The project also uses generated sample documents for practical LibreOffice-orien
 
 ## Documentation
 
-More detailed feature documentation and examples are available in [`docs/README.md`](docs/README.md).
+The developer documentation is published at [odt.walter-dietz.de/docs/](https://odt.walter-dietz.de/docs/). Its versioned Markdown source lives in [`docs/`](docs/) and is built with Zensical.
 
 Useful repository areas:
 
@@ -194,7 +194,7 @@ src/Utils/               Style and XML utilities
 tests/                   Unit and integration tests
 samples/                 Example scripts, templates and assets
 demo/sample-explorer/    Interactive local showcase
-docs/                    Extended documentation
+docs/                    Developer documentation source
 ```
 
 ## Project status
