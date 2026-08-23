@@ -19,7 +19,7 @@ For simple values and template logic, place expressions directly inside the ODT 
 {{customer_name}}
 
 {{#foreach:items}}
-{{name}} — {{price}}
+{{name}} – {{price}}
 {{#endforeach}}
 ```
 
@@ -30,25 +30,25 @@ use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\RichText;
 
 $paragraph = new Paragraph();
-$paragraph->addText('Hello ', ['bold' => true]);
-$paragraph->addText('world!', ['italic' => true]);
+$paragraph->addText('Generated from PHP', [
+    'bold' => true,
+]);
 
-$content = new RichText();
-$content->addParagraph($paragraph);
+$richText = new RichText();
+$richText->addParagraph($paragraph);
 
-$template->setElement('content', $content);
+$template->setElement('content', $richText);
 ```
-
-Both approaches can be combined in the same document.
 
 ## Real-world example
 
-[Sample 21: Editable CV Showcase](examples/cv-showcase.md) combines a two-column LibreOffice template with `PageLayoutOdtTemplate`, `RichText`, `Paragraph`, native ODT lists, images, styles, and dynamic CV sections.
+The [Editable CV Showcase](examples/cv-showcase.md) demonstrates a two-column CV with a sidebar, rich text, native lists, images, styles, dynamic career entries, education, qualifications, skills, languages, and programmatic page margins.
 
-The complete sample source remains available in the repository and through the public Sample Explorer.
+The complete sample can also be executed through the public Sample Explorer.
 
 ## Project links
 
 - [GitHub repository](https://github.com/WaltDietzney/odt-template-engine)
 - [Packagist package](https://packagist.org/packages/waltdietzney/odt-template-engine)
-- [Live project page and Sample Explorer](https://odt.walter-dietz.de/)
+- [Public project page](https://odt.walter-dietz.de/)
+- [Live Sample Explorer](https://odt.walter-dietz.de/#samples)
