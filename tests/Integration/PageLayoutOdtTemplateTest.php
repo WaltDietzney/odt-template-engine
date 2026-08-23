@@ -3,6 +3,7 @@
 namespace OdtTemplateEngine\Tests\Integration;
 
 use DOMDocument;
+use DOMElement;
 use DOMXPath;
 use OdtTemplateEngine\PageLayoutOdtTemplate;
 use PHPUnit\Framework\TestCase;
@@ -10,6 +11,9 @@ use ZipArchive;
 
 class PageLayoutOdtTemplateTest extends TestCase
 {
+    private const STYLE_NS = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
+    private const FO_NS = 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0';
+
     public function testSetPageMarginsUpdatesStylesXml(): void
     {
         $template = new PageLayoutOdtTemplate('samples/templates/template_01_simple_variables.odt');
@@ -70,41 +74,28 @@ class PageLayoutOdtTemplateTest extends TestCase
         self::assertTrue($dom->loadXML($xml));
 
         $xpath = new DOMXPath($dom);
-        $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
-        $xpath->registerNamespace('fo', 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0');
+        $xpath->registerNamespace('style', self::STYLE_NS);
+        $xpath->registerNamespace('fo', self::FO_NS);
 
-        $node = $xpath->query('//style:page-layout/style:page-layout-properties')->item(0);
-        self::assertNotNull($node);
+        $masterPage = $xpath->query('//style:master-page[@style:name="Standard"]')->item(0);
+        self::assertInstanceOf(DOMElement::class, $masterPage);
+
+        $layoutName = $masterPage->getAttributeNS(self::STYLE_NS, 'page-layout-name');
+        self::assertNotSame('', $layoutName);
+
+        $node = $xpath->query(
+            sprintf('//style:page-layout[@style:name="%s"]/style:page-layout-properties', $layoutName)
+        )->item(0);
+        self::assertInstanceOf(DOMElement::class, $node);
 
         return [
-            'margin-top' => $node->attributes->getNamedItemNS(
-                'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0',
-                'margin-top'
-            )?->nodeValue ?? '',
-            'margin-right' => $node->attributes->getNamedItemNS(
-                'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0',
-                'margin-right'
-            )?->nodeValue ?? '',
-            'margin-bottom' => $node->attributes->getNamedItemNS(
-                'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0',
-                'margin-bottom'
-            )?->nodeValue ?? '',
-            'margin-left' => $node->attributes->getNamedItemNS(
-                'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0',
-                'margin-left'
-            )?->nodeValue ?? '',
-            'page-width' => $node->attributes->getNamedItemNS(
-                'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0',
-                'page-width'
-            )?->nodeValue ?? '',
-            'page-height' => $node->attributes->getNamedItemNS(
-                'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0',
-                'page-height'
-            )?->nodeValue ?? '',
-            'orientation' => $node->attributes->getNamedItemNS(
-                'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
-                'print-orientation'
-            )?->nodeValue ?? '',
+            'margin-top' => $node->getAttributeNS(self::FO_NS, 'margin-top'),
+            'margin-right' => $node->getAttributeNS(self::FO_NS, 'margin-right'),
+            'margin-bottom' => $node->getAttributeNS(self::FO_NS, 'margin-bottom'),
+            'margin-left' => $node->getAttributeNS(self::FO_NS, 'margin-left'),
+            'page-width' => $node->getAttributeNS(self::FO_NS, 'page-width'),
+            'page-height' => $node->getAttributeNS(self::FO_NS, 'page-height'),
+            'orientation' => $node->getAttributeNS(self::STYLE_NS, 'print-orientation'),
         ];
     }
 }
