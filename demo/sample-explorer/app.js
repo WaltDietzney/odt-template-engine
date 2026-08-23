@@ -84,5 +84,63 @@
         });
     });
 
+    const projectCards = Array.from(document.querySelectorAll('.project-card'));
+    projectCards.forEach((projectCard) => {
+        const title = projectCard.querySelector('h3')?.textContent?.trim();
+
+        if (title === 'Bewerbungstools.de') {
+            projectCard.href = 'https://www.bewerbungstools.de/';
+        }
+
+        if (title === 'CV Generator') {
+            projectCard.href = 'https://www.bewerbungstools.de/lebenslauf-erstellen';
+            const projectLink = projectCard.querySelector('.project-link');
+            if (projectLink) {
+                projectLink.textContent = 'Try the CV Generator →';
+            }
+        }
+    });
+
+    const githubButton = document.querySelector('.support-button-github');
+    if (githubButton) {
+        githubButton.innerHTML = '<strong>★ Star on GitHub</strong>';
+    }
+
+    const paypalPlaceholder = document.querySelector('.support-button-disabled');
+    if (paypalPlaceholder) {
+        const paypalLink = document.createElement('a');
+        paypalLink.className = 'support-button';
+        paypalLink.href = 'https://www.paypal.com/donate/?hosted_button_id=RVFJUELPFMXQW';
+        paypalLink.target = '_blank';
+        paypalLink.rel = 'noreferrer';
+        paypalLink.setAttribute('aria-label', 'Support ODT Template Engine via PayPal');
+        paypalLink.innerHTML = `
+            <strong>PayPal</strong>
+            <span>Support via PayPal →</span>
+            <img src="assets/paypal-qr.svg" width="112" height="112" alt="QR code for PayPal support" style="padding: 6px; border-radius: 10px; background: #fff;">
+        `;
+        paypalPlaceholder.replaceWith(paypalLink);
+    }
+
+    const lightningPlaceholder = document.querySelector('.support-button-lightning');
+    if (lightningPlaceholder) {
+        const lightningUrl = 'lightning:lnurl1dp68gurn8ghj7ampd3kx2ar0veekzar0wd5xjtnrdakj7tnhv4kxctttdehhwm30d3h82unvwqhkv6t5w3jkgetvd35hqum9x5cnqq24e0d';
+        const lightningLink = document.createElement('a');
+        lightningLink.className = 'support-button support-button-lightning';
+        lightningLink.href = lightningUrl;
+        lightningLink.setAttribute('aria-label', 'Support ODT Template Engine via Bitcoin Lightning');
+        lightningLink.innerHTML = `
+            <strong>⚡ Bitcoin Lightning</strong>
+            <span>Support via Lightning →</span>
+            <img src="assets/lightning-qr.svg" width="112" height="112" alt="QR code for Bitcoin Lightning support" style="padding: 6px; border-radius: 10px; background: #fff;">
+        `;
+        lightningPlaceholder.replaceWith(lightningLink);
+    }
+
+    const supportCopy = document.querySelector('.support-copy p');
+    if (supportCopy) {
+        supportCopy.textContent = 'ODT Template Engine is free and open source. If the library saves you time or helps with your project, you can support its continued development via PayPal or Bitcoin Lightning. Thank you!';
+    }
+
     updateVisibleCards();
 })();
