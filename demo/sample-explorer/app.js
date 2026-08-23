@@ -121,11 +121,26 @@
             >
         `;
         paypalPlaceholder.replaceWith(paypalLink);
+    }
 
-        const supportCopy = document.querySelector('.support-copy p');
-        if (supportCopy) {
-            supportCopy.textContent = 'ODT Template Engine is free and open source. If the library saves you time or helps with your project, you can support its continued development here. Thank you!';
-        }
+    const lightningPlaceholder = document.querySelector('.support-button-lightning');
+    if (lightningPlaceholder) {
+        const lightningUrl = 'lightning:lnurl1dp68gurn8ghj7ampd3kx2ar0veekzar0wd5xjtnrdakj7tnhv4kxctttdehhwm30d3h82unvwqhkv6t5w3jkgetvd35hqum9x5cnqq24e0d';
+        const lightningLink = document.createElement('a');
+        lightningLink.className = 'support-button support-button-lightning';
+        lightningLink.href = lightningUrl;
+        lightningLink.setAttribute('aria-label', 'Support ODT Template Engine via Bitcoin Lightning');
+        lightningLink.innerHTML = `
+            <strong>⚡ Bitcoin Lightning</strong>
+            <span>Support via Lightning →</span>
+            <span style="margin-top: 10px; font-size: 0.78rem; opacity: 0.78;">Open with a Lightning wallet</span>
+        `;
+        lightningPlaceholder.replaceWith(lightningLink);
+    }
+
+    const supportCopy = document.querySelector('.support-copy p');
+    if (supportCopy) {
+        supportCopy.textContent = 'ODT Template Engine is free and open source. If the library saves you time or helps with your project, you can support its continued development via PayPal or Bitcoin Lightning. Thank you!';
     }
 
     updateVisibleCards();
