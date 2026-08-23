@@ -99,6 +99,33 @@ class PageLayoutOdtTemplate extends OdtTemplate
     }
 
     /**
+     * Adjust list indentation without touching unrelated fo:margin-left attributes.
+     *
+     * The base implementation historically used a global regular expression on
+     * styles.xml. That also removed page and other style margins. Page layout
+     * support must preserve those unrelated attributes.
+     */
+    protected function adjustBulletIndentation(): void
+    {
+        $xpath = new DOMXPath($this->domStyles);
+        $xpath->registerNamespace('style', self::STYLE_NS);
+
+        $nodes = $xpath->query('//style:list-level-label-alignment');
+        if ($nodes === false) {
+            return;
+        }
+
+        foreach ($nodes as $node) {
+            if (!$node instanceof DOMElement) {
+                continue;
+            }
+
+            $node->setAttributeNS(self::FO_NS, 'fo:margin-left', '0.35cm');
+            $node->setAttributeNS(self::FO_NS, 'fo:text-indent', '-0.25cm');
+        }
+    }
+
+    /**
      * Resolve the page-layout-properties node referenced by a master page.
      */
     private function findPageLayoutProperties(string $masterPage): DOMElement
