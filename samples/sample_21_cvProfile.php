@@ -1,7 +1,6 @@
 <?php
 
 use OdtTemplateEngine\OdtTemplate;
-use OdtTemplateEngine\Elements\ImageElement;
 use OdtTemplateEngine\Elements\RichText;
 use OdtTemplateEngine\Elements\Paragraph;
 
@@ -156,13 +155,11 @@ $template->setImage('foto', 'assets/Logo-2.png', [
     'align' => 'left',
 ]);
 
-// Use an ImageElement here because it can replace placeholders inside styled spans or text boxes.
-$qrCode = new ImageElement('assets/sample_21_vcard_qr.png', [
-    'svg:width' => '2.8cm',
-    'svg:height' => '2.8cm',
-    'text:anchor-type' => 'as-char',
+$template->setImage('qrCode', 'assets/sample_21_vcard_qr.png', [
+    'width' => '2.8cm',
+    'anchor' => 'as-char',
+    'wrap' => 'none',
 ]);
-$template->setElement('qrCode', $qrCode);
 
 // Render and save the document.
 $template->render();
