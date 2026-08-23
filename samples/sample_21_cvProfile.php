@@ -1,6 +1,7 @@
 <?php
 
 use OdtTemplateEngine\OdtTemplate;
+use OdtTemplateEngine\Elements\ImageElement;
 use OdtTemplateEngine\Elements\RichText;
 use OdtTemplateEngine\Elements\Paragraph;
 
@@ -9,12 +10,15 @@ $template = new OdtTemplate('samples/templates/template_21_cvProfile.odt');
 $template->load();
 
 // Example data.
+$address = 'Musterstr. 122, 32456 Musterhausen';
 $contact = [
     'Vorname' => 'Max',
     'Nachname' => 'Mustermann',
     'strasse' => 'Musterstr. 122',
     'ort' => '32456 Musterhausen',
-    'adresse' => 'Musterstr. 122, 32456 Musterhausen',
+    'adresse' => $address,
+    'adress' => $address,
+    'address' => $address,
     'mail' => 'Max@Muster.de',
     'telefon' => '01234 5678910',
 ];
@@ -152,12 +156,13 @@ $template->setImage('foto', 'assets/Logo-2.png', [
     'align' => 'left',
 ]);
 
-// Insert a vCard QR code for the fixed example contact data.
-$template->setImage('qrcode', 'assets/sample_21_vcard_qr.png', [
-    'width' => '2.8cm',
-    'anchor' => 'as-char',
-    'wrap' => 'none',
+// Use an ImageElement here because it can replace placeholders inside styled spans or text boxes.
+$qrCode = new ImageElement('assets/sample_21_vcard_qr.png', [
+    'svg:width' => '2.8cm',
+    'svg:height' => '2.8cm',
+    'text:anchor-type' => 'as-char',
 ]);
+$template->setElement('qrcode', $qrCode);
 
 // Render and save the document.
 $template->render();
