@@ -27,13 +27,11 @@ $template->replaceImageByName('Logo', 'assets/WaltDietzney.png', [
     'width' => '6cm' // Optional: you could also specify 'height' => '4cm'
 ]);
 
-// [4] Render (optional, in case other replacements were made)
-//$template->render();
+// No render() call is required when only replacing an existing image frame.
 
-// [5] Save the updated document
+// [4] Save the updated document
 $outputPath = 'samples/output/output_05_replaceImage.odt';
 $template->save($outputPath);
 
-// [6] Output success message
+// [5] Output success message
 echo "The file 'output_5_replaceImage.odt' was successfully created.\n";
-
