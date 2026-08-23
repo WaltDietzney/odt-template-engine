@@ -101,6 +101,11 @@
         }
     });
 
+    const githubButton = document.querySelector('.support-button-github');
+    if (githubButton) {
+        githubButton.innerHTML = '<strong>★ Star on GitHub</strong>';
+    }
+
     const paypalPlaceholder = document.querySelector('.support-button-disabled');
     if (paypalPlaceholder) {
         const paypalLink = document.createElement('a');
@@ -112,7 +117,7 @@
         paypalLink.innerHTML = `
             <strong>PayPal</strong>
             <span>Support via PayPal →</span>
-            <img src="assets/paypal-qr.svg" width="112" height="112" alt="QR code for PayPal support" style="margin-top: 10px; padding: 6px; border-radius: 10px; background: #fff;">
+            <img src="assets/paypal-qr.svg" width="112" height="112" alt="QR code for PayPal support" style="padding: 6px; border-radius: 10px; background: #fff;">
         `;
         paypalPlaceholder.replaceWith(paypalLink);
     }
@@ -127,8 +132,7 @@
         lightningLink.innerHTML = `
             <strong>⚡ Bitcoin Lightning</strong>
             <span>Support via Lightning →</span>
-            <img src="assets/lightning-qr.svg" width="112" height="112" alt="QR code for Bitcoin Lightning support" style="margin-top: 10px; padding: 6px; border-radius: 10px; background: #fff;">
-            <span style="margin-top: 8px; font-size: 0.78rem; opacity: 0.78;">Scan or open with a Lightning wallet</span>
+            <img src="assets/lightning-qr.svg" width="112" height="112" alt="QR code for Bitcoin Lightning support" style="padding: 6px; border-radius: 10px; background: #fff;">
         `;
         lightningPlaceholder.replaceWith(lightningLink);
     }
