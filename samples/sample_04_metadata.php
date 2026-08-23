@@ -103,7 +103,3 @@ $template->render();
 
 // [13] Save the final document
 $template->save($outputPath);
-
-// [14] (Optional) Output metadata for debugging
-// print_r($metadata);
-
