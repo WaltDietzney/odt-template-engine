@@ -16,8 +16,6 @@ use OdtTemplateEngine\Elements\ImageElement;
  * - Inline style attributes (color, text-decoration, font-style)
  */
 
-//require_once '../vendor/autoload.php';
-
 $template = new OdtTemplate('samples/templates/template_08_html.odt');
 $template->load();
 
@@ -91,8 +89,6 @@ function helloWorld() {
 <a href="mailto:contact@example.com" style="color: #006400;">contact@example.com</a></p>
 <p style="font-size: small; text-align: center;">© 2025 OdtTemplateEngine — Automatically generated with ❤️.</p>
 HTML;
-
-
 
 // 2️⃣ Import the HTML into a RichText object
 $rich = HtmlImporter::fromHtml($html);
