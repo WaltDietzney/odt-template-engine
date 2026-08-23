@@ -11,7 +11,9 @@ ODT Template Engine is an open-source PHP library for turning existing ODT templ
 
 > Use familiar LibreOffice/ODT documents as templates and keep the generated result editable instead of limiting document generation to PDF output.
 
-**Official project site:** [odt.walter-dietz.de](https://odt.walter-dietz.de/) — explore the engine through the interactive Sample Explorer, inspect examples and generate real ODT documents online.
+### 🚀 Try it online
+
+**[Open the live Sample Explorer](https://odt.walter-dietz.de/)** — inspect real PHP sample code, explore template variables and generate downloadable `.odt` documents directly in your browser. No installation required.
 
 ## Why ODT Template Engine?
 
@@ -130,7 +132,7 @@ The repository also contains elements and helpers for tables, table cells, image
 
 ## Interactive samples
 
-Try the **[live Sample Explorer](https://odt.walter-dietz.de/)** to browse examples, inspect their PHP source and generate downloadable ODT documents directly in the browser.
+Want to see what the engine actually produces before installing it? **[Try the live Sample Explorer](https://odt.walter-dietz.de/)**. You can open the PHP source behind each example, inspect the template variables and generate the real editable ODT output yourself.
 
 The same Sample Explorer is included in the repository under [`demo/sample-explorer/`](demo/sample-explorer/), while the growing collection of real ODT templates and executable examples lives under [`samples/`](samples/).
 
