@@ -142,5 +142,14 @@
         supportCopy.textContent = 'ODT Template Engine is free and open source. If the library saves you time or helps with your project, you can support its continued development via PayPal or Bitcoin Lightning. Thank you!';
     }
 
+    const footerLinks = document.querySelector('.footer-links');
+    if (footerLinks && !footerLinks.querySelector('[data-legal-link]')) {
+        const legalLink = document.createElement('a');
+        legalLink.href = 'impressum.php';
+        legalLink.textContent = 'Impressum';
+        legalLink.dataset.legalLink = 'true';
+        footerLinks.prepend(legalLink);
+    }
+
     updateVisibleCards();
 })();
