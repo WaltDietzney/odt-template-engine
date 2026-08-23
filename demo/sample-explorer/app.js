@@ -144,10 +144,17 @@
 
     const footerLinks = document.querySelector('.footer-links');
     if (footerLinks && !footerLinks.querySelector('[data-legal-link]')) {
+        const privacyLink = document.createElement('a');
+        privacyLink.href = 'datenschutz.php';
+        privacyLink.textContent = 'Datenschutz';
+        privacyLink.dataset.legalLink = 'true';
+
         const legalLink = document.createElement('a');
         legalLink.href = 'impressum.php';
         legalLink.textContent = 'Impressum';
         legalLink.dataset.legalLink = 'true';
+
+        footerLinks.prepend(privacyLink);
         footerLinks.prepend(legalLink);
     }
 
