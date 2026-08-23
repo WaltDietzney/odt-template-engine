@@ -162,7 +162,7 @@ $qrCode = new ImageElement('assets/sample_21_vcard_qr.png', [
     'svg:height' => '2.8cm',
     'text:anchor-type' => 'as-char',
 ]);
-$template->setElement('qrcode', $qrCode);
+$template->setElement('qrCode', $qrCode);
 
 // Render and save the document.
 $template->render();
