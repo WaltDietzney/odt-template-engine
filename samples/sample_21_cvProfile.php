@@ -1,5 +1,7 @@
 <?php
 
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
 use OdtTemplateEngine\Elements\ImageElement;
 use OdtTemplateEngine\Elements\ListElement;
 use OdtTemplateEngine\Elements\Paragraph;
