@@ -6,10 +6,10 @@ use OdtTemplateEngine\Elements\ImageElement;
 use OdtTemplateEngine\Elements\ListElement;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\RichText;
-use OdtTemplateEngine\OdtTemplate;
+use OdtTemplateEngine\PageLayoutOdtTemplate;
 
-$template = new OdtTemplate('samples/templates/template_21_cvProfile.odt');
-$template->load();
+$template = new PageLayoutOdtTemplate('samples/templates/template_21_cvProfile.odt');
+$template->setPageMargins('0cm', '0cm', '0cm', '0cm');
 
 $cv = [
     'personal' => [
@@ -317,7 +317,7 @@ foreach ($cv['qualifications'] as $qualification) {
 }
 $content->addElement($qualifications);
 
-// The LibreOffice template defines the page and column layout. PHP supplies the structured content.
+// The LibreOffice template defines the columns; PHP controls page geometry and structured content.
 $template->setElement('cv_sidebar', $sidebar);
 $template->setElement('cv_content', $content);
 $template->save('samples/output/output_21_cvProfile.odt');
