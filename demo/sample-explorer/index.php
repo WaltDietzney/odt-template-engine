@@ -171,6 +171,7 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
             <a href="#samples">Live samples</a>
             <a href="#projects">Projects</a>
             <a href="#support">Support</a>
+            <a href="/docs/">Documentation</a>
             <a href="<?= $githubUrl ?>" target="_blank" rel="noreferrer">GitHub</a>
         </div>
     </nav>
