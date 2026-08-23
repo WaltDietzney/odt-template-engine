@@ -43,6 +43,15 @@ declare(strict_types=1);
             font-weight: 700;
             text-decoration: none;
         }
+
+        .legal-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin-top: 48px;
+            padding-top: 22px;
+            border-top: 1px solid var(--line);
+        }
     </style>
 </head>
 <body>
@@ -90,6 +99,11 @@ declare(strict_types=1);
         Sonstige auf dieser Website veröffentlichte Inhalte unterliegen den jeweils anwendbaren
         urheberrechtlichen Bestimmungen.
     </p>
+
+    <div class="legal-links">
+        <a href="datenschutz.php">Datenschutz</a>
+        <a href="./">Zurück zur Projektseite</a>
+    </div>
 </main>
 </body>
 </html>
