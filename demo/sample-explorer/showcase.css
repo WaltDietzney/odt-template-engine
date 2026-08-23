@@ -181,11 +181,6 @@
     transform: translateY(-1px);
 }
 
-.support-button-disabled,
-.support-button-lightning {
-    cursor: default;
-}
-
 .support-button-lightning strong {
     color: #ffd965;
 }
