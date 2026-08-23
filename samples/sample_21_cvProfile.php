@@ -105,8 +105,8 @@ function addSidebarHeading(RichText $rich, string $title): void
         'font-size' => '10pt',
         'color' => '#ffffff',
     ], [
-        'margin-top' => '0.28cm',
-        'margin-bottom' => '0.07cm',
+        'margin-top' => '0.16cm',
+        'margin-bottom' => '0.04cm',
         'line-height' => '100%',
     ]));
 }
@@ -125,29 +125,29 @@ function addSidebarList(RichText $rich, string $title, array $items): void
         $paragraph = new Paragraph();
         $paragraph->addText($item, [
             'font-family' => 'Arial',
-            'font-size' => '9pt',
+            'font-size' => '8.5pt',
             'color' => '#ffffff',
         ]);
         $list->addItem($paragraph);
     }
 
     $rich->addElement($list);
-    $rich->addParagraph(cvParagraph('', [], ['margin-bottom' => '0.12cm']));
+    $rich->addParagraph(cvParagraph('', [], ['margin-bottom' => '0.05cm']));
 }
 
 /**
  * Add a section heading to the main content column.
  */
-function addMainHeading(RichText $rich, string $title): void
+function addMainHeading(RichText $rich, string $title, string $marginTop = '0.20cm'): void
 {
     $rich->addParagraph(cvParagraph($title, [
         'bold' => true,
-        'font-size' => '14pt',
+        'font-size' => '13pt',
         'color' => '#111111',
     ], [
-        'margin-top' => '0.35cm',
-        'margin-bottom' => '0.18cm',
-        'padding-bottom' => '0.04cm',
+        'margin-top' => $marginTop,
+        'margin-bottom' => '0.10cm',
+        'padding-bottom' => '0.03cm',
         'line-height' => '100%',
         'border-bottom' => '1.5pt solid #12324a',
     ]));
@@ -161,13 +161,13 @@ $sidebar->addParagraph(cvParagraph($cv['personal']['name'], [
     'font-size' => '16pt',
     'color' => '#ffffff',
 ], [
-    'margin-bottom' => '0.22cm',
+    'margin-bottom' => '0.10cm',
     'line-height' => '100%',
 ]));
 
 $sidebar->addImage(new ImageElement($cv['personal']['photo'], [
-    'width' => '3.8cm',
-    'height' => '3.8cm',
+    'width' => '3.4cm',
+    'height' => '3.4cm',
     'anchor' => 'as-char',
     'align' => 'left',
 ]));
@@ -176,8 +176,8 @@ $sidebar->addParagraph(cvParagraph('° ' . $cv['personal']['birth'], [
     'font-size' => '8.5pt',
     'color' => '#ffffff',
 ], [
-    'margin-top' => '0.12cm',
-    'margin-bottom' => '0.20cm',
+    'margin-top' => '0.05cm',
+    'margin-bottom' => '0.10cm',
 ]));
 
 addSidebarHeading($sidebar, 'KONTAKT');
@@ -190,7 +190,8 @@ foreach ([
         'font-size' => '8.5pt',
         'color' => '#ffffff',
     ], [
-        'margin-bottom' => '0.04cm',
+        'margin-bottom' => '0.02cm',
+        'line-height' => '105%',
     ]));
 }
 
@@ -201,7 +202,8 @@ addSidebarHeading($sidebar, 'FACHKOMPETENZEN');
 foreach ($cv['skills'] as $skill) {
     $rating = str_repeat('★', $skill['level']) . str_repeat('☆', 5 - $skill['level']);
     $paragraph = new Paragraph('cv_skill', [
-        'margin-bottom' => '0.05cm',
+        'margin-bottom' => '0.02cm',
+        'line-height' => '105%',
     ]);
     $paragraph->addText($skill['name'] . '  ', [
         'font-family' => 'Arial',
@@ -222,39 +224,42 @@ addSidebarList($sidebar, 'SPRACHEN', $cv['languages']);
 // Build the main CV column independently from the template layout.
 $content = new RichText();
 
-addMainHeading($content, 'PROFIL');
+addMainHeading($content, 'PROFIL', '0cm');
 $content->addParagraph(cvParagraph($cv['profile'], [
-    'font-size' => '9.5pt',
+    'font-size' => '9pt',
     'color' => '#333333',
 ], [
-    'margin-bottom' => '0.22cm',
-    'line-height' => '115%',
+    'margin-bottom' => '0.10cm',
+    'line-height' => '110%',
 ]));
 
 addMainHeading($content, 'BERUFSERFAHRUNG');
 foreach ($cv['experience'] as $entry) {
     $content->addParagraph(cvParagraph($entry['period'], [
         'bold' => true,
-        'font-size' => '9pt',
+        'font-size' => '8.5pt',
         'color' => '#444444',
     ], [
-        'margin-top' => '0.10cm',
-        'margin-bottom' => '0.03cm',
+        'margin-top' => '0.05cm',
+        'margin-bottom' => '0.01cm',
+        'line-height' => '100%',
     ]));
 
     $content->addParagraph(cvParagraph($entry['position'], [
         'bold' => true,
-        'font-size' => '11pt',
+        'font-size' => '10.5pt',
         'color' => '#111111',
     ], [
-        'margin-bottom' => '0.02cm',
+        'margin-bottom' => '0.01cm',
+        'line-height' => '100%',
     ]));
 
     $content->addParagraph(cvParagraph($entry['company'], [
-        'font-size' => '9pt',
+        'font-size' => '8.5pt',
         'color' => '#666666',
     ], [
-        'margin-bottom' => '0.05cm',
+        'margin-bottom' => '0.03cm',
+        'line-height' => '100%',
     ]));
 
     $tasks = new ListElement('bullet');
@@ -262,7 +267,7 @@ foreach ($cv['experience'] as $entry) {
         $paragraph = new Paragraph();
         $paragraph->addText($task, [
             'font-family' => 'Arial',
-            'font-size' => '9pt',
+            'font-size' => '8.5pt',
             'color' => '#333333',
         ]);
         $tasks->addItem($paragraph);
@@ -274,25 +279,28 @@ addMainHeading($content, 'AUSBILDUNG');
 foreach ($cv['education'] as $entry) {
     $content->addParagraph(cvParagraph($entry['period'], [
         'bold' => true,
-        'font-size' => '9pt',
+        'font-size' => '8.5pt',
         'color' => '#444444',
     ], [
-        'margin-top' => '0.10cm',
-        'margin-bottom' => '0.02cm',
+        'margin-top' => '0.05cm',
+        'margin-bottom' => '0.01cm',
+        'line-height' => '100%',
     ]));
 
     $content->addParagraph(cvParagraph($entry['title'], [
         'bold' => true,
         'font-size' => '10pt',
     ], [
-        'margin-bottom' => '0.02cm',
+        'margin-bottom' => '0.01cm',
+        'line-height' => '100%',
     ]));
 
     $content->addParagraph(cvParagraph($entry['institution'], [
-        'font-size' => '9pt',
+        'font-size' => '8.5pt',
         'color' => '#666666',
     ], [
-        'margin-bottom' => '0.08cm',
+        'margin-bottom' => '0.04cm',
+        'line-height' => '100%',
     ]));
 }
 
@@ -302,7 +310,7 @@ foreach ($cv['qualifications'] as $qualification) {
     $paragraph = new Paragraph();
     $paragraph->addText($qualification, [
         'font-family' => 'Arial',
-        'font-size' => '9pt',
+        'font-size' => '8.5pt',
         'color' => '#333333',
     ]);
     $qualifications->addItem($paragraph);
