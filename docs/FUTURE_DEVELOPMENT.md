@@ -191,3 +191,20 @@ structure. Automated smoke testing should remain isolated from tracked
 generated artifacts. The repository still contains historical and
 canonical generated ODT artifacts whose long-term ownership and
 retention policy should be formalized.
+
+## Lifecycle APIs
+
+### LIFECYCLE-API-01 — Clarify load / refresh / reset lifecycle semantics
+
+- Priority: Medium
+- Status: API / lifecycle clarification
+
+Current `refresh()` persists the current DOM state into the workspace and
+immediately calls `load()`, while `load()` resets the workspace from the
+original source template. The persisted workspace state is therefore
+discarded. This behavior predates ARCH-02 and is intentionally preserved
+for compatibility.
+
+Future work should evaluate explicit semantics for reloading or reparsing
+the current workspace separately from resetting from the source template.
+No replacement API is defined or implemented by this roadmap entry.
