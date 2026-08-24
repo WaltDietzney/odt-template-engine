@@ -52,8 +52,43 @@ class StyleWriter
             $officeStyles->appendChild($style);
         }
 
-        // === 2) GRAPHIC Styles (neu) ===
-// Nach den Text-Styles ➔ Frame-Styles schreiben
+        // === 2) PARAGRAPH Styles ===
+        foreach (StyleMapper::getParagraphStyles() as $name => $options) {
+            if (self::styleAlreadyExists($domStyles, $name, 'paragraph')) {
+                continue;
+            }
+
+            $style = $domStyles->createElement('style:style');
+            $style->setAttribute('style:name', $name);
+            $style->setAttribute('style:family', 'paragraph');
+            $style->setAttribute('style:parent-style-name', 'Standard');
+            $style->setAttribute('style:class', 'text');
+
+            $paragraphProps = $domStyles->createElement('style:paragraph-properties');
+            $mappedOptions = StyleMapper::mapParagraphStyle($options);
+
+            foreach ($mappedOptions as $key => $value) {
+                if ($key === 'style:tab-stops' && is_array($value)) {
+                    $tabStops = $domStyles->createElement('style:tab-stops');
+                    foreach ($value as $tabStop) {
+                        $tabStopElement = $domStyles->createElement('style:tab-stop');
+                        foreach ($tabStop as $attribute => $attributeValue) {
+                            $tabStopElement->setAttribute($attribute, $attributeValue);
+                        }
+                        $tabStops->appendChild($tabStopElement);
+                    }
+                    $paragraphProps->appendChild($tabStops);
+                    continue;
+                }
+
+                $paragraphProps->setAttribute($key, $value);
+            }
+
+            $style->appendChild($paragraphProps);
+            $officeStyles->appendChild($style);
+        }
+
+        // === 3) GRAPHIC Styles ===
         foreach (StyleMapper::getFrameStyles() as $name => $props) {
             if (self::styleAlreadyExists($domStyles, $name, 'graphic')) {
                 continue;
@@ -62,11 +97,10 @@ class StyleWriter
             $style = $domStyles->createElement('style:style');
             $style->setAttribute('style:name', $name);
             $style->setAttribute('style:family', 'graphic');
-            $style->setAttribute('style:parent-style-name', 'Frame'); // 🔥 Wichtig: parent "Frame"
+            $style->setAttribute('style:parent-style-name', 'Frame');
 
             $graphicProps = $domStyles->createElement('style:graphic-properties');
 
-            // 🛠 Automatische Ergänzung, falls nur fo:background-color gesetzt wurde
             if (
                 isset($props['fo:background-color']) &&
                 !isset($props['draw:fill']) &&
@@ -84,16 +118,15 @@ class StyleWriter
             $officeStyles->appendChild($style);
         }
 
-
-        // === 3) TABLE-CELL Styles ===
+        // === 4) TABLE-CELL Styles ===
         $cellStyles = StyleMapper::getRegisteredTableCellStyles();
 
-        // Breiten aus Zell-Stilen entfernen (damit Spaltenstile greifen können)
         foreach ($cellStyles as &$props) {
             foreach (['style:column-width', 'fo:width'] as $forbidden) {
                 unset($props[$forbidden]);
             }
         }
+        unset($props);
 
         foreach ($cellStyles as $name => $props) {
             if (self::styleAlreadyExists($domStyles, $name, 'table-cell')) {
@@ -114,36 +147,7 @@ class StyleWriter
             $officeStyles->appendChild($style);
         }
 
-        // === 4) TABLE Styles (neu!)
-        $cellStyles = StyleMapper::getRegisteredTableCellStyles();
-
-        // Breiten aus Zell-Stilen entfernen (damit Spaltenstile greifen können)
-        foreach ($cellStyles as &$props) {
-            foreach (['style:column-width', 'fo:width'] as $forbidden) {
-                unset($props[$forbidden]);
-            }
-        }
-
-        foreach ($cellStyles as $name => $props) {
-            if (self::styleAlreadyExists($domStyles, $name, 'table-cell')) {
-                continue;
-            }
-
-            $style = $domStyles->createElement('style:style');
-            $style->setAttribute('style:name', $name);
-            $style->setAttribute('style:family', 'table-cell');
-            $style->setAttribute('style:parent-style-name', 'Default');
-
-            $cellProps = $domStyles->createElement('style:table-cell-properties');
-            foreach ($props as $key => $value) {
-                $cellProps->setAttribute($key, $value);
-            }
-
-            $style->appendChild($cellProps);
-            $officeStyles->appendChild($style);
-        }
-
-        // === 4) TABLE Styles (neu!)
+        // === 5) TABLE Styles ===
         $tableStyles = StyleMapper::getRegisteredTableStyles();
 
         foreach ($tableStyles as $name => $props) {
@@ -164,7 +168,7 @@ class StyleWriter
             $officeStyles->appendChild($style);
         }
 
-        // === 4) Fonts (wie bisher) ===
+        // === 6) Fonts ===
         $decls = $domStyles->createElement('office:font-face-decls');
         foreach (array_keys(self::$fontsUsed) as $fontName) {
             $fontName = trim($fontName, "'\" ");
@@ -179,8 +183,6 @@ class StyleWriter
         }
         $officeStyles->appendChild($decls);
     }
-
-
 
     /**
      * Writes text styles (with fonts) to office:styles.
@@ -235,12 +237,10 @@ class StyleWriter
         $xpath = new DOMXPath($dom);
         $xpath->registerNamespace('office', 'urn:oasis:names:tc:opendocument:xmlns:office:1.0');
 
-        // Remove wrong font-face entries like "0"
         foreach ($xpath->query('//style:font-face[@style:name="0"]') as $badFontFace) {
             $badFontFace->parentNode->removeChild($badFontFace);
         }
 
-        // Debug-Ausgabe: Logs alle gesammelten Fonts
         error_log('=== StyleWriter: fontsUsed === ' . implode(', ', array_keys(self::$fontsUsed)));
 
         $fontFaceDecls = $dom->createElement('office:font-face-decls');
@@ -256,7 +256,6 @@ class StyleWriter
             $fontFace->setAttribute('svg:font-family', $fontName);
             $fontFace->setAttribute('style:font-pitch', 'variable');
 
-            // Classification
             $lowerFont = strtolower($fontName);
             if (str_contains($lowerFont, 'sans') || str_contains($lowerFont, 'arial') || str_contains($lowerFont, 'ubuntu')) {
                 $fontFace->setAttribute('style:font-family-generic', 'swiss');
@@ -278,19 +277,15 @@ class StyleWriter
     }
 
     /**
-     * Prüft, ob ein Stil mit dem gegebenen Namen und Stilfamilie bereits existiert.
-     *
-     * @param DOMDocument $domStyles
-     * @param string $styleName
-     * @param string $family 'text', 'paragraph', 'graphic' usw.
-     * @return bool
+     * Checks whether a style with the given name and family already exists.
      */
     private static function styleAlreadyExists(DOMDocument $domStyles, string $styleName, string $family): bool
     {
-        $xpath = new \DOMXPath($domStyles);
+        $xpath = new DOMXPath($domStyles);
         $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
 
         $query = sprintf('//style:style[@style:name="%s" and @style:family="%s"]', $styleName, $family);
+
         return $xpath->query($query)->length > 0;
     }
 
@@ -322,6 +317,4 @@ class StyleWriter
 
         return $styleNames;
     }
-
-
 }
