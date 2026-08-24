@@ -22,10 +22,8 @@ class DrawTextBox extends OdtElement implements HasStyles
     {
         $this->name = $name;
         $this->frameOptions = $options;
-        // register frame style immediately
+        // Register the graphic/frame style immediately.
         $this->registerFrameStyle();
-        $this->frameStyleProps = StyleMapper::mapFrameStyleOptions($options);
-
     }
 
     /**
@@ -44,8 +42,6 @@ class DrawTextBox extends OdtElement implements HasStyles
     {
         $styleDef = StyleMapper::mapFrameStyleOptions($this->frameOptions);
         $this->frameStyleName = StyleMapper::generateStyleName($styleDef);
-        StyleMapper::registerParagraphStyle($this->frameStyleName, $styleDef);
-        // also register frame-level (graphic) style
         StyleMapper::$frameStyles[$this->frameStyleName] = $styleDef;
     }
 
@@ -215,5 +211,6 @@ class DrawTextBox extends OdtElement implements HasStyles
 
     public function registerStyles(): void
     {
+        $this->registerFrameStyle();
     }
 }

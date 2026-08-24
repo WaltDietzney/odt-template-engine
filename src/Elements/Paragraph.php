@@ -108,6 +108,35 @@ class Paragraph extends OdtElement implements HasStyles
         return $this;
     }
 
+    /**
+     * Applies additional text styling to existing text-like parts.
+     *
+     * @internal Compatibility helper for mixed convenience style arrays.
+     * @param array<string, mixed> $style
+     * @return $this
+     */
+    public function applyTextStyle(array $style): self
+    {
+        if ($style === []) {
+            return $this;
+        }
+
+        foreach ($this->parts as &$part) {
+            if (!in_array($part['type'] ?? null, ['text', 'hyperlink', 'tab-stop'], true)) {
+                continue;
+            }
+
+            $partStyle = array_merge($part['style'] ?? [], $style);
+            $styleName = StyleMapper::generateStyleName($partStyle);
+            $part['style'] = $partStyle;
+            $part['styleName'] = $styleName;
+            $this->textStyleMap[$styleName] = $partStyle;
+        }
+        unset($part);
+
+        return $this;
+    }
+
 
 
     /**
@@ -241,10 +270,8 @@ class Paragraph extends OdtElement implements HasStyles
         return $this;
     }
 
-    /**
-     * Gets all embedded elements.
-     *
-     * @return OdtElement[]
+    /** Returns all embedded elements.
+     ** @return OdtElement[]
      */
     public function getEmbeddedElements(): array
     {
@@ -315,7 +342,7 @@ class Paragraph extends OdtElement implements HasStyles
 
     /**
      * Summary of addTabsWithTexts
-     * @param array $tabs = ['position' =>$position, 'alignment'=>$alignment, 'text'=>$text, 'style' => $textStyle ]
+     * @param array $tabs [ 'position'=>$position, 'alignment'=>$alignment, 'text'=>$text, 'style' => $textStyle ]
      * @return Paragraph
      */
     public function addTabsWithTexts(array $tabs): self
@@ -513,7 +540,7 @@ class Paragraph extends OdtElement implements HasStyles
                     if (!empty($part['text'])) {
                         $node = $dom->createTextNode($part['text']);
                         if (!empty($part['style'])) {
-                            $styleName = StyleMapper::generateStyleName($part['style']);
+                            $styleName = StyleMapper::generateStyleName($part['tyle']);
                             $span = $dom->createElement('text:span');
                             $span->setAttribute('text:style-name', $styleName);
                             $span->appendChild($node);

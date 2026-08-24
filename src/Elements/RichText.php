@@ -8,6 +8,8 @@ use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Contracts\HasStyles;
 use OdtTemplateEngine\Elements\NumberedList;
 use OdtTemplateEngine\Elements\OdtElement;
+use OdtTemplateEngine\Utils\StyleMapper;
+use OdtTemplateEngine\Utils\StyleOptionSplitter;
 
 /**
  * Class RichText
@@ -40,10 +42,13 @@ class RichText extends OdtElement implements HasStyles
             if ($styleName) {
                 $p->setParagraphStyle($styleName);
             }
-            if (!empty($styleOptions)) {
-                $p->setParagraphStyleOptions($styleOptions);
+
+            $split = StyleOptionSplitter::split($styleOptions, 'paragraph');
+            if (!empty($split['paragraph'])) {
+                $p->setParagraphStyleOptions($split['paragraph']);
             }
-            $p->addText($text, $styleOptions);
+
+            $p->addText($text, $split['text']);
             $this->elements[] = $p;
         }
         return $this;
@@ -119,7 +124,14 @@ class RichText extends OdtElement implements HasStyles
      */
     public function addText(string $text, array $style = []): self
     {
-        $this->getLastParagraphOrCreate()->addText($text, $style);
+        $paragraph = $this->getLastParagraphOrCreate();
+        $split = StyleOptionSplitter::split($style, 'paragraph');
+
+        if (!empty($split['paragraph'])) {
+            $paragraph->setParagraphStyleOptions($split['paragraph']);
+        }
+
+        $paragraph->addText($text, $split['text']);
         return $this;
     }
 
@@ -156,7 +168,7 @@ class RichText extends OdtElement implements HasStyles
     {
         $list = new ListElement('bullet');
         foreach ($items as $text) {
-            $list->addItem((new Paragraph())->addText($text));
+            $list->addItem((new Paragraph())->addText($text, $style));
         }
         $this->elements[] = $list;
         return $this;
@@ -173,7 +185,7 @@ class RichText extends OdtElement implements HasStyles
     {
         $list = new ListElement('numbered');
         foreach ($items as $text) {
-            $list->addItem((new Paragraph())->addText($text));
+            $list->addItem((new Paragraph())->addText($text, $style));
         }
         $this->elements[] = $list;
         return $this;
@@ -258,9 +270,45 @@ class RichText extends OdtElement implements HasStyles
         return $styles;
     }
 
-    public function addElement($element): self
+    public function addElement(OdtElement $element): self
     {
         $this->elements[] = $element;
+        return $this;
+    }
+
+    /**
+     * Applies paragraph options to direct paragraph children.
+     *
+     * @internal Compatibility helper for mixed table-cell style arrays.
+     * @param array<string, mixed> $options
+     * @return $this
+     */
+    public function applyParagraphStyleOptions(array $options): self
+    {
+        foreach ($this->elements as $element) {
+            if ($element instanceof Paragraph) {
+                $element->setParagraphStyleOptions($options);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Applies text styling to direct paragraph children.
+     *
+     * @internal Compatibility helper for mixed table-cell style arrays.
+     * @param array<string, mixed> $style
+     * @return $this
+     */
+    public function applyTextStyle(array $style): self
+    {
+        foreach ($this->elements as $element) {
+            if ($element instanceof Paragraph) {
+                $element->applyTextStyle($style);
+            }
+        }
+
         return $this;
     }
 
