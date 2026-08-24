@@ -22,8 +22,9 @@ use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Elements\RichText;
 use OdtTemplateEngine\Elements\Paragraph;
 
-$template = new OdtTemplate('samples/templates/template_10_smarties.odt');
-$template->load();
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
+$template = new OdtTemplate(__DIR__ . '/templates/template_10_smarties.odt');
 
 // Set document metadata (project-related and descriptive)
 $template->setMeta([
@@ -46,7 +47,7 @@ $template->setMeta([
 ]);
 
 // Insert a sample image
-$template->setImage('image', 'assets/WaltDietzney.png', [
+$template->setImage('image', __DIR__ . '/../assets/WaltDietzney.png', [
     'width' => '2cm',
     'wrap' => 'left',
     'align' => 'right',
@@ -176,5 +177,5 @@ $template->setElement('rich2', $rich2);
 
 // Render and save
 $template->render();
-$template->save('samples/output/output_10_smarties.odt');
+$template->save(__DIR__ . '/output/output_10_smarties.odt');
 ;

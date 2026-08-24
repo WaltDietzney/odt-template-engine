@@ -10,10 +10,10 @@
  *
  * Requirements:
  * - OdtTemplateEngine (https://github.com/...)
- * - Template: samples/templates/template_9_richtextblock.odt
+ * - Template: samples/templates/template_09_richtextblock.odt
  *
  * Output:
- * - samples/output/output_9_richtextblock.odt
+ * - samples/output/output_09_richtextblock.odt
  *
  * Author: Walter Dietz
  * Date: 2025-04-29
@@ -24,9 +24,10 @@ use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Elements\RichText;
 use OdtTemplateEngine\Elements\Paragraph;
 
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
 // 1. Load an existing ODT template with a placeholder {{CONTENT}}
-$template = new OdtTemplate('samples/templates/template_09_richtextblock.odt');
-$template->load();
+$template = new OdtTemplate(__DIR__ . '/templates/template_09_richtextblock.odt');
 
 // 2. Build a RichText block to replace {{CONTENT}}
 $rich = new RichText();
@@ -140,6 +141,6 @@ $template->ensureParagraphStylesExist([
 $template->setElement('TEXTBLOCK', $rich);
 
 // 4. Save the filled template to a new file
-$template->save('samples/output/output_09_richtextblock.odt');
+$template->save(__DIR__ . '/output/output_09_richtextblock.odt');
 
-echo "✅ example_full.odt generated successfully\n";
+echo "✅ samples/output/output_09_richtextblock.odt generated successfully\n";

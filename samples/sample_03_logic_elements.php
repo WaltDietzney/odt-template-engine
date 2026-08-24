@@ -11,11 +11,10 @@
 
 use OdtTemplateEngine\OdtTemplate;
 
-// [1] Initialize template engine with a logic-focused ODT template
-$template = new OdtTemplate('samples/templates/template_03_logic_elements.odt');
+require_once dirname(__DIR__) . '/vendor/autoload.php';
 
-// [2] Load the template into memory
-$template->load();
+// [1] Initialize template engine with a logic-focused ODT template
+$template = new OdtTemplate(__DIR__ . '/templates/template_03_logic_elements.odt');
 
 // [3] Assign variables that drive the conditional logic
 
@@ -33,4 +32,4 @@ $template->assign([
 $template->render();
 
 // [5] Save the final output document
-$template->save('samples/output/output_03_logic_elements.odt');
+$template->save(__DIR__ . '/output/output_03_logic_elements.odt');

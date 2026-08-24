@@ -14,9 +14,10 @@ use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\RichText;
 
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
 // 1️⃣ Load and prepare the template
-$template = new OdtTemplate('samples/templates/template_07_contactList.odt');
-$template->load();
+$template = new OdtTemplate(__DIR__ . '/templates/template_07_contactList.odt');
 
 // Create a new RichText container for multiple paragraphs
 $rich = new RichText();
@@ -73,7 +74,7 @@ $para3 = new Paragraph();
 
 $para3
     ->addTabularLines(
-        ['Visit our site', '', ''],
+        [['Visit our site', '', '']],
         $tabStops,
         ['italic' => true]
     )
@@ -100,4 +101,4 @@ $rich
 $template->setElement('contacts_block', $rich);
 
 // 9️⃣ Save the final document
-$template->save('samples/output/output_07_contactList.odt');
+$template->save(__DIR__ . '/output/output_07_contactList.odt');

@@ -4,8 +4,10 @@ use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Elements\DrawTextBox;
 use OdtTemplateEngine\Elements\Paragraph;
 
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
 // Load the ODT template.
-$tpl = new OdtTemplate('samples/templates/template_17_textfield.odt');
+$tpl = new OdtTemplate(__DIR__ . '/templates/template_17_textfield.odt');
 
 // Create a right-aligned floating text box that lets body text flow around it.
 $textbox = (new DrawTextBox('Box1', [
@@ -75,6 +77,6 @@ $para->addText('Hier kommt eine Inline-Textbox: ')
     ->addText(' und weiter geht’s mit normalem Text.', ['bold' => true, 'italic' => true]);
 
 $tpl->setElement('INLINE_BOX', $para);
-$tpl->save('samples/output/output_17_textfield.odt');
+$tpl->save(__DIR__ . '/output/output_17_textfield.odt');
 
 echo "✅ Text box sample generated successfully.\n";

@@ -11,7 +11,7 @@ use OdtTemplateEngine\Utils\StyleMapper;
 
 // Load the LibreOffice-designed CV template. The template defines the
 // two-column structure, while PHP supplies the dynamic document content.
-$template = new PageLayoutOdtTemplate('samples/templates/template_21_cvProfile.odt');
+$template = new PageLayoutOdtTemplate(__DIR__ . '/templates/template_21_cvProfile.odt');
 
 // Page geometry can be adjusted without editing the original ODT template.
 $template->setPageMargins('0cm', '0.8cm', '0cm', '0cm');
@@ -98,7 +98,7 @@ $cv = [
         'email' => 'max.mustermann@example.de',
         'phone' => '+49 123 456789',
         'city' => '32456 Musterhausen',
-        'photo' => 'assets/WaltDietzney.png',
+        'photo' => __DIR__ . '/../assets/WaltDietzney.png',
     ],
     'profile' => 'Erfahrener Softwareentwickler mit Schwerpunkt auf PHP, Webanwendungen und dokumentenbasierten Workflows. '
         . 'Strukturierte, wartbare Lösungen und eine verständliche technische Kommunikation stehen im Mittelpunkt.',
@@ -387,6 +387,6 @@ $template->setElement('cv_content', $content);
 
 // Save a native OpenDocument Text file. The generated CV remains editable in
 // LibreOffice and other ODF-compatible applications.
-$template->save('samples/output/output_21_cvProfile.odt');
+$template->save(__DIR__ . '/output/output_21_cvProfile.odt');
 
-echo "Document generated successfully: output/output_21_cvProfile.odt\n";
+echo "Document generated successfully: samples/output/output_21_cvProfile.odt\n";

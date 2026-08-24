@@ -10,17 +10,12 @@
  * - Conditional sections (if/else logic)
  */
 
-// (Optional) Load Composer autoloader
-// (Normally needed outside Docker)
-// require '../vendor/autoload.php';
+require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 use OdtTemplateEngine\OdtTemplate;
 
 // [1] Initialize template engine with a filter-based ODT template
-$template = new OdtTemplate('samples/templates/template_02_filter.odt');
-
-// [2] Load the template into memory
-$template->load();
+$template = new OdtTemplate(__DIR__ . '/templates/template_02_filter.odt');
 
 // [3] Assign simple variables with filters applied in the template
 
@@ -61,6 +56,5 @@ $template->setValues([
 $template->render();
 
 // [7] Save the output to a new ODT file
-$template->save('samples/output/output_02_filter.odt');
-
+$template->save(__DIR__ . '/output/output_02_filter.odt');
 

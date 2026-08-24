@@ -5,8 +5,9 @@ use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\RichTable;
 use OdtTemplateEngine\Elements\RichTableCell;
 
-$template = new OdtTemplate('samples/templates/template_12_advancedTable.odt');
-$template->load();
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
+$template = new OdtTemplate(__DIR__ . '/templates/template_12_advancedTable.odt');
 
 $template->ensureParagraphStylesExist([
     'CenterPara' => [
@@ -65,4 +66,4 @@ $table
 
 // Insert the table into the template and save the result.
 $template->setElement('tableblock', $table);
-$template->save('samples/output/output_12_advancedTable.odt');
+$template->save(__DIR__ . '/output/output_12_advancedTable.odt');

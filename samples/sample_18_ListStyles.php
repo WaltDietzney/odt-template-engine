@@ -4,8 +4,10 @@ use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Elements\ListElement;
 use OdtTemplateEngine\Elements\Paragraph;
 
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
 // Load the ODT template.
-$tpl = new OdtTemplate('samples/templates/template_18_ListStyles.odt');
+$tpl = new OdtTemplate(__DIR__ . '/templates/template_18_ListStyles.odt');
 
 // Create the numbered top-level list.
 $list = new ListElement('numbered');
@@ -38,6 +40,6 @@ $list->addItem(
 );
 
 $tpl->setElement('my_list', $list);
-$tpl->save('samples/output/output_18_ListStyles.odt');
+$tpl->save(__DIR__ . '/output/output_18_ListStyles.odt');
 
 echo "✅ List style sample generated successfully.\n";

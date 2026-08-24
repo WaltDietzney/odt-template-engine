@@ -14,9 +14,10 @@ use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\RichTableCell;
 use OdtTemplateEngine\OdtTemplate;
 
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
 // ➡️ Load the ODT template
-$template = new OdtTemplate('samples/templates/template_13_settingCells.odt');
-$template->load();
+$template = new OdtTemplate(__DIR__ . '/templates/template_13_settingCells.odt');
 
 // Create a new RichText container to collect all elements
 $rich = new RichText();
@@ -167,6 +168,6 @@ $rich->addParagraph('Sample 13: Advanced Table Construction','Title')
 $template->setElement('table1', $rich);
 
 // ➡️ Save the output document
-$template->save('samples/output/output_13_settingCells.odt');
+$template->save(__DIR__ . '/output/output_13_settingCells.odt');
 
 echo "✔️ Successfully created test ODT: samples/output/output_13_settingCells.odt\n";

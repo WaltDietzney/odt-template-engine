@@ -11,12 +11,14 @@
 use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Elements\ImageElement;
 
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
 // [1] Initialize template
-$template = new OdtTemplate('samples/templates/template_06_imageSettings.odt');
+$template = new OdtTemplate(__DIR__ . '/templates/template_06_imageSettings.odt');
 
 // [2] Define paths to images
-$imagePath = 'assets/banner.png';  // Image for direct replacement
-$logoPath = 'assets/Logo.png';     // Logo for ImageElement insertion
+$imagePath = __DIR__ . '/../assets/banner.png';  // Image for direct replacement
+$logoPath = __DIR__ . '/../assets/Logo.png';     // Logo for ImageElement insertion
 
 // [3] Create an ImageElement with custom styling
 $img = new ImageElement($logoPath, [
@@ -24,7 +26,7 @@ $img = new ImageElement($logoPath, [
     'anchor' => 'as-char',        // Anchoring as character (text:anchor-type)
     'wrap'   => 'none',           // No text wrapping around image
     'width'  => '4cm',            // Set width
-    'height' => '3cm',            // Set height
+//    'height' => '3cm',            // Set height
 ]);
 
 // Alternative: set styles separately when the element already exists.
@@ -47,4 +49,4 @@ $template->setImage('image', $imagePath, [
 ]);
 
 // [6] Save the final document
-$template->save('samples/output/output_06_imageSettings.odt');
+$template->save(__DIR__ . '/output/output_06_imageSettings.odt');

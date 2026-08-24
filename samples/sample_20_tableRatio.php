@@ -4,9 +4,10 @@ use OdtTemplateEngine\Elements\RichTable;
 use OdtTemplateEngine\Elements\RichTableCell;
 use OdtTemplateEngine\OdtTemplate;
 
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
 // Load the ODT template.
-$template = new OdtTemplate('samples/templates/template_20_tableRatio.odt');
-$template->load();
+$template = new OdtTemplate(__DIR__ . '/templates/template_20_tableRatio.odt');
 
 // Create a table with a 2:1:1 column width ratio.
 $table = new RichTable();
@@ -46,4 +47,4 @@ $table->addRow([
 
 // Insert the table into the template and save the result.
 $template->setElement('tableblock', $table);
-$template->save('samples/output/output_20_tableRatio.odt');
+$template->save(__DIR__ . '/output/output_20_tableRatio.odt');

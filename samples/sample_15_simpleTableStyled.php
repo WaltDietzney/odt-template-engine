@@ -19,9 +19,10 @@ use OdtTemplateEngine\Elements\RichTable;
 use OdtTemplateEngine\Elements\RichTableCell;
 use OdtTemplateEngine\Utils\StyleMapper;
 
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
 // Load the ODT template
-$template = new OdtTemplate('samples/templates/template_15_simpleTableStyled.odt');
-$template->load();
+$template = new OdtTemplate(__DIR__ . '/templates/template_15_simpleTableStyled.odt');
 
 // Create a new RichTable instance
 $table = new RichTable();
@@ -87,8 +88,7 @@ $template->setElement('tableblock', $table);
 
 
 // Save the modified document
-$template->save('samples/output/output_15_simpleTableStyled.odt');
+$template->save(__DIR__ . '/output/output_15_simpleTableStyled.odt');
 
 // Output success message
 echo "✅ Table with formatting successfully generated.\n";
-

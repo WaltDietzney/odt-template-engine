@@ -5,6 +5,8 @@ use OdtTemplateEngine\Import\HtmlImporter;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\ImageElement;
 
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
 /**
  * Sample 8 - HTML Import with Rich Structures
  *
@@ -16,8 +18,9 @@ use OdtTemplateEngine\Elements\ImageElement;
  * - Inline style attributes (color, text-decoration, font-style)
  */
 
-$template = new OdtTemplate('samples/templates/template_08_html.odt');
-$template->load();
+$template = new OdtTemplate(__DIR__ . '/templates/template_08_html.odt');
+
+$bannerImagePath = __DIR__ . '/../assets/banner.png';
 
 // 1️⃣ Define an HTML document as a string
 $html = <<<HTML
@@ -83,7 +86,7 @@ function helloWorld() {
 </ol>
 <h2>Image Showcase</h2>
 <p>An example of an embedded image:</p>
-<p><img src="assets/banner.png" width="6cm" height="3cm" style="display: block; margin: auto;"></p>
+<p><img src="{$bannerImagePath}" width="6cm" height="3cm" style="display: block; margin: auto;"></p>
 <h2 id="contact" style="color: #2F4F4F;">Contact</h2>
 <p style="font-size: small; text-align: center;">For questions, reach us at: 
 <a href="mailto:contact@example.com" style="color: #006400;">contact@example.com</a></p>
@@ -97,6 +100,6 @@ $rich = HtmlImporter::fromHtml($html);
 $template->setElement('html', $rich);
 
 // 4️⃣ Save the final document
-$template->save('samples/output/output_08_html.odt');
+$template->save(__DIR__ . '/output/output_08_html.odt');
 
-echo "✅ Document successfully created: output_8_html.odt\n";
+echo "✅ Document successfully created: samples/output/output_08_html.odt\n";
