@@ -113,6 +113,9 @@ class ImageElement extends OdtElement implements HasStyles
                 $this->width = '5cm';
                 $this->height = '3cm';
             }
+
+            $options['width'] = $this->width;
+            $options['height'] = $this->height;
         }
 
         if ($options) {
