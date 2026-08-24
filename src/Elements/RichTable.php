@@ -105,10 +105,11 @@ class RichTable extends OdtElement implements HasStyles
     public function addRow(array $cells, array $style = []): self
     {
         foreach ($cells as &$cell) {
-            if (!$cell instanceof RichTableCell && !$cell instanceof Paragraph && !$cell instanceof RichText) {
+            if (!$cell instanceof RichTableCell) {
                 $cell = new RichTableCell($cell);
             }
         }
+        unset($cell);
 
         if (!empty($this->columnWidthRatios)) {
             $sum = array_sum($this->columnWidthRatios);
