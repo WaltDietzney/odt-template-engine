@@ -22,6 +22,17 @@ nav = [
     { "Variables & Filters" = "template-language/variables-and-filters.md" },
     { "Conditions & Loops" = "template-language/conditions-and-loops.md" },
   ] },
+  { "Rich Documents" = [
+    { "RichText & Paragraphs" = "rich-documents/richtext-and-paragraphs.md" },
+    { "Lists" = "rich-documents/lists.md" },
+    { "Tables" = "rich-documents/tables.md" },
+    { "Images" = "rich-documents/images.md" },
+  ] },
+  { "Styling" = [
+    { "Style Model" = "styling/style-model.md" },
+    { "Text & Paragraph Styles" = "styling/text-and-paragraph-styles.md" },
+    { "Table & Cell Styles" = "styling/table-and-cell-styles.md" },
+  ] },
   { "Examples" = [
     { "Editable CV Showcase" = "examples/cv-showcase.md" },
   ] },
