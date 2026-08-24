@@ -91,8 +91,7 @@ require __DIR__ . '/vendor/autoload.php';
 
 use OdtTemplateEngine\OdtTemplate;
 
-$template = new OdtTemplate('templates/example.odt');
-$template->load();
+$template = new OdtTemplate(__DIR__ . '/templates/example.odt');
 
 $template->assign([
     'customer_name' => 'Jane Smith',
@@ -104,8 +103,10 @@ $template->assignRepeating('items', [
 ]);
 
 $template->render();
-$template->save('output/example-result.odt');
+$template->save(__DIR__ . '/output/example-result.odt');
 ```
+
+`OdtTemplate` loads the source document during construction. After all values and repeating data have been assigned, `render()` applies the template logic and `save()` writes the resulting ODT package.
 
 The result is a normal ODT document that can be opened and edited in LibreOffice and other compatible OpenDocument applications.
 
@@ -183,6 +184,8 @@ The project also uses generated sample documents for practical LibreOffice-orien
 ## Documentation
 
 The developer documentation is published at [odt.walter-dietz.de/docs/](https://odt.walter-dietz.de/docs/). Its versioned Markdown source lives in [`docs/`](docs/) and is built with Zensical.
+
+Start with the [Quick Start](https://odt.walter-dietz.de/docs/getting-started/quick-start/) and then continue with the template-language and rich-document guides.
 
 Useful repository areas:
 
