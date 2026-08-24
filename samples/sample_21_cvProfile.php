@@ -7,6 +7,7 @@ use OdtTemplateEngine\Elements\ListElement;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\RichText;
 use OdtTemplateEngine\PageLayoutOdtTemplate;
+use OdtTemplateEngine\Utils\StyleMapper;
 
 // Load the LibreOffice-designed CV template. The template defines the
 // two-column structure, while PHP supplies the dynamic document content.
@@ -14,6 +15,79 @@ $template = new PageLayoutOdtTemplate('samples/templates/template_21_cvProfile.o
 
 // Page geometry can be adjusted without editing the original ODT template.
 $template->setPageMargins('0cm', '0.8cm', '0cm', '0cm');
+
+// Register reusable paragraph styles once. The generated paragraphs reference
+// these semantic names instead of creating hash-based paragraph style names.
+$paragraphStyles = [
+    'CVSidebarName' => [
+        'margin-bottom' => '0.10cm',
+        'line-height' => '100%',
+    ],
+    'CVSidebarBirth' => [
+        'margin-top' => '0.05cm',
+        'margin-bottom' => '0.10cm',
+    ],
+    'CVSidebarHeading' => [
+        'margin-top' => '0.16cm',
+        'margin-bottom' => '0.04cm',
+        'line-height' => '100%',
+    ],
+    'CVSidebarLine' => [
+        'margin-bottom' => '0.02cm',
+        'line-height' => '105%',
+    ],
+    'CVSidebarSpacer' => [
+        'margin-bottom' => '0.05cm',
+    ],
+    'CVSkill' => [
+        'margin-bottom' => '0.02cm',
+        'line-height' => '105%',
+    ],
+    'CVMainHeading' => [
+        'margin-top' => '0.45cm',
+        'margin-bottom' => '0.10cm',
+        'padding-bottom' => '0.03cm',
+        'line-height' => '100%',
+        'border-bottom' => '1.5pt solid #12324a',
+    ],
+    'CVMainHeadingFirst' => [
+        'margin-top' => '0cm',
+        'margin-bottom' => '0.10cm',
+        'padding-bottom' => '0.03cm',
+        'line-height' => '100%',
+        'border-bottom' => '1.5pt solid #12324a',
+    ],
+    'CVProfile' => [
+        'margin-bottom' => '0.10cm',
+        'line-height' => '110%',
+    ],
+    'CVEntryDate' => [
+        'margin-top' => '0.14cm',
+        'margin-bottom' => '0.01cm',
+        'line-height' => '100%',
+    ],
+    'CVEntryDateFirst' => [
+        'margin-top' => '0.05cm',
+        'margin-bottom' => '0.01cm',
+        'line-height' => '100%',
+    ],
+    'CVEntryTitle' => [
+        'margin-bottom' => '0.01cm',
+        'line-height' => '100%',
+    ],
+    'CVEntryCompany' => [
+        'margin-bottom' => '0.03cm',
+        'line-height' => '100%',
+    ],
+    'CVEducationInstitution' => [
+        'margin-bottom' => '0.04cm',
+        'line-height' => '100%',
+    ],
+];
+
+foreach ($paragraphStyles as $styleName => $styleOptions) {
+    StyleMapper::registerParagraphStyle($styleName, $styleOptions);
+}
 
 // In a real application, this data would typically come from a database,
 // API, form submission, or another application layer.
@@ -106,15 +180,15 @@ $cv = [
 ];
 
 /**
- * Create a styled paragraph used throughout the CV renderer.
+ * Create a styled paragraph using a reusable named paragraph style.
  *
- * Centralizing paragraph creation keeps the showcase readable while still
- * demonstrating programmatic text and paragraph styling.
+ * Paragraph layout is defined once through StyleMapper, while text styling
+ * remains local to the text run. This keeps the generated ODT style model
+ * predictable and easier to inspect in LibreOffice.
  */
-function cvParagraph(string $text, array $textStyle = [], array $paragraphStyle = []): Paragraph
+function cvParagraph(string $text, array $textStyle = [], ?string $paragraphStyle = null): Paragraph
 {
-    $styleName = 'cv_' . substr(md5(json_encode($paragraphStyle)), 0, 8);
-    $paragraph = new Paragraph($styleName, $paragraphStyle);
+    $paragraph = new Paragraph($paragraphStyle);
     $paragraph->addText($text, array_merge([
         'font-family' => 'Arial',
     ], $textStyle));
@@ -131,11 +205,7 @@ function addSidebarHeading(RichText $rich, string $title): void
         'bold' => true,
         'font-size' => '10pt',
         'color' => '#ffffff',
-    ], [
-        'margin-top' => '0.16cm',
-        'margin-bottom' => '0.04cm',
-        'line-height' => '100%',
-    ]));
+    ], 'CVSidebarHeading'));
 }
 
 /**
@@ -159,25 +229,19 @@ function addSidebarList(RichText $rich, string $title, array $items): void
     }
 
     $rich->addElement($list);
-    $rich->addParagraph(cvParagraph('', [], ['margin-bottom' => '0.05cm']));
+    $rich->addParagraph(cvParagraph('', [], 'CVSidebarSpacer'));
 }
 
 /**
  * Add a consistently styled section heading to the main content column.
  */
-function addMainHeading(RichText $rich, string $title, string $marginTop = '0.45cm'): void
+function addMainHeading(RichText $rich, string $title, bool $first = false): void
 {
     $rich->addParagraph(cvParagraph($title, [
         'bold' => true,
         'font-size' => '13pt',
         'color' => '#111111',
-    ], [
-        'margin-top' => $marginTop,
-        'margin-bottom' => '0.10cm',
-        'padding-bottom' => '0.03cm',
-        'line-height' => '100%',
-        'border-bottom' => '1.5pt solid #12324a',
-    ]));
+    ], $first ? 'CVMainHeadingFirst' : 'CVMainHeading'));
 }
 
 // Build the sidebar as a structured ODT content block. RichText can contain
@@ -189,10 +253,7 @@ $sidebar->addParagraph(cvParagraph($cv['personal']['name'], [
     'bold' => true,
     'font-size' => '16pt',
     'color' => '#ffffff',
-], [
-    'margin-bottom' => '0.10cm',
-    'line-height' => '100%',
-]));
+], 'CVSidebarName'));
 
 $sidebar->addImage(new ImageElement($cv['personal']['photo'], [
     'width' => '3.4cm',
@@ -204,10 +265,7 @@ $sidebar->addImage(new ImageElement($cv['personal']['photo'], [
 $sidebar->addParagraph(cvParagraph('° ' . $cv['personal']['birth'], [
     'font-size' => '8.5pt',
     'color' => '#ffffff',
-], [
-    'margin-top' => '0.05cm',
-    'margin-bottom' => '0.10cm',
-]));
+], 'CVSidebarBirth'));
 
 addSidebarHeading($sidebar, 'KONTAKT');
 foreach ([
@@ -218,10 +276,7 @@ foreach ([
     $sidebar->addParagraph(cvParagraph($line, [
         'font-size' => '8.5pt',
         'color' => '#ffffff',
-    ], [
-        'margin-bottom' => '0.02cm',
-        'line-height' => '105%',
-    ]));
+    ], 'CVSidebarLine'));
 }
 
 addSidebarList($sidebar, 'PLUSPUNKTE', $cv['plus_points']);
@@ -230,10 +285,7 @@ addSidebarList($sidebar, 'SOFT SKILLS', $cv['soft_skills']);
 addSidebarHeading($sidebar, 'FACHKOMPETENZEN');
 foreach ($cv['skills'] as $skill) {
     $rating = str_repeat('★', $skill['level']) . str_repeat('☆', 5 - $skill['level']);
-    $paragraph = new Paragraph('cv_skill', [
-        'margin-bottom' => '0.02cm',
-        'line-height' => '105%',
-    ]);
+    $paragraph = new Paragraph('CVSkill');
     $paragraph->addText($skill['name'] . '  ', [
         'font-family' => 'Arial',
         'font-size' => '8.5pt',
@@ -255,14 +307,11 @@ addSidebarList($sidebar, 'SPRACHEN', $cv['languages']);
 // entries, styles, and lists are generated.
 $content = new RichText();
 
-addMainHeading($content, 'PROFIL', '0cm');
+addMainHeading($content, 'PROFIL', true);
 $content->addParagraph(cvParagraph($cv['profile'], [
     'font-size' => '9pt',
     'color' => '#333333',
-], [
-    'margin-bottom' => '0.10cm',
-    'line-height' => '110%',
-]));
+], 'CVProfile'));
 
 addMainHeading($content, 'BERUFSERFAHRUNG');
 foreach ($cv['experience'] as $index => $entry) {
@@ -270,28 +319,18 @@ foreach ($cv['experience'] as $index => $entry) {
         'bold' => true,
         'font-size' => '8.5pt',
         'color' => '#444444',
-    ], [
-        'margin-top' => $index === 0 ? '0.05cm' : '0.14cm',
-        'margin-bottom' => '0.01cm',
-        'line-height' => '100%',
-    ]));
+    ], $index === 0 ? 'CVEntryDateFirst' : 'CVEntryDate'));
 
     $content->addParagraph(cvParagraph($entry['position'], [
         'bold' => true,
         'font-size' => '10.5pt',
         'color' => '#111111',
-    ], [
-        'margin-bottom' => '0.01cm',
-        'line-height' => '100%',
-    ]));
+    ], 'CVEntryTitle'));
 
     $content->addParagraph(cvParagraph($entry['company'], [
         'font-size' => '8.5pt',
         'color' => '#666666',
-    ], [
-        'margin-bottom' => '0.03cm',
-        'line-height' => '100%',
-    ]));
+    ], 'CVEntryCompany'));
 
     // Each task collection becomes a native ODF list rather than simulated
     // bullet characters, so the resulting document remains structurally rich.
@@ -314,27 +353,17 @@ foreach ($cv['education'] as $index => $entry) {
         'bold' => true,
         'font-size' => '8.5pt',
         'color' => '#444444',
-    ], [
-        'margin-top' => $index === 0 ? '0.05cm' : '0.14cm',
-        'margin-bottom' => '0.01cm',
-        'line-height' => '100%',
-    ]));
+    ], $index === 0 ? 'CVEntryDateFirst' : 'CVEntryDate'));
 
     $content->addParagraph(cvParagraph($entry['title'], [
         'bold' => true,
         'font-size' => '10pt',
-    ], [
-        'margin-bottom' => '0.01cm',
-        'line-height' => '100%',
-    ]));
+    ], 'CVEntryTitle'));
 
     $content->addParagraph(cvParagraph($entry['institution'], [
         'font-size' => '8.5pt',
         'color' => '#666666',
-    ], [
-        'margin-bottom' => '0.04cm',
-        'line-height' => '100%',
-    ]));
+    ], 'CVEducationInstitution'));
 }
 
 addMainHeading($content, 'ZUSATZQUALIFIKATIONEN');
