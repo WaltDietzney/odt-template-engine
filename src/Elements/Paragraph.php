@@ -296,11 +296,16 @@ class Paragraph extends OdtElement implements HasStyles
      * @param array $options
      * @return $this
      */
-    public function setParagraphStyleOptions(array $options): self
-    {
-        $this->paragraphStyleOptions = $options;
-        return $this;
+public function setParagraphStyleOptions(array $options): self
+{
+    $this->paragraphStyleOptions = $options;
+
+    if ($options !== [] && $this->paragraphStyle === null) {
+        $this->paragraphStyle = StyleMapper::generateParagraphStyleName();
     }
+
+    return $this;
+}
 
     /**
      * Sets the paragraph tabs definitions.
@@ -540,7 +545,7 @@ class Paragraph extends OdtElement implements HasStyles
                     if (!empty($part['text'])) {
                         $node = $dom->createTextNode($part['text']);
                         if (!empty($part['style'])) {
-                            $styleName = StyleMapper::generateStyleName($part['tyle']);
+                            $styleName = StyleMapper::generateStyleName($part['style']);
                             $span = $dom->createElement('text:span');
                             $span->setAttribute('text:style-name', $styleName);
                             $span->appendChild($node);

@@ -185,25 +185,24 @@ abstract class AbstractOdtTemplate
      */
     protected function adjustBulletIndentation(): void
     {
-        // Use regex on serialized XML to add margin-left / text-indent
-        // to <style:list-level-label-alignment> elements.
-        $xml = $this->domStyles->saveXML();
-        if ($xml === false) {
+        // Adjust only list label alignment nodes. A global XML replacement here
+        // would also remove paragraph margins such as fo:margin-left.
+        $xpath = new DOMXPath($this->domStyles);
+        $this->prepareNamespaces($xpath);
+
+        $nodes = $xpath->query('//style:list-level-label-alignment');
+        if ($nodes === false) {
             return;
         }
-        // Remove any existing fo:margin-left / fo:text-indent first
-        $xml = preg_replace(
-            '/\s+fo:(margin-left|text-indent)="[^"]*"/',
-            '',
-            $xml
-        );
-        // Add indentation attributes to each list-level-label-alignment
-        $xml = preg_replace(
-            '/(<style:list-level-label-alignment\b)/',
-            '$1 fo:margin-left="0.35cm" fo:text-indent="-0.25cm"',
-            $xml
-        );
-        $this->domStyles->loadXML($xml);
+
+        foreach ($nodes as $node) {
+            if (!$node instanceof DOMElement) {
+                continue;
+            }
+
+            $node->setAttribute('fo:margin-left', '0.35cm');
+            $node->setAttribute('fo:text-indent', '-0.25cm');
+        }
     }
 
     /**

@@ -302,12 +302,12 @@ class RichTableCell extends OdtElement implements HasStyles
             return null;
         }
 
-        $styleNode = $dom->createElement('tyle:style');
-        $styleNode->setAttribute('tyle:name', $this->styleName);
+        $styleNode = $dom->createElement('style:style');
+        $styleNode->setAttribute('style:name', $this->styleName);
         $styleNode->setAttribute('style:family', 'table-cell');
         $styleNode->setAttribute('style:parent-style-name', 'Default');
 
-        $propsNode = $dom->createElement('tyle:table-cell-properties');
+        $propsNode = $dom->createElement('style:table-cell-properties');
 
         foreach ($this->style as $key => $value) {
             $propsNode->setAttribute($key, $value);
@@ -352,6 +352,8 @@ class RichTableCell extends OdtElement implements HasStyles
     {
         if ($this->content instanceof Paragraph) {
             $this->content->setParagraphStyle('LeftPara');
+        }
+
         return $this;
     }
 
