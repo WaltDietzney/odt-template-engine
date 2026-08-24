@@ -11,8 +11,10 @@
 use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Elements\Paragraph;
 
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
 // [1] Initialize a new template instance
-$template = new OdtTemplate('samples/templates/template_04_metadata.odt');
+$template = new OdtTemplate(__DIR__ . '/templates/template_04_metadata.odt');
 
 // [2] Load the template file
 $template->load();
@@ -32,7 +34,7 @@ $template->setMeta([
 ]);
 
 // [4] Save the file once to ensure metadata is written into the document
-$outputPath = 'samples/output/output_04_metadata.odt';
+$outputPath = __DIR__ . '/output/output_04_metadata.odt';
 $template->save($outputPath);
 
 // === Phase 2: Reload and Process Metadata ===

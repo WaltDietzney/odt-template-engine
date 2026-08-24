@@ -16,8 +16,10 @@ use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\RichText;
 
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
 // Load the ODT template
-$tpl = new OdtTemplate('samples/templates/template_16_tabsBasic.odt');
+$tpl = new OdtTemplate(__DIR__ . '/templates/template_16_tabsBasic.odt');
 
 // Create the first paragraph
 $para = new Paragraph();
@@ -30,8 +32,8 @@ $para->addTabsWithTexts([
 ]);
 
 // Create an image element
-$image = new ImageElement('assets/Logo.png', [
-    'abchor' => 'paragraph',
+$image = new ImageElement(__DIR__ . '/../assets/Logo.png', [
+    'anchor' => 'paragraph',
     'wrap' => 'left',
     'align' => 'right'
 ]);
@@ -119,4 +121,4 @@ $rich = (new RichText())
 $tpl->setElement('product_table', $rich);
 
 // Save the modified document
-$tpl->save('samples/output/output_16_tabsBasic.odt');
+$tpl->save(__DIR__ . '/output/output_16_tabsBasic.odt');

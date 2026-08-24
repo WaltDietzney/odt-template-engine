@@ -177,3 +177,17 @@ Long-running workers may eventually need an explicit per-document or
 per-job cleanup lifecycle so temporary assets do not remain until the
 worker process terminates. `TemporaryAssetRegistry` is unchanged by
 this roadmap entry.
+
+## Sample Infrastructure
+
+### SAMPLE-INFRA-01 — Public sample execution and artifact lifecycle
+
+- Priority: Medium
+- Status: Infrastructure / repository lifecycle improvement
+
+Public samples now have an executable contract covering standalone
+Composer bootstrap, canonical output names and valid ODT package
+structure. Automated smoke testing should remain isolated from tracked
+generated artifacts. The repository still contains historical and
+canonical generated ODT artifacts whose long-term ownership and
+retention policy should be formalized.

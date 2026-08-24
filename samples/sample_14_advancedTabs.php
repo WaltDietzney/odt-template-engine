@@ -12,9 +12,10 @@ use OdtTemplateEngine\Elements\ImageElement;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\RichText;
 
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
 // 1. Load and prepare the ODT template
-$template = new OdtTemplate('samples/templates/template_14_advancedTabs.odt');
-$template->load();
+$template = new OdtTemplate(__DIR__ . '/templates/template_14_advancedTabs.odt');
 $template->assign([
     'title' => "WaltDietzney's ODT Template Engine — Enjoy!"
 ]);
@@ -82,7 +83,7 @@ $par1 = (new Paragraph())
     ->addTabsWithTexts($tabStops);
 
 // 6. Insert an illustrative image (optional)
-$img1 = new ImageElement('assets/addsTabsWithTexts.png', [
+$img1 = new ImageElement(__DIR__ . '/../assets/addsTabsWithTexts.png', [
     'width' => '7cm',
     'align' => 'center',
     'wrap' => 'none',
@@ -126,7 +127,7 @@ $rich = (new RichText())
     ->addParagraph('$par1 = new Paragraph();', 'Cite', ['font-size' => '10pt', 'color' => '#a83244', 'italic' => true])
     ->addParagraphBreak(1)
     ->addParagraph(
-        "$tabStops = [\n" .
+        "\$tabStops = [\n" .
         "    ['position' => 5.0, 'alignment' => 'left',  'text' => 'Item A', 'style' => ['bold' => true]],\n" .
         "    ['position' => 11.0, 'alignment' => 'right', 'text' => '€12.50', 'style' => ['color' => '#cfcfcf'], 'italic' => true],\n" .
         "];",
@@ -175,7 +176,7 @@ $rich = (new RichText())
 
 // 10. Insert content into template variables
 $template->setElement('tabular_block', $rich);
-$template->setImage('logo', 'assets/WaltDietzney.png', [
+$template->setImage('logo', __DIR__ . '/../assets/WaltDietzney.png', [
     'width' => '2cm',
     'anchor' => 'as-char',
     'wrap' => 'none',
@@ -183,6 +184,6 @@ $template->setImage('logo', 'assets/WaltDietzney.png', [
 
 // 11. Render and save the final document
 $template->render();
-$template->save('samples/output/output_14_advancedTabs.odt');
+$template->save(__DIR__ . '/output/output_14_advancedTabs.odt');
 
 // --- End of Sample 14 ---

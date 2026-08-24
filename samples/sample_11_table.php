@@ -12,9 +12,10 @@ use OdtTemplateEngine\Elements\RichTable;
 use OdtTemplateEngine\Elements\RichTableCell;
 use OdtTemplateEngine\Utils\StyleMapper;
 
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
 // Initialize the template.
-$template = new OdtTemplate('samples/templates/template_11_table.odt');
-$template->load();
+$template = new OdtTemplate(__DIR__ . '/templates/template_11_table.odt');
 
 // Create a fixed-width table style and apply it to the table.
 $table = new RichTable();
@@ -75,4 +76,4 @@ $table
 $template->setElement('tableblock', $table);
 
 // Save the generated ODT document.
-$template->save('samples/output/output_11_table.odt');
+$template->save(__DIR__ . '/output/output_11_table.odt');

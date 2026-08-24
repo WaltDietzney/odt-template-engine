@@ -13,25 +13,24 @@
 
 use OdtTemplateEngine\OdtTemplate;
 
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
 // [1] Initialize the template
-$template = new OdtTemplate('samples/templates/template_05_replaceImage.odt');
+$template = new OdtTemplate(__DIR__ . '/templates/template_05_replaceImage.odt');
 
-// [2] Load the ODT document
-$template->load();
-
-// [3] Replace an image identified by the draw:name="Logo" in the document
+// [2] Replace an image identified by the draw:name="Logo" in the document
 // - Replace the image file with "assets/WaltDietzney.png"
 // - Set the new width of the image frame to "6cm"
 // - Height will be kept proportional if not specified
-$template->replaceImageByName('Logo', 'assets/WaltDietzney.png', [
+$template->replaceImageByName('Logo', __DIR__ . '/../assets/WaltDietzney.png', [
     'width' => '6cm' // Optional: you could also specify 'height' => '4cm'
 ]);
 
 // No render() call is required when only replacing an existing image frame.
 
 // [4] Save the updated document
-$outputPath = 'samples/output/output_05_replaceImage.odt';
+$outputPath = __DIR__ . '/output/output_05_replaceImage.odt';
 $template->save($outputPath);
 
 // [5] Output success message
-echo "The file 'output_5_replaceImage.odt' was successfully created.\n";
+echo "The file 'samples/output/output_05_replaceImage.odt' was successfully created.\n";

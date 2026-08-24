@@ -9,17 +9,12 @@
  * - Inserting an image into the document
  */
 
-// [1] (Optional) Load Composer autoloader
-// (Normally needed outside Docker)
-// require '../vendor/autoload.php';
+require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 use OdtTemplateEngine\OdtTemplate;
 
 // [2] Initialize template engine with a simple ODT template
-$template = new OdtTemplate('samples/templates/template_01_simple_variables.odt');
-
-// [3] Load the template into memory
-$template->load();
+$template = new OdtTemplate(__DIR__ . '/templates/template_01_simple_variables.odt');
 
 // [4] Assign simple variables for direct text replacement
 $template->assign([
@@ -35,7 +30,7 @@ $template->assignRepeating('items', [
 ]);
 
 // [6] Insert an image by replacing a placeholder
-$template->setImage('foto', 'assets/Logo.png', [
+$template->setImage('foto', __DIR__ . '/../assets/Logo.png', [
     'width' => '2cm' // Resize the image to fit nicely
 ]);
 
@@ -43,5 +38,4 @@ $template->setImage('foto', 'assets/Logo.png', [
 $template->render();
 
 // [8] Save the result to a new output file
-$template->save('samples/output/output_01_simple_variables.odt');
-
+$template->save(__DIR__ . '/output/output_01_simple_variables.odt');
