@@ -169,19 +169,43 @@ class StyleWriter
         }
 
         // === 6) Fonts ===
-        $decls = $domStyles->createElement('office:font-face-decls');
-        foreach (array_keys(self::$fontsUsed) as $fontName) {
-            $fontName = trim($fontName, "'\" ");
-            if ($fontName === '' || $fontName === '0') {
+        // Text styles may have been written directly by AbstractOdtTemplate's
+        // compatibility helpers, so collect font references from this document
+        // rather than relying only on StyleMapper's process-wide registry.
+        $fontNames = [];
+        foreach ($xpath->query('//@*[contains(name(), "font-name")]') as $fontAttribute) {
+            if (!str_ends_with($fontAttribute->nodeName, 'font-name')) {
                 continue;
             }
+
+            $fontName = trim($fontAttribute->nodeValue, "'\" ");
+            if ($fontName !== '' && $fontName !== '0') {
+                $fontNames[$fontName] = true;
+            }
+        }
+
+        $fontFaceDecls = $xpath->query('/office:document-styles/office:font-face-decls')->item(0);
+        if (!$fontFaceDecls) {
+            $fontFaceDecls = $domStyles->createElement('office:font-face-decls');
+            $domStyles->documentElement->insertBefore($fontFaceDecls, $officeStyles);
+        }
+
+        $existingFonts = [];
+        foreach ($xpath->query('style:font-face/@style:name', $fontFaceDecls) as $fontAttribute) {
+            $existingFonts[$fontAttribute->nodeValue] = true;
+        }
+
+        foreach (array_keys($fontNames) as $fontName) {
+            if (isset($existingFonts[$fontName])) {
+                continue;
+            }
+
             $fontFace = $domStyles->createElement('style:font-face');
             $fontFace->setAttribute('style:name', $fontName);
             $fontFace->setAttribute('svg:font-family', $fontName);
             $fontFace->setAttribute('style:font-pitch', 'variable');
-            $decls->appendChild($fontFace);
+            $fontFaceDecls->appendChild($fontFace);
         }
-        $officeStyles->appendChild($decls);
     }
 
     /**
