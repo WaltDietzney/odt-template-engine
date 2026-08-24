@@ -18,6 +18,10 @@ nav = [
     { "Quick Start" = "getting-started/quick-start.md" },
     { "Creating Templates" = "getting-started/creating-templates.md" },
   ] },
+  { "Template Language" = [
+    { "Variables & Filters" = "template-language/variables-and-filters.md" },
+    { "Conditions & Loops" = "template-language/conditions-and-loops.md" },
+  ] },
   { "Examples" = [
     { "Editable CV Showcase" = "examples/cv-showcase.md" },
   ] },
