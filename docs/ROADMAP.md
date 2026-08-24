@@ -52,28 +52,25 @@ A larger development milestone should be merged from `develop` to `master` only 
 
 ## Phase A — Architecture and responsibility boundaries
 
-### ARCH-01 — Responsibility audit
+### ARCH-01 — Responsibility audit — COMPLETE
 
 Goal: map every responsibility currently located in `AbstractOdtTemplate`, `OdtTemplate`, and `PageLayoutOdtTemplate` before moving code.
 
-The audit should classify methods and state by responsibility, including:
+The audit is recorded in [`architecture/ARCH-01_RESPONSIBILITY_AUDIT.md`](architecture/ARCH-01_RESPONSIBILITY_AUDIT.md).
 
-- ODT package lifecycle;
-- temporary workspace management;
-- XML document access;
-- template-language rendering;
-- element insertion;
-- styles;
-- metadata;
-- images and assets;
-- manifest handling;
-- page layout;
-- compatibility helpers;
-- debugging/internal utilities.
+Confirmed findings include:
 
-No code movement should happen before this map exists.
+- document/package state has no single owner;
+- package lifecycle and template-language rendering are mixed in `OdtTemplate`;
+- basic placeholder processing and structured element insertion are mixed into `AbstractOdtTemplate`;
+- style serialization still has multiple compatibility/direct paths;
+- page-layout behavior is a coherent domain responsibility but currently depends on inheritance for document access;
+- several legacy/compatibility paths require characterization before removal;
+- composition behind the existing `OdtTemplate` facade is the preferred direction.
 
-### ARCH-02 — Extract ODT package / document context
+The audit confirms ARCH-02 as the first implementation milestone.
+
+### ARCH-02 — Extract ODT package / document context — NEXT
 
 Goal: separate physical ODT package handling from template rendering.
 
@@ -96,6 +93,14 @@ Possible concepts include `OdtPackage` and/or a document-scoped context object. 
 
 Public `OdtTemplate` usage should remain unchanged during this extraction.
 
+ARCH-01 further constrains ARCH-02:
+
+- do not redesign template-language processing in this step;
+- do not solve `StyleMapper` static state in this step;
+- do not remove `AbstractOdtTemplate` yet;
+- preserve constructor, render, and save behavior;
+- add characterization/integration coverage for extraction, XML ownership, ZIP rebuild, `mimetype`, and cleanup.
+
 ### ARCH-03 — Extract template-language processing
 
 Goal: move variables, filters, conditions, and repeating-block processing behind a focused renderer/processor responsibility.
@@ -108,11 +113,15 @@ $template->assignRepeating(...);
 $template->render();
 ```
 
+ARCH-01 identified alternative/legacy conditional and repeating implementations. These must be characterized before consolidation rather than copied blindly into the new processor.
+
 ### ARCH-04 — Extract structured element insertion
 
 Goal: isolate the DOM-specific work required to place `OdtElement` structures into `content.xml` and other valid document regions.
 
 This should create a clearer home for placeholder lookup, replacement, and structured content insertion without coupling that code to ZIP or metadata behavior.
+
+This boundary is also intended to provide a future home for structural document concepts without adding them directly to the template-language processor.
 
 ### ARCH-05 — Reassess `AbstractOdtTemplate`
 
@@ -293,6 +302,6 @@ The following principles apply across all phases:
 
 The next recommended development milestone is:
 
-> **ARCH-01 — Responsibility & Future Document Model Audit**
+> **ARCH-02 — Extract ODT package / document context**
 
-It should produce a concrete responsibility map for `AbstractOdtTemplate`, `OdtTemplate`, and `PageLayoutOdtTemplate`, identify extraction boundaries, and verify that the proposed architecture can accommodate page styles, dynamic headers/footers, sections, and future renderer/pagination requirements before implementation begins.
+ARCH-01 established the responsibility map and confirmed that package/document-state extraction is the safest first implementation boundary. ARCH-02 should now define a narrow change contract and characterization-test plan before production code is moved.
