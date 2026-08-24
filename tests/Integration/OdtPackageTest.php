@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OdtTemplateEngine\Tests\Integration;
 
 use DOMDocument;
+use DOMXPath;
 use OdtTemplateEngine\OdtPackage;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
@@ -57,10 +58,18 @@ final class OdtPackageTest extends TestCase
 
         try {
             $content = $package->contentDom();
-            $paragraph = $content->createElement('text:p');
+            $paragraph = $content->createElementNS(
+                'urn:oasis:names:tc:opendocument:xmlns:text:1.0',
+                'text:p'
+            );
             $paragraph->appendChild($content->createTextNode('ARCH-02 package roundtrip'));
 
-            $officeText = $content->getElementsByTagName('office:text')->item(0);
+            $xpath = new DOMXPath($content);
+            $xpath->registerNamespace(
+                'office',
+                'urn:oasis:names:tc:opendocument:xmlns:office:1.0'
+            );
+            $officeText = $xpath->query('//office:text')->item(0);
             self::assertNotNull($officeText);
             $officeText->appendChild($paragraph);
 
