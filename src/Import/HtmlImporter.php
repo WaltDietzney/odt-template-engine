@@ -29,9 +29,10 @@ class HtmlImporter
      * wie Text, Absätze und andere Formate.
      * 
      * @param string $html Der HTML-String, der in RichText umgewandelt werden soll.
+     * @param array{allow_remote_images?: bool} $options Import options.
      * @return RichText Das RichText-Objekt, das die konvertierten HTML-Inhalte enthält.
      */
-    public static function fromHtml(string $html): RichText
+    public static function fromHtml(string $html, array $options = []): RichText
     {
         $doc = new DOMDocument();
         // HTML korrekt laden (UTF-8, ohne zusätzliche <html><body>-Tags)
@@ -42,8 +43,9 @@ class HtmlImporter
         $body = $doc->getElementsByTagName('body')->item(0);
 
         $rich = new RichText();
+        $resolver = new HtmlImageResolver((bool) ($options['allow_remote_images'] ?? false));
         foreach ($body->childNodes as $child) {
-            self::processNode($child, $rich);
+            self::processNode($child, $rich, null, $resolver);
         }
 
         return $rich;
@@ -58,8 +60,14 @@ class HtmlImporter
      * @param RichText $rich Das RichText-Objekt, dem der Inhalt hinzugefügt werden soll.
      * @param Paragraph|null $currentParagraph Der aktuelle Absatz, in den der Text eingefügt werden soll.
      */
-    protected static function processNode(DOMNode $node, RichText $rich, ?Paragraph $currentParagraph = null): void
+    protected static function processNode(
+        DOMNode $node,
+        RichText $rich,
+        ?Paragraph $currentParagraph = null,
+        ?HtmlImageResolver $imageResolver = null
+    ): void
     {
+        $imageResolver ??= new HtmlImageResolver();
         // 🧱 Textknoten verarbeiten
         if ($node instanceof DOMText) {
             $text = $node->wholeText;
@@ -104,7 +112,7 @@ class HtmlImporter
 
 
                         // Text/Absatz-Stil
-                        $paragraph = self::buildStyledParagraphFromCellNode($cellNode);
+                        $paragraph = self::buildStyledParagraphFromCellNode($cellNode, $imageResolver);
                         $allowedKeys = [
                             'background',
                             'background-color',
@@ -159,7 +167,7 @@ class HtmlImporter
             case 'header':
             case 'footer':
             case 'main':
-                self::handleStyledBlockElement($node, $rich);
+                self::handleStyledBlockElement($node, $rich, $imageResolver);
                 break;
 
             case 'strong':
@@ -180,7 +188,7 @@ class HtmlImporter
                 $style = StyleMapper::mapTextStyleOptions($option);
                 StyleMapper::registerTextStyle($style);
                 foreach ($node->childNodes as $child) {
-                    self::processStyledNode($child, $rich, $currentParagraph, $style);
+                    self::processStyledNode($child, $rich, $currentParagraph, $style, $imageResolver);
                 }
                 break;
 
@@ -208,7 +216,7 @@ class HtmlImporter
                         }
                         $currentParagraph->addText($child->wholeText, $odtStyle); // ✅ ODT-kompatibles Array
                     } else {
-                        self::processStyledNode($child, $rich, $currentParagraph, $odtStyle);
+                        self::processStyledNode($child, $rich, $currentParagraph, $odtStyle, $imageResolver);
                     }
                 }
                 break;
@@ -274,10 +282,10 @@ class HtmlImporter
                             if ($child->nodeName === 'ul' || $child->nodeName === 'ol') {
                                 // rekursiv verschachtelte Liste extrahieren
                                 ob_start(); // optional zur Fehlervermeidung
-                                self::processNode($child, $rich, null);
+                                self::processNode($child, $rich, null, $imageResolver);
                                 ob_end_clean(); // nur für Sicherheit, wenn Liste oben hinzugefügt wird
                             } else {
-                                self::processNode($child, $rich, $para);
+                                self::processNode($child, $rich, $para, $imageResolver);
                             }
                         }
 
@@ -305,35 +313,7 @@ class HtmlImporter
                 $src = $node->getAttribute('src');
                 $path = null;
 
-                // 📦 1. Base64 Data URL
-                if (preg_match('#^data:image/(\w+);base64,#i', $src, $match)) {
-                    $ext = strtolower($match[1]);
-                    $data = substr($src, strpos($src, ',') + 1);
-                    $binary = base64_decode($data);
-                    $ext = in_array($ext, ['png', 'jpg', 'jpeg', 'gif']) ? $ext : 'png'; // convert if needed
-                    $tempPath = sys_get_temp_dir() . '/odt_img_' . uniqid() . '.' . $ext;
-                    file_put_contents($tempPath, $binary);
-                    $path = $tempPath;
-                }
-
-                // 🌐 2. Remote URL
-                elseif (preg_match('/^https?:\/\//i', $src)) {
-                    $imgContent = @file_get_contents($src);
-                    if ($imgContent !== false) {
-                        $ext = pathinfo(parse_url($src, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'png';
-                        if (!in_array(strtolower($ext), ['png', 'jpg', 'jpeg', 'gif', 'bmp'])) {
-                            $ext = 'png'; // fallback
-                        }
-                        $tempPath = sys_get_temp_dir() . '/odt_img_' . uniqid() . '.' . $ext;
-                        file_put_contents($tempPath, $imgContent);
-                        $path = $tempPath;
-                    }
-                }
-
-                // 📁 3. Local File
-                elseif (file_exists($src)) {
-                    $path = realpath($src);
-                }
+                $path = $imageResolver->resolve($src);
 
                 if (!$path || !file_exists($path)) {
                     break;
@@ -355,7 +335,7 @@ class HtmlImporter
 
             default:
                 foreach ($node->childNodes as $child) {
-                    self::processNode($child, $rich, $currentParagraph);
+                    self::processNode($child, $rich, $currentParagraph, $imageResolver);
                 }
         }
     }
@@ -369,8 +349,15 @@ class HtmlImporter
      * @param Paragraph|null $currentParagraph Der aktuelle Absatz, in den der Text eingefügt werden soll.
      * @param array $style Das Stil-Array, das auf den Text angewendet wird.
      */
-    protected static function processStyledNode(DOMNode $node, RichText $rich, ?Paragraph $currentParagraph, array $style): void
+    protected static function processStyledNode(
+        DOMNode $node,
+        RichText $rich,
+        ?Paragraph $currentParagraph,
+        array $style,
+        ?HtmlImageResolver $imageResolver = null
+    ): void
     {
+        $imageResolver ??= new HtmlImageResolver();
         if ($node instanceof DOMText) {
             $text = $node->wholeText;
             if (trim($text) !== '') {
@@ -382,7 +369,7 @@ class HtmlImporter
             }
         } elseif ($node instanceof DOMElement) {
             foreach ($node->childNodes as $child) {
-                self::processStyledNode($child, $rich, $currentParagraph, $style);
+                self::processStyledNode($child, $rich, $currentParagraph, $style, $imageResolver);
             }
         }
     }
@@ -518,7 +505,11 @@ class HtmlImporter
         };
     }
 
-    protected static function handleStyledBlockElement(DOMElement $node, RichText $rich): void
+    protected static function handleStyledBlockElement(
+        DOMElement $node,
+        RichText $rich,
+        HtmlImageResolver $imageResolver
+    ): void
     {
         $inlineStyle = $node->getAttribute('style');
         $rawCss = StyleMapper::parseInlineStyle($inlineStyle);
@@ -559,13 +550,16 @@ class HtmlImporter
                     $previousWasText = true;
                 }
             } else {
-                self::processNode($child, $rich, $para);
+                self::processNode($child, $rich, $para, $imageResolver);
                 $previousWasText = false;
             }
         }
     }
 
-    protected static function buildStyledParagraphFromCellNode(DOMElement $cellNode): Paragraph
+    protected static function buildStyledParagraphFromCellNode(
+        DOMElement $cellNode,
+        HtmlImageResolver $imageResolver
+    ): Paragraph
     {
         $inlineStyle = $cellNode->getAttribute('style');
         $rawCss = StyleMapper::parseInlineStyle($inlineStyle);
@@ -589,7 +583,7 @@ class HtmlImporter
                     $paragraph->addText($text, $textCss);
                 }
             } elseif ($child instanceof DOMElement) {
-                self::processNode($child, new RichText(), $paragraph);
+                self::processNode($child, new RichText(), $paragraph, $imageResolver);
             }
         }
 
