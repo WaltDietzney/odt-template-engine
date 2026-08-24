@@ -102,6 +102,10 @@ $template->save('samples/output/output_21_cvProfile.odt');
 
 The generated file remains an editable ODT document.
 
+## Architecture behind the showcase
+
+The showcase is intentionally short. For the architectural lessons behind it — section builders, semantic styles, template/application boundaries, and how to scale from a sample to a production renderer — continue with [Building Complex Documents](building-complex-documents.md).
+
 ## Run the complete example
 
 The documentation intentionally shows only the architectural parts of the example. The executable source remains the single source of truth:
@@ -109,4 +113,4 @@ The documentation intentionally shows only the architectural parts of the exampl
 - [View `sample_21_cvProfile.php` on GitHub](https://github.com/WaltDietzney/odt-template-engine/blob/master/samples/sample_21_cvProfile.php)
 - [Open the public Sample Explorer](https://odt.walter-dietz.de/)
 
-For the underlying processing model, see [How the Engine Works](../concepts/how-it-works.md).
+For the underlying processing model, see [How the Engine Works](../concepts/how-it-works.md). For the individual numbered examples, see the [Sample Guide](sample-guide.md).
