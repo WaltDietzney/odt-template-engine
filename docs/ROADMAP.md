@@ -129,7 +129,73 @@ After the package, renderer, and insertion responsibilities have been extracted,
 
 A possible long-term outcome is removal of the abstract base class in favor of composition, but this is not a requirement. The decision should be based on the remaining responsibilities after extraction.
 
-## Phase B — Document-scoped style and asset state
+## Phase B — Document-scoped defaults, style and asset state
+
+### DOCUMENT-DEFAULTS-01 — Document-level default settings
+
+Goal: allow an application to define document-wide defaults once instead of repeating the same style and layout options on every generated element.
+
+Representative defaults include:
+
+```text
+Text defaults
+├── font family
+├── font size
+├── color
+└── language where appropriate
+
+Paragraph defaults
+├── line height
+├── paragraph spacing
+├── alignment where appropriate
+└── default paragraph style / role
+
+Page defaults
+├── margins
+├── page size
+└── orientation
+```
+
+The design should distinguish document defaults from explicit element styles. Explicit element options must continue to override defaults.
+
+A possible future usage might look conceptually like:
+
+```php
+$template->setDocumentDefaults([
+    'text' => [
+        'font-family' => 'Arial',
+        'font-size' => '10pt',
+    ],
+    'paragraph' => [
+        'line-height' => '110%',
+        'margin-bottom' => '0.08cm',
+    ],
+    'page' => [
+        'margin-top' => '1cm',
+        'margin-right' => '1cm',
+        'margin-bottom' => '1cm',
+        'margin-left' => '1cm',
+    ],
+]);
+```
+
+This example is illustrative only; the public API is not fixed by this roadmap entry.
+
+The important semantics are:
+
+```text
+document defaults
+      ↓
+element-specific style
+      ↓
+explicit local override
+```
+
+The resulting values should be resolved in a document-scoped context rather than through new process-wide static defaults.
+
+This milestone should be coordinated with ARCH-02 and STYLE-CONTEXT-01 so that default settings have a natural document owner. It should not be implemented by adding more global state to `StyleMapper`.
+
+The long-term purpose is larger than convenience: document-wide defaults are a prerequisite for treating the engine as a coherent document composition system and for allowing multiple renderers to consume the same visual/document semantics later.
 
 ### STYLE-CONTEXT-01 — Document-scoped style context
 
@@ -297,6 +363,8 @@ The following principles apply across all phases:
 8. Validate non-trivial ODF changes with tests, package/XML inspection, and LibreOffice.
 9. Document known limitations rather than presenting uncertain layout behavior as guaranteed functionality.
 10. Treat `FUTURE_DEVELOPMENT.md` as the issue backlog and this roadmap as the sequencing document.
+11. Prefer document-scoped defaults and state over process-wide configuration.
+12. Explicit element settings must override document defaults predictably.
 
 ## Immediate next milestone
 
@@ -304,4 +372,4 @@ The next recommended development milestone is:
 
 > **ARCH-02 — Extract ODT package / document context**
 
-ARCH-01 established the responsibility map and confirmed that package/document-state extraction is the safest first implementation boundary. ARCH-02 should now define a narrow change contract and characterization-test plan before production code is moved.
+ARCH-01 established the responsibility map and confirmed that package/document-state extraction is the safest first implementation boundary. ARCH-02 should now define a narrow change contract and characterization-test plan before production code is moved. The resulting document context should leave a natural home for later document defaults, style state, assets, and page/document composition settings.
