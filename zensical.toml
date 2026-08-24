@@ -33,7 +33,15 @@ nav = [
     { "Text & Paragraph Styles" = "styling/text-and-paragraph-styles.md" },
     { "Table & Cell Styles" = "styling/table-and-cell-styles.md" },
   ] },
+  { "Advanced" = [
+    { "HTML Import" = "advanced/html-import.md" },
+    { "Metadata" = "advanced/metadata.md" },
+    { "Page Layout" = "advanced/page-layout.md" },
+    { "ODT Internals" = "advanced/odt-internals.md" },
+  ] },
   { "Examples" = [
+    { "Sample Guide" = "examples/sample-guide.md" },
+    { "Building Complex Documents" = "examples/building-complex-documents.md" },
     { "Editable CV Showcase" = "examples/cv-showcase.md" },
   ] },
 ]
