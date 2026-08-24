@@ -108,6 +108,35 @@ class Paragraph extends OdtElement implements HasStyles
         return $this;
     }
 
+    /**
+     * Applies additional text styling to existing text-like parts.
+     *
+     * @internal Compatibility helper for mixed convenience style arrays.
+     * @param array<string, mixed> $style
+     * @return $this
+     */
+    public function applyTextStyle(array $style): self
+    {
+        if ($style === []) {
+            return $this;
+        }
+
+        foreach ($this->parts as &$part) {
+            if (!in_array($part['type'] ?? null, ['text', 'hyperlink', 'tab-stop'], true)) {
+                continue;
+            }
+
+            $partStyle = array_merge($part['style'] ?? [], $style);
+            $styleName = StyleMapper::generateStyleName($partStyle);
+            $part['style'] = $partStyle;
+            $part['styleName'] = $styleName;
+            $this->textStyleMap[$styleName] = $partStyle;
+        }
+        unset($part);
+
+        return $this;
+    }
+
 
 
     /**
@@ -241,10 +270,8 @@ class Paragraph extends OdtElement implements HasStyles
         return $this;
     }
 
-    /**
-     * Gets all embedded elements.
-     *
-     * @return OdtElement[]
+    /** Returns all embedded elements.
+     ** @return OdtElement[]
      */
     public function getEmbeddedElements(): array
     {
@@ -269,11 +296,16 @@ class Paragraph extends OdtElement implements HasStyles
      * @param array $options
      * @return $this
      */
-    public function setParagraphStyleOptions(array $options): self
-    {
-        $this->paragraphStyleOptions = $options;
-        return $this;
+public function setParagraphStyleOptions(array $options): self
+{
+    $this->paragraphStyleOptions = $options;
+
+    if ($options !== [] && $this->paragraphStyle === null) {
+        $this->paragraphStyle = StyleMapper::generateParagraphStyleName();
     }
+
+    return $this;
+}
 
     /**
      * Sets the paragraph tabs definitions.
@@ -315,7 +347,7 @@ class Paragraph extends OdtElement implements HasStyles
 
     /**
      * Summary of addTabsWithTexts
-     * @param array $tabs = ['position' =>$position, 'alignment'=>$alignment, 'text'=>$text, 'style' => $textStyle ]
+     * @param array $tabs [ 'position'=>$position, 'alignment'=>$alignment, 'text'=>$text, 'style' => $textStyle ]
      * @return Paragraph
      */
     public function addTabsWithTexts(array $tabs): self

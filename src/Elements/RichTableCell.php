@@ -8,6 +8,7 @@ use DOMElement;
 use OdtTemplateEngine\AbstractOdtTemplate;
 use OdtTemplateEngine\Contracts\HasStyles;
 use OdtTemplateEngine\Utils\StyleMapper;
+use OdtTemplateEngine\Utils\StyleOptionSplitter;
 
 /**
  * Represents a single cell within a table in an ODT document.
@@ -69,6 +70,12 @@ class RichTableCell extends OdtElement implements HasStyles
      */
     protected int $rowspan = 1;
 
+    /** Whether the current paragraph was created from plain string content. */
+    protected bool $contentCreatedFromString = false;
+
+    /** Original plain text used for compatibility style normalization. */
+    protected string $plainTextContent = '';
+
     /**
      * Constructor.
      *
@@ -78,9 +85,9 @@ class RichTableCell extends OdtElement implements HasStyles
     public function __construct(string|Paragraph|RichText $content, array $style = [])
     {
         if (is_string($content)) {
-            $paragraph = new Paragraph();
-            $paragraph->addText($content);
-            $this->content = $paragraph;
+            $this->contentCreatedFromString = true;
+            $this->plainTextContent = $content;
+            $this->content = (new Paragraph())->addText($content);
         } else {
             $this->content = $content;
         }
@@ -98,6 +105,8 @@ class RichTableCell extends OdtElement implements HasStyles
     public function setContent(mixed $content): self
     {
         $this->content = $content;
+        $this->contentCreatedFromString = false;
+        $this->plainTextContent = '';
         return $this;
     }
 
@@ -121,23 +130,35 @@ class RichTableCell extends OdtElement implements HasStyles
      */
     public function setStyle(array $style): self
     {
-        $this->style = StyleMapper::mapTableCellStyleOptions($style);
+        $split = StyleOptionSplitter::split($style, 'table-cell');
+        $this->style = StyleMapper::mapTableCellStyleOptions($split['cell']);
         $this->styleName = StyleMapper::generateStyleName($this->style);
         StyleMapper::registerTableCellStyle($this->styleName, $this->style);
 
         if (
-            (isset($style['text-align']) || isset($style['align'])) &&
-            $this->content instanceof Paragraph
+            $this->contentCreatedFromString
+            && (!empty($split['text']) || !empty($split['paragraph']))
         ) {
-            $align = $style['text-align'] ?? $style['align'];
-            $this->content->setParagraphStyle(
-                match (strtolower($align)) {
-                    'center' => 'CenterPara',
-                    'right' => 'RightPara',
-                    'left', 'start' => 'LeftPara',
-                    default => 'LeftPara',
-                }
-            );
+            $paragraph = new Paragraph();
+            if (!empty($split['paragraph'])) {
+                $paragraph->setParagraphStyleOptions($split['paragraph']);
+            }
+            $paragraph->addText($this->plainTextContent, $split['text']);
+            $this->content = $paragraph;
+        } elseif ($this->content instanceof Paragraph) {
+            if (!empty($split['paragraph'])) {
+                $this->content->setParagraphStyleOptions($split['paragraph']);
+            }
+            if (!empty($split['text'])) {
+                $this->content->applyTextStyle($split['text']);
+            }
+        } elseif ($this->content instanceof RichText) {
+            if (!empty($split['paragraph'])) {
+                $this->content->applyParagraphStyleOptions($split['paragraph']);
+            }
+            if (!empty($split['text'])) {
+                $this->content->applyTextStyle($split['text']);
+            }
         }
 
         return $this;
@@ -156,7 +177,7 @@ class RichTableCell extends OdtElement implements HasStyles
     }
 
     /**
-     * Sets the number of rows the cell spans.
+     * Sets the number of rows this cell spans.
      *
      * @param int $rowspan
      * @return self
@@ -332,6 +353,7 @@ class RichTableCell extends OdtElement implements HasStyles
         if ($this->content instanceof Paragraph) {
             $this->content->setParagraphStyle('LeftPara');
         }
+
         return $this;
     }
 
