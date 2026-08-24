@@ -589,7 +589,7 @@ class HtmlImporter
                     $paragraph->addText($text, $textCss);
                 }
             } elseif ($child instanceof DOMElement) {
-                self::processStyledNode($child, $paragraph, null, $textCss);
+                self::processNode($child, new RichText(), $paragraph);
             }
         }
 

@@ -71,6 +71,11 @@ class Paragraph extends OdtElement implements HasStyles
     {
         if ($paragraphStyle !== null) {
             $this->setParagraphStyle($paragraphStyle);
+        } elseif ($paragraphStyleOptions !== []) {
+            $this->setParagraphStyle(StyleMapper::generateParagraphStyleName());
+        }
+
+        if ($paragraphStyleOptions !== []) {
             $this->setParagraphStyleOptions($paragraphStyleOptions);
         }
     }
