@@ -105,6 +105,20 @@ final class OdtPackage
     }
 
     /**
+     * Restore the workspace from the original template and reload its core XML.
+     *
+     * The legacy public OdtTemplate::load() method re-extracted the source ODT.
+     * Keeping that behavior explicit avoids changing public semantics while the
+     * facade is migrated to package composition.
+     */
+    public function resetFromTemplate(): void
+    {
+        $this->clearWorkspaceContents();
+        $this->extractTemplate();
+        $this->reloadCoreDocuments();
+    }
+
+    /**
      * Persist the current core DOM documents into the workspace.
      */
     public function persistCoreDocuments(): void
@@ -260,22 +274,7 @@ final class OdtPackage
             return;
         }
 
-        $files = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator(
-                $this->workspacePath,
-                RecursiveDirectoryIterator::SKIP_DOTS
-            ),
-            RecursiveIteratorIterator::CHILD_FIRST
-        );
-
-        foreach ($files as $file) {
-            if ($file->isDir()) {
-                rmdir($file->getPathname());
-            } else {
-                unlink($file->getPathname());
-            }
-        }
-
+        $this->clearWorkspaceContents();
         rmdir($this->workspacePath);
         $this->cleanedUp = true;
     }
@@ -327,6 +326,29 @@ final class OdtPackage
 
         if (file_put_contents($path, $xml) === false) {
             throw new RuntimeException(sprintf('Unable to write XML file %s.', $path));
+        }
+    }
+
+    private function clearWorkspaceContents(): void
+    {
+        if (!is_dir($this->workspacePath)) {
+            return;
+        }
+
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(
+                $this->workspacePath,
+                RecursiveDirectoryIterator::SKIP_DOTS
+            ),
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        foreach ($files as $file) {
+            if ($file->isDir()) {
+                rmdir($file->getPathname());
+            } else {
+                unlink($file->getPathname());
+            }
         }
     }
 }
