@@ -96,6 +96,19 @@ protected function documentContext(): OdtDocumentContext
 
 If another equally narrow naming is more consistent with the codebase, it may be used.
 
+### Constructor/load compatibility finding
+
+Before ARCH-02, `OdtTemplate::__construct()` called the overridable public
+`load()` method. Construction now initializes `OdtPackage` directly and
+performs the same normal preparation without dispatching through an
+overridable `load()` method. Public `load()` behavior itself remains
+unchanged and continues to reset from the original source template.
+
+An external subclass that specifically depended on constructor-time overriding
+of `load()` would therefore observe a compatibility difference. This avoids
+calling an overridable method from the constructor; ARCH-03B does not restore
+that dispatch or introduce a new public hook.
+
 ## Explicitly out of scope
 
 ARCH-03B must NOT implement or redesign:

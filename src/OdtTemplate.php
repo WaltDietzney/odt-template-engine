@@ -5,6 +5,7 @@ namespace OdtTemplateEngine;
 use DOMDocument;
 use DOMXPath;
 use Exception;
+use OdtTemplateEngine\Document\MetadataManager;
 use OdtTemplateEngine\Utils\StyleWriter;
 use OdtTemplateEngine\Elements\RichText;
 
@@ -127,6 +128,14 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         $this->package->resetFromTemplate();
         $this->synchronizePackageState();
         $this->prepareLoadedTemplate();
+    }
+
+    /**
+     * Access the document context owned by the package.
+     */
+    protected function documentContext(): OdtDocumentContext
+    {
+        return $this->package->context();
     }
 
     private function synchronizePackageState(): void
@@ -673,47 +682,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     public function setMeta(array $meta): void
     {
-        $xpath = new DOMXPath($this->domMeta);
-        $xpath->registerNamespace("office", "urn:oasis:names:tc:opendocument:xmlns:office:1.0");
-        $xpath->registerNamespace("dc", "http://purl.org/dc/elements/1.1/");
-        $xpath->registerNamespace("meta", "urn:oasis:names:tc:opendocument:xmlns:meta:1.0");
-
-        $map = [
-            'title' => ['dc:title'],
-            'subject' => ['dc:subject'],
-            'description' => ['dc:description'],
-            'coverage' => ['dc:coverage'],
-            'keywords' => ['meta:keyword'],
-            'initial_author' => ['meta:initial-creator'],
-            'author' => ['dc:creator'],
-            'language' => ['dc:language'],
-            'creation_date' => ['meta:creation-date'],
-            'date' => ['dc:date'],
-            'editing_cycles' => ['meta:editing-cycles'],
-            'editing_duration' => ['meta:editing-duration'],
-            'generator' => ['meta:generator'],
-        ];
-
-
-        foreach ($meta as $key => $value) {
-            if (!isset($map[$key]))
-                continue;
-
-            foreach ($map[$key] as $xpathExpr) {
-                $nodes = $xpath->query("//$xpathExpr");
-                if ($nodes->length > 0) {
-                    $nodes->item(0)->nodeValue = $value;
-                } else {
-                    // Füge Knoten hinzu, falls nicht vorhanden
-                    $metaRoot = $xpath->query('//office:document-meta/office:meta')->item(0);
-                    if ($metaRoot) {
-                        [$prefix, $tag] = explode(':', $xpathExpr);
-                        $newNode = $this->domMeta->createElement("$prefix:$tag", $value);
-                        $metaRoot->appendChild($newNode);
-                    }
-                }
-            }
-        }
+        (new MetadataManager($this->documentContext()))->set($meta);
     }
 
 
@@ -741,37 +710,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     public function getMeta(): array
     {
-        $xpath = new DOMXPath($this->domMeta);
-        $xpath->registerNamespace("office", "urn:oasis:names:tc:opendocument:xmlns:office:1.0");
-        $xpath->registerNamespace("dc", "http://purl.org/dc/elements/1.1/");
-        $xpath->registerNamespace("meta", "urn:oasis:names:tc:opendocument:xmlns:meta:1.0");
-
-        $map = [
-            'title' => 'dc:title',
-            'subject' => 'dc:subject',
-            'description' => 'dc:description',
-            'coverage' => 'dc:coverage',
-            'keywords' => 'meta:keyword',
-            'initial_author' => 'meta:initial-creator',
-            'author' => 'dc:creator',
-            'language' => 'dc:language',
-            'creation_date' => 'meta:creation-date',
-            'date' => 'dc:date',
-            'editing_cycles' => 'meta:editing-cycles',
-            'editing_duration' => 'meta:editing-duration',
-            'generator' => 'meta:generator',
-        ];
-
-        $result = [];
-
-        foreach ($map as $key => $xpathExpr) {
-            $node = $xpath->query("//$xpathExpr")->item(0);
-            if ($node) {
-                $result[$key] = $node->textContent;
-            }
-        }
-
-        return $result;
+        return (new MetadataManager($this->documentContext()))->get();
     }
 
 
