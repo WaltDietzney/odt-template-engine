@@ -8,9 +8,15 @@ use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\RichText;
 use OdtTemplateEngine\PageLayoutOdtTemplate;
 
+// Load the LibreOffice-designed CV template. The template defines the
+// two-column structure, while PHP supplies the dynamic document content.
 $template = new PageLayoutOdtTemplate('samples/templates/template_21_cvProfile.odt');
+
+// Page geometry can be adjusted without editing the original ODT template.
 $template->setPageMargins('0cm', '0.8cm', '0cm', '0cm');
 
+// In a real application, this data would typically come from a database,
+// API, form submission, or another application layer.
 $cv = [
     'personal' => [
         'name' => 'Max Mustermann',
@@ -100,7 +106,10 @@ $cv = [
 ];
 
 /**
- * Create a styled paragraph while keeping the sample code compact.
+ * Create a styled paragraph used throughout the CV renderer.
+ *
+ * Centralizing paragraph creation keeps the showcase readable while still
+ * demonstrating programmatic text and paragraph styling.
  */
 function cvParagraph(string $text, array $textStyle = [], array $paragraphStyle = []): Paragraph
 {
@@ -114,7 +123,7 @@ function cvParagraph(string $text, array $textStyle = [], array $paragraphStyle 
 }
 
 /**
- * Add a heading to the dark sidebar.
+ * Add a consistently styled heading to the dark sidebar.
  */
 function addSidebarHeading(RichText $rich, string $title): void
 {
@@ -154,7 +163,7 @@ function addSidebarList(RichText $rich, string $title, array $items): void
 }
 
 /**
- * Add a section heading to the main content column.
+ * Add a consistently styled section heading to the main content column.
  */
 function addMainHeading(RichText $rich, string $title, string $marginTop = '0.45cm'): void
 {
@@ -171,7 +180,9 @@ function addMainHeading(RichText $rich, string $title, string $marginTop = '0.45
     ]));
 }
 
-// Build the dark sidebar as one rich ODT content block.
+// Build the sidebar as a structured ODT content block. RichText can contain
+// paragraphs, images, lists, and other ODT elements before insertion into
+// the corresponding template placeholder.
 $sidebar = new RichText();
 
 $sidebar->addParagraph(cvParagraph($cv['personal']['name'], [
@@ -239,7 +250,9 @@ foreach ($cv['skills'] as $skill) {
 
 addSidebarList($sidebar, 'SPRACHEN', $cv['languages']);
 
-// Build the main CV column independently from the template layout.
+// Build the main CV column independently from the template layout. The ODT
+// template controls where this block is placed; PHP controls which sections,
+// entries, styles, and lists are generated.
 $content = new RichText();
 
 addMainHeading($content, 'PROFIL', '0cm');
@@ -280,6 +293,8 @@ foreach ($cv['experience'] as $index => $entry) {
         'line-height' => '100%',
     ]));
 
+    // Each task collection becomes a native ODF list rather than simulated
+    // bullet characters, so the resulting document remains structurally rich.
     $tasks = new ListElement('bullet');
     foreach ($entry['tasks'] as $task) {
         $paragraph = new Paragraph();
@@ -335,9 +350,14 @@ foreach ($cv['qualifications'] as $qualification) {
 }
 $content->addElement($qualifications);
 
-// The LibreOffice template defines the columns; PHP controls page geometry and structured content.
+// Insert both generated content blocks into placeholders defined by the ODT
+// template. This separates LibreOffice-based layout design from PHP-driven
+// document content and styling.
 $template->setElement('cv_sidebar', $sidebar);
 $template->setElement('cv_content', $content);
+
+// Save a native OpenDocument Text file. The generated CV remains editable in
+// LibreOffice and other ODF-compatible applications.
 $template->save('samples/output/output_21_cvProfile.odt');
 
 echo "Document generated successfully: output/output_21_cvProfile.odt\n";
