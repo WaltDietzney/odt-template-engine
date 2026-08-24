@@ -2,7 +2,6 @@
 
 namespace OdtTemplateEngine;
 
-use ZipArchive;
 use DOMDocument;
 use DOMXPath;
 use Exception;
@@ -23,6 +22,8 @@ use OdtTemplateEngine\Elements\RichText;
 
 class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 {
+    private OdtPackage $package;
+
     /**
      * Path to the original ODT template file.
      *
@@ -101,20 +102,10 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     public function __construct(string $templatePath)
     {
-        if (!file_exists($templatePath)) {
-            throw new Exception("Template file not found: $templatePath");
-        }
+        $this->package = new OdtPackage($templatePath);
+        $this->synchronizePackageState();
+        $this->prepareLoadedTemplate();
 
-        $tmpDir = sys_get_temp_dir() . '/odt_' . uniqid();
-        if (!mkdir($tmpDir) && !is_dir($tmpDir)) {
-            throw new Exception("Failed to create temporary directory.");
-        }
-
-        $this->tempDir = $tmpDir;
-        $this->templatePath = $templatePath;
-        $this->load();
-
-        // Automatische Aufräumaktion beim Scriptende
         register_shutdown_function([$this, 'cleanup']);
     }
 
@@ -133,25 +124,29 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 
     public function load(): void
     {
-        $zip = new ZipArchive;
-        if ($zip->open($this->templatePath) !== true) {
-            throw new Exception("Could not open ODT file.");
-        }
+        $this->package->resetFromTemplate();
+        $this->synchronizePackageState();
+        $this->prepareLoadedTemplate();
+    }
 
-        $zip->extractTo($this->tempDir);
-        $zip->close();
+    private function synchronizePackageState(): void
+    {
+        $context = $this->package->context();
 
-        $this->domContent = $this->loadXmlFile('content.xml');
-        $this->domStyles = $this->loadXmlFile('styles.xml');
-        $this->domMeta = $this->loadXmlFile('meta.xml');
+        $this->templatePath = $this->package->templatePath();
+        $this->tempDir = $this->package->workspacePath();
+        $this->domContent = $context->contentDom();
+        $this->domStyles = $context->stylesDom();
+        $this->domMeta = $context->metaDom();
+    }
 
+    private function prepareLoadedTemplate(): void
+    {
         $this->normalizeTemplateDom($this->domContent);
         $this->normalizeTemplateDom($this->domStyles);
-
         $this->ensureDefaultParagraphStyles();
         $this->ensureDefaultListStyles();
         $this->ensureDefaultListStylesForContentXml($this->domContent);
-
     }
 
 
@@ -1170,71 +1165,16 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     public function save(string $outputPath): void
     {
-        // ✅ Inject registered image styles (graphic styles + fill-image elements)
         $this->injectImageStyles();
-
-        // ✅ StyleWriter einbinden und Styles eintragen
         StyleWriter::writeAllStyles($this->domStyles);
-
-        // ✅ Bullet list indentation anpassen (weiter links)
         $this->adjustBulletIndentation();
-
-        // ✅ Manifest um Bild-Einträge ergänzen
-        $this->addImagesToManifest();
-
-        // 💾 Minifizierte XML-Dateien speichern
-        $this->saveMinifiedXml($this->domContent, $this->tempDir . '/content.xml');
-        $this->saveMinifiedXml($this->domStyles, $this->tempDir . '/styles.xml');
-        $this->saveMinifiedXml($this->domMeta, $this->tempDir . '/meta.xml');
-
-        // 📦 Archiv erzeugen
-        $zip = new ZipArchive;
-        if ($zip->open($outputPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new Exception("Could not create output file: $outputPath");
-        }
-
-        // 📄 mimetype-Datei (uncompressed zuerst)
-        $mimetypePath = $this->tempDir . '/mimetype';
-        if (!file_exists($mimetypePath)) {
-            throw new Exception("Missing mimetype file in template.");
-        }
-
-        $zip->addFromString('mimetype', file_get_contents($mimetypePath));
-        $zip->setCompressionName('mimetype', ZipArchive::CM_STORE);
-
-        // 📂 Restliche Dateien hinzufügen
-        $rii = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($this->tempDir, \RecursiveDirectoryIterator::SKIP_DOTS)
-        );
-
-        foreach ($rii as $file) {
-            if ($file->isDir())
-                continue;
-
-            $filePath = $file->getPathname();
-            $localPath = substr($filePath, strlen($this->tempDir) + 1);
-
-            // ❌ Skip mimetype & evtl. temporäre template-Datei
-            if (in_array($localPath, ['mimetype', 'template.odt']))
-                continue;
-
-            $zip->addFile($filePath, $localPath);
-        }
-
-        $zip->close();
+        $this->package->saveAs($outputPath);
     }
 
     public function refresh()
     {
-        // ✅ StyleWriter einbinden und Styles eintragen
         StyleWriter::writeAllStyles($this->domStyles);
-
-
-        // 💾 Minifizierte XML-Dateien speichern
-        $this->saveMinifiedXml($this->domContent, $this->tempDir . '/content.xml');
-        $this->saveMinifiedXml($this->domStyles, $this->tempDir . '/styles.xml');
-        $this->saveMinifiedXml($this->domMeta, $this->tempDir . '/meta.xml');
-
+        $this->package->persistCoreDocuments();
         $this->load();
     }
 
@@ -1270,60 +1210,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     protected function addImagesToManifest(): void
     {
-        $manifestPath = $this->tempDir . '/META-INF/manifest.xml';
-        $picturesDir = $this->tempDir . '/Pictures';
-
-        if (!file_exists($manifestPath) || !is_dir($picturesDir)) {
-            return;
-        }
-
-        $manifest = file_get_contents($manifestPath);
-
-        // Existierende Einträge ermitteln
-        $existingEntries = [];
-        preg_match_all('/manifest:full-path="([^"]+)"/', $manifest, $matches);
-        foreach ($matches[1] as $path) {
-            $existingEntries[$path] = true;
-        }
-
-        $imageMimeTypes = [
-            'png' => 'image/png',
-            'jpg'  => 'image/jpeg',
-            'jpeg' => 'image/jpeg',
-            'gif'  => 'image/gif',
-            'svg'  => 'image/svg+xml',
-            'bmp'  => 'image/bmp',
-            'webp' => 'image/webp',
-        ];
-
-        $changed = false;
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($picturesDir, \RecursiveDirectoryIterator::SKIP_DOTS)
-        );
-
-        foreach ($iterator as $file) {
-            if ($file->isDir()) continue;
-
-            $localPath = 'Pictures/' . $file->getFilename();
-
-            if (isset($existingEntries[$localPath])) continue;
-
-            $ext = strtolower(pathinfo($file->getFilename(), PATHINFO_EXTENSION));
-            $mime = $imageMimeTypes[$ext] ?? 'application/octet-stream';
-
-            // Vor </manifest:manifest> einfügen
-            $entry = sprintf(
-                "\n <manifest:file-entry manifest:full-path=\"%s\" manifest:media-type=\"%s\"/>",
-                $localPath,
-                $mime
-            );
-            $manifest = str_replace('</manifest:manifest>', $entry . "\n</manifest:manifest>", $manifest);
-            $changed = true;
-        }
-
-        if ($changed) {
-            file_put_contents($manifestPath, $manifest);
-        }
+        $this->package->synchronizeImageManifest();
     }
 
     /**
@@ -1339,19 +1226,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     public function cleanup(): void
     {
-        if (!is_dir($this->tempDir))
-            return;
-
-        $files = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($this->tempDir, \RecursiveDirectoryIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::CHILD_FIRST
-        );
-
-        foreach ($files as $file) {
-            $file->isDir() ? rmdir($file) : unlink($file);
-        }
-
-        rmdir($this->tempDir);
+        $this->package->cleanup();
     }
 
 

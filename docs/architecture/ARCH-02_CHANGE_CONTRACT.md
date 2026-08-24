@@ -287,6 +287,19 @@ ARCH-02 may temporarily keep compatibility accessors/properties while delegating
 
 Any temporary bridge must be clearly documented as transitional architecture rather than a second permanent owner of the same state.
 
+### Constructor/load compatibility finding
+
+Before ARCH-02, `OdtTemplate::__construct()` called the overridable public
+`load()` method. Construction now initializes `OdtPackage` directly and
+performs the same normal preparation without dispatching through an
+overridable `load()` method. Public `load()` behavior itself remains
+unchanged and continues to reset from the original source template.
+
+An external subclass that specifically depended on constructor-time
+overriding of `load()` would therefore observe a compatibility difference.
+This avoids calling an overridable method from the constructor; ARCH-02 does
+not restore that dispatch or introduce a new public hook.
+
 ## Security preservation
 
 The existing XML-loading behavior uses `LIBXML_NOENT | LIBXML_NOCDATA` and therefore assumes trusted ODT template input.
