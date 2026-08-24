@@ -18,7 +18,30 @@ nav = [
     { "Quick Start" = "getting-started/quick-start.md" },
     { "Creating Templates" = "getting-started/creating-templates.md" },
   ] },
+  { "Template Language" = [
+    { "Variables & Filters" = "template-language/variables-and-filters.md" },
+    { "Conditions & Loops" = "template-language/conditions-and-loops.md" },
+  ] },
+  { "Rich Documents" = [
+    { "RichText & Paragraphs" = "rich-documents/richtext-and-paragraphs.md" },
+    { "Lists" = "rich-documents/lists.md" },
+    { "Tables" = "rich-documents/tables.md" },
+    { "Images" = "rich-documents/images.md" },
+  ] },
+  { "Styling" = [
+    { "Style Model" = "styling/style-model.md" },
+    { "Text & Paragraph Styles" = "styling/text-and-paragraph-styles.md" },
+    { "Table & Cell Styles" = "styling/table-and-cell-styles.md" },
+  ] },
+  { "Advanced" = [
+    { "HTML Import" = "advanced/html-import.md" },
+    { "Metadata" = "advanced/metadata.md" },
+    { "Page Layout" = "advanced/page-layout.md" },
+    { "ODT Internals" = "advanced/odt-internals.md" },
+  ] },
   { "Examples" = [
+    { "Sample Guide" = "examples/sample-guide.md" },
+    { "Building Complex Documents" = "examples/building-complex-documents.md" },
     { "Editable CV Showcase" = "examples/cv-showcase.md" },
   ] },
 ]
