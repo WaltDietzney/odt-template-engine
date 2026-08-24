@@ -1,23 +1,22 @@
 # How the Engine Works
 
-The ODT Template Engine is template-driven, but it is not limited to replacing text placeholders. It supports two complementary ways to create dynamic document content.
+The ODT Template Engine combines a real office document with application data. It is template-driven, but it is not limited to replacing text placeholders.
 
-## 1. Start with a real ODT template
+A useful rule of thumb is:
 
-Create the document layout in LibreOffice Writer or another ODT-compatible editor. The template remains a normal `.odt` file, so page structure, tables, static text, and other design decisions can be prepared visually.
+> **Use LibreOffice for document design. Use PHP for dynamic content.**
 
-Inside the template, mark dynamic positions with placeholders such as:
+The engine supports three complementary levels of document generation.
+
+## Level 1: Template syntax
+
+Create the stable document structure in LibreOffice Writer or another ODT-compatible editor and mark dynamic positions with placeholders:
 
 ```text
-{{customer_name}}
-{{content}}
+Customer: {{customer_name}}
 ```
 
-An ODT file is a ZIP package containing XML files such as `content.xml`, `styles.xml`, and `meta.xml`. The engine loads that package and modifies the relevant XML while preserving the document as an editable ODT file.
-
-## 2. Use template syntax for data and control flow
-
-Simple values are assigned from PHP:
+Assign the value from PHP:
 
 ```php
 $template->assign([
@@ -25,23 +24,13 @@ $template->assign([
 ]);
 ```
 
-The template can also contain filters, conditions, and repeating blocks. For example:
+Template syntax also supports filters, conditions, and repeating blocks. This is the simplest approach when the ODT template already owns the document structure.
 
-```text
-{{#if:is_vip}}
-VIP Customer
-{{#endif}}
+See [Variables & Filters](../template-language/variables-and-filters.md) and [Conditions & Loops](../template-language/conditions-and-loops.md).
 
-{{#foreach:items}}
-{{name}} — {{price}}
-{{#endforeach}}
-```
+## Level 2: Structured PHP content
 
-Repeating data is provided with `assignRepeating()`.
-
-## 3. Build complex content with PHP elements
-
-For content that is easier to express programmatically, the engine provides document elements such as `RichText`, `Paragraph`, `ListElement`, `ImageElement`, and `RichTable`.
+When the structure itself depends on application data, build native ODT content with PHP elements such as `RichText`, `Paragraph`, `ListElement`, `ImageElement`, and `RichTable`.
 
 ```php
 use OdtTemplateEngine\Elements\Paragraph;
@@ -58,22 +47,78 @@ $richText->addParagraph($paragraph);
 $template->setElement('content', $richText);
 ```
 
-The placeholder `{{content}}` is then replaced by the generated ODT structure rather than by plain text.
+The template contains a placeholder such as `{{content}}`, but PHP supplies a document structure rather than plain text.
 
-## 4. Combine template layout and generated content
+This is useful for dynamic lists, tables, styled paragraphs, images, and larger generated sections.
 
-The two approaches are designed to work together:
+## Level 3: Advanced document control
+
+Advanced workflows can also control document-level concerns such as:
+
+- reusable styles;
+- HTML import;
+- document metadata;
+- page layout;
+- image and frame behavior.
+
+These features still operate on a real ODT package rather than converting the document to another format.
+
+## The ODT package
+
+An `.odt` file is a ZIP package containing XML and related assets. Important package members include:
+
+- `content.xml` — document body content and some automatic styles;
+- `styles.xml` — document styles, page styles, and related definitions;
+- `meta.xml` — document metadata;
+- `META-INF/manifest.xml` — package file declarations;
+- `Pictures/` — embedded image assets when present.
+
+The engine extracts the template into a temporary working directory, loads the relevant XML documents, modifies them, and writes a new ODT package when `save()` is called.
+
+You normally do not need to edit this XML manually. Understanding the package structure becomes useful when diagnosing advanced styling, layout, or interoperability behavior.
+
+## The normal processing lifecycle
+
+A typical document follows this sequence:
+
+```text
+LibreOffice ODT template
+        ↓
+new OdtTemplate(...)
+        ↓
+assign values / repeating data
+        ↓
+add generated ODT elements
+        ↓
+render()
+        ↓
+save(...)
+        ↓
+editable .odt document
+```
+
+`OdtTemplate` loads the source ODT during construction. `render()` applies assigned values, repeating blocks, and conditional template logic. `save()` writes styles and XML changes and packages the result as an ODT file.
+
+## Template layout and PHP content work together
+
+The most useful documents often combine the three levels instead of choosing only one.
 
 ```text
 LibreOffice template
-        +
-PHP data and ODT elements
-        ↓
-ODT Template Engine
-        ↓
-Fully editable .odt document
+├── page and stable layout
+├── static text
+├── {{simple_value}}
+└── {{generated_section}}
+
+PHP
+├── assigns simple values
+├── controls conditions and loops
+└── builds generated ODT elements
+
+                    ↓
+            ODT Template Engine
+                    ↓
+          fully editable .odt file
 ```
 
-This separation is especially useful for complex documents. The template can define stable layout structures while PHP generates the parts that depend on application data.
-
-The [Editable CV Showcase](../examples/cv-showcase.md) demonstrates this approach with a two-column template, programmatically generated sidebar and main content, native lists, an image, text styles, and programmatic page margins.
+The [Editable CV Showcase](../examples/cv-showcase.md) demonstrates this architecture with a two-column LibreOffice template, programmatically generated sidebar and main content, native lists, an image, reusable styles, and programmatic page margins.
