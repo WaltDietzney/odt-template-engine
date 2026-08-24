@@ -14,20 +14,16 @@ use ZipArchive;
 /**
  * Owns the physical lifecycle of one editable ODT package.
  *
- * The package is extracted into a document-scoped temporary workspace and
- * exposes the three core XML documents used by the template engine. It does
- * not know anything about placeholders, template-language rendering, styles,
- * page layout, or public document-element APIs.
+ * The package owns archive extraction, the temporary workspace, package files,
+ * manifest synchronization, persistence, ZIP rebuild, and cleanup. Mutable XML
+ * state is grouped in an OdtDocumentContext so later document-scoped concerns
+ * have a clear lifetime without being mixed into archive mechanics.
  */
 final class OdtPackage
 {
     private string $workspacePath;
 
-    private DOMDocument $contentDom;
-
-    private DOMDocument $stylesDom;
-
-    private DOMDocument $metaDom;
+    private OdtDocumentContext $context;
 
     private bool $cleanedUp = false;
 
@@ -47,7 +43,11 @@ final class OdtPackage
 
         $this->workspacePath = $workspacePath;
         $this->extractTemplate();
-        $this->loadCoreDocuments();
+        $this->context = new OdtDocumentContext(
+            $this->loadXmlFile('content.xml'),
+            $this->loadXmlFile('styles.xml'),
+            $this->loadXmlFile('meta.xml')
+        );
     }
 
     public function templatePath(): string
@@ -60,19 +60,24 @@ final class OdtPackage
         return $this->workspacePath;
     }
 
+    public function context(): OdtDocumentContext
+    {
+        return $this->context;
+    }
+
     public function contentDom(): DOMDocument
     {
-        return $this->contentDom;
+        return $this->context->contentDom();
     }
 
     public function stylesDom(): DOMDocument
     {
-        return $this->stylesDom;
+        return $this->context->stylesDom();
     }
 
     public function metaDom(): DOMDocument
     {
-        return $this->metaDom;
+        return $this->context->metaDom();
     }
 
     /**
@@ -92,7 +97,11 @@ final class OdtPackage
      */
     public function reloadCoreDocuments(): void
     {
-        $this->loadCoreDocuments();
+        $this->context->replaceCoreDocuments(
+            $this->loadXmlFile('content.xml'),
+            $this->loadXmlFile('styles.xml'),
+            $this->loadXmlFile('meta.xml')
+        );
     }
 
     /**
@@ -100,9 +109,9 @@ final class OdtPackage
      */
     public function persistCoreDocuments(): void
     {
-        $this->saveMinifiedXml($this->contentDom, $this->path('content.xml'));
-        $this->saveMinifiedXml($this->stylesDom, $this->path('styles.xml'));
-        $this->saveMinifiedXml($this->metaDom, $this->path('meta.xml'));
+        $this->saveMinifiedXml($this->contentDom(), $this->path('content.xml'));
+        $this->saveMinifiedXml($this->stylesDom(), $this->path('styles.xml'));
+        $this->saveMinifiedXml($this->metaDom(), $this->path('meta.xml'));
     }
 
     /**
@@ -285,13 +294,6 @@ final class OdtPackage
         } finally {
             $zip->close();
         }
-    }
-
-    private function loadCoreDocuments(): void
-    {
-        $this->contentDom = $this->loadXmlFile('content.xml');
-        $this->stylesDom = $this->loadXmlFile('styles.xml');
-        $this->metaDom = $this->loadXmlFile('meta.xml');
     }
 
     private function loadXmlFile(string $filename): DOMDocument
