@@ -3,9 +3,11 @@
 namespace OdtTemplateEngine;
 
 use DOMDocument;
+use DOMNode;
 use DOMXPath;
 use Exception;
 use OdtTemplateEngine\Document\MetadataManager;
+use OdtTemplateEngine\Template\TemplateProcessor;
 use OdtTemplateEngine\Utils\StyleWriter;
 use OdtTemplateEngine\Elements\RichText;
 
@@ -228,40 +230,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     protected function replaceNl2brInDom(DOMDocument $dom, array $values): void
     {
-        $xpath = new DOMXPath($dom);
-        $xpath->registerNamespace('text', 'urn:oasis:names:tc:opendocument:xmlns:text:1.0'); // für <text:line-break>
-        $nodes = $xpath->query('//text()');
-
-        foreach ($nodes as $textNode) {
-            $text = $textNode->nodeValue;
-
-            if (preg_match('/{{nl2br:(\w+)}}/', $text, $match)) {
-                $key = $match[1];
-                $original = $values[$key] ?? '';
-                $parts = preg_split('/\r\n|\n|\r/', $original);
-
-                $parent = $textNode->parentNode;
-
-                // Neue Knoten erzeugen
-                $newNodes = [];
-                foreach ($parts as $i => $part) {
-                    if ($i > 0) {
-                        $newNodes[] = $dom->createElement('text:line-break');
-                    }
-                    if ($part !== '') {
-                        $newNodes[] = $dom->createTextNode($part);
-                    }
-                }
-
-                // Neue Knoten VOR dem Platzhalter einfügen
-                foreach ($newNodes as $newNode) {
-                    $parent->insertBefore($newNode, $textNode);
-                }
-
-                // Platzhalterknoten entfernen
-                $parent->removeChild($textNode);
-            }
-        }
+        (new TemplateProcessor())->replaceNl2brInDom($dom, $values);
     }
 
     /**
@@ -282,42 +251,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     protected function replaceListsInDom(DOMDocument $dom, array $values): void
     {
-        $xpath = new DOMXPath($dom);
-        $nodes = $xpath->query('//text()');
-
-        foreach ($nodes as $textNode) {
-            $text = $textNode->nodeValue;
-
-            if (preg_match('/{{(ul|ol):(\w+)}}/', $text, $match)) {
-                $listType = $match[1];  // ul oder ol
-                $key = $match[2];
-                $original = $values[$key] ?? '';
-
-                // Text in Zeilen aufsplitten
-                $lines = preg_split('/\r\n|\r|\n/', $original);
-
-                // Liste erstellen
-                $list = $dom->createElement('text:list');
-                $styleName = ($listType === 'ol') ? 'Numbering_20_Symbol' : 'Bullet_20_Symbol';
-                $list->setAttribute('text:style-name', $styleName);
-
-                foreach ($lines as $line) {
-                    $listItem = $dom->createElement('text:list-item');
-                    $p = $dom->createElement('text:p');
-                    $p->appendChild($dom->createTextNode($line));
-                    $listItem->appendChild($p);
-                    $list->appendChild($listItem);
-                }
-
-                // Den <text:p> Knoten komplett ersetzen, nicht nur den Textknoten!
-                $pNode = $textNode->parentNode;
-                $pParent = $pNode->parentNode;
-
-                if ($pParent && $pNode->nodeName === 'text:p') {
-                    $pParent->replaceChild($list, $pNode);
-                }
-            }
-        }
+        (new TemplateProcessor())->replaceListsInDom($dom, $values);
     }
 
 
@@ -348,84 +282,12 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 
     protected function applyConditionalsInDom(DOMDocument $dom, array $values): void
     {
-        $xpath = new DOMXPath($dom);
-        $paragraphs = iterator_to_array($xpath->query('//text:p'));
-        $i = 0;
-
-        while ($i < count($paragraphs)) {
-            $node = $paragraphs[$i];
-            $text = trim($node->textContent);
-
-            if (preg_match('/{{#(ifnot|if):(.+?)}}/', $text, $match)) {
-                $type = $match[1]; // "if" oder "ifnot"
-                $expr = trim($match[2]);
-
-                $conditions = [
-                    ['start' => $i, 'expr' => $expr, 'type' => $type]
-                ];
-
-                $else = null;
-                $end = null;
-                $j = $i + 1;
-
-                while ($j < count($paragraphs)) {
-                    $inner = trim($paragraphs[$j]->textContent);
-                    if (preg_match('/{{#elseif:(.+?)}}/', $inner, $m)) {
-                        $conditions[] = ['start' => $j, 'expr' => trim($m[1]), 'type' => 'if'];
-                    } elseif ($inner === '{{#else}}') {
-                        $else = $j;
-                    } elseif ($inner === '{{#endif}}') {
-                        $end = $j;
-                        break;
-                    }
-                    $j++;
-                }
-
-                if ($end === null) {
-                    $i++;
-                    continue;
-                }
-
-                $keepStart = null;
-                $keepEnd = null;
-
-                for ($c = 0; $c < count($conditions); $c++) {
-                    $cond = $conditions[$c];
-                    $result = $this->evaluateCondition($cond['expr'], $values);
-                    if ($cond['type'] === 'ifnot') {
-                        $result = !$result;
-                    }
-
-                    if ($result) {
-                        $keepStart = $cond['start'] + 1;
-                        $keepEnd = isset($conditions[$c + 1])
-                            ? $conditions[$c + 1]['start'] - 1
-                            : ($else ?? $end) - 1;
-                        break;
-                    }
-                }
-
-
-                if ($keepStart === null && $else !== null) {
-                    $keepStart = $else + 1;
-                    $keepEnd = $end - 1;
-                }
-
-                for ($k = $end; $k >= $i; $k--) {
-                    if ($k >= $keepStart && $k <= $keepEnd)
-                        continue;
-                    $n = $paragraphs[$k];
-                    if ($n->parentNode) {
-                        $n->parentNode->removeChild($n);
-                    }
-                }
-
-                $paragraphs = iterator_to_array($xpath->query('//text:p'));
-                $i = $i;
-            } else {
-                $i++;
-            }
-        }
+        (new TemplateProcessor())->applyConditionalsInDom(
+            $dom,
+            $values,
+            fn (string $expression, array $conditionValues): bool =>
+                $this->evaluateCondition($expression, $conditionValues)
+        );
     }
 
 
@@ -454,30 +316,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 
     protected function evaluateCondition(string $expr, array $values): bool
     {
-        if (preg_match('/^(\w+)\s*(==|!=|>=|<=|>|<)\s*(.+)$/', $expr, $m)) {
-            $var = $m[1];
-            $op = $m[2];
-            $val = trim($m[3], '"\'');
-
-            $left = $values[$var] ?? null;
-            if (is_numeric($left) && is_numeric($val)) {
-                $left = (float) $left;
-                $val = (float) $val;
-            }
-
-            return match ($op) {
-                '==' => $left == $val,
-                '!=' => $left != $val,
-                '>' => $left > $val,
-                '<' => $left < $val,
-                '>=' => $left >= $val,
-                '<=' => $left <= $val,
-            };
-        }
-
-        // Wahrheitswert prüfen
-        $val = $values[$expr] ?? false;
-        return filter_var($val, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        return (new TemplateProcessor())->evaluateCondition($expr, $values);
     }
 
 
@@ -540,59 +379,14 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 
     protected function applyRepeatingInDom(DOMDocument $dom, string $key, array $rows): void
     {
-        $xpath = new DOMXPath($dom);
-
-        while (true) {
-            // Suche nach einem Start- und End-Block für die Schleife
-            $startNodeList = $xpath->query("//text:p[contains(text(), '{{#foreach:$key}}')]");
-            if ($startNodeList->length === 0) {
-                break; // Keine weiteren foreach-Blöcke vorhanden
+        (new TemplateProcessor())->applyRepeatingInDom(
+            $dom,
+            $key,
+            $rows,
+            function (DOMNode $node, array $rowData): void {
+                $this->replacePlaceholdersInNode($node, $rowData);
             }
-
-            $startNode = $startNodeList->item(0);
-
-            // Suche den dazugehörigen End-Block
-            $endNode = null;
-            $current = $startNode->nextSibling;
-            while ($current) {
-                if ($current->nodeType === XML_ELEMENT_NODE && strpos($current->textContent, '{{#endforeach}}') !== false) {
-                    $endNode = $current;
-                    break;
-                }
-                $current = $current->nextSibling;
-            }
-
-            if (!$endNode) {
-                // Fehler: Kein passendes #endforeach gefunden, Abbruch
-                break;
-            }
-
-            $parent = $startNode->parentNode;
-            $referenceNode = $endNode->nextSibling;
-
-            // Sammle alle Knoten zwischen start und end
-            $templateNodes = [];
-            $current = $startNode->nextSibling;
-            while ($current && $current !== $endNode) {
-                $templateNodes[] = $current;
-                $next = $current->nextSibling;
-                $parent->removeChild($current);
-                $current = $next;
-            }
-
-            // Entferne Start- und End-Marker
-            $parent->removeChild($startNode);
-            $parent->removeChild($endNode);
-
-            // Jetzt für jede Zeile neue Knoten einfügen
-            foreach ($rows as $rowData) {
-                foreach ($templateNodes as $template) {
-                    $clone = $template->cloneNode(true); // Deep Clone
-                    $this->replacePlaceholdersInNode($clone, $rowData);
-                    $parent->insertBefore($clone, $referenceNode); // An der richtigen Stelle einfügen
-                }
-            }
-        }
+        );
     }
 
 
@@ -999,18 +793,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     protected function applyFilter(string $filter, string $value, ?string $option = null): string
     {
-        return match ($filter) {
-            'upper' => mb_strtoupper($value),
-            'lower' => mb_strtolower($value),
-            'trim' => trim($value),
-            'nl2br' => $value, // von replaceNl2brInDom separat behandelt
-            'ul' => $value, // von  separat behandelt
-            'date' => date($option ?: 'd.m.Y', strtotime($value)),
-            'number' => number_format((float) str_replace(',', '.', $value), (int) ($option ?? 2), ',', '.'),
-            default => $value,
-            'checkbox' => ($value) ? '☑' : '☐',
-            'currency' => number_format((float) str_replace(',', '.', $value), (int) 2, ',', '.') . ' €'
-        };
+        return (new TemplateProcessor())->applyFilter($filter, $value, $option);
     }
 
 
@@ -1041,43 +824,9 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      * @param DOMDocument $dom The ODT XML DOM to normalize (usually content.xml or styles.xml)
      */
     protected function normalizeTemplateDom(DOMDocument $dom): void
-{
-    $xpath = new \DOMXPath($dom);
-
-    // Alle Textabsätze finden (normale Absätze + in Textboxen)
-    $paragraphs = $xpath->query('//text:p');
-
-    foreach ($paragraphs as $p) {
-        if (!($p instanceof \DOMElement)) {
-            continue;
-        }
-
-        $buffer = '';
-        $nodesToRemove = [];
-
-        foreach (iterator_to_array($p->childNodes) as $child) {
-            if ($child->nodeType === XML_TEXT_NODE || $child->nodeName === 'text:span') {
-                $buffer .= $child->textContent;
-                $nodesToRemove[] = $child;
-
-                // Wenn der Platzhalter abgeschlossen ist (genug geschlossene Klammern), dann zusammenfügen
-                if (substr_count($buffer, '{{') > 0 && substr_count($buffer, '{{') === substr_count($buffer, '}}')) {
-                    // Alte Nodes entfernen
-                    foreach ($nodesToRemove as $n) {
-                        $p->removeChild($n);
-                    }
-
-                    // Neuen Text-Node einfügen
-                    $p->appendChild($dom->createTextNode($buffer));
-
-                    // Reset
-                    $buffer = '';
-                    $nodesToRemove = [];
-                }
-            }
-        }
+    {
+        (new TemplateProcessor())->normalizeTemplateDom($dom);
     }
-}
 
 
 

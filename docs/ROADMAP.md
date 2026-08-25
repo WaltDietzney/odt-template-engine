@@ -148,22 +148,24 @@ finalization boundary.
 The decision is recorded in
 [`architecture/ARCH-03C_FINALIZATION_DECISION.md`](architecture/ARCH-03C_FINALIZATION_DECISION.md).
 
-### ARCH-04 — Extract template-language processing
+### ARCH-04 — Extract template-language processing — COMPLETE
 
-Goal: move template-language processing behind a focused
-`TemplateProcessor`/renderer responsibility.
+ARCH-04 extracted the active template-language operations behind the
+stateless `TemplateProcessor` while preserving the public `OdtTemplate`
+facade and protected compatibility seams.
 
-The responsibility includes:
+Completed slices include:
 
-- variables;
-- filters;
-- `nl2br`;
-- list placeholders;
-- conditions;
-- loops;
-- template normalization.
+- ARCH-04A — template-processing audit;
+- ARCH-04B — extraction design contract;
+- ARCH-04B1 — scalar replacement, normalization and scalar filters;
+- ARCH-04B2 — `nl2br` and `ul`/`ol` structural placeholders;
+- ARCH-04B3A — control-structure characterization;
+- ARCH-04B3B1 — active condition processing and evaluation;
+- ARCH-04B3B2 — active foreach block processing;
+- ARCH-04B4 — facade and compatibility final review.
 
-The public workflow should remain compatible:
+The public workflow remains compatible:
 
 ```php
 $template->assign(...);
@@ -171,10 +173,18 @@ $template->assignRepeating(...);
 $template->render();
 ```
 
-ARCH-01 identified alternative/legacy conditional and repeating
-implementations. These must be characterized before consolidation rather than
-copied blindly into the new processor. Existing public APIs must remain
-compatible.
+The audit, change contract, control-structure characterization and final
+review are recorded in:
+
+- [`architecture/ARCH-04_TEMPLATE_PROCESSING_AUDIT.md`](architecture/ARCH-04_TEMPLATE_PROCESSING_AUDIT.md);
+- [`architecture/ARCH-04B_CHANGE_CONTRACT.md`](architecture/ARCH-04B_CHANGE_CONTRACT.md);
+- [`architecture/ARCH-04B3_CONTROL_STRUCTURE_CHARACTERIZATION.md`](architecture/ARCH-04B3_CONTROL_STRUCTURE_CHARACTERIZATION.md);
+- [`architecture/ARCH-04B_FINAL_REVIEW.md`](architecture/ARCH-04B_FINAL_REVIEW.md).
+
+Structured `OdtElement` insertion remains explicitly outside ARCH-04 and is
+the responsibility of ARCH-05. Formatting preservation and template-authoring
+UX remain future work under `TEMPLATE-FORMAT-PRESERVATION-01` and
+`TEMPLATE-AUTHORING-UX-01`.
 
 ### ARCH-05 — Extract structured element insertion
 
@@ -431,9 +441,9 @@ The following principles apply across all phases:
 
 The next recommended development milestone is:
 
-> **ARCH-04 — Extract template-language processing**
+> **ARCH-05 — Extract structured element insertion**
 
-ARCH-03 completed the technical ODT document-layer audit and the low-coupling
-metadata/page-layout extraction. The next milestone should characterize and
-extract template-language processing while preserving the existing public
-workflow and legacy/alternative condition and repeating paths.
+ARCH-04 completed the template-language extraction while preserving the
+existing public workflow and legacy/alternative condition and repeating
+paths. The next milestone should isolate structured `OdtElement` placement
+and insertion without moving that responsibility into `TemplateProcessor`.
