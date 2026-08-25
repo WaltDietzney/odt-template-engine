@@ -70,7 +70,7 @@ Confirmed findings include:
 
 The audit confirms ARCH-02 as the first implementation milestone.
 
-### ARCH-02 — Extract ODT package / document context — NEXT
+### ARCH-02 — Extract ODT package / document context — COMPLETE
 
 Goal: separate physical ODT package handling from template rendering.
 
@@ -89,7 +89,19 @@ ODT package
 └── cleanup
 ```
 
-Possible concepts include `OdtPackage` and/or a document-scoped context object. Final names and APIs should follow the ARCH-01 findings rather than being fixed in advance.
+ARCH-02 introduced `OdtPackage` and `OdtDocumentContext` as the owners of
+package/workspace state and the core document DOMs.
+
+Completed responsibilities include:
+
+- template extraction and temporary workspace ownership;
+- `content.xml`, `styles.xml`, and `meta.xml` access through
+  `OdtDocumentContext`;
+- XML persistence;
+- manifest synchronization;
+- ZIP rebuild with ODT `mimetype` handling;
+- idempotent cleanup;
+- reset-from-source behavior for the compatible public `load()` lifecycle.
 
 Public `OdtTemplate` usage should remain unchanged during this extraction.
 
@@ -101,9 +113,55 @@ ARCH-01 further constrains ARCH-02:
 - preserve constructor, render, and save behavior;
 - add characterization/integration coverage for extraction, XML ownership, ZIP rebuild, `mimetype`, and cleanup.
 
-### ARCH-03 — Extract template-language processing
+### ARCH-03 — Technical ODT document layer — COMPLETE
 
-Goal: move variables, filters, conditions, and repeating-block processing behind a focused renderer/processor responsibility.
+ARCH-03 established and characterized the technical document layer between
+the public template facade and the physical package lifecycle. The audit is
+recorded in [`architecture/ARCH-03_DOCUMENT_CORE_AUDIT.md`](architecture/ARCH-03_DOCUMENT_CORE_AUDIT.md).
+
+#### ARCH-03A — Technical ODT document layer audit — COMPLETE
+
+The audit separated technical ODT document responsibilities from
+template-language processing and confirmed that package persistence belongs
+to `OdtPackage`, while the core XML documents belong to `OdtDocumentContext`.
+
+#### ARCH-03B — Extract metadata and page-layout services — COMPLETE
+
+Completed services:
+
+- `MetadataManager`;
+- `PageLayoutManager`;
+- public facade compatibility for `OdtTemplate` and
+  `PageLayoutOdtTemplate`.
+
+The change contract is recorded in
+[`architecture/ARCH-03B_CHANGE_CONTRACT.md`](architecture/ARCH-03B_CHANGE_CONTRACT.md).
+
+#### ARCH-03C — Document finalization boundary — COMPLETE
+
+The finalization sequence was characterized and remains orchestrated by
+`OdtTemplate`. No `DocumentFinalizer` was extracted because current style and
+image finalization still depends on process-wide static `StyleMapper` state.
+`STYLE-CONTEXT-01` is therefore a prerequisite for a sound document-scoped
+finalization boundary.
+
+The decision is recorded in
+[`architecture/ARCH-03C_FINALIZATION_DECISION.md`](architecture/ARCH-03C_FINALIZATION_DECISION.md).
+
+### ARCH-04 — Extract template-language processing
+
+Goal: move template-language processing behind a focused
+`TemplateProcessor`/renderer responsibility.
+
+The responsibility includes:
+
+- variables;
+- filters;
+- `nl2br`;
+- list placeholders;
+- conditions;
+- loops;
+- template normalization.
 
 The public workflow should remain compatible:
 
@@ -113,9 +171,12 @@ $template->assignRepeating(...);
 $template->render();
 ```
 
-ARCH-01 identified alternative/legacy conditional and repeating implementations. These must be characterized before consolidation rather than copied blindly into the new processor.
+ARCH-01 identified alternative/legacy conditional and repeating
+implementations. These must be characterized before consolidation rather than
+copied blindly into the new processor. Existing public APIs must remain
+compatible.
 
-### ARCH-04 — Extract structured element insertion
+### ARCH-05 — Extract structured element insertion
 
 Goal: isolate the DOM-specific work required to place `OdtElement` structures into `content.xml` and other valid document regions.
 
@@ -123,7 +184,7 @@ This should create a clearer home for placeholder lookup, replacement, and struc
 
 This boundary is also intended to provide a future home for structural document concepts without adding them directly to the template-language processor.
 
-### ARCH-05 — Reassess `AbstractOdtTemplate`
+### ARCH-06 — Reassess `AbstractOdtTemplate`
 
 After the package, renderer, and insertion responsibilities have been extracted, reassess whether `AbstractOdtTemplate` still represents a meaningful abstraction.
 
@@ -370,6 +431,9 @@ The following principles apply across all phases:
 
 The next recommended development milestone is:
 
-> **ARCH-02 — Extract ODT package / document context**
+> **ARCH-04 — Extract template-language processing**
 
-ARCH-01 established the responsibility map and confirmed that package/document-state extraction is the safest first implementation boundary. ARCH-02 should now define a narrow change contract and characterization-test plan before production code is moved. The resulting document context should leave a natural home for later document defaults, style state, assets, and page/document composition settings.
+ARCH-03 completed the technical ODT document-layer audit and the low-coupling
+metadata/page-layout extraction. The next milestone should characterize and
+extract template-language processing while preserving the existing public
+workflow and legacy/alternative condition and repeating paths.
