@@ -39,20 +39,20 @@ The review used:
 - `src/Document/MetadataManager.php` and `PageLayoutManager.php`;
 - `src/Utils/StyleMapper.php` and `StyleWriter.php`;
 - relevant inheritance and protected-polymorphism tests;
+- `docs/architecture/ARCH-06A_ABSTRACT_ODT_TEMPLATE_AUDIT.md`;
 - ARCH-01, ARCH-02, ARCH-03, ARCH-04 and ARCH-05 architecture records;
 - `docs/ROADMAP.md` and `docs/FUTURE_DEVELOPMENT.md`.
 
-The requested file
-`docs/architecture/ARCH-06A_ABSTRACT_ODT_TEMPLATE_AUDIT.md` is not present
-on this branch. It could not be read or verified. This is a repository/document
-baseline contradiction and is itself recorded as an ARCH-06 documentation
-follow-up. The conclusions below therefore verify the available audit history
-against the current implementation rather than treating the missing document
-as authoritative.
+ARCH-06A is an audit/research record, not a Change Contract. It conditionally
+favours attempting a real abstract base contract, while explicitly leaving
+removal open if no coherent contract can be defined. ARCH-06B verifies that
+conditional recommendation against the current code and tests. The more
+conservative target below is therefore a deliberate refinement of ARCH-06A,
+not a silent reinterpretation of it.
 
 ## 3. Confirmed and corrected ARCH-06A findings
 
-The available architecture history and current code confirm that:
+ARCH-06A and the current code confirm that:
 
 - `AbstractOdtTemplate` is formally `abstract` but declares no abstract
   methods;
@@ -66,6 +66,12 @@ The available architecture history and current code confirm that:
 - ARCH-04 moved active template-language operations to `TemplateProcessor`;
 - ARCH-05 moved structured materialization and introduced typed target
   resolution, but intentionally retained compatibility seams.
+
+ARCH-06A's conditional preference for a real abstract base remains an open
+design hypothesis. The current evidence does not yet identify two genuinely
+different concrete implementations or a mandatory subclass-provided operation
+that would justify adding abstract methods. ARCH-06B therefore does not adopt
+that hypothesis as an implementation commitment.
 
 The current code adds an important qualification: the protected
 `documentContext()` accessor is implemented on `OdtTemplate`, not on
