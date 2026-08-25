@@ -3,10 +3,13 @@
 namespace OdtTemplateEngine;
 
 use DOMDocument;
+use DOMElement;
 use DOMNode;
 use DOMXPath;
 use Exception;
+use OdtTemplateEngine\Document\AmbiguousTemplateTargetException;
 use OdtTemplateEngine\Document\MetadataManager;
+use OdtTemplateEngine\Document\TemplateTargetResolver;
 use OdtTemplateEngine\Template\TemplateProcessor;
 use OdtTemplateEngine\Utils\StyleWriter;
 use OdtTemplateEngine\Elements\RichText;
@@ -138,6 +141,15 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
     protected function documentContext(): OdtDocumentContext
     {
         return $this->package->context();
+    }
+
+    /**
+     * Prepare a constructed element's image resource without resolving a
+     * named template target.
+     */
+    protected function copyImageResource(string $imagePath): void
+    {
+        $this->package->copyImageResource($imagePath);
     }
 
     private function synchronizePackageState(): void
@@ -663,7 +675,9 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      *
      * Behavior:
      * - Copies the image to the "Pictures" folder inside the ODT temp directory.
-     * - Calculates missing width or height proportionally based on original image dimensions.
+     * - Uses the legacy default dimensions of 5cm x 3cm unless explicit options
+     *   replace them. A single explicit dimension does not trigger proportional
+     *   recalculation because the other dimension already has a default.
      * - Updates the xlink:href attribute of the targeted <draw:image> node.
      *
      * Throws:
@@ -742,17 +756,42 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         string $width,
         string $height
     ): void {
-        $xpath = new DOMXPath($dom);
-        $frames = $xpath->query("//draw:frame[@draw:name='$name']");
+        $resolver = new TemplateTargetResolver();
 
-        foreach ($frames as $frame) {
-            $frame->setAttribute('svg:width', $width);
-            $frame->setAttribute('svg:height', $height);
+        try {
+            $target = $resolver->resolveFrame($dom, $name);
+        } catch (AmbiguousTemplateTargetException) {
+            // Preserve the legacy public behavior: every matching frame was
+            // updated when duplicate names existed in one document.
+            $xpath = new DOMXPath($dom);
+            $frames = $xpath->query("//draw:frame[@draw:name='$name']");
 
-            foreach ($frame->childNodes as $child) {
-                if ($child->nodeName === 'draw:image') {
-                    $child->setAttribute('xlink:href', 'Pictures/' . $filename);
-                }
+            foreach ($frames as $frame) {
+                $this->replaceImageInFrame($frame, $filename, $width, $height);
+            }
+
+            return;
+        }
+
+        if ($target === null) {
+            return;
+        }
+
+        $this->replaceImageInFrame($target->node(), $filename, $width, $height);
+    }
+
+    private function replaceImageInFrame(
+        DOMElement $frame,
+        string $filename,
+        string $width,
+        string $height
+    ): void {
+        $frame->setAttribute('svg:width', $width);
+        $frame->setAttribute('svg:height', $height);
+
+        foreach ($frame->childNodes as $child) {
+            if ($child->nodeName === 'draw:image') {
+                $child->setAttribute('xlink:href', 'Pictures/' . $filename);
             }
         }
     }

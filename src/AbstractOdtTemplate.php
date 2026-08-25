@@ -3,6 +3,7 @@
 namespace OdtTemplateEngine;
 
 use OdtTemplateEngine\Elements\OdtElement;
+use OdtTemplateEngine\Document\StructuredElementMaterializer;
 use DOMDocument;
 use DOMNode;
 use DOMXPath;
@@ -669,7 +670,7 @@ abstract class AbstractOdtTemplate
         // 3. 🖼️ Replace image assets from the element
         if (method_exists($element, 'getImageAssets')) {
             foreach ($element->getImageAssets() as $img) {
-                $this->replaceImageByName($img['id'], $img['path']);
+                $this->copyImageResource($img['path']);
             }
         }
 
@@ -685,25 +686,20 @@ abstract class AbstractOdtTemplate
             }
         }
 
-        $this->fixBrokenVariables($this->domContent);
-        // 6. 🪄 Replace placeholder with DOM node in content.xml
-        $this->replacePlaceholderWithDom(
+        $materializer = new StructuredElementMaterializer();
+        $materializer->insert(
             $this->domContent,
+            $this->domStyles,
             $placeholder,
-            $element->toDomNode($this->domContent)
+            $element,
+            function (DOMDocument $dom): void {
+                $this->fixBrokenVariables($dom);
+            },
+            function (DOMDocument $dom, string $key, DOMNode $replacement): void {
+                $this->replacePlaceholderWithDom($dom, $key, $replacement);
+            },
+            fn (DOMDocument $dom, string $key): bool => $this->hasPlaceholder($dom, $key)
         );
-
-        $this->fixBrokenVariables($this->domStyles);
-        // 6. 🪄 Replace ALL occurrences in styles.xml (e.g. {{cv_header}} in
-        //    page 1 AND page 2 headers). Build a fresh replacement for each
-        //    occurrence by cloning from the element directly (fresh toDomNode).
-        while ($this->hasPlaceholder($this->domStyles, $placeholder)) {
-            $this->replacePlaceholderWithDom(
-                $this->domStyles,
-                $placeholder,
-                $element->toDomNode($this->domStyles)
-            );
-        }
     }
 
 
@@ -719,57 +715,7 @@ abstract class AbstractOdtTemplate
      */
     protected function replacePlaceholderWithDom(DOMDocument $dom, string $key, DOMNode $replacement): void
     {
-        $xpath = new DOMXPath($dom);
-
-        foreach ($xpath->query('//text()') as $textNode) {
-            if (strpos($textNode->nodeValue, '{{' . $key . '}}') === false) {
-                continue;
-            }
-
-            $parent = $textNode->parentNode;
-            if (!$parent) {
-                continue;
-            }
-
-            if (in_array($replacement->nodeName, ['text:span', 'text:s', 'text:line-break'])) {
-                $parts = explode('{{' . $key . '}}', $textNode->nodeValue);
-                $refNode = $textNode;
-                foreach ($parts as $index => $part) {
-                    if ($index > 0) {
-                        $cloned = $replacement->cloneNode(true);
-                        $parent->insertBefore($cloned, $refNode);
-                    }
-                    if ($part !== '') {
-                        $newText = $dom->createTextNode($part);
-                        $parent->insertBefore($newText, $refNode);
-                    }
-                }
-                $parent->removeChild($refNode);
-            } else {
-                $pNode = $textNode;
-                while ($pNode && $pNode->nodeName !== 'text:p') {
-                    $pNode = $pNode->parentNode;
-                }
-                if ($pNode) {
-                    $insideTextBox = false;
-                    $ancestor = $pNode->parentNode;
-                    while ($ancestor) {
-                        if ($ancestor->nodeName === 'draw:text-box') {
-                            $insideTextBox = true;
-                            break;
-                        }
-                        $ancestor = $ancestor->parentNode;
-                    }
-                    $cloned = $replacement->cloneNode(true);
-                    if ($insideTextBox) {
-                        $pNode->parentNode->insertBefore($cloned, $pNode);
-                        $pNode->parentNode->removeChild($pNode);
-                    } else {
-                        $pNode->parentNode->replaceChild($cloned, $pNode);
-                    }
-                }
-            }
-        }
+        (new StructuredElementMaterializer())->replacePlaceholder($dom, $key, $replacement);
     }
 
     /**

@@ -201,6 +201,29 @@ final class OdtPackage
     }
 
     /**
+     * Copy an image into the package Pictures directory.
+     *
+     * This prepares a package resource without resolving or mutating any
+     * document target. Manifest synchronization is performed when the package
+     * is saved.
+     *
+     * @throws Exception If the image file does not exist.
+     */
+    public function copyImageResource(string $imagePath): void
+    {
+        if (!file_exists($imagePath)) {
+            throw new Exception("Image file not found: $imagePath");
+        }
+
+        $picturesDir = $this->path('Pictures');
+        if (!is_dir($picturesDir)) {
+            mkdir($picturesDir);
+        }
+
+        copy($imagePath, $picturesDir . '/' . basename($imagePath));
+    }
+
+    /**
      * Serialize the current document state and create a valid ODT archive.
      *
      * The caller remains responsible for domain-specific finalization such as

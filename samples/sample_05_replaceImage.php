@@ -21,7 +21,11 @@ $template = new OdtTemplate(__DIR__ . '/templates/template_05_replaceImage.odt')
 // [2] Replace an image identified by the draw:name="Logo" in the document
 // - Replace the image file with "assets/WaltDietzney.png"
 // - Set the new width of the image frame to "6cm"
-// - Height will be kept proportional if not specified
+// Legacy dimension behavior:
+// - No dimensions: 5cm x 3cm
+// - Width only: supplied width x 3cm
+// - Height only: 5cm x supplied height
+// - Width and height: supplied values verbatim
 $template->replaceImageByName('Logo', __DIR__ . '/../assets/WaltDietzney.png', [
     'width' => '6cm' // Optional: you could also specify 'height' => '4cm'
 ]);
