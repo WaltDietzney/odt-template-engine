@@ -186,13 +186,41 @@ the responsibility of ARCH-05. Formatting preservation and template-authoring
 UX remain future work under `TEMPLATE-FORMAT-PRESERVATION-01` and
 `TEMPLATE-AUTHORING-UX-01`.
 
-### ARCH-05 — Extract structured element insertion
+### ARCH-05 — Structured elements / structured insertion — COMPLETE
 
-Goal: isolate the DOM-specific work required to place `OdtElement` structures into `content.xml` and other valid document regions.
+ARCH-05 established the structured-document boundary without changing the
+public facade or claiming a universal named-object API.
 
-This should create a clearer home for placeholder lookup, replacement, and structured content insertion without coupling that code to ZIP or metadata behavior.
+The milestone includes:
 
-This boundary is also intended to provide a future home for structural document concepts without adding them directly to the template-language processor.
+- structured-element audit and identity/replacement semantics;
+- the distinction between constructed ODF materialization and existing native
+  template-object resolution;
+- `StructuredElementMaterializer` for constructed `OdtElement` insertion;
+- typed native target resolution through `TemplateTargetResolver`;
+- frame targets identified by `draw:name`;
+- table targets identified by `table:name`;
+- integration of the existing `replaceImageByName()` operation through typed
+  frame resolution;
+- explicit separation between target resolution and operation capability;
+- structured image resource preparation through `OdtPackage`;
+- preservation of existing public, protected, package, image, and manifest
+  compatibility behavior.
+
+The research and contract history is recorded in:
+
+- [`architecture/ARCH-05A_STRUCTURED_ELEMENTS_AUDIT.md`](architecture/ARCH-05A_STRUCTURED_ELEMENTS_AUDIT.md);
+- [`architecture/ARCH-05B_ELEMENT_IDENTITY_AND_REPLACEMENT_SEMANTICS.md`](architecture/ARCH-05B_ELEMENT_IDENTITY_AND_REPLACEMENT_SEMANTICS.md);
+- [`architecture/ARCH-05C_CHANGE_CONTRACT.md`](architecture/ARCH-05C_CHANGE_CONTRACT.md).
+
+The following remain future work and were not implemented by ARCH-05:
+
+- public generic named-object APIs;
+- named text-box replacement;
+- table-target mutation;
+- whole-object replacement or removal;
+- Exact Clone, Template Clone / Template Instance, and Structural Clone;
+- generalized drawing-object operations or capability frameworks.
 
 ### ARCH-06 — Reassess `AbstractOdtTemplate`
 
@@ -439,11 +467,10 @@ The following principles apply across all phases:
 
 ## Immediate next milestone
 
-The next recommended development milestone is:
+The next recommended step is:
 
-> **ARCH-05 — Extract structured element insertion**
+> **ARCH-05 independent final review and merge preflight**
 
-ARCH-04 completed the template-language extraction while preserving the
-existing public workflow and legacy/alternative condition and repeating
-paths. The next milestone should isolate structured `OdtElement` placement
-and insertion without moving that responsibility into `TemplateProcessor`.
+ARCH-05 implementation is complete through resource decoupling. The remaining
+activity is independent verification of the documentation, compatibility
+behavior, generated ODT packages, and representative LibreOffice output.

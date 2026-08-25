@@ -1,11 +1,27 @@
 # ARCH-05C Structured Elements Change Contract
 
-**Status:** Change contract complete; production implementation not started
+**Status:** Historical pre-implementation change contract; implementation completed through ARCH-05H
 **Milestone:** ARCH-05 — Structured elements / structured insertion
 **Base branch:** `develop`
 **Base HEAD:** `95681ef62b2b9a5d48a825a4406e20000c3f51b5`
 **Architecture branch:** `architecture/arch-05-structured-elements`
 **Contract commit basis:** `3f841728ebf5d6f3dd58e69c3bcb96fef270d60b`
+
+## Implementation status
+
+This document is the pre-implementation change contract. Its architectural
+decisions and non-goals remain historical contract text; it is not rewritten
+retrospectively.
+
+The approved implementation is now complete through:
+
+- **ARCH-05D** — structured behavior characterization;
+- **ARCH-05E** — `StructuredElementMaterializer` extraction;
+- **ARCH-05F** — typed target-resolution foundation;
+- **ARCH-05G** — existing named-image integration;
+- **ARCH-05H** — structured image resource decoupling through `OdtPackage`.
+
+Independent final review and merge preflight remain the closeout activity.
 
 ## 1. Purpose
 
