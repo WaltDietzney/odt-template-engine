@@ -2,10 +2,12 @@
 
 namespace OdtTemplateEngine;
 
-use ZipArchive;
 use DOMDocument;
+use DOMNode;
 use DOMXPath;
 use Exception;
+use OdtTemplateEngine\Document\MetadataManager;
+use OdtTemplateEngine\Template\TemplateProcessor;
 use OdtTemplateEngine\Utils\StyleWriter;
 use OdtTemplateEngine\Elements\RichText;
 
@@ -23,6 +25,8 @@ use OdtTemplateEngine\Elements\RichText;
 
 class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 {
+    private OdtPackage $package;
+
     /**
      * Path to the original ODT template file.
      *
@@ -101,20 +105,10 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     public function __construct(string $templatePath)
     {
-        if (!file_exists($templatePath)) {
-            throw new Exception("Template file not found: $templatePath");
-        }
+        $this->package = new OdtPackage($templatePath);
+        $this->synchronizePackageState();
+        $this->prepareLoadedTemplate();
 
-        $tmpDir = sys_get_temp_dir() . '/odt_' . uniqid();
-        if (!mkdir($tmpDir) && !is_dir($tmpDir)) {
-            throw new Exception("Failed to create temporary directory.");
-        }
-
-        $this->tempDir = $tmpDir;
-        $this->templatePath = $templatePath;
-        $this->load();
-
-        // Automatische Aufräumaktion beim Scriptende
         register_shutdown_function([$this, 'cleanup']);
     }
 
@@ -133,25 +127,37 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 
     public function load(): void
     {
-        $zip = new ZipArchive;
-        if ($zip->open($this->templatePath) !== true) {
-            throw new Exception("Could not open ODT file.");
-        }
+        $this->package->resetFromTemplate();
+        $this->synchronizePackageState();
+        $this->prepareLoadedTemplate();
+    }
 
-        $zip->extractTo($this->tempDir);
-        $zip->close();
+    /**
+     * Access the document context owned by the package.
+     */
+    protected function documentContext(): OdtDocumentContext
+    {
+        return $this->package->context();
+    }
 
-        $this->domContent = $this->loadXmlFile('content.xml');
-        $this->domStyles = $this->loadXmlFile('styles.xml');
-        $this->domMeta = $this->loadXmlFile('meta.xml');
+    private function synchronizePackageState(): void
+    {
+        $context = $this->package->context();
 
+        $this->templatePath = $this->package->templatePath();
+        $this->tempDir = $this->package->workspacePath();
+        $this->domContent = $context->contentDom();
+        $this->domStyles = $context->stylesDom();
+        $this->domMeta = $context->metaDom();
+    }
+
+    private function prepareLoadedTemplate(): void
+    {
         $this->normalizeTemplateDom($this->domContent);
         $this->normalizeTemplateDom($this->domStyles);
-
         $this->ensureDefaultParagraphStyles();
         $this->ensureDefaultListStyles();
         $this->ensureDefaultListStylesForContentXml($this->domContent);
-
     }
 
 
@@ -224,40 +230,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     protected function replaceNl2brInDom(DOMDocument $dom, array $values): void
     {
-        $xpath = new DOMXPath($dom);
-        $xpath->registerNamespace('text', 'urn:oasis:names:tc:opendocument:xmlns:text:1.0'); // für <text:line-break>
-        $nodes = $xpath->query('//text()');
-
-        foreach ($nodes as $textNode) {
-            $text = $textNode->nodeValue;
-
-            if (preg_match('/{{nl2br:(\w+)}}/', $text, $match)) {
-                $key = $match[1];
-                $original = $values[$key] ?? '';
-                $parts = preg_split('/\r\n|\n|\r/', $original);
-
-                $parent = $textNode->parentNode;
-
-                // Neue Knoten erzeugen
-                $newNodes = [];
-                foreach ($parts as $i => $part) {
-                    if ($i > 0) {
-                        $newNodes[] = $dom->createElement('text:line-break');
-                    }
-                    if ($part !== '') {
-                        $newNodes[] = $dom->createTextNode($part);
-                    }
-                }
-
-                // Neue Knoten VOR dem Platzhalter einfügen
-                foreach ($newNodes as $newNode) {
-                    $parent->insertBefore($newNode, $textNode);
-                }
-
-                // Platzhalterknoten entfernen
-                $parent->removeChild($textNode);
-            }
-        }
+        (new TemplateProcessor())->replaceNl2brInDom($dom, $values);
     }
 
     /**
@@ -278,42 +251,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     protected function replaceListsInDom(DOMDocument $dom, array $values): void
     {
-        $xpath = new DOMXPath($dom);
-        $nodes = $xpath->query('//text()');
-
-        foreach ($nodes as $textNode) {
-            $text = $textNode->nodeValue;
-
-            if (preg_match('/{{(ul|ol):(\w+)}}/', $text, $match)) {
-                $listType = $match[1];  // ul oder ol
-                $key = $match[2];
-                $original = $values[$key] ?? '';
-
-                // Text in Zeilen aufsplitten
-                $lines = preg_split('/\r\n|\r|\n/', $original);
-
-                // Liste erstellen
-                $list = $dom->createElement('text:list');
-                $styleName = ($listType === 'ol') ? 'Numbering_20_Symbol' : 'Bullet_20_Symbol';
-                $list->setAttribute('text:style-name', $styleName);
-
-                foreach ($lines as $line) {
-                    $listItem = $dom->createElement('text:list-item');
-                    $p = $dom->createElement('text:p');
-                    $p->appendChild($dom->createTextNode($line));
-                    $listItem->appendChild($p);
-                    $list->appendChild($listItem);
-                }
-
-                // Den <text:p> Knoten komplett ersetzen, nicht nur den Textknoten!
-                $pNode = $textNode->parentNode;
-                $pParent = $pNode->parentNode;
-
-                if ($pParent && $pNode->nodeName === 'text:p') {
-                    $pParent->replaceChild($list, $pNode);
-                }
-            }
-        }
+        (new TemplateProcessor())->replaceListsInDom($dom, $values);
     }
 
 
@@ -344,84 +282,12 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 
     protected function applyConditionalsInDom(DOMDocument $dom, array $values): void
     {
-        $xpath = new DOMXPath($dom);
-        $paragraphs = iterator_to_array($xpath->query('//text:p'));
-        $i = 0;
-
-        while ($i < count($paragraphs)) {
-            $node = $paragraphs[$i];
-            $text = trim($node->textContent);
-
-            if (preg_match('/{{#(ifnot|if):(.+?)}}/', $text, $match)) {
-                $type = $match[1]; // "if" oder "ifnot"
-                $expr = trim($match[2]);
-
-                $conditions = [
-                    ['start' => $i, 'expr' => $expr, 'type' => $type]
-                ];
-
-                $else = null;
-                $end = null;
-                $j = $i + 1;
-
-                while ($j < count($paragraphs)) {
-                    $inner = trim($paragraphs[$j]->textContent);
-                    if (preg_match('/{{#elseif:(.+?)}}/', $inner, $m)) {
-                        $conditions[] = ['start' => $j, 'expr' => trim($m[1]), 'type' => 'if'];
-                    } elseif ($inner === '{{#else}}') {
-                        $else = $j;
-                    } elseif ($inner === '{{#endif}}') {
-                        $end = $j;
-                        break;
-                    }
-                    $j++;
-                }
-
-                if ($end === null) {
-                    $i++;
-                    continue;
-                }
-
-                $keepStart = null;
-                $keepEnd = null;
-
-                for ($c = 0; $c < count($conditions); $c++) {
-                    $cond = $conditions[$c];
-                    $result = $this->evaluateCondition($cond['expr'], $values);
-                    if ($cond['type'] === 'ifnot') {
-                        $result = !$result;
-                    }
-
-                    if ($result) {
-                        $keepStart = $cond['start'] + 1;
-                        $keepEnd = isset($conditions[$c + 1])
-                            ? $conditions[$c + 1]['start'] - 1
-                            : ($else ?? $end) - 1;
-                        break;
-                    }
-                }
-
-
-                if ($keepStart === null && $else !== null) {
-                    $keepStart = $else + 1;
-                    $keepEnd = $end - 1;
-                }
-
-                for ($k = $end; $k >= $i; $k--) {
-                    if ($k >= $keepStart && $k <= $keepEnd)
-                        continue;
-                    $n = $paragraphs[$k];
-                    if ($n->parentNode) {
-                        $n->parentNode->removeChild($n);
-                    }
-                }
-
-                $paragraphs = iterator_to_array($xpath->query('//text:p'));
-                $i = $i;
-            } else {
-                $i++;
-            }
-        }
+        (new TemplateProcessor())->applyConditionalsInDom(
+            $dom,
+            $values,
+            fn (string $expression, array $conditionValues): bool =>
+                $this->evaluateCondition($expression, $conditionValues)
+        );
     }
 
 
@@ -450,30 +316,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 
     protected function evaluateCondition(string $expr, array $values): bool
     {
-        if (preg_match('/^(\w+)\s*(==|!=|>=|<=|>|<)\s*(.+)$/', $expr, $m)) {
-            $var = $m[1];
-            $op = $m[2];
-            $val = trim($m[3], '"\'');
-
-            $left = $values[$var] ?? null;
-            if (is_numeric($left) && is_numeric($val)) {
-                $left = (float) $left;
-                $val = (float) $val;
-            }
-
-            return match ($op) {
-                '==' => $left == $val,
-                '!=' => $left != $val,
-                '>' => $left > $val,
-                '<' => $left < $val,
-                '>=' => $left >= $val,
-                '<=' => $left <= $val,
-            };
-        }
-
-        // Wahrheitswert prüfen
-        $val = $values[$expr] ?? false;
-        return filter_var($val, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        return (new TemplateProcessor())->evaluateCondition($expr, $values);
     }
 
 
@@ -536,59 +379,14 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 
     protected function applyRepeatingInDom(DOMDocument $dom, string $key, array $rows): void
     {
-        $xpath = new DOMXPath($dom);
-
-        while (true) {
-            // Suche nach einem Start- und End-Block für die Schleife
-            $startNodeList = $xpath->query("//text:p[contains(text(), '{{#foreach:$key}}')]");
-            if ($startNodeList->length === 0) {
-                break; // Keine weiteren foreach-Blöcke vorhanden
+        (new TemplateProcessor())->applyRepeatingInDom(
+            $dom,
+            $key,
+            $rows,
+            function (DOMNode $node, array $rowData): void {
+                $this->replacePlaceholdersInNode($node, $rowData);
             }
-
-            $startNode = $startNodeList->item(0);
-
-            // Suche den dazugehörigen End-Block
-            $endNode = null;
-            $current = $startNode->nextSibling;
-            while ($current) {
-                if ($current->nodeType === XML_ELEMENT_NODE && strpos($current->textContent, '{{#endforeach}}') !== false) {
-                    $endNode = $current;
-                    break;
-                }
-                $current = $current->nextSibling;
-            }
-
-            if (!$endNode) {
-                // Fehler: Kein passendes #endforeach gefunden, Abbruch
-                break;
-            }
-
-            $parent = $startNode->parentNode;
-            $referenceNode = $endNode->nextSibling;
-
-            // Sammle alle Knoten zwischen start und end
-            $templateNodes = [];
-            $current = $startNode->nextSibling;
-            while ($current && $current !== $endNode) {
-                $templateNodes[] = $current;
-                $next = $current->nextSibling;
-                $parent->removeChild($current);
-                $current = $next;
-            }
-
-            // Entferne Start- und End-Marker
-            $parent->removeChild($startNode);
-            $parent->removeChild($endNode);
-
-            // Jetzt für jede Zeile neue Knoten einfügen
-            foreach ($rows as $rowData) {
-                foreach ($templateNodes as $template) {
-                    $clone = $template->cloneNode(true); // Deep Clone
-                    $this->replacePlaceholdersInNode($clone, $rowData);
-                    $parent->insertBefore($clone, $referenceNode); // An der richtigen Stelle einfügen
-                }
-            }
-        }
+        );
     }
 
 
@@ -678,47 +476,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     public function setMeta(array $meta): void
     {
-        $xpath = new DOMXPath($this->domMeta);
-        $xpath->registerNamespace("office", "urn:oasis:names:tc:opendocument:xmlns:office:1.0");
-        $xpath->registerNamespace("dc", "http://purl.org/dc/elements/1.1/");
-        $xpath->registerNamespace("meta", "urn:oasis:names:tc:opendocument:xmlns:meta:1.0");
-
-        $map = [
-            'title' => ['dc:title'],
-            'subject' => ['dc:subject'],
-            'description' => ['dc:description'],
-            'coverage' => ['dc:coverage'],
-            'keywords' => ['meta:keyword'],
-            'initial_author' => ['meta:initial-creator'],
-            'author' => ['dc:creator'],
-            'language' => ['dc:language'],
-            'creation_date' => ['meta:creation-date'],
-            'date' => ['dc:date'],
-            'editing_cycles' => ['meta:editing-cycles'],
-            'editing_duration' => ['meta:editing-duration'],
-            'generator' => ['meta:generator'],
-        ];
-
-
-        foreach ($meta as $key => $value) {
-            if (!isset($map[$key]))
-                continue;
-
-            foreach ($map[$key] as $xpathExpr) {
-                $nodes = $xpath->query("//$xpathExpr");
-                if ($nodes->length > 0) {
-                    $nodes->item(0)->nodeValue = $value;
-                } else {
-                    // Füge Knoten hinzu, falls nicht vorhanden
-                    $metaRoot = $xpath->query('//office:document-meta/office:meta')->item(0);
-                    if ($metaRoot) {
-                        [$prefix, $tag] = explode(':', $xpathExpr);
-                        $newNode = $this->domMeta->createElement("$prefix:$tag", $value);
-                        $metaRoot->appendChild($newNode);
-                    }
-                }
-            }
-        }
+        (new MetadataManager($this->documentContext()))->set($meta);
     }
 
 
@@ -746,37 +504,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     public function getMeta(): array
     {
-        $xpath = new DOMXPath($this->domMeta);
-        $xpath->registerNamespace("office", "urn:oasis:names:tc:opendocument:xmlns:office:1.0");
-        $xpath->registerNamespace("dc", "http://purl.org/dc/elements/1.1/");
-        $xpath->registerNamespace("meta", "urn:oasis:names:tc:opendocument:xmlns:meta:1.0");
-
-        $map = [
-            'title' => 'dc:title',
-            'subject' => 'dc:subject',
-            'description' => 'dc:description',
-            'coverage' => 'dc:coverage',
-            'keywords' => 'meta:keyword',
-            'initial_author' => 'meta:initial-creator',
-            'author' => 'dc:creator',
-            'language' => 'dc:language',
-            'creation_date' => 'meta:creation-date',
-            'date' => 'dc:date',
-            'editing_cycles' => 'meta:editing-cycles',
-            'editing_duration' => 'meta:editing-duration',
-            'generator' => 'meta:generator',
-        ];
-
-        $result = [];
-
-        foreach ($map as $key => $xpathExpr) {
-            $node = $xpath->query("//$xpathExpr")->item(0);
-            if ($node) {
-                $result[$key] = $node->textContent;
-            }
-        }
-
-        return $result;
+        return (new MetadataManager($this->documentContext()))->get();
     }
 
 
@@ -1065,18 +793,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     protected function applyFilter(string $filter, string $value, ?string $option = null): string
     {
-        return match ($filter) {
-            'upper' => mb_strtoupper($value),
-            'lower' => mb_strtolower($value),
-            'trim' => trim($value),
-            'nl2br' => $value, // von replaceNl2brInDom separat behandelt
-            'ul' => $value, // von  separat behandelt
-            'date' => date($option ?: 'd.m.Y', strtotime($value)),
-            'number' => number_format((float) str_replace(',', '.', $value), (int) ($option ?? 2), ',', '.'),
-            default => $value,
-            'checkbox' => ($value) ? '☑' : '☐',
-            'currency' => number_format((float) str_replace(',', '.', $value), (int) 2, ',', '.') . ' €'
-        };
+        return (new TemplateProcessor())->applyFilter($filter, $value, $option);
     }
 
 
@@ -1107,43 +824,9 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      * @param DOMDocument $dom The ODT XML DOM to normalize (usually content.xml or styles.xml)
      */
     protected function normalizeTemplateDom(DOMDocument $dom): void
-{
-    $xpath = new \DOMXPath($dom);
-
-    // Alle Textabsätze finden (normale Absätze + in Textboxen)
-    $paragraphs = $xpath->query('//text:p');
-
-    foreach ($paragraphs as $p) {
-        if (!($p instanceof \DOMElement)) {
-            continue;
-        }
-
-        $buffer = '';
-        $nodesToRemove = [];
-
-        foreach (iterator_to_array($p->childNodes) as $child) {
-            if ($child->nodeType === XML_TEXT_NODE || $child->nodeName === 'text:span') {
-                $buffer .= $child->textContent;
-                $nodesToRemove[] = $child;
-
-                // Wenn der Platzhalter abgeschlossen ist (genug geschlossene Klammern), dann zusammenfügen
-                if (substr_count($buffer, '{{') > 0 && substr_count($buffer, '{{') === substr_count($buffer, '}}')) {
-                    // Alte Nodes entfernen
-                    foreach ($nodesToRemove as $n) {
-                        $p->removeChild($n);
-                    }
-
-                    // Neuen Text-Node einfügen
-                    $p->appendChild($dom->createTextNode($buffer));
-
-                    // Reset
-                    $buffer = '';
-                    $nodesToRemove = [];
-                }
-            }
-        }
+    {
+        (new TemplateProcessor())->normalizeTemplateDom($dom);
     }
-}
 
 
 
@@ -1170,71 +853,16 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     public function save(string $outputPath): void
     {
-        // ✅ Inject registered image styles (graphic styles + fill-image elements)
         $this->injectImageStyles();
-
-        // ✅ StyleWriter einbinden und Styles eintragen
         StyleWriter::writeAllStyles($this->domStyles);
-
-        // ✅ Bullet list indentation anpassen (weiter links)
         $this->adjustBulletIndentation();
-
-        // ✅ Manifest um Bild-Einträge ergänzen
-        $this->addImagesToManifest();
-
-        // 💾 Minifizierte XML-Dateien speichern
-        $this->saveMinifiedXml($this->domContent, $this->tempDir . '/content.xml');
-        $this->saveMinifiedXml($this->domStyles, $this->tempDir . '/styles.xml');
-        $this->saveMinifiedXml($this->domMeta, $this->tempDir . '/meta.xml');
-
-        // 📦 Archiv erzeugen
-        $zip = new ZipArchive;
-        if ($zip->open($outputPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new Exception("Could not create output file: $outputPath");
-        }
-
-        // 📄 mimetype-Datei (uncompressed zuerst)
-        $mimetypePath = $this->tempDir . '/mimetype';
-        if (!file_exists($mimetypePath)) {
-            throw new Exception("Missing mimetype file in template.");
-        }
-
-        $zip->addFromString('mimetype', file_get_contents($mimetypePath));
-        $zip->setCompressionName('mimetype', ZipArchive::CM_STORE);
-
-        // 📂 Restliche Dateien hinzufügen
-        $rii = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($this->tempDir, \RecursiveDirectoryIterator::SKIP_DOTS)
-        );
-
-        foreach ($rii as $file) {
-            if ($file->isDir())
-                continue;
-
-            $filePath = $file->getPathname();
-            $localPath = substr($filePath, strlen($this->tempDir) + 1);
-
-            // ❌ Skip mimetype & evtl. temporäre template-Datei
-            if (in_array($localPath, ['mimetype', 'template.odt']))
-                continue;
-
-            $zip->addFile($filePath, $localPath);
-        }
-
-        $zip->close();
+        $this->package->saveAs($outputPath);
     }
 
     public function refresh()
     {
-        // ✅ StyleWriter einbinden und Styles eintragen
         StyleWriter::writeAllStyles($this->domStyles);
-
-
-        // 💾 Minifizierte XML-Dateien speichern
-        $this->saveMinifiedXml($this->domContent, $this->tempDir . '/content.xml');
-        $this->saveMinifiedXml($this->domStyles, $this->tempDir . '/styles.xml');
-        $this->saveMinifiedXml($this->domMeta, $this->tempDir . '/meta.xml');
-
+        $this->package->persistCoreDocuments();
         $this->load();
     }
 
@@ -1270,60 +898,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     protected function addImagesToManifest(): void
     {
-        $manifestPath = $this->tempDir . '/META-INF/manifest.xml';
-        $picturesDir = $this->tempDir . '/Pictures';
-
-        if (!file_exists($manifestPath) || !is_dir($picturesDir)) {
-            return;
-        }
-
-        $manifest = file_get_contents($manifestPath);
-
-        // Existierende Einträge ermitteln
-        $existingEntries = [];
-        preg_match_all('/manifest:full-path="([^"]+)"/', $manifest, $matches);
-        foreach ($matches[1] as $path) {
-            $existingEntries[$path] = true;
-        }
-
-        $imageMimeTypes = [
-            'png' => 'image/png',
-            'jpg'  => 'image/jpeg',
-            'jpeg' => 'image/jpeg',
-            'gif'  => 'image/gif',
-            'svg'  => 'image/svg+xml',
-            'bmp'  => 'image/bmp',
-            'webp' => 'image/webp',
-        ];
-
-        $changed = false;
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($picturesDir, \RecursiveDirectoryIterator::SKIP_DOTS)
-        );
-
-        foreach ($iterator as $file) {
-            if ($file->isDir()) continue;
-
-            $localPath = 'Pictures/' . $file->getFilename();
-
-            if (isset($existingEntries[$localPath])) continue;
-
-            $ext = strtolower(pathinfo($file->getFilename(), PATHINFO_EXTENSION));
-            $mime = $imageMimeTypes[$ext] ?? 'application/octet-stream';
-
-            // Vor </manifest:manifest> einfügen
-            $entry = sprintf(
-                "\n <manifest:file-entry manifest:full-path=\"%s\" manifest:media-type=\"%s\"/>",
-                $localPath,
-                $mime
-            );
-            $manifest = str_replace('</manifest:manifest>', $entry . "\n</manifest:manifest>", $manifest);
-            $changed = true;
-        }
-
-        if ($changed) {
-            file_put_contents($manifestPath, $manifest);
-        }
+        $this->package->synchronizeImageManifest();
     }
 
     /**
@@ -1339,19 +914,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     public function cleanup(): void
     {
-        if (!is_dir($this->tempDir))
-            return;
-
-        $files = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($this->tempDir, \RecursiveDirectoryIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::CHILD_FIRST
-        );
-
-        foreach ($files as $file) {
-            $file->isDir() ? rmdir($file) : unlink($file);
-        }
-
-        rmdir($this->tempDir);
+        $this->package->cleanup();
     }
 
 
