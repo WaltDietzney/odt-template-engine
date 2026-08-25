@@ -277,14 +277,25 @@ and DOM structure while processing an existing document, whereas this entry
 concerns how developers and document authors create and understand templates
 in LibreOffice. The concerns interact but should be investigated separately.
 
-Future work may also define visual reference material for selected samples,
-showing both the original LibreOffice template and the expected generated
-output. Sample 10 should be considered an important reference candidate;
-other representative samples may be selected later. A later task may
-investigate automated reference generation through a headless conversion flow
-such as ODT to PDF to PNG/image for documentation, manual regression, visual
-comparison or future visual regression testing. No images, tooling or
-implementation are defined by this entry.
+The project now has an established operational visual validation workflow for
+rendering-sensitive changes:
+
+```text
+ODT → LibreOffice headless → PDF → PNG → visual review
+```
+
+The workflow can compare an untouched input template with its generated output
+and can compare a newly generated output with a previously accepted local
+reference baseline. The current local/reference baseline covers the public
+sample set and is not represented as committed permanent golden-master
+binaries in the repository.
+
+`TEMPLATE-AUTHORING-UX-01` remains future work. The validation workflow does
+not solve visual template authoring UX, complex template readability,
+LibreOffice authoring ergonomics, automated visual-diff acceptance, semantic
+interpretation of visual changes, or template-object authoring workflows.
+Sample 10 remains an important candidate for future authoring/reference work;
+other representative samples may be selected later.
 
 None of these authoring, visual-reference or template-language design ideas
 belong to the current ARCH-04 extraction work. ARCH-04 remains concerned with

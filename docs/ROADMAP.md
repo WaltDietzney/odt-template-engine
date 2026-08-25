@@ -25,6 +25,29 @@ The current stable line already provides:
 - public Samples 01–21 with smoke-test coverage;
 - developer documentation and a real-world complex-document example.
 
+The project also has an established rendering-sensitive validation workflow:
+
+```text
+automated tests
+    ↓
+ODT / ZIP / XML validation
+    ↓
+public Sample Explorer
+    ↓
+LibreOffice headless
+    ↓
+PDF
+    ↓
+Poppler PNG pages
+    ↓
+visual review
+```
+
+The current local/reference baseline covers 22 public samples and variants, 22
+input templates, 22 generated output ODTs, 22 template PDFs, 22 output PDFs,
+23 template PNG pages and 25 output PNG pages. These generated files are local
+validation artifacts, not committed permanent golden-master binaries.
+
 The next phase is not primarily about adding isolated features. It is about preparing the engine for more complex document composition without continuing to grow `AbstractOdtTemplate` and `OdtTemplate` as central all-purpose classes.
 
 ## Development branch model
@@ -469,8 +492,12 @@ The following principles apply across all phases:
 
 The next recommended step is:
 
-> **ARCH-05 independent final review and merge preflight**
+> **ARCH-06 — Reassess `AbstractOdtTemplate`**
 
-ARCH-05 implementation is complete through resource decoupling. The remaining
-activity is independent verification of the documentation, compatibility
-behavior, generated ODT packages, and representative LibreOffice output.
+ARCH-05 is complete, independently reviewed, visually reviewed and merged into
+`develop`. ARCH-06 is a reassessment after the responsibility extractions in
+ARCH-02 through ARCH-05. It must determine whether `AbstractOdtTemplate` still
+has a coherent architectural role, should remain as a facade/compatibility
+abstraction, contains responsibilities that belong elsewhere, or can
+eventually be reduced or replaced through composition. This roadmap entry does
+not predetermine that outcome.
