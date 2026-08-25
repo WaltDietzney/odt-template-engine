@@ -143,6 +143,15 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         return $this->package->context();
     }
 
+    /**
+     * Prepare a constructed element's image resource without resolving a
+     * named template target.
+     */
+    protected function copyImageResource(string $imagePath): void
+    {
+        $this->package->copyImageResource($imagePath);
+    }
+
     private function synchronizePackageState(): void
     {
         $context = $this->package->context();
@@ -666,7 +675,9 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      *
      * Behavior:
      * - Copies the image to the "Pictures" folder inside the ODT temp directory.
-     * - Calculates missing width or height proportionally based on original image dimensions.
+     * - Uses the legacy default dimensions of 5cm x 3cm unless explicit options
+     *   replace them. A single explicit dimension does not trigger proportional
+     *   recalculation because the other dimension already has a default.
      * - Updates the xlink:href attribute of the targeted <draw:image> node.
      *
      * Throws:

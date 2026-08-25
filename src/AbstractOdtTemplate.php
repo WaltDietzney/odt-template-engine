@@ -670,7 +670,7 @@ abstract class AbstractOdtTemplate
         // 3. 🖼️ Replace image assets from the element
         if (method_exists($element, 'getImageAssets')) {
             foreach ($element->getImageAssets() as $img) {
-                $this->replaceImageByName($img['id'], $img['path']);
+                $this->copyImageResource($img['path']);
             }
         }
 
