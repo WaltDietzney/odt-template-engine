@@ -8,7 +8,6 @@ use DOMNode;
 use DOMXPath;
 use DOMElement;
 use Exception;
-use OdtTemplateEngine\Template\TemplateProcessor;
 use OdtTemplateEngine\Utils\StyleWriter;
 use OdtTemplateEngine\Utils\StyleMapper;
 
@@ -599,26 +598,25 @@ abstract class AbstractOdtTemplate
     protected function setValuesInDom(DOMDocument $dom, array $values): void
     {
         $xpath = new DOMXPath($dom);
-        $processor = new TemplateProcessor();
-
         foreach ($xpath->query('//text()') as $textNode) {
             $text = $textNode->nodeValue;
-            $scalarValues = [];
 
+            // Standard placeholders: {{key}}
             foreach ($values as $key => $value) {
                 if ($value instanceof OdtElement) {
                     $this->replacePlaceholderWithDom($dom, $key, $value->toDomNode($dom));
                 } else {
-                    $scalarValues[$key] = $value;
+                    $text = str_replace('{{' . $key . '}}', $value, $text);
                 }
             }
-
-            $text = $processor->replaceScalarText(
-                $text,
-                $scalarValues,
-                fn (string $filter, mixed $value, ?string $option): string =>
-                    $this->applyFilter($filter, $value, $option)
-            );
+            // Filtered placeholders: {{filter:key}} or {{filter:key|option}}
+            $text = preg_replace_callback('/{{(\w+):(\w+)(?:\|([^}]+))?}}/', function ($matches) use ($values) {
+                $filter = $matches[1];
+                $key = $matches[2];
+                $option = $matches[3] ?? null;
+                $val = $values[$key] ?? '';
+                return $this->applyFilter($filter, $val, $option);
+            }, $text);
 
             $textNode->nodeValue = $text;
         }
@@ -993,7 +991,44 @@ abstract class AbstractOdtTemplate
 
     protected function fixBrokenVariables(DOMNode $node): void
     {
-        (new TemplateProcessor())->fixBrokenVariables($node);
+        if (!$node->hasChildNodes()) {
+            return;
+        }
+
+        $children = iterator_to_array($node->childNodes);
+        $buffer = '';
+        $inPlaceholder = false;
+        $nodesToRemove = [];
+
+        foreach ($children as $child) {
+            if ($child->nodeType === XML_TEXT_NODE) {
+                $text = $child->nodeValue;
+
+                if ($inPlaceholder) {
+                    $buffer .= $text;
+                    $nodesToRemove[] = $child;
+
+                    if (str_contains($text, '}}')) {
+                        $inPlaceholder = false;
+                        $firstNode = array_shift($nodesToRemove);
+                        $firstNode->nodeValue = $buffer;
+                        foreach ($nodesToRemove as $remove) {
+                            if ($remove->parentNode) {
+                                $remove->parentNode->removeChild($remove);
+                            }
+                        }
+                        $buffer = '';
+                        $nodesToRemove = [];
+                    }
+                } elseif (preg_match('/{{[^}]*$/', $text)) { // Text endet mit offenen {{
+                    $inPlaceholder = true;
+                    $buffer = $text;
+                    $nodesToRemove[] = $child;
+                }
+            } elseif ($child->nodeType === XML_ELEMENT_NODE && $child->nodeName === 'text:span') {
+                $this->fixBrokenVariables($child);
+            }
+        }
     }
     /**
      * Summary of enableDebugMode

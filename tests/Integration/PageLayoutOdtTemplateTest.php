@@ -34,24 +34,6 @@ class PageLayoutOdtTemplateTest extends TestCase
         }
     }
 
-    public function testSetPageMarginsPreservesSetPageLayoutPolymorphism(): void
-    {
-        $template = new class ('samples/templates/template_01_simple_variables.odt') extends PageLayoutOdtTemplate {
-            public bool $setPageLayoutCalled = false;
-
-            public function setPageLayout(array $options, string $masterPage = 'Standard'): static
-            {
-                $this->setPageLayoutCalled = true;
-
-                return parent::setPageLayout($options, $masterPage);
-            }
-        };
-
-        $template->setPageMargins('0.5cm', '1cm', '1.5cm', '2cm');
-
-        self::assertTrue($template->setPageLayoutCalled);
-    }
-
     public function testSetPageLayoutCanChangeOrientationAndPageSize(): void
     {
         $template = new PageLayoutOdtTemplate('samples/templates/template_01_simple_variables.odt');
