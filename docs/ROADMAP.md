@@ -245,11 +245,71 @@ The following remain future work and were not implemented by ARCH-05:
 - Exact Clone, Template Clone / Template Instance, and Structural Clone;
 - generalized drawing-object operations or capability frameworks.
 
-### ARCH-06 — Reassess `AbstractOdtTemplate`
+### ARCH-06 — Reassess `AbstractOdtTemplate` — COMPLETE
 
-After the package, renderer, and insertion responsibilities have been extracted, reassess whether `AbstractOdtTemplate` still represents a meaningful abstraction.
+ARCH-06 reassessed the inheritance and compatibility role of
+`AbstractOdtTemplate` after ARCH-02 through ARCH-05 extracted the major package,
+document, template-language, and structured-element responsibilities.
 
-A possible long-term outcome is removal of the abstract base class in favor of composition, but this is not a requirement. The decision should be based on the remaining responsibilities after extraction.
+The milestone established that:
+
+- `AbstractOdtTemplate` is formally abstract but does not currently express a
+  meaningful mandatory subclass contract;
+- new abstract methods must not be invented merely to justify the class name;
+- current inherited public behavior and protected dispatch are real
+  compatibility surfaces;
+- authoritative package/document state belongs to `OdtPackage` and
+  `OdtDocumentContext`;
+- historical DOM/path properties are compatibility mirrors, not independent
+  owners;
+- `OdtTemplate::documentContext()` is already the appropriate protected context
+  boundary;
+- retaining `AbstractOdtTemplate` as a compatibility base is a migration state,
+  not the desired permanent structural solution.
+
+ARCH-06C characterized protected polymorphism, lifecycle behavior and state
+mirrors. ARCH-06D confirmed that no production change was justified merely to
+make the existing state-access boundary look different.
+
+The milestone history is recorded in:
+
+- [`architecture/ARCH-06A_ABSTRACT_ODT_TEMPLATE_AUDIT.md`](architecture/ARCH-06A_ABSTRACT_ODT_TEMPLATE_AUDIT.md);
+- [`architecture/ARCH-06B_BASE_CLASS_CONTRACT.md`](architecture/ARCH-06B_BASE_CLASS_CONTRACT.md);
+- [`architecture/ARCH-06C_COMPATIBILITY_CHARACTERIZATION.md`](architecture/ARCH-06C_COMPATIBILITY_CHARACTERIZATION.md);
+- [`architecture/ARCH-06D_FACADE_STATE_ACCESS_BOUNDARY.md`](architecture/ARCH-06D_FACADE_STATE_ACCESS_BOUNDARY.md);
+- [`architecture/ARCH-06_CLOSEOUT.md`](architecture/ARCH-06_CLOSEOUT.md).
+
+### ARCH-07 — Template facade / base structure consolidation
+
+ARCH-07 is the final structural-foundation milestone before Phase B.
+
+Goal: leave the engine with a coherent, presentable and explainable template
+facade/base structure before document defaults, document-scoped style state,
+asset state and higher-level document composition are built on top of it.
+
+ARCH-07 must decide and implement, in small characterized slices, the final
+structural direction of the current inheritance arrangement. It must examine:
+
+- whether `AbstractOdtTemplate` should be removed from the active architecture;
+- whether any remaining common base type has genuine semantics;
+- which responsibilities belong directly to `OdtTemplate` as the public
+  facade;
+- which responsibilities belong to composed services;
+- which inherited public methods remain part of the supported facade;
+- which protected seams are intentional extension points and which are
+  migration-only compatibility seams;
+- which historical state mirrors and legacy helpers can be retired safely;
+- which pre-1.0 compatibility changes are acceptable and how they are
+  documented.
+
+ARCH-06C is the characterization baseline for these decisions. ARCH-07 must not
+preserve inheritance solely because it exists, but it must also not discard
+observable behavior without an explicit migration decision.
+
+ARCH-07 remains structural work. It must not absorb document defaults, style
+context, asset-context redesign, named-object feature work, cloning, or page
+structure merely because related code is currently located in the template
+hierarchy.
 
 ## Phase B — Document-scoped defaults, style and asset state
 
@@ -487,17 +547,18 @@ The following principles apply across all phases:
 10. Treat `FUTURE_DEVELOPMENT.md` as the issue backlog and this roadmap as the sequencing document.
 11. Prefer document-scoped defaults and state over process-wide configuration.
 12. Explicit element settings must override document defaults predictably.
+13. Before document/style feature work expands, keep the public facade/base
+    structure semantically explainable rather than preserving misleading
+    inheritance solely for historical compatibility.
 
 ## Immediate next milestone
 
 The next recommended step is:
 
-> **ARCH-06 — Reassess `AbstractOdtTemplate`**
+> **ARCH-07 — Template Facade / Base Structure Consolidation**
 
-ARCH-05 is complete, independently reviewed, visually reviewed and merged into
-`develop`. ARCH-06 is a reassessment after the responsibility extractions in
-ARCH-02 through ARCH-05. It must determine whether `AbstractOdtTemplate` still
-has a coherent architectural role, should remain as a facade/compatibility
-abstraction, contains responsibilities that belong elsewhere, or can
-eventually be reduced or replaced through composition. This roadmap entry does
-not predetermine that outcome.
+ARCH-07 is the final structural-foundation milestone before Phase B. It should
+use the ARCH-06 audit and characterization as evidence, make an explicit
+pre-1.0 migration decision for the current `AbstractOdtTemplate` inheritance
+arrangement, and leave a coherent base on which document defaults, style
+context and asset context can be built.
