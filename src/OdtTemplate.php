@@ -281,84 +281,12 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 
     protected function applyConditionalsInDom(DOMDocument $dom, array $values): void
     {
-        $xpath = new DOMXPath($dom);
-        $paragraphs = iterator_to_array($xpath->query('//text:p'));
-        $i = 0;
-
-        while ($i < count($paragraphs)) {
-            $node = $paragraphs[$i];
-            $text = trim($node->textContent);
-
-            if (preg_match('/{{#(ifnot|if):(.+?)}}/', $text, $match)) {
-                $type = $match[1]; // "if" oder "ifnot"
-                $expr = trim($match[2]);
-
-                $conditions = [
-                    ['start' => $i, 'expr' => $expr, 'type' => $type]
-                ];
-
-                $else = null;
-                $end = null;
-                $j = $i + 1;
-
-                while ($j < count($paragraphs)) {
-                    $inner = trim($paragraphs[$j]->textContent);
-                    if (preg_match('/{{#elseif:(.+?)}}/', $inner, $m)) {
-                        $conditions[] = ['start' => $j, 'expr' => trim($m[1]), 'type' => 'if'];
-                    } elseif ($inner === '{{#else}}') {
-                        $else = $j;
-                    } elseif ($inner === '{{#endif}}') {
-                        $end = $j;
-                        break;
-                    }
-                    $j++;
-                }
-
-                if ($end === null) {
-                    $i++;
-                    continue;
-                }
-
-                $keepStart = null;
-                $keepEnd = null;
-
-                for ($c = 0; $c < count($conditions); $c++) {
-                    $cond = $conditions[$c];
-                    $result = $this->evaluateCondition($cond['expr'], $values);
-                    if ($cond['type'] === 'ifnot') {
-                        $result = !$result;
-                    }
-
-                    if ($result) {
-                        $keepStart = $cond['start'] + 1;
-                        $keepEnd = isset($conditions[$c + 1])
-                            ? $conditions[$c + 1]['start'] - 1
-                            : ($else ?? $end) - 1;
-                        break;
-                    }
-                }
-
-
-                if ($keepStart === null && $else !== null) {
-                    $keepStart = $else + 1;
-                    $keepEnd = $end - 1;
-                }
-
-                for ($k = $end; $k >= $i; $k--) {
-                    if ($k >= $keepStart && $k <= $keepEnd)
-                        continue;
-                    $n = $paragraphs[$k];
-                    if ($n->parentNode) {
-                        $n->parentNode->removeChild($n);
-                    }
-                }
-
-                $paragraphs = iterator_to_array($xpath->query('//text:p'));
-                $i = $i;
-            } else {
-                $i++;
-            }
-        }
+        (new TemplateProcessor())->applyConditionalsInDom(
+            $dom,
+            $values,
+            fn (string $expression, array $conditionValues): bool =>
+                $this->evaluateCondition($expression, $conditionValues)
+        );
     }
 
 
@@ -387,30 +315,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 
     protected function evaluateCondition(string $expr, array $values): bool
     {
-        if (preg_match('/^(\w+)\s*(==|!=|>=|<=|>|<)\s*(.+)$/', $expr, $m)) {
-            $var = $m[1];
-            $op = $m[2];
-            $val = trim($m[3], '"\'');
-
-            $left = $values[$var] ?? null;
-            if (is_numeric($left) && is_numeric($val)) {
-                $left = (float) $left;
-                $val = (float) $val;
-            }
-
-            return match ($op) {
-                '==' => $left == $val,
-                '!=' => $left != $val,
-                '>' => $left > $val,
-                '<' => $left < $val,
-                '>=' => $left >= $val,
-                '<=' => $left <= $val,
-            };
-        }
-
-        // Wahrheitswert prüfen
-        $val = $values[$expr] ?? false;
-        return filter_var($val, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        return (new TemplateProcessor())->evaluateCondition($expr, $values);
     }
 
 

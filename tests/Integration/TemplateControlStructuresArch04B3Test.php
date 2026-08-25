@@ -245,6 +245,29 @@ final class TemplateControlStructuresArch04B3Test extends TestCase
         }
     }
 
+    public function testConditionFacadeAndEvaluatorOverridesRemainObservable(): void
+    {
+        $template = new Arch04B3ConditionalPolymorphismTemplate(
+            dirname(__DIR__, 2) . '/samples/templates/template_01_simple_variables.odt'
+        );
+
+        try {
+            $template->render();
+            self::assertTrue($template->conditionHookCalled);
+
+            $dom = $this->dom(
+                '<text:p>{{#if:forced}}</text:p><text:p>forced branch</text:p>'
+                . '<text:p>{{#endif}}</text:p>'
+            );
+            $template->applyConditionalsForTest($dom, []);
+
+            self::assertTrue($template->evaluatorHookCalled);
+            self::assertStringContainsString('forced branch', $dom->saveXML());
+        } finally {
+            $template->cleanup();
+        }
+    }
+
     private function template(): Arch04B3InspectableTemplate
     {
         $path = dirname(__DIR__, 2) . '/samples/templates/template_01_simple_variables.odt';
@@ -287,5 +310,33 @@ final class Arch04B3InspectableTemplate extends OdtTemplate
     public function evaluateConditionForTest(string $expression, array $values): bool
     {
         return $this->evaluateCondition($expression, $values);
+    }
+}
+
+final class Arch04B3ConditionalPolymorphismTemplate extends OdtTemplate
+{
+    public bool $conditionHookCalled = false;
+    public bool $evaluatorHookCalled = false;
+
+    public function applyConditionalsForTest(DOMDocument $dom, array $values): void
+    {
+        $this->applyConditionalsInDom($dom, $values);
+    }
+
+    protected function applyConditionalsInDom(DOMDocument $dom, array $values): void
+    {
+        $this->conditionHookCalled = true;
+        parent::applyConditionalsInDom($dom, $values);
+    }
+
+    protected function evaluateCondition(string $expression, array $values): bool
+    {
+        $this->evaluatorHookCalled = true;
+
+        if ($expression === 'forced') {
+            return true;
+        }
+
+        return parent::evaluateCondition($expression, $values);
     }
 }

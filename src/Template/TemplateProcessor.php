@@ -226,4 +226,132 @@ final class TemplateProcessor
             }
         }
     }
+
+    /**
+     * Apply paragraph-based conditional blocks to a supplied ODT DOM.
+     *
+     * @param array<string, mixed> $values
+     * @param callable(string, array<string, mixed>): bool $evaluateCondition
+     */
+    public function applyConditionalsInDom(
+        DOMDocument $dom,
+        array $values,
+        callable $evaluateCondition
+    ): void {
+        $xpath = new DOMXPath($dom);
+        $paragraphs = iterator_to_array($xpath->query('//text:p'));
+        $i = 0;
+
+        while ($i < count($paragraphs)) {
+            $node = $paragraphs[$i];
+            $text = trim($node->textContent);
+
+            if (preg_match('/{{#(ifnot|if):(.+?)}}/', $text, $match)) {
+                $type = $match[1];
+                $expr = trim($match[2]);
+
+                $conditions = [
+                    ['start' => $i, 'expr' => $expr, 'type' => $type],
+                ];
+
+                $else = null;
+                $end = null;
+                $j = $i + 1;
+
+                while ($j < count($paragraphs)) {
+                    $inner = trim($paragraphs[$j]->textContent);
+                    if (preg_match('/{{#elseif:(.+?)}}/', $inner, $m)) {
+                        $conditions[] = [
+                            'start' => $j,
+                            'expr' => trim($m[1]),
+                            'type' => 'if',
+                        ];
+                    } elseif ($inner === '{{#else}}') {
+                        $else = $j;
+                    } elseif ($inner === '{{#endif}}') {
+                        $end = $j;
+                        break;
+                    }
+                    $j++;
+                }
+
+                if ($end === null) {
+                    $i++;
+                    continue;
+                }
+
+                $keepStart = null;
+                $keepEnd = null;
+
+                for ($c = 0; $c < count($conditions); $c++) {
+                    $condition = $conditions[$c];
+                    $result = $evaluateCondition($condition['expr'], $values);
+                    if ($condition['type'] === 'ifnot') {
+                        $result = !$result;
+                    }
+
+                    if ($result) {
+                        $keepStart = $condition['start'] + 1;
+                        $keepEnd = isset($conditions[$c + 1])
+                            ? $conditions[$c + 1]['start'] - 1
+                            : ($else ?? $end) - 1;
+                        break;
+                    }
+                }
+
+                if ($keepStart === null && $else !== null) {
+                    $keepStart = $else + 1;
+                    $keepEnd = $end - 1;
+                }
+
+                for ($k = $end; $k >= $i; $k--) {
+                    if ($k >= $keepStart && $k <= $keepEnd) {
+                        continue;
+                    }
+
+                    $paragraph = $paragraphs[$k];
+                    if ($paragraph->parentNode) {
+                        $paragraph->parentNode->removeChild($paragraph);
+                    }
+                }
+
+                $paragraphs = iterator_to_array($xpath->query('//text:p'));
+                $i = $i;
+            } else {
+                $i++;
+            }
+        }
+    }
+
+    /**
+     * Evaluate the existing simple condition expression semantics.
+     *
+     * @param array<string, mixed> $values
+     */
+    public function evaluateCondition(string $expression, array $values): bool
+    {
+        if (preg_match('/^(\w+)\s*(==|!=|>=|<=|>|<)\s*(.+)$/', $expression, $match)) {
+            $variable = $match[1];
+            $operator = $match[2];
+            $value = trim($match[3], '"\'');
+
+            $left = $values[$variable] ?? null;
+            if (is_numeric($left) && is_numeric($value)) {
+                $left = (float) $left;
+                $value = (float) $value;
+            }
+
+            return match ($operator) {
+                '==' => $left == $value,
+                '!=' => $left != $value,
+                '>' => $left > $value,
+                '<' => $left < $value,
+                '>=' => $left >= $value,
+                '<=' => $left <= $value,
+            };
+        }
+
+        $value = $values[$expression] ?? false;
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+    }
 }
