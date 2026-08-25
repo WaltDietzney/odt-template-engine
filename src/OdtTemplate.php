@@ -3,6 +3,7 @@
 namespace OdtTemplateEngine;
 
 use DOMDocument;
+use DOMNode;
 use DOMXPath;
 use Exception;
 use OdtTemplateEngine\Document\MetadataManager;
@@ -378,59 +379,14 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 
     protected function applyRepeatingInDom(DOMDocument $dom, string $key, array $rows): void
     {
-        $xpath = new DOMXPath($dom);
-
-        while (true) {
-            // Suche nach einem Start- und End-Block für die Schleife
-            $startNodeList = $xpath->query("//text:p[contains(text(), '{{#foreach:$key}}')]");
-            if ($startNodeList->length === 0) {
-                break; // Keine weiteren foreach-Blöcke vorhanden
+        (new TemplateProcessor())->applyRepeatingInDom(
+            $dom,
+            $key,
+            $rows,
+            function (DOMNode $node, array $rowData): void {
+                $this->replacePlaceholdersInNode($node, $rowData);
             }
-
-            $startNode = $startNodeList->item(0);
-
-            // Suche den dazugehörigen End-Block
-            $endNode = null;
-            $current = $startNode->nextSibling;
-            while ($current) {
-                if ($current->nodeType === XML_ELEMENT_NODE && strpos($current->textContent, '{{#endforeach}}') !== false) {
-                    $endNode = $current;
-                    break;
-                }
-                $current = $current->nextSibling;
-            }
-
-            if (!$endNode) {
-                // Fehler: Kein passendes #endforeach gefunden, Abbruch
-                break;
-            }
-
-            $parent = $startNode->parentNode;
-            $referenceNode = $endNode->nextSibling;
-
-            // Sammle alle Knoten zwischen start und end
-            $templateNodes = [];
-            $current = $startNode->nextSibling;
-            while ($current && $current !== $endNode) {
-                $templateNodes[] = $current;
-                $next = $current->nextSibling;
-                $parent->removeChild($current);
-                $current = $next;
-            }
-
-            // Entferne Start- und End-Marker
-            $parent->removeChild($startNode);
-            $parent->removeChild($endNode);
-
-            // Jetzt für jede Zeile neue Knoten einfügen
-            foreach ($rows as $rowData) {
-                foreach ($templateNodes as $template) {
-                    $clone = $template->cloneNode(true); // Deep Clone
-                    $this->replacePlaceholdersInNode($clone, $rowData);
-                    $parent->insertBefore($clone, $referenceNode); // An der richtigen Stelle einfügen
-                }
-            }
-        }
+        );
     }
 
 

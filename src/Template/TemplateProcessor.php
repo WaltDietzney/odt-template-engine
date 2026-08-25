@@ -228,6 +228,70 @@ final class TemplateProcessor
     }
 
     /**
+     * Apply one active foreach block using supplied row substitution behavior.
+     *
+     * @param array<int, array<string, mixed>> $rows
+     * @param callable(DOMNode, array<string, mixed>): void $replacePlaceholders
+     */
+    public function applyRepeatingInDom(
+        DOMDocument $dom,
+        string $key,
+        array $rows,
+        callable $replacePlaceholders
+    ): void {
+        $xpath = new DOMXPath($dom);
+
+        while (true) {
+            $startNodeList = $xpath->query("//text:p[contains(text(), '{{#foreach:$key}}')]");
+            if ($startNodeList->length === 0) {
+                break;
+            }
+
+            $startNode = $startNodeList->item(0);
+
+            $endNode = null;
+            $current = $startNode->nextSibling;
+            while ($current) {
+                if (
+                    $current->nodeType === XML_ELEMENT_NODE
+                    && strpos($current->textContent, '{{#endforeach}}') !== false
+                ) {
+                    $endNode = $current;
+                    break;
+                }
+                $current = $current->nextSibling;
+            }
+
+            if (!$endNode) {
+                break;
+            }
+
+            $parent = $startNode->parentNode;
+            $referenceNode = $endNode->nextSibling;
+
+            $templateNodes = [];
+            $current = $startNode->nextSibling;
+            while ($current && $current !== $endNode) {
+                $templateNodes[] = $current;
+                $next = $current->nextSibling;
+                $parent->removeChild($current);
+                $current = $next;
+            }
+
+            $parent->removeChild($startNode);
+            $parent->removeChild($endNode);
+
+            foreach ($rows as $rowData) {
+                foreach ($templateNodes as $template) {
+                    $clone = $template->cloneNode(true);
+                    $replacePlaceholders($clone, $rowData);
+                    $parent->insertBefore($clone, $referenceNode);
+                }
+            }
+        }
+    }
+
+    /**
      * Apply paragraph-based conditional blocks to a supplied ODT DOM.
      *
      * @param array<string, mixed> $values

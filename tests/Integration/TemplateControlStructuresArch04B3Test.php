@@ -268,6 +268,48 @@ final class TemplateControlStructuresArch04B3Test extends TestCase
         }
     }
 
+    public function testRepeatingFacadeAndRowReplacementOverridesRemainObservable(): void
+    {
+        $template = new Arch04B3RepeatingPolymorphismTemplate(
+            dirname(__DIR__, 2) . '/samples/templates/template_01_simple_variables.odt'
+        );
+
+        try {
+            $dom = $this->dom(
+                '<text:p>{{#foreach:items}}</text:p><text:p>{{name}}</text:p>'
+                . '<text:p>{{#endforeach}}</text:p>'
+            );
+            $template->applyRepeatingForTest($dom, 'items', [['name' => 'Alice']]);
+
+            self::assertTrue($template->repeatingHookCalled);
+            self::assertTrue($template->rowReplacementHookCalled);
+            self::assertStringContainsString('Alice', $dom->saveXML());
+        } finally {
+            $template->cleanup();
+        }
+    }
+
+    public function testRepeatingStylesDomAndSecondPassRemainStable(): void
+    {
+        $template = $this->template();
+
+        try {
+            $dom = $this->dom(
+                '<style:style><text:p>{{#foreach:items}}</text:p>'
+                . '<text:p>{{name}}</text:p><text:p>{{#endforeach}}</text:p></style:style>'
+            );
+            $template->applyRepeatingForTest($dom, 'items', [['name' => 'Style row']]);
+            $firstPass = $dom->saveXML();
+
+            $template->applyRepeatingForTest($dom, 'items', [['name' => 'Style row']]);
+
+            self::assertSame($firstPass, $dom->saveXML());
+            self::assertStringContainsString('Style row', $firstPass);
+        } finally {
+            $template->cleanup();
+        }
+    }
+
     private function template(): Arch04B3InspectableTemplate
     {
         $path = dirname(__DIR__, 2) . '/samples/templates/template_01_simple_variables.odt';
@@ -338,5 +380,28 @@ final class Arch04B3ConditionalPolymorphismTemplate extends OdtTemplate
         }
 
         return parent::evaluateCondition($expression, $values);
+    }
+}
+
+final class Arch04B3RepeatingPolymorphismTemplate extends OdtTemplate
+{
+    public bool $repeatingHookCalled = false;
+    public bool $rowReplacementHookCalled = false;
+
+    public function applyRepeatingForTest(DOMDocument $dom, string $key, array $rows): void
+    {
+        $this->applyRepeatingInDom($dom, $key, $rows);
+    }
+
+    protected function applyRepeatingInDom(DOMDocument $dom, string $key, array $rows): void
+    {
+        $this->repeatingHookCalled = true;
+        parent::applyRepeatingInDom($dom, $key, $rows);
+    }
+
+    protected function replaceInText(string $text, array $data): string
+    {
+        $this->rowReplacementHookCalled = true;
+        return parent::replaceInText($text, $data);
     }
 }
