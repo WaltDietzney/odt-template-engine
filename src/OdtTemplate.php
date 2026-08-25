@@ -6,6 +6,7 @@ use DOMDocument;
 use DOMXPath;
 use Exception;
 use OdtTemplateEngine\Document\MetadataManager;
+use OdtTemplateEngine\Template\TemplateProcessor;
 use OdtTemplateEngine\Utils\StyleWriter;
 use OdtTemplateEngine\Elements\RichText;
 
@@ -999,18 +1000,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     protected function applyFilter(string $filter, string $value, ?string $option = null): string
     {
-        return match ($filter) {
-            'upper' => mb_strtoupper($value),
-            'lower' => mb_strtolower($value),
-            'trim' => trim($value),
-            'nl2br' => $value, // von replaceNl2brInDom separat behandelt
-            'ul' => $value, // von  separat behandelt
-            'date' => date($option ?: 'd.m.Y', strtotime($value)),
-            'number' => number_format((float) str_replace(',', '.', $value), (int) ($option ?? 2), ',', '.'),
-            default => $value,
-            'checkbox' => ($value) ? '☑' : '☐',
-            'currency' => number_format((float) str_replace(',', '.', $value), (int) 2, ',', '.') . ' €'
-        };
+        return (new TemplateProcessor())->applyFilter($filter, $value, $option);
     }
 
 
@@ -1041,43 +1031,9 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      * @param DOMDocument $dom The ODT XML DOM to normalize (usually content.xml or styles.xml)
      */
     protected function normalizeTemplateDom(DOMDocument $dom): void
-{
-    $xpath = new \DOMXPath($dom);
-
-    // Alle Textabsätze finden (normale Absätze + in Textboxen)
-    $paragraphs = $xpath->query('//text:p');
-
-    foreach ($paragraphs as $p) {
-        if (!($p instanceof \DOMElement)) {
-            continue;
-        }
-
-        $buffer = '';
-        $nodesToRemove = [];
-
-        foreach (iterator_to_array($p->childNodes) as $child) {
-            if ($child->nodeType === XML_TEXT_NODE || $child->nodeName === 'text:span') {
-                $buffer .= $child->textContent;
-                $nodesToRemove[] = $child;
-
-                // Wenn der Platzhalter abgeschlossen ist (genug geschlossene Klammern), dann zusammenfügen
-                if (substr_count($buffer, '{{') > 0 && substr_count($buffer, '{{') === substr_count($buffer, '}}')) {
-                    // Alte Nodes entfernen
-                    foreach ($nodesToRemove as $n) {
-                        $p->removeChild($n);
-                    }
-
-                    // Neuen Text-Node einfügen
-                    $p->appendChild($dom->createTextNode($buffer));
-
-                    // Reset
-                    $buffer = '';
-                    $nodesToRemove = [];
-                }
-            }
-        }
+    {
+        (new TemplateProcessor())->normalizeTemplateDom($dom);
     }
-}
 
 
 

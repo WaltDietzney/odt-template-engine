@@ -192,6 +192,39 @@ generated artifacts. The repository still contains historical and
 canonical generated ODT artifacts whose long-term ownership and
 retention policy should be formalized.
 
+## Template Processing
+
+### TEMPLATE-FORMAT-PRESERVATION-01 — Preserve unrelated ODT inline formatting
+
+- Priority: Medium-high
+- Status: Future work / not part of ARCH-04B1
+
+The Smarty-inspired template language currently performs DOM
+transformations that can lose or alter existing ODT inline formatting,
+especially when placeholders or control structures are distributed across
+multiple `text:span` or text nodes. This is pre-existing behavior and is not
+an ARCH-04B1 regression.
+
+The issue applies to the complete template-language family, including plain
+placeholders, scalar filters, structural `nl2br`/`ul`/`ol` placeholders,
+conditionals and repeating blocks. LibreOffice may split visually
+continuous expressions across nodes; normalization and replacement can then
+repair the expression by changing the DOM or text structure and affect
+formatting.
+
+A dedicated future development round should first audit formatting-loss
+scenarios and add characterization coverage for deliberately formatted
+placeholders, placeholders split across formatted spans, bold/italic/color/
+font styles, formatting around control structures, and formatting inside
+repeating blocks and conditional branches. It should define preservation
+expectations for `content.xml` and `styles.xml`, investigate a node-aware
+replacement strategy, and include LibreOffice regression testing,
+Collabora testing where practical, and a dedicated public/sample document.
+
+No implementation strategy is defined by this entry. The architectural
+principle is that template-language processing should transform template
+semantics without unnecessarily destroying unrelated document formatting.
+
 ## Lifecycle APIs
 
 ### LIFECYCLE-API-01 — Clarify load / refresh / reset lifecycle semantics
