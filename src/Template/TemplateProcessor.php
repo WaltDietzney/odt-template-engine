@@ -146,4 +146,84 @@ final class TemplateProcessor
             'currency' => number_format((float) str_replace(',', '.', $value), 2, ',', '.') . ' €',
         };
     }
+
+    /**
+     * Replace nl2br placeholders with text and ODT line-break nodes.
+     *
+     * @param array<string, string> $values
+     */
+    public function replaceNl2brInDom(DOMDocument $dom, array $values): void
+    {
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('text', 'urn:oasis:names:tc:opendocument:xmlns:text:1.0');
+        $nodes = $xpath->query('//text()');
+
+        foreach ($nodes as $textNode) {
+            $text = $textNode->nodeValue;
+
+            if (preg_match('/{{nl2br:(\w+)}}/', $text, $match)) {
+                $key = $match[1];
+                $original = $values[$key] ?? '';
+                $parts = preg_split('/\r\n|\n|\r/', $original);
+                $parent = $textNode->parentNode;
+
+                $newNodes = [];
+                foreach ($parts as $i => $part) {
+                    if ($i > 0) {
+                        $newNodes[] = $dom->createElement('text:line-break');
+                    }
+                    if ($part !== '') {
+                        $newNodes[] = $dom->createTextNode($part);
+                    }
+                }
+
+                foreach ($newNodes as $newNode) {
+                    $parent->insertBefore($newNode, $textNode);
+                }
+
+                $parent->removeChild($textNode);
+            }
+        }
+    }
+
+    /**
+     * Replace unordered and ordered list placeholders with ODT lists.
+     *
+     * @param array<string, string> $values
+     */
+    public function replaceListsInDom(DOMDocument $dom, array $values): void
+    {
+        $xpath = new DOMXPath($dom);
+        $nodes = $xpath->query('//text()');
+
+        foreach ($nodes as $textNode) {
+            $text = $textNode->nodeValue;
+
+            if (preg_match('/{{(ul|ol):(\w+)}}/', $text, $match)) {
+                $listType = $match[1];
+                $key = $match[2];
+                $original = $values[$key] ?? '';
+                $lines = preg_split('/\r\n|\r|\n/', $original);
+
+                $list = $dom->createElement('text:list');
+                $styleName = ($listType === 'ol') ? 'Numbering_20_Symbol' : 'Bullet_20_Symbol';
+                $list->setAttribute('text:style-name', $styleName);
+
+                foreach ($lines as $line) {
+                    $listItem = $dom->createElement('text:list-item');
+                    $paragraph = $dom->createElement('text:p');
+                    $paragraph->appendChild($dom->createTextNode($line));
+                    $listItem->appendChild($paragraph);
+                    $list->appendChild($listItem);
+                }
+
+                $paragraphNode = $textNode->parentNode;
+                $paragraphParent = $paragraphNode->parentNode;
+
+                if ($paragraphParent && $paragraphNode->nodeName === 'text:p') {
+                    $paragraphParent->replaceChild($list, $paragraphNode);
+                }
+            }
+        }
+    }
 }

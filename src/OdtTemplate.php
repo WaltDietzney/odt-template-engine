@@ -229,40 +229,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     protected function replaceNl2brInDom(DOMDocument $dom, array $values): void
     {
-        $xpath = new DOMXPath($dom);
-        $xpath->registerNamespace('text', 'urn:oasis:names:tc:opendocument:xmlns:text:1.0'); // für <text:line-break>
-        $nodes = $xpath->query('//text()');
-
-        foreach ($nodes as $textNode) {
-            $text = $textNode->nodeValue;
-
-            if (preg_match('/{{nl2br:(\w+)}}/', $text, $match)) {
-                $key = $match[1];
-                $original = $values[$key] ?? '';
-                $parts = preg_split('/\r\n|\n|\r/', $original);
-
-                $parent = $textNode->parentNode;
-
-                // Neue Knoten erzeugen
-                $newNodes = [];
-                foreach ($parts as $i => $part) {
-                    if ($i > 0) {
-                        $newNodes[] = $dom->createElement('text:line-break');
-                    }
-                    if ($part !== '') {
-                        $newNodes[] = $dom->createTextNode($part);
-                    }
-                }
-
-                // Neue Knoten VOR dem Platzhalter einfügen
-                foreach ($newNodes as $newNode) {
-                    $parent->insertBefore($newNode, $textNode);
-                }
-
-                // Platzhalterknoten entfernen
-                $parent->removeChild($textNode);
-            }
-        }
+        (new TemplateProcessor())->replaceNl2brInDom($dom, $values);
     }
 
     /**
@@ -283,42 +250,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     protected function replaceListsInDom(DOMDocument $dom, array $values): void
     {
-        $xpath = new DOMXPath($dom);
-        $nodes = $xpath->query('//text()');
-
-        foreach ($nodes as $textNode) {
-            $text = $textNode->nodeValue;
-
-            if (preg_match('/{{(ul|ol):(\w+)}}/', $text, $match)) {
-                $listType = $match[1];  // ul oder ol
-                $key = $match[2];
-                $original = $values[$key] ?? '';
-
-                // Text in Zeilen aufsplitten
-                $lines = preg_split('/\r\n|\r|\n/', $original);
-
-                // Liste erstellen
-                $list = $dom->createElement('text:list');
-                $styleName = ($listType === 'ol') ? 'Numbering_20_Symbol' : 'Bullet_20_Symbol';
-                $list->setAttribute('text:style-name', $styleName);
-
-                foreach ($lines as $line) {
-                    $listItem = $dom->createElement('text:list-item');
-                    $p = $dom->createElement('text:p');
-                    $p->appendChild($dom->createTextNode($line));
-                    $listItem->appendChild($p);
-                    $list->appendChild($listItem);
-                }
-
-                // Den <text:p> Knoten komplett ersetzen, nicht nur den Textknoten!
-                $pNode = $textNode->parentNode;
-                $pParent = $pNode->parentNode;
-
-                if ($pParent && $pNode->nodeName === 'text:p') {
-                    $pParent->replaceChild($list, $pNode);
-                }
-            }
-        }
+        (new TemplateProcessor())->replaceListsInDom($dom, $values);
     }
 
 

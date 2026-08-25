@@ -212,6 +212,15 @@ continuous expressions across nodes; normalization and replacement can then
 repair the expression by changing the DOM or text structure and affect
 formatting.
 
+ARCH-04B2 explicitly characterized an additional case: when a placeholder
+such as `prefix {{nl2br:value}} suffix` is contained in one XML text node,
+the current `nl2br` implementation removes the complete original text node
+and replaces it with generated value and line-break nodes. The surrounding
+prefix and suffix are therefore lost. This is historical behavior, now
+covered by tests, and is not an ARCH-04B2 regression. Future
+format-preserving processing must preserve unrelated surrounding text and
+XML content as well as inline formatting.
+
 A dedicated future development round should first audit formatting-loss
 scenarios and add characterization coverage for deliberately formatted
 placeholders, placeholders split across formatted spans, bold/italic/color/
