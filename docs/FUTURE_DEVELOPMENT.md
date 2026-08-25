@@ -234,6 +234,63 @@ No implementation strategy is defined by this entry. The architectural
 principle is that template-language processing should transform template
 semantics without unnecessarily destroying unrelated document formatting.
 
+### TEMPLATE-AUTHORING-UX-01 — More intuitive authoring of complex ODT templates
+
+- Priority: Medium-high
+- Status: Future work / not part of ARCH-04
+
+The current template language is functional and intentionally lightweight,
+but complex documents require authors to understand the structural placement
+of template markers inside LibreOffice/ODT documents. Sample 10 is a useful
+real-world reference because it combines scalar placeholders, filters,
+conditions, foreach blocks, tables, styled content and document layout. The
+resulting document is useful, while its underlying template exposes the
+technical nature of the current authoring model.
+
+Conditions such as `{{#if:...}}`, `{{#elseif:...}}`, `{{#else}}` and
+`{{#endif}}`, together with `{{#foreach:...}}` / `{{#endforeach}}`, depend on
+structural properties of the ODT DOM. Future work should investigate whether
+authoring can become more intuitive without hiding important ODT behavior or
+creating an unnecessarily complex programming language inside LibreOffice.
+
+ARCH-04B3 characterization exposed interactions that must be considered by
+that investigation: row-local filters are not re-evaluated during foreach
+processing; `nl2br` and list transformations are not generally row-local;
+conditions inside foreach use outer values rather than row-local state;
+nested control structures are unsupported or uncertain; and RichText/
+OdtElement values are not supported as foreach row values. These are known
+compatibility limitations, not ARCH-04 defects, and are not changed by this
+roadmap entry.
+
+An architectural question for future work is whether increasingly complex
+behavior belongs in the template language or should remain the responsibility
+of programmatic `RichText`/`OdtElement` construction. In particular, future
+investigation may consider whether foreach rows should support structured
+values, without assuming that they should. The project should preserve a
+useful separation between template-driven authoring and programmatic rich
+document construction rather than reproducing a full programming language in
+an ODT template.
+
+This topic is related to, but distinct from,
+`TEMPLATE-FORMAT-PRESERVATION-01`: that entry concerns preserving formatting
+and DOM structure while processing an existing document, whereas this entry
+concerns how developers and document authors create and understand templates
+in LibreOffice. The concerns interact but should be investigated separately.
+
+Future work may also define visual reference material for selected samples,
+showing both the original LibreOffice template and the expected generated
+output. Sample 10 should be considered an important reference candidate;
+other representative samples may be selected later. A later task may
+investigate automated reference generation through a headless conversion flow
+such as ODT to PDF to PNG/image for documentation, manual regression, visual
+comparison or future visual regression testing. No images, tooling or
+implementation are defined by this entry.
+
+None of these authoring, visual-reference or template-language design ideas
+belong to the current ARCH-04 extraction work. ARCH-04 remains concerned with
+architectural extraction and behavior preservation; no template-language
+redesign is part of ARCH-04.
+
 ## Lifecycle APIs
 
 ### LIFECYCLE-API-01 — Clarify load / refresh / reset lifecycle semantics
