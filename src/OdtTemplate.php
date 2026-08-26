@@ -11,9 +11,14 @@ use RuntimeException;
 use OdtTemplateEngine\Document\AmbiguousTemplateTargetException;
 use OdtTemplateEngine\Document\DocumentInspection;
 use OdtTemplateEngine\Document\DocumentInspector;
+use OdtTemplateEngine\Document\BookmarkTarget;
+use OdtTemplateEngine\Document\FrameTarget;
 use OdtTemplateEngine\Document\MetadataManager;
+use OdtTemplateEngine\Document\SectionTarget;
 use OdtTemplateEngine\Document\StructuredElementMaterializer;
+use OdtTemplateEngine\Document\TableTarget;
 use OdtTemplateEngine\Document\TemplateTargetResolver;
+use OdtTemplateEngine\Document\TypedTargetResolver;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Template\TemplateProcessor;
 use OdtTemplateEngine\Utils\StyleWriter;
@@ -127,6 +132,38 @@ class OdtTemplate
         $context = $this->documentContext();
 
         return (new DocumentInspector())->inspect($context->contentDom(), $context->stylesDom());
+    }
+
+    /**
+     * Resolve a named bookmark or range in the current document state.
+     */
+    public function bookmark(string $name): BookmarkTarget
+    {
+        return (new TypedTargetResolver())->resolveBookmark($this->documentContext(), $name);
+    }
+
+    /**
+     * Resolve a named native section in the current document state.
+     */
+    public function section(string $name): SectionTarget
+    {
+        return (new TypedTargetResolver())->resolveSection($this->documentContext(), $name);
+    }
+
+    /**
+     * Resolve a named native table in the current document state.
+     */
+    public function table(string $name): TableTarget
+    {
+        return (new TypedTargetResolver())->resolveTable($this->documentContext(), $name);
+    }
+
+    /**
+     * Resolve a named native drawing frame in the current document state.
+     */
+    public function frame(string $name): FrameTarget
+    {
+        return (new TypedTargetResolver())->resolveFrame($this->documentContext(), $name);
     }
 
     /**
