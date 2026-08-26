@@ -48,7 +48,9 @@ input templates, 22 generated output ODTs, 22 template PDFs, 22 output PDFs,
 23 template PNG pages and 25 output PNG pages. These generated files are local
 validation artifacts, not committed permanent golden-master binaries.
 
-The next phase is not primarily about adding isolated features. It is about preparing the engine for more complex document composition without continuing to grow `AbstractOdtTemplate` and `OdtTemplate` as central all-purpose classes.
+The next phase is not primarily about adding isolated features. It is about
+preparing the engine for more complex document composition on top of the
+completed facade and ownership boundaries established by ARCH-07.
 
 ## Development branch model
 
@@ -279,7 +281,7 @@ The milestone history is recorded in:
 - [`architecture/ARCH-06D_FACADE_STATE_ACCESS_BOUNDARY.md`](architecture/ARCH-06D_FACADE_STATE_ACCESS_BOUNDARY.md);
 - [`architecture/ARCH-06_CLOSEOUT.md`](architecture/ARCH-06_CLOSEOUT.md).
 
-### ARCH-07 — Template facade / base structure consolidation
+### ARCH-07 — Template facade / base structure consolidation — COMPLETE
 
 ARCH-07 is the final structural-foundation milestone before Phase B.
 
@@ -310,6 +312,42 @@ ARCH-07 remains structural work. It must not absorb document defaults, style
 context, asset-context redesign, named-object feature work, cloning, or page
 structure merely because related code is currently located in the template
 hierarchy.
+
+ARCH-07 was completed through the following bounded slices:
+
+- ARCH-07A — template-facade end-state audit;
+- ARCH-07B — structural change contract;
+- ARCH-07C — migration-gap characterization;
+- ARCH-07D — concrete `OdtTemplate` facade ownership;
+- ARCH-07E — processing and structured-facade migration;
+- ARCH-07F — state-mirror migration;
+- ARCH-07G — PageLayout compatibility resolution;
+- ARCH-07H — complete removal of `AbstractOdtTemplate`.
+
+The resulting structure is:
+
+```text
+OdtTemplate
+├── OdtPackage
+│   └── OdtDocumentContext
+├── TemplateProcessor
+├── StructuredElementMaterializer
+├── TemplateTargetResolver
+├── MetadataManager
+├── PageLayoutManager
+└── temporary style/finalization helpers
+
+PageLayoutOdtTemplate extends OdtTemplate
+```
+
+`AbstractOdtTemplate` is no longer part of the active source tree. Package,
+document DOM, and template-session state have distinct owners; the historical
+DOM/path mirrors and `synchronizePackageState()` were removed. Core public
+workflows remain covered by the full test suite and public sample validation.
+The removal of the old base type, its type identity, direct subclassing, and
+the unused `ensureTableCellStyleNodesExist()` helper are deliberate documented
+pre-1.0 compatibility changes. Style and finalization helpers remain a
+temporary implementation boundary until `STYLE-CONTEXT-01`.
 
 ## Phase B — Document-scoped defaults, style and asset state
 
@@ -555,10 +593,11 @@ The following principles apply across all phases:
 
 The next recommended step is:
 
-> **ARCH-07 — Template Facade / Base Structure Consolidation**
+> **DOCUMENT-DEFAULTS-01 — Document-level default settings**
 
-ARCH-07 is the final structural-foundation milestone before Phase B. It should
-use the ARCH-06 audit and characterization as evidence, make an explicit
-pre-1.0 migration decision for the current `AbstractOdtTemplate` inheritance
-arrangement, and leave a coherent base on which document defaults, style
-context and asset context can be built.
+ARCH-07 is complete and provides the structural foundation for Phase B. The
+next milestone should define document-scoped defaults with explicit element
+overrides, coordinating with `STYLE-CONTEXT-01` so that defaults do not add
+new process-wide state. `STYLE-CONTEXT-01` and `ASSET-CONTEXT` remain separate
+follow-up milestones and are not implicitly included in
+`DOCUMENT-DEFAULTS-01`.
