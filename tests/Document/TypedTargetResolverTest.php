@@ -116,7 +116,7 @@ final class TypedTargetResolverTest extends TestCase
         $first->descriptor();
     }
 
-    public function testFacadeResolvesTypedTargetsWithoutExposingMutation(): void
+    public function testFacadeResolvesTypedTargetsWithSectionMutationBoundary(): void
     {
         $template = new class ('samples/templates/template_01_simple_variables.odt') extends OdtTemplate {
             public function addSection(): void
@@ -132,7 +132,7 @@ final class TypedTargetResolverTest extends TestCase
         $template->addSection();
 
         self::assertSame('ExperienceEntry', $template->section('ExperienceEntry')->name());
-        self::assertFalse(method_exists($template->section('ExperienceEntry'), 'replaceContent'));
+        self::assertTrue(method_exists($template->section('ExperienceEntry'), 'replaceContent'));
     }
 
     public function testFacadeHandleFailsDeterministicallyAfterLoadRemovesItsIdentity(): void
