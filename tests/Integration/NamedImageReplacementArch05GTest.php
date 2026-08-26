@@ -135,10 +135,11 @@ final class NamedImageReplacementInspectableTemplate extends OdtTemplate
     public function appendImageFrameToStyles(string $name): void
     {
         $drawingNamespace = 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0';
-        $frame = $this->domStyles->createElementNS($drawingNamespace, 'draw:frame');
+        $stylesDom = $this->documentContext()->stylesDom();
+        $frame = $stylesDom->createElementNS($drawingNamespace, 'draw:frame');
         $frame->setAttributeNS($drawingNamespace, 'draw:name', $name);
-        $image = $this->domStyles->createElementNS($drawingNamespace, 'draw:image');
+        $image = $stylesDom->createElementNS($drawingNamespace, 'draw:image');
         $frame->appendChild($image);
-        $this->domStyles->documentElement->appendChild($frame);
+        $stylesDom->documentElement->appendChild($frame);
     }
 }

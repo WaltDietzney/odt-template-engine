@@ -54,15 +54,11 @@ final class AbstractOdtTemplateCompatibilityArch06CTest extends TestCase
         }
     }
 
-    public function testCompatibilityDomMirrorsRemainSynchronizedWithDocumentContext(): void
+    public function testAuthoritativeDocumentContextRemainsStableAcrossLifecycle(): void
     {
         $template = new Arch06CStateProbeTemplate($this->templatePath('template_01_simple_variables.odt'));
 
         try {
-            self::assertSame($template->contentMirror(), $template->contextContent());
-            self::assertSame($template->stylesMirror(), $template->contextStyles());
-            self::assertSame($template->metaMirror(), $template->contextMeta());
-
             $initialContent = $template->contentMirror();
             $template->assign(['name' => 'state check']);
             $template->render();
@@ -135,7 +131,7 @@ final class Arch06CProcessingProbeTemplate extends OdtTemplate
 
     public function contentXml(): string
     {
-        return $this->domContent->saveXML() ?: '';
+        return $this->documentContext()->contentDom()->saveXML() ?: '';
     }
 }
 
@@ -154,7 +150,7 @@ final class Arch06CStructuredProbeTemplate extends OdtTemplate
 
     public function contentXml(): string
     {
-        return $this->domContent->saveXML() ?: '';
+        return $this->documentContext()->contentDom()->saveXML() ?: '';
     }
 }
 
@@ -162,17 +158,17 @@ final class Arch06CStateProbeTemplate extends OdtTemplate
 {
     public function contentMirror(): DOMDocument
     {
-        return $this->domContent;
+        return $this->documentContext()->contentDom();
     }
 
     public function stylesMirror(): DOMDocument
     {
-        return $this->domStyles;
+        return $this->documentContext()->stylesDom();
     }
 
     public function metaMirror(): DOMDocument
     {
-        return $this->domMeta;
+        return $this->documentContext()->metaDom();
     }
 
     public function contextContent(): DOMDocument

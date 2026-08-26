@@ -169,7 +169,7 @@ class StyleWriter
         }
 
         // === 6) Fonts ===
-        // Text styles may have been written directly by AbstractOdtTemplate's
+        // Text styles may have been written directly by OdtTemplate's
         // compatibility helpers, so collect font references from this document
         // rather than relying only on StyleMapper's process-wide registry.
         $fontNames = [];

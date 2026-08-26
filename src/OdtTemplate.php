@@ -7,6 +7,7 @@ use DOMElement;
 use DOMNode;
 use DOMXPath;
 use Exception;
+use RuntimeException;
 use OdtTemplateEngine\Document\AmbiguousTemplateTargetException;
 use OdtTemplateEngine\Document\MetadataManager;
 use OdtTemplateEngine\Document\StructuredElementMaterializer;
@@ -14,6 +15,7 @@ use OdtTemplateEngine\Document\TemplateTargetResolver;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Template\TemplateProcessor;
 use OdtTemplateEngine\Utils\StyleWriter;
+use OdtTemplateEngine\Utils\StyleMapper;
 
 
 /**
@@ -27,37 +29,9 @@ use OdtTemplateEngine\Utils\StyleWriter;
  * - Output as a valid LibreOffice-compatible ODT document
  */
 
-class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
+class OdtTemplate
 {
     private OdtPackage $package;
-
-    /**
-     * Path to the original ODT template file.
-     *
-     * @var string
-     */
-    protected string $templatePath;
-
-    /**
-     * Temporary working directory for unpacking and editing the ODT content.
-     *
-     * @var string
-     */
-    protected string $tempDir;
-
-    /**
-     * Contents of content.xml as a DOMDocument.
-     *
-     * @var DOMDocument
-     */
-    protected DOMDocument $domContent;
-
-    /**
-     * Contents of styles.xml (e.g., for headers/footers) as a DOMDocument.
-     *
-     * @var DOMDocument
-     */
-    protected DOMDocument $domStyles;
 
     /**
      * All placeholder values to be replaced, set via setValues().
@@ -65,13 +39,6 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      * @var array<string, mixed>
      */
     protected array $values = [];
-
-    /**
-     * DOM representation of meta.xml (for document metadata).
-     *
-     * @var DOMDocument
-     */
-    protected DOMDocument $domMeta;
 
     /**
      * Summary of valueStack
@@ -84,6 +51,11 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      * @var array
      */
     protected array $repeatStack = [];   // Repeating structures (foreach data)
+
+    /** @var list<string> */
+    private array $log = [];
+
+    private bool $debugMode = false;
 
 
 
@@ -110,7 +82,6 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
     public function __construct(string $templatePath)
     {
         $this->package = new OdtPackage($templatePath);
-        $this->synchronizePackageState();
         $this->prepareLoadedTemplate();
 
         register_shutdown_function([$this, 'cleanup']);
@@ -132,7 +103,6 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
     public function load(): void
     {
         $this->package->resetFromTemplate();
-        $this->synchronizePackageState();
         $this->prepareLoadedTemplate();
     }
 
@@ -151,17 +121,6 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
     protected function copyImageResource(string $imagePath): void
     {
         $this->package->copyImageResource($imagePath);
-    }
-
-    private function synchronizePackageState(): void
-    {
-        $context = $this->package->context();
-
-        $this->templatePath = $this->package->templatePath();
-        $this->tempDir = $this->package->workspacePath();
-        $this->domContent = $context->contentDom();
-        $this->domStyles = $context->stylesDom();
-        $this->domMeta = $context->metaDom();
     }
 
     private function prepareLoadedTemplate(): void
@@ -239,10 +198,6 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         $paragraphStyles = method_exists($element, 'getRequiredParagraphStyles')
             ? $element->getRequiredParagraphStyles()
             : [];
-        $tableCellStyles = method_exists($element, 'getRequiredTableCellStyleNodes')
-            ? $element->getRequiredTableCellStyleNodes()
-            : [];
-
         if ($element instanceof HasStyles) {
             $this->registerStyles($element->getStyleDefinitions());
         }
@@ -253,10 +208,6 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 
         if (!empty($paragraphStyles)) {
             $this->ensureParagraphStylesExist($paragraphStyles);
-        }
-
-        if (!empty($tableCellStyles)) {
-            $this->ensureTableCellStyleNodesExist($tableCellStyles);
         }
 
         if (method_exists($element, 'getImageAssets')) {
@@ -1358,6 +1309,394 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
                 $parent->removeChild($ref);
             }
         }
+    }
+
+    /**
+     * Register the namespaces used by the ODF style helpers.
+     */
+    protected function prepareNamespaces(DOMXPath $xpath): void
+    {
+        $xpath->registerNamespace('office', 'urn:oasis:names:tc:opendocument:xmlns:office:1.0');
+        $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
+        $xpath->registerNamespace('fo', 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0');
+    }
+
+    /**
+     * Ensure namespaces required by generated style attributes exist.
+     */
+    protected function ensureXmlnsAttributes(): void
+    {
+        $stylesDom = $this->documentContext()->stylesDom();
+        $root = $stylesDom->documentElement;
+
+        if (!$root->hasAttribute('xmlns:fo')) {
+            $root->setAttributeNS(
+                'http://www.w3.org/2000/xmlns/',
+                'xmlns:fo',
+                'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0'
+            );
+        }
+        if (!$root->hasAttribute('xmlns:style')) {
+            $root->setAttributeNS(
+                'http://www.w3.org/2000/xmlns/',
+                'xmlns:style',
+                'urn:oasis:names:tc:opendocument:xmlns:style:1.0'
+            );
+        }
+    }
+
+    /**
+     * Write registered image styles into the authoritative styles DOM.
+     */
+    protected function injectImageStyles(): void
+    {
+        $stylesDom = $this->documentContext()->stylesDom();
+        $xpath = new DOMXPath($stylesDom);
+        $this->prepareNamespaces($xpath);
+        $xpath->registerNamespace('draw', 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0');
+        $xpath->registerNamespace('xlink', 'http://www.w3.org/1999/xlink');
+
+        $officeStyles = $xpath->query('//office:styles')->item(0);
+        foreach (StyleMapper::getRegisteredFillImages() as $name => $image) {
+            if (!$officeStyles || $xpath->query("//draw:fill-image[@draw:name='$name']")->length > 0) {
+                continue;
+            }
+            $fillImage = $stylesDom->createElement('draw:fill-image');
+            $fillImage->setAttribute('draw:name', $image['name']);
+            $fillImage->setAttribute('xlink:href', 'Pictures/' . $image['filename']);
+            $fillImage->setAttribute('xlink:type', 'simple');
+            $fillImage->setAttribute('xlink:show', 'embed');
+            $fillImage->setAttribute('xlink:actuate', 'onLoad');
+            $officeStyles->insertBefore($fillImage, $officeStyles->firstChild);
+        }
+
+        $automaticStyles = $xpath->query('//office:automatic-styles')->item(0);
+        foreach (StyleMapper::getRegisteredImageStyles() as $styleName => $options) {
+            if (!$automaticStyles) {
+                continue;
+            }
+            $existing = $xpath->query("//style:style[@style:name='$styleName']")->item(0);
+            if ($existing) {
+                $props = $existing->getElementsByTagName('style:graphic-properties')->item(0);
+                if ($props instanceof DOMElement && !$props->hasAttributes()) {
+                    $this->applyImageStyleProps($props, $options);
+                }
+                continue;
+            }
+            $style = $stylesDom->createElement('style:style');
+            $style->setAttribute('style:name', $styleName);
+            $style->setAttribute('style:family', 'graphic');
+            $style->setAttribute('style:parent-style-name', 'Standard');
+            $props = $stylesDom->createElement('style:graphic-properties');
+            $this->applyImageStyleProps($props, $options);
+            $style->appendChild($props);
+            $automaticStyles->appendChild($style);
+        }
+    }
+
+    protected function adjustBulletIndentation(): void
+    {
+        $stylesDom = $this->documentContext()->stylesDom();
+        $xpath = new DOMXPath($stylesDom);
+        $this->prepareNamespaces($xpath);
+        foreach ($xpath->query('//style:list-level-label-alignment') as $node) {
+            if ($node instanceof DOMElement) {
+                $node->setAttribute('fo:margin-left', '0.35cm');
+                $node->setAttribute('fo:text-indent', '-0.25cm');
+            }
+        }
+    }
+
+    private function applyImageStyleProps(DOMElement $props, array $options): void
+    {
+        $attributes = [
+            'style:wrap', 'style:horizontal-pos', 'style:horizontal-rel',
+            'style:vertical-pos', 'style:vertical-rel', 'fo:margin-left',
+            'fo:margin-right', 'fo:margin-top', 'fo:margin-bottom', 'draw:fill',
+            'draw:fill-image-name', 'draw:fill-image-width', 'draw:fill-image-height',
+            'style:repeat', 'draw:stroke',
+        ];
+        foreach ($attributes as $attribute) {
+            if (isset($options[$attribute])) {
+                $props->setAttribute($attribute, (string) $options[$attribute]);
+            }
+        }
+    }
+
+    protected function ensureTextStylesExist(array $styleMap): void
+    {
+        $this->ensureXmlnsAttributes();
+        $stylesDom = $this->documentContext()->stylesDom();
+        $xpath = new DOMXPath($stylesDom);
+        $this->prepareNamespaces($xpath);
+        $officeStyles = $xpath->query('//office:styles')->item(0);
+        if (!$officeStyles) {
+            throw new Exception('❌ <office:styles> section not found in styles.xml');
+        }
+        foreach ($styleMap as $name => $options) {
+            if ($xpath->query("//style:style[@style:name='$name']")->length > 0) {
+                continue;
+            }
+            $style = $stylesDom->createElement('style:style');
+            $style->setAttribute('style:name', $name);
+            $style->setAttribute('style:family', 'text');
+            $style->setAttribute('style:parent-style-name', 'Standard');
+            $props = $stylesDom->createElement('style:text-properties');
+            foreach (StyleMapper::mapTextStyleOptions($options) as $key => $value) {
+                $props->setAttribute($key, $value);
+            }
+            $style->appendChild($props);
+            $officeStyles->appendChild($style);
+        }
+    }
+
+    public function ensureParagraphStylesExist(array $styleMap): void
+    {
+        $this->ensureXmlnsAttributes();
+        $stylesDom = $this->documentContext()->stylesDom();
+        $xpath = new DOMXPath($stylesDom);
+        $this->prepareNamespaces($xpath);
+        $officeStyles = $xpath->query('//office:styles')->item(0);
+        if (!$officeStyles) {
+            throw new Exception('❌ <office:styles> not found');
+        }
+        foreach ($styleMap as $name => $rawOptions) {
+            if ($xpath->query("//style:style[@style:name='$name']")->length > 0) {
+                continue;
+            }
+            $style = $stylesDom->createElement('style:style');
+            $style->setAttribute('style:name', $name);
+            $style->setAttribute('style:family', 'paragraph');
+            $style->setAttribute('style:parent-style-name', 'Standard');
+            $style->setAttribute('style:class', 'text');
+            $paraProps = $stylesDom->createElement('style:paragraph-properties');
+            foreach (StyleMapper::mapParagraphStyle($rawOptions) as $key => $value) {
+                if ($key === 'style:tab-stops' && is_array($value)) {
+                    $tabStops = $stylesDom->createElement('style:tab-stops');
+                    foreach ($value as $tabStop) {
+                        $tab = $stylesDom->createElement('style:tab-stop');
+                        foreach ($tabStop as $attr => $attrValue) {
+                            $tab->setAttribute($attr, $attrValue);
+                        }
+                        $tabStops->appendChild($tab);
+                    }
+                    $paraProps->appendChild($tabStops);
+                } else {
+                    $paraProps->setAttribute($key, $value);
+                }
+            }
+            $style->appendChild($paraProps);
+            $officeStyles->appendChild($style);
+        }
+    }
+
+    protected function insertAutomaticStyle(DOMDocument $dom, DOMElement $style): void
+    {
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('office', 'urn:oasis:names:tc:opendocument:xmlns:office:1.0');
+        $automaticStyles = $xpath->query('//office:automatic-styles')->item(0);
+        if (!$automaticStyles) {
+            $automaticStyles = $dom->createElement('office:automatic-styles');
+            $dom->documentElement->insertBefore($automaticStyles, $dom->documentElement->firstChild);
+        }
+        $automaticStyles->appendChild($style);
+    }
+
+    protected function ensureDefaultListStyles(): void
+    {
+        $stylesDom = $this->documentContext()->stylesDom();
+        $xpath = new DOMXPath($stylesDom);
+        $xpath->registerNamespace('text', 'urn:oasis:names:tc:opendocument:xmlns:text:1.0');
+        $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
+        foreach ([['Bullet_20_Symbol', 'text:list-level-style-bullet', 'text:bullet-char', '•'], ['Numbering_20_Symbol', 'text:list-level-style-number', 'style:num-format', '1']] as $definition) {
+            [$name, $levelName, $attribute, $value] = $definition;
+            if ($xpath->query("//text:list-style[@style:name='$name']")->length > 0) {
+                continue;
+            }
+            $list = $stylesDom->createElement('text:list-style');
+            $list->setAttribute('style:name', $name);
+            $level = $stylesDom->createElement($levelName);
+            $level->setAttribute('text:level', '1');
+            $level->setAttribute($attribute, $value);
+            if ($name === 'Numbering_20_Symbol') {
+                $level->setAttribute('style:num-suffix', '.');
+                $level->setAttribute('style:num-prefix', '');
+            }
+            $props = $stylesDom->createElement('style:list-level-properties');
+            $props->setAttribute('text:space-before', '0.5cm');
+            $props->setAttribute('text:min-label-width', '0.5cm');
+            $level->appendChild($props);
+            $list->appendChild($level);
+            $stylesDom->documentElement->appendChild($list);
+        }
+    }
+
+    public function ensureDefaultListStylesForContentXml(DOMDocument $contentDom): void
+    {
+        $xpath = new DOMXPath($contentDom);
+        foreach ([
+            'office' => 'urn:oasis:names:tc:opendocument:xmlns:office:1.0',
+            'text' => 'urn:oasis:names:tc:opendocument:xmlns:text:1.0',
+            'style' => 'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+            'loext' => 'urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0',
+            'fo' => 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0',
+        ] as $prefix => $namespace) {
+            $xpath->registerNamespace($prefix, $namespace);
+        }
+        $automaticStyles = $xpath->query('//office:automatic-styles')->item(0);
+        if (!$automaticStyles) {
+            $office = $xpath->query('//office:document-content')->item(0);
+            if (!$office) {
+                throw new RuntimeException('No <office:document-content> found.');
+            }
+            $automaticStyles = $contentDom->createElement('office:automatic-styles');
+            $office->insertBefore($automaticStyles, $office->firstChild);
+        }
+        foreach ($automaticStyles->getElementsByTagName('list-style') as $style) {
+            if ($style->getAttribute('style:name') === 'Numbering_20_Symbol') {
+                return;
+            }
+        }
+        $list = $contentDom->createElement('text:list-style');
+        $list->setAttribute('style:name', 'Numbering_20_Symbol');
+        $level = $contentDom->createElement('text:list-level-style-number');
+        $level->setAttribute('text:level', '1');
+        $level->setAttribute('style:num-format', '1');
+        $level->setAttribute('style:num-suffix', '.');
+        $level->setAttribute('loext:num-list-format', '%1%.');
+        $props = $contentDom->createElement('style:list-level-properties');
+        $props->setAttribute('text:list-level-position-and-space-mode', 'label-alignment');
+        $align = $contentDom->createElement('style:list-level-label-alignment');
+        $align->setAttribute('text:label-followed-by', 'listtab');
+        $align->setAttribute('text:list-tab-stop-position', '1.27cm');
+        $align->setAttribute('fo:text-indent', '-0.635cm');
+        $align->setAttribute('fo:margin-left', '1.27cm');
+        $props->appendChild($align);
+        $level->appendChild($props);
+        $list->appendChild($level);
+        $automaticStyles->appendChild($list);
+    }
+
+    protected function ensureDefaultParagraphStyles(): void
+    {
+        $stylesDom = $this->documentContext()->stylesDom();
+        $xpath = new DOMXPath($stylesDom);
+        $this->prepareNamespaces($xpath);
+        $officeStyles = $xpath->query('//office:styles')->item(0);
+        if (!$officeStyles) {
+            throw new Exception('❌ <office:styles> section not found.');
+        }
+        for ($i = 1; $i <= 6; $i++) {
+            $name = "Heading $i";
+            if ($xpath->query("//style:style[@style:name='$name']")->length > 0) {
+                continue;
+            }
+            $style = $stylesDom->createElement('style:style');
+            $style->setAttribute('style:name', $name);
+            $style->setAttribute('style:family', 'paragraph');
+            $style->setAttribute('style:parent-style-name', 'Standard');
+            $textProps = $stylesDom->createElement('style:text-properties');
+            $textProps->setAttribute('fo:font-weight', 'bold');
+            $paraProps = $stylesDom->createElement('style:paragraph-properties');
+            $paraProps->setAttribute('fo:margin-top', '0.5cm');
+            $paraProps->setAttribute('fo:margin-bottom', '0.3cm');
+            $style->appendChild($textProps);
+            $style->appendChild($paraProps);
+            $officeStyles->appendChild($style);
+        }
+        $this->ensureParagraphStylesExist([
+            'CenterPara' => ['text-align' => 'center'],
+            'LeftPara' => ['text-align' => 'left'],
+            'RightPara' => ['text-align' => 'right'],
+        ]);
+    }
+
+    protected function registerStyles(array $styleDefinitions): void
+    {
+        $stylesDom = $this->documentContext()->stylesDom();
+        foreach ($styleDefinitions as $name => $definition) {
+            $family = $definition['family'];
+            if (StyleWriter::styleAlreadyExists($stylesDom, $name, $family)) {
+                continue;
+            }
+            $style = $stylesDom->createElement('style:style');
+            $style->setAttribute('style:name', $name);
+            $style->setAttribute('style:family', $family);
+            $style->setAttribute('style:parent-style-name', 'Standard');
+            $elementName = match ($family) {
+                'text' => 'style:text-properties',
+                'paragraph' => 'style:paragraph-properties',
+                'table-cell' => 'style:table-cell-properties',
+                'graphic' => 'style:graphic-properties',
+                default => null,
+            };
+            if ($elementName) {
+                $properties = $stylesDom->createElement($elementName);
+                foreach ($definition['properties'] as $key => $value) {
+                    $properties->setAttribute($key, $value);
+                }
+                $style->appendChild($properties);
+            }
+            StyleWriter::appendStyleToStylesXml($stylesDom, $style);
+        }
+    }
+
+    public function extractTemplateVariables(): array
+    {
+        $result = [
+            'variables' => [], 'loops' => [], 'conditions' => [],
+            'negated_conditions' => [], 'filters' => [], 'filter_options' => [],
+        ];
+        foreach ([$this->documentContext()->contentDom(), $this->documentContext()->stylesDom()] as $dom) {
+            foreach ($this->parseTemplateContent($dom->saveXML()) as $key => $values) {
+                if ($key === 'filter_options') {
+                    foreach ($values as $variable => $options) {
+                        $result[$key][$variable] = array_unique(array_merge($result[$key][$variable] ?? [], $options));
+                    }
+                } else {
+                    $result[$key] = array_unique(array_merge($result[$key], $values));
+                }
+            }
+        }
+        return $result;
+    }
+
+    protected function parseTemplateContent(string $content): array
+    {
+        $result = ['variables' => [], 'loops' => [], 'conditions' => [], 'negated_conditions' => [], 'filters' => [], 'filter_options' => []];
+        preg_match_all('/\{\{(?:(\w+):)?(\w+)(?:\|(\w+))?\}\}/', $content, $matches, PREG_SET_ORDER);
+        foreach ($matches as $match) {
+            if (!empty($match[1])) $result['filters'][] = $match[1];
+            $result['variables'][] = $match[2];
+            if (!empty($match[3])) $result['filter_options'][$match[2]][] = $match[3];
+        }
+        preg_match_all('/\{\{#foreach:(\w+)\}\}/', $content, $matches);
+        $result['loops'] = $matches[1];
+        preg_match_all('/\{\{#(?:if|elseif):([^\}]+)\}\}/', $content, $matches);
+        $result['conditions'] = $matches[1];
+        preg_match_all('/\{\{#ifnot:(\w+)\}\}/', $content, $matches);
+        $result['negated_conditions'] = $matches[1];
+        foreach ($result as $key => $values) {
+            if ($key !== 'filter_options') $result[$key] = array_unique($values);
+        }
+        return $result;
+    }
+
+    public function enableDebugMode(): void
+    {
+        $this->debugMode = true;
+    }
+
+    protected function log(string $message): void
+    {
+        if ($this->debugMode) {
+            $this->log[] = $message;
+        }
+    }
+
+    public function getDebugLog(): array
+    {
+        return $this->log;
     }
 
 

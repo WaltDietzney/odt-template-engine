@@ -306,12 +306,12 @@ final class Arch04InspectableTemplate extends OdtTemplate
 
     public function contentXml(): string
     {
-        return $this->domContent->saveXML() ?: '';
+        return $this->documentContext()->contentDom()->saveXML() ?: '';
     }
 
     public function stylesXml(): string
     {
-        return $this->domStyles->saveXML() ?: '';
+        return $this->documentContext()->stylesDom()->saveXML() ?: '';
     }
 
     public function replaceNl2brForTest(DOMDocument $dom, array $values): void

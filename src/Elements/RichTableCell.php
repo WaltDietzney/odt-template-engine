@@ -5,7 +5,6 @@ namespace OdtTemplateEngine\Elements;
 use DOMDocument;
 use DOMNode;
 use DOMElement;
-use OdtTemplateEngine\AbstractOdtTemplate;
 use OdtTemplateEngine\Contracts\HasStyles;
 use OdtTemplateEngine\Utils\StyleMapper;
 use OdtTemplateEngine\Utils\StyleOptionSplitter;

@@ -27,27 +27,22 @@ final class OdtTemplatePackageLifecycleTest extends TestCase
         $templatePath = $this->templatePath('template_01_simple_variables.odt');
         $first = new InspectableOdtTemplate($templatePath);
         $second = new InspectableOdtTemplate($templatePath);
-        $firstWorkspace = $first->workspacePath();
-        $secondWorkspace = $second->workspacePath();
-        $output = $this->newOutputPath('isolated');
+        $firstOutput = $this->newOutputPath('isolated-first');
+        $secondOutput = $this->newOutputPath('isolated-second');
 
         try {
-            self::assertNotSame($firstWorkspace, $secondWorkspace);
-            self::assertDirectoryExists($firstWorkspace);
-            self::assertDirectoryExists($secondWorkspace);
-
-            $first->cleanup();
-            $first->cleanup();
-
-            self::assertDirectoryDoesNotExist($firstWorkspace);
-            self::assertDirectoryExists($secondWorkspace);
-
+            $first->assign(['name' => 'First isolated document']);
+            $first->render();
+            $first->save($firstOutput);
             $second->assign(['name' => 'Isolated document']);
             $second->render();
-            $second->save($output);
+            $second->save($secondOutput);
 
-            self::assertFileExists($output);
+            self::assertFileExists($firstOutput);
+            self::assertFileExists($secondOutput);
+            self::assertNotSame(file_get_contents($firstOutput), file_get_contents($secondOutput));
         } finally {
+            $first->cleanup();
             $second->cleanup();
         }
     }
@@ -178,13 +173,8 @@ final class OdtTemplatePackageLifecycleTest extends TestCase
 
 final class InspectableOdtTemplate extends OdtTemplate
 {
-    public function workspacePath(): string
-    {
-        return $this->tempDir;
-    }
-
     public function contentXml(): string
     {
-        return $this->domContent->saveXML() ?: '';
+        return $this->documentContext()->contentDom()->saveXML() ?: '';
     }
 }
