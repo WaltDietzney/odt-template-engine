@@ -41,6 +41,25 @@ final class BookmarkMutationService
         if ($between === []) {
             $this->fail($name, BookmarkDescriptor::TOPOLOGY_INLINE, 'empty paired bookmark range is not a text replacement');
         }
+
+        if (count($between) === 1 && $between[0] instanceof DOMElement && $between[0]->nodeName === 'text:span') {
+            $span = $between[0];
+            if ($span->childNodes->length === 0) {
+                $this->fail($name, BookmarkDescriptor::TOPOLOGY_INLINE, 'wrapped span has no textual content');
+            }
+            foreach ($span->childNodes as $child) {
+                if ($child->nodeType !== XML_TEXT_NODE) {
+                    $this->fail($name, BookmarkDescriptor::TOPOLOGY_INLINE, 'wrapped span contains nested structured content');
+                }
+            }
+
+            foreach (iterator_to_array($span->childNodes) as $child) {
+                $span->removeChild($child);
+            }
+            $span->appendChild($context->contentDom()->createTextNode($value));
+            return;
+        }
+
         foreach ($between as $node) {
             if ($node->nodeType !== XML_TEXT_NODE) {
                 $this->fail($name, BookmarkDescriptor::TOPOLOGY_INLINE, 'selected range contains structured inline content');

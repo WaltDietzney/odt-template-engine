@@ -49,6 +49,23 @@ final class BookmarkTargetReplacementTest extends TestCase
         self::assertCount(1, $this->markers($dom, 'bookmark-end', 'Name'));
     }
 
+    public function testReplacesTextInsideOneCompleteWrappedSpanPreservingElementAndAttributes(): void
+    {
+        [$context, $dom] = $this->contextForShape('around-span');
+        $target = $this->target($context, 'Name');
+        $span = $dom->getElementsByTagNameNS(self::TEXT, 'span')->item(0);
+        $beforeXml = $span?->C14N();
+
+        $target->replaceText('ODT Template Engine Developer');
+
+        self::assertInstanceOf(DOMElement::class, $span);
+        self::assertSame('A', $span->getAttribute('text:style-name'));
+        self::assertSame('ODT Template Engine Developer', $target->descriptor()->text());
+        self::assertNotSame($beforeXml, $span->C14N());
+        self::assertCount(1, $this->markers($dom, 'bookmark-start', 'Name'));
+        self::assertCount(1, $this->markers($dom, 'bookmark-end', 'Name'));
+    }
+
     public function testReplacementTreatsXmlSpecialCharactersAsLiteralText(): void
     {
         [$context, $dom] = $this->contextWithRange('', 'Max', '');
@@ -97,7 +114,6 @@ final class BookmarkTargetReplacementTest extends TestCase
     {
         yield 'empty' => ['empty'];
         yield 'collapsed' => ['collapsed'];
-        yield 'around span' => ['around-span'];
         yield 'multiple spans' => ['multiple-spans'];
         yield 'paragraph spanning' => ['paragraph-spanning'];
         yield 'list spanning' => ['list-spanning'];
@@ -265,6 +281,7 @@ final class BookmarkTargetReplacementTest extends TestCase
             [$start, $end] = $this->namedPair($dom);
             $paragraph = $this->paragraph($dom);
             $span = $dom->createElementNS(self::TEXT, 'text:span');
+            $span->setAttribute('text:style-name', 'A');
             $span->appendChild($dom->createTextNode('Max'));
             $paragraph->appendChild($start);
             $paragraph->appendChild($span);
