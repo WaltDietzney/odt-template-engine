@@ -9,10 +9,11 @@ use DOMXPath;
 use Exception;
 use OdtTemplateEngine\Document\AmbiguousTemplateTargetException;
 use OdtTemplateEngine\Document\MetadataManager;
+use OdtTemplateEngine\Document\StructuredElementMaterializer;
 use OdtTemplateEngine\Document\TemplateTargetResolver;
+use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Template\TemplateProcessor;
 use OdtTemplateEngine\Utils\StyleWriter;
-use OdtTemplateEngine\Elements\RichText;
 
 
 /**
@@ -221,6 +222,73 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
     public function setValues(array $values): void
     {
         $this->valueStack = array_merge($this->valueStack, $values);
+    }
+
+    /**
+     * Insert constructed structured content through the public template facade.
+     *
+     * Style and resource preparation remain delegated to the existing
+     * compatibility/document collaborators. The materializer owns the ODF
+     * subtree replacement rules, while protected callbacks continue to
+     * dispatch through the facade.
+     */
+    public function setElement(string $placeholder, OdtElement $element): void
+    {
+        $textStyles = $element->getRequiredStyles() ?? [];
+        $paragraphStyles = method_exists($element, 'getRequiredParagraphStyles')
+            ? $element->getRequiredParagraphStyles()
+            : [];
+        $tableCellStyles = method_exists($element, 'getRequiredTableCellStyleNodes')
+            ? $element->getRequiredTableCellStyleNodes()
+            : [];
+
+        if ($element instanceof HasStyles) {
+            $this->registerStyles($element->getStyleDefinitions());
+        }
+
+        if (!empty($textStyles)) {
+            $this->ensureTextStylesExist($textStyles);
+        }
+
+        if (!empty($paragraphStyles)) {
+            $this->ensureParagraphStylesExist($paragraphStyles);
+        }
+
+        if (!empty($tableCellStyles)) {
+            $this->ensureTableCellStyleNodesExist($tableCellStyles);
+        }
+
+        if (method_exists($element, 'getImageAssets')) {
+            foreach ($element->getImageAssets() as $img) {
+                $this->copyImageResource($img['path']);
+            }
+        }
+
+        if (method_exists($element, 'toStyleDomNode')) {
+            $styleNode = $element->toStyleDomNode($this->domStyles);
+            if ($styleNode instanceof DOMElement) {
+                $xpath = new DOMXPath($this->domStyles);
+                $stylesRoot = $xpath->query('//office:automatic-styles')->item(0);
+                if ($stylesRoot) {
+                    $stylesRoot->appendChild($styleNode);
+                }
+            }
+        }
+
+        $materializer = new StructuredElementMaterializer();
+        $materializer->insert(
+            $this->domContent,
+            $this->domStyles,
+            $placeholder,
+            $element,
+            function (DOMDocument $dom): void {
+                $this->fixBrokenVariables($dom);
+            },
+            function (DOMDocument $dom, string $key, DOMNode $replacement): void {
+                $this->replacePlaceholderWithDom($dom, $key, $replacement);
+            },
+            fn (DOMDocument $dom, string $key): bool => $this->hasPlaceholder($dom, $key)
+        );
     }
 
 
