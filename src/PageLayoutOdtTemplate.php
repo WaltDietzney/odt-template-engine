@@ -2,8 +2,6 @@
 
 namespace OdtTemplateEngine;
 
-use DOMElement;
-use DOMXPath;
 use OdtTemplateEngine\Document\PageLayoutManager;
 
 /**
@@ -14,9 +12,6 @@ use OdtTemplateEngine\Document\PageLayoutManager;
  */
 class PageLayoutOdtTemplate extends OdtTemplate
 {
-    private const STYLE_NS = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
-    private const FO_NS = 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0';
-
     /**
      * Change page margins for the document's master page.
      *
@@ -63,30 +58,4 @@ class PageLayoutOdtTemplate extends OdtTemplate
         return $this;
     }
 
-    /**
-     * Adjust list indentation without touching unrelated fo:margin-left attributes.
-     *
-     * The base implementation historically used a global regular expression on
-     * styles.xml. That also removed page and other style margins. Page layout
-     * support must preserve those unrelated attributes.
-     */
-    protected function adjustBulletIndentation(): void
-    {
-        $xpath = new DOMXPath($this->domStyles);
-        $xpath->registerNamespace('style', self::STYLE_NS);
-
-        $nodes = $xpath->query('//style:list-level-label-alignment');
-        if ($nodes === false) {
-            return;
-        }
-
-        foreach ($nodes as $node) {
-            if (!$node instanceof DOMElement) {
-                continue;
-            }
-
-            $node->setAttributeNS(self::FO_NS, 'fo:margin-left', '0.35cm');
-            $node->setAttributeNS(self::FO_NS, 'fo:text-indent', '-0.25cm');
-        }
-    }
 }
