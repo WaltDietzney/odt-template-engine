@@ -166,11 +166,12 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 
     private function prepareLoadedTemplate(): void
     {
-        $this->normalizeTemplateDom($this->domContent);
-        $this->normalizeTemplateDom($this->domStyles);
+        $context = $this->documentContext();
+        $this->normalizeTemplateDom($context->contentDom());
+        $this->normalizeTemplateDom($context->stylesDom());
         $this->ensureDefaultParagraphStyles();
         $this->ensureDefaultListStyles();
-        $this->ensureDefaultListStylesForContentXml($this->domContent);
+        $this->ensureDefaultListStylesForContentXml($context->contentDom());
     }
 
 
@@ -186,7 +187,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
     // Ensure the source XML is trusted to avoid potential security issues.
     protected function loadXmlFile(string $filename): DOMDocument
     {
-        $path = $this->tempDir . '/' . $filename;
+        $path = $this->package->path($filename);
         if (!file_exists($path)) {
             throw new Exception("Missing $filename in template.");
         }
@@ -265,9 +266,10 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         }
 
         if (method_exists($element, 'toStyleDomNode')) {
-            $styleNode = $element->toStyleDomNode($this->domStyles);
+            $stylesDom = $this->documentContext()->stylesDom();
+            $styleNode = $element->toStyleDomNode($stylesDom);
             if ($styleNode instanceof DOMElement) {
-                $xpath = new DOMXPath($this->domStyles);
+                $xpath = new DOMXPath($stylesDom);
                 $stylesRoot = $xpath->query('//office:automatic-styles')->item(0);
                 if ($stylesRoot) {
                     $stylesRoot->appendChild($styleNode);
@@ -277,8 +279,8 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 
         $materializer = new StructuredElementMaterializer();
         $materializer->insert(
-            $this->domContent,
-            $this->domStyles,
+            $this->documentContext()->contentDom(),
+            $this->documentContext()->stylesDom(),
             $placeholder,
             $element,
             function (DOMDocument $dom): void {
@@ -553,10 +555,11 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     public function setRepeatingData(array $data): void
     {
-        $this->fixBrokenVariables($this->domContent);
-        $this->fixBrokenVariables($this->domStyles);
-        $this->applyAllRepeatingBlocksInDom($this->domContent, $data);
-        $this->applyAllRepeatingBlocksInDom($this->domStyles, $data);
+        $context = $this->documentContext();
+        $this->fixBrokenVariables($context->contentDom());
+        $this->fixBrokenVariables($context->stylesDom());
+        $this->applyAllRepeatingBlocksInDom($context->contentDom(), $data);
+        $this->applyAllRepeatingBlocksInDom($context->stylesDom(), $data);
     }
 
 
@@ -721,7 +724,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         }
 
         $filename = basename($imagePath);
-        $picturesDir = $this->tempDir . '/Pictures';
+        $picturesDir = $this->package->path('Pictures');
         if (!is_dir($picturesDir)) {
             mkdir($picturesDir);
         }
@@ -749,8 +752,9 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         $anchor = $options['anchor'] ?? 'paragraph';
         $wrap = $options['wrap'] ?? 'none';
 
-        $this->replaceImageInDom($this->domContent, $key, $filename, $targetWidth, $targetHeight, $anchor, $wrap);
-        $this->replaceImageInDom($this->domStyles, $key, $filename, $targetWidth, $targetHeight, $anchor, $wrap);
+        $context = $this->documentContext();
+        $this->replaceImageInDom($context->contentDom(), $key, $filename, $targetWidth, $targetHeight, $anchor, $wrap);
+        $this->replaceImageInDom($context->stylesDom(), $key, $filename, $targetWidth, $targetHeight, $anchor, $wrap);
     }
 
 
@@ -866,7 +870,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         }
 
         $filename = basename($imagePath);
-        $picturesDir = $this->tempDir . '/Pictures';
+        $picturesDir = $this->package->path('Pictures');
         if (!is_dir($picturesDir)) {
             mkdir($picturesDir);
         }
@@ -886,8 +890,9 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
             $width = round($cm * $imgWidth / $imgHeight, 3) . 'cm';
         }
 
-        $this->replaceImageInNamedDom($this->domContent, $name, $filename, $width, $height);
-        $this->replaceImageInNamedDom($this->domStyles, $name, $filename, $width, $height);
+        $context = $this->documentContext();
+        $this->replaceImageInNamedDom($context->contentDom(), $name, $filename, $width, $height);
+        $this->replaceImageInNamedDom($context->stylesDom(), $name, $filename, $width, $height);
     }
 
 
@@ -1064,14 +1069,14 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
     public function save(string $outputPath): void
     {
         $this->injectImageStyles();
-        StyleWriter::writeAllStyles($this->domStyles);
+        StyleWriter::writeAllStyles($this->documentContext()->stylesDom());
         $this->adjustBulletIndentation();
         $this->package->saveAs($outputPath);
     }
 
     public function refresh()
     {
-        StyleWriter::writeAllStyles($this->domStyles);
+        StyleWriter::writeAllStyles($this->documentContext()->stylesDom());
         $this->package->persistCoreDocuments();
         $this->load();
     }
@@ -1142,31 +1147,35 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     public function render(): void
     {
-        $this->fixBrokenVariables($this->domContent);
-        $this->fixBrokenVariables($this->domStyles);
+        $context = $this->documentContext();
+        $contentDom = $context->contentDom();
+        $stylesDom = $context->stylesDom();
+
+        $this->fixBrokenVariables($contentDom);
+        $this->fixBrokenVariables($stylesDom);
 
         // Sonderbehandlungen zuerst
-        $this->replaceNl2brInDom($this->domContent, $this->valueStack);
-        $this->replaceNl2brInDom($this->domStyles, $this->valueStack);
+        $this->replaceNl2brInDom($contentDom, $this->valueStack);
+        $this->replaceNl2brInDom($stylesDom, $this->valueStack);
 
-        $this->replaceListsInDom($this->domContent, $this->valueStack);
-        $this->replaceListsInDom($this->domStyles, $this->valueStack);
+        $this->replaceListsInDom($contentDom, $this->valueStack);
+        $this->replaceListsInDom($stylesDom, $this->valueStack);
 
         // Normale Werte ersetzen
-        $this->setValuesInDom($this->domContent, $this->valueStack);
-        $this->setValuesInDom($this->domStyles, $this->valueStack);
+        $this->setValuesInDom($contentDom, $this->valueStack);
+        $this->setValuesInDom($stylesDom, $this->valueStack);
 
         // Textboxen separat behandeln
-        $this->renderTextBoxes($this->domContent, $this->valueStack);
-        $this->renderTextBoxes($this->domStyles, $this->valueStack);
+        $this->renderTextBoxes($contentDom, $this->valueStack);
+        $this->renderTextBoxes($stylesDom, $this->valueStack);
 
         foreach ($this->repeatStack as $key => $rows) {
-            $this->applyRepeatingInDom($this->domContent, $key, $rows);
-            $this->applyRepeatingInDom($this->domStyles, $key, $rows);
+            $this->applyRepeatingInDom($contentDom, $key, $rows);
+            $this->applyRepeatingInDom($stylesDom, $key, $rows);
         }
 
-        $this->applyConditionalsInDom($this->domContent, $this->valueStack);
-        $this->applyConditionalsInDom($this->domStyles, $this->valueStack);
+        $this->applyConditionalsInDom($contentDom, $this->valueStack);
+        $this->applyConditionalsInDom($stylesDom, $this->valueStack);
     }
 
 
