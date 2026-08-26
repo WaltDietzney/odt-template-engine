@@ -18,4 +18,15 @@ final class BookmarkTarget extends AbstractAddressableTarget
     {
         return (new TypedTargetResolver())->resolveBookmarkDescriptor($this->context, $this->targetName);
     }
+
+    /**
+     * Replace a safely bounded textual bookmark range and preserve its markers.
+     */
+    public function replaceText(string $value): self
+    {
+        $this->descriptor();
+        (new BookmarkMutationService())->replaceText($this->context, $this->targetName, $value);
+
+        return $this;
+    }
 }
