@@ -9,6 +9,8 @@ use DOMXPath;
 use Exception;
 use RuntimeException;
 use OdtTemplateEngine\Document\AmbiguousTemplateTargetException;
+use OdtTemplateEngine\Document\DocumentInspection;
+use OdtTemplateEngine\Document\DocumentInspector;
 use OdtTemplateEngine\Document\MetadataManager;
 use OdtTemplateEngine\Document\StructuredElementMaterializer;
 use OdtTemplateEngine\Document\TemplateTargetResolver;
@@ -112,6 +114,19 @@ class OdtTemplate
     protected function documentContext(): OdtDocumentContext
     {
         return $this->package->context();
+    }
+
+    /**
+     * Inspect native named structures in the current document state.
+     *
+     * Each call creates a read-only snapshot. No DOM or package state is
+     * changed, and the result does not expose internal DOM nodes.
+     */
+    public function inspect(): DocumentInspection
+    {
+        $context = $this->documentContext();
+
+        return (new DocumentInspector())->inspect($context->contentDom(), $context->stylesDom());
     }
 
     /**
