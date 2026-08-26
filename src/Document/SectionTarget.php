@@ -18,4 +18,18 @@ final class SectionTarget extends AbstractAddressableTarget
     {
         return (new TypedTargetResolver())->resolveSectionDescriptor($this->context, $this->targetName);
     }
+
+    /**
+     * Return a deterministic plain-text view of the current section content.
+     */
+    public function text(): string
+    {
+        return (new SectionReader())->text($this->context, $this->targetName);
+    }
+
+    /** @return list<NamedObjectReference> */
+    public function nestedNamedObjects(): array
+    {
+        return $this->descriptor()->nestedNamedObjects();
+    }
 }

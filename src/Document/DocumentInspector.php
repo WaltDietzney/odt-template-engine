@@ -59,13 +59,33 @@ final class DocumentInspector
             }
 
             $nested = [];
-            foreach ($xpath->query('.//table:table[@table:name] | .//draw:frame[@draw:name]', $node) ?: [] as $child) {
+            $seenBookmarks = [];
+            foreach ($xpath->query(
+                './/text:section[@text:name] | .//text:bookmark[@text:name] | .//text:bookmark-start[@text:name] | .//text:bookmark-end[@text:name] | .//table:table[@table:name] | .//draw:frame[@draw:name]',
+                $node
+            ) ?: [] as $child) {
                 if (!$child instanceof DOMElement) {
                     continue;
                 }
 
-                $type = $child->nodeName === 'table:table' ? 'table' : 'frame';
-                $attribute = $type === 'table' ? 'table:name' : 'draw:name';
+                if (in_array($child->nodeName, ['text:bookmark', 'text:bookmark-start', 'text:bookmark-end'], true)) {
+                    $type = 'bookmark';
+                    $attribute = 'text:name';
+                    $bookmarkName = $child->getAttribute($attribute);
+                    if (isset($seenBookmarks[$bookmarkName])) {
+                        continue;
+                    }
+                    $seenBookmarks[$bookmarkName] = true;
+                } elseif ($child->nodeName === 'text:section') {
+                    $type = 'section';
+                    $attribute = 'text:name';
+                } elseif ($child->nodeName === 'table:table') {
+                    $type = 'table';
+                    $attribute = 'table:name';
+                } else {
+                    $type = 'frame';
+                    $attribute = 'draw:name';
+                }
                 $nested[] = new NamedObjectReference($type, $child->getAttribute($attribute), 'content.xml');
             }
 
