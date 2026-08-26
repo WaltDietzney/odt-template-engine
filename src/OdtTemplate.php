@@ -291,6 +291,109 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         );
     }
 
+    /**
+     * Apply assigned scalar values and structured elements to one document DOM.
+     *
+     * Scalar replacement remains delegated to TemplateProcessor. Structured
+     * values are routed through the facade callback so materialization and
+     * protected compatibility dispatch remain separate concerns.
+     */
+    protected function setValuesInDom(DOMDocument $dom, array $values): void
+    {
+        $xpath = new DOMXPath($dom);
+        $processor = new TemplateProcessor();
+
+        foreach ($xpath->query('//text()') as $textNode) {
+            $text = $textNode->nodeValue;
+            $scalarValues = [];
+
+            foreach ($values as $key => $value) {
+                if ($value instanceof OdtElement) {
+                    $this->replacePlaceholderWithDom($dom, $key, $value->toDomNode($dom));
+                } else {
+                    $scalarValues[$key] = $value;
+                }
+            }
+
+            $textNode->nodeValue = $processor->replaceScalarText(
+                $text,
+                $scalarValues,
+                fn (string $filter, mixed $value, ?string $option): string =>
+                    $this->applyFilter($filter, $value, $option)
+            );
+        }
+    }
+
+    /**
+     * Repair placeholders split across ODF text nodes.
+     */
+    protected function fixBrokenVariables(DOMNode $node): void
+    {
+        (new TemplateProcessor())->fixBrokenVariables($node);
+    }
+
+    /**
+     * Route structured placeholder replacement through the materializer.
+     */
+    protected function replacePlaceholderWithDom(
+        DOMDocument $dom,
+        string $key,
+        DOMNode $replacement
+    ): void {
+        (new StructuredElementMaterializer())->replacePlaceholder($dom, $key, $replacement);
+    }
+
+    /**
+     * Check whether a structured placeholder remains in a document DOM.
+     */
+    protected function hasPlaceholder(DOMDocument $dom, string $key): bool
+    {
+        $xpath = new DOMXPath($dom);
+
+        foreach ($xpath->query('//text()') as $textNode) {
+            if (strpos($textNode->nodeValue, '{{' . $key . '}}') !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Replace placeholders recursively in a cloned foreach row subtree.
+     */
+    protected function replacePlaceholdersInNode(DOMNode $node, array $data): void
+    {
+        if ($node->nodeType === XML_TEXT_NODE) {
+            $replaced = $this->replaceInText($node->nodeValue, $data);
+            if ($replaced !== $node->nodeValue) {
+                $node->nodeValue = $replaced;
+            }
+        }
+
+        if ($node->hasChildNodes()) {
+            foreach (iterator_to_array($node->childNodes) as $child) {
+                $this->replacePlaceholdersInNode($child, $data);
+            }
+        }
+    }
+
+    /**
+     * Apply legacy row-local placeholder substitution semantics.
+     */
+    protected function replaceInText(string $text, array $data): string
+    {
+        return preg_replace_callback('/{{(.*?)}}/', function ($matches) use ($data) {
+            $key = trim($matches[1]);
+
+            if (!array_key_exists($key, $data)) {
+                return '';
+            }
+
+            return (string) $data[$key];
+        }, $text);
+    }
+
 
     /**
      * Replaces `{{nl2br:placeholder}}` tags with text content and <text:line-break/> elements.

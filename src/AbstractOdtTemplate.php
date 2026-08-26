@@ -2,14 +2,11 @@
 
 namespace OdtTemplateEngine;
 
-use OdtTemplateEngine\Elements\OdtElement;
-use OdtTemplateEngine\Document\StructuredElementMaterializer;
 use DOMDocument;
 use DOMNode;
 use DOMXPath;
 use DOMElement;
 use Exception;
-use OdtTemplateEngine\Template\TemplateProcessor;
 use OdtTemplateEngine\Utils\StyleWriter;
 use OdtTemplateEngine\Utils\StyleMapper;
 
@@ -597,120 +594,6 @@ abstract class AbstractOdtTemplate
      * 
      * @return void
      */
-    protected function setValuesInDom(DOMDocument $dom, array $values): void
-    {
-        $xpath = new DOMXPath($dom);
-        $processor = new TemplateProcessor();
-
-        foreach ($xpath->query('//text()') as $textNode) {
-            $text = $textNode->nodeValue;
-            $scalarValues = [];
-
-            foreach ($values as $key => $value) {
-                if ($value instanceof OdtElement) {
-                    $this->replacePlaceholderWithDom($dom, $key, $value->toDomNode($dom));
-                } else {
-                    $scalarValues[$key] = $value;
-                }
-            }
-
-            $text = $processor->replaceScalarText(
-                $text,
-                $scalarValues,
-                fn (string $filter, mixed $value, ?string $option): string =>
-                    $this->applyFilter($filter, $value, $option)
-            );
-
-            $textNode->nodeValue = $text;
-        }
-    }
-
-
-    /**
-     * Replaces a placeholder in the DOM with a given DOM node.
-     * This method searches for the placeholder in the form {{key}} inside <text:p> elements and replaces it with the provided DOM node.
-     * 
-     * @param DOMDocument $dom The XML document (content.xml or styles.xml)
-     * @param string $key The placeholder key (e.g., "name")
-     * @param DOMNode $replacement The DOM node to replace the placeholder with
-     * 
-     * @return void
-     */
-    protected function replacePlaceholderWithDom(DOMDocument $dom, string $key, DOMNode $replacement): void
-    {
-        (new StructuredElementMaterializer())->replacePlaceholder($dom, $key, $replacement);
-    }
-
-    /**
-     * Checks whether a placeholder still exists in the DOM.
-     */
-    protected function hasPlaceholder(DOMDocument $dom, string $key): bool
-    {
-        $xpath = new DOMXPath($dom);
-        foreach ($xpath->query('//text()') as $textNode) {
-            if (strpos($textNode->nodeValue, '{{' . $key . '}}') !== false) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-
-
-    /**
-     * Recursively replaces placeholders within the node tree without breaking XML structure.
-     *
-     * @param DOMNode $node The DOM node to process.
-     * @param array<string, mixed> $data Placeholder key-value pairs.
-     * 
-     * @return void
-     */
-    protected function replacePlaceholdersInNode(DOMNode $node, array $data): void
-    {
-        if ($node->nodeType === XML_TEXT_NODE) {
-            $replaced = $this->replaceInText($node->nodeValue, $data);
-
-            // Nur ersetzen, wenn sich etwas geändert hat
-            if ($replaced !== $node->nodeValue) {
-                $node->nodeValue = $replaced;
-            }
-        }
-
-        // Klonen, um die Iteration stabil zu halten
-        if ($node->hasChildNodes()) {
-            foreach (iterator_to_array($node->childNodes) as $child) {
-                $this->replacePlaceholdersInNode($child, $data);
-            }
-        }
-    }
-
-
-    /**
-     * Helper to replace placeholders in a text string.
-     *
-     * @param string $text Input text possibly containing placeholders.
-     * @param array<string, mixed> $data Placeholder key-value pairs.
-     * 
-     * @return string Text with placeholders replaced.
-     */
-    protected function replaceInText(string $text, array $data): string
-    {
-        return preg_replace_callback('/{{(.*?)}}/', function ($matches) use ($data) {
-            $key = trim($matches[1]);
-
-            // Optional: Debug-Warnung für fehlende Keys
-            if (!array_key_exists($key, $data)) {
-                // error_log("Placeholder {{$key}} not found in data."); // aktivieren für Debugging
-                return ''; // oder ggf. $matches[0] beibehalten
-            }
-
-            return (string) $data[$key];
-        }, $text);
-    }
-
-
-
-
     /**
      * Registers a set of styles in the styles.xml document.
      * This method checks if the style already exists in the styles document, and if not, it creates a new style element and appends it.
@@ -860,10 +743,6 @@ abstract class AbstractOdtTemplate
         ];
     }
 
-    protected function fixBrokenVariables(DOMNode $node): void
-    {
-        (new TemplateProcessor())->fixBrokenVariables($node);
-    }
     /**
      * Summary of enableDebugMode
      * @return void
