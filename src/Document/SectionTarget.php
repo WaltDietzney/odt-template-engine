@@ -41,7 +41,12 @@ final class SectionTarget extends AbstractAddressableTarget
     public function replaceContent(OdtElement $content): self
     {
         $this->descriptor();
-        (new SectionMutationService())->replaceContent($this->context, $this->targetName, $content);
+        (new SectionMutationService())->replaceContent(
+            $this->context,
+            $this->targetName,
+            $content,
+            $this->package
+        );
 
         return $this;
     }

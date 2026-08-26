@@ -9,6 +9,7 @@ use DOMElement;
 use DOMNode;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\OdtDocumentContext;
+use OdtTemplateEngine\OdtPackage;
 
 /**
  * Replaces the children of one native section with bounded structured content.
@@ -19,7 +20,12 @@ final class SectionMutationService
     private const TABLE_NAMESPACE = 'urn:oasis:names:tc:opendocument:xmlns:table:1.0';
     private const TEXT_NAMESPACE = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0';
 
-    public function replaceContent(OdtDocumentContext $context, string $name, OdtElement $content): void
+    public function replaceContent(
+        OdtDocumentContext $context,
+        string $name,
+        OdtElement $content,
+        ?OdtPackage $package = null
+    ): void
     {
         $section = $this->findSection($context->contentDom(), $name);
         $staging = $context->contentDom()->cloneNode(true);
@@ -32,18 +38,49 @@ final class SectionMutationService
         $nodes = $this->replacementNodes($replacement, $name);
         $this->validateNames($context->contentDom(), $section, $nodes, $name);
 
-        while ($stagedSection->firstChild !== null) {
-            $stagedSection->removeChild($stagedSection->firstChild);
-        }
+        $assets = $content->getImageAssets();
+        $containsImage = false;
         foreach ($nodes as $node) {
-            $stagedSection->appendChild($node);
+            if ($this->containsImageAsset($node)) {
+                $containsImage = true;
+                break;
+            }
+        }
+        if ($containsImage && $assets === []) {
+            $this->fail($name, 'resource-bearing content does not expose package assets');
+        }
+        if ($assets !== [] && $package === null) {
+            $this->fail($name, 'resource-bearing content requires package ownership');
+        }
+        $createdResources = $package?->copyImageResourcesAtomically($assets) ?? [];
+        $originalChildren = [];
+        foreach ($section->childNodes as $child) {
+            $originalChildren[] = $child->cloneNode(true);
         }
 
-        while ($section->firstChild !== null) {
-            $section->removeChild($section->firstChild);
-        }
-        foreach ($nodes as $node) {
-            $section->appendChild($this->copyNode($context->contentDom(), $node));
+        try {
+            while ($stagedSection->firstChild !== null) {
+                $stagedSection->removeChild($stagedSection->firstChild);
+            }
+            foreach ($nodes as $node) {
+                $stagedSection->appendChild($node);
+            }
+
+            while ($section->firstChild !== null) {
+                $section->removeChild($section->firstChild);
+            }
+            foreach ($nodes as $node) {
+                $section->appendChild($this->copyNode($context->contentDom(), $node));
+            }
+        } catch (\Throwable $exception) {
+            while ($section->firstChild !== null) {
+                $section->removeChild($section->firstChild);
+            }
+            foreach ($originalChildren as $child) {
+                $section->appendChild($this->copyNode($context->contentDom(), $child));
+            }
+            $package?->removePreparedPackageFiles($createdResources);
+            throw $exception;
         }
     }
 
@@ -77,9 +114,6 @@ final class SectionMutationService
             if (!in_array($node->nodeName, ['text:p', 'text:h', 'text:list', 'table:table', 'draw:frame'], true)) {
                 $this->fail($name, 'replacement contains a node that is not legal section block content');
             }
-            if ($this->containsImageAsset($node)) {
-                $this->fail($name, 'resource-bearing image content is deferred until atomic package preparation exists');
-            }
             $nodes[] = $node;
         }
 
@@ -95,6 +129,9 @@ final class SectionMutationService
         foreach ($nodes as $node) {
             foreach ($this->namedIdentitiesInSubtree($node) as [$type, $name]) {
                 if ($name === '') {
+                    if ($type === 'frame') {
+                        continue;
+                    }
                     $this->fail($sectionName, 'replacement contains a named native object without an identity');
                 }
                 $key = $type . ':' . $name;

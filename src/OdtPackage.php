@@ -224,6 +224,79 @@ final class OdtPackage
     }
 
     /**
+     * Copy image resources as one bounded package preparation operation.
+     *
+     * @param list<array{id?: string, path: string}> $assets
+     * @return list<string> Relative package paths created by this call.
+     */
+    public function copyImageResourcesAtomically(array $assets): array
+    {
+        $prepared = [];
+        $created = [];
+        try {
+            foreach ($assets as $asset) {
+                $source = $asset['path'] ?? '';
+                if (!is_string($source) || !is_file($source) || !is_readable($source)) {
+                    throw new RuntimeException(sprintf('Image resource not found or unreadable: %s', $source));
+                }
+
+                $sourceHash = hash_file('sha256', $source);
+                if ($sourceHash === false) {
+                    throw new RuntimeException(sprintf('Unable to hash image resource: %s', $source));
+                }
+
+                $relativePath = 'Pictures/' . basename($source);
+                if (isset($prepared[$relativePath])) {
+                    if (!hash_equals($prepared[$relativePath], $sourceHash)) {
+                        throw new RuntimeException(sprintf('Conflicting image resources use package path: %s', $relativePath));
+                    }
+                    continue;
+                }
+                $prepared[$relativePath] = $sourceHash;
+
+                $destination = $this->path($relativePath);
+                if (is_file($destination)) {
+                    $destinationHash = hash_file('sha256', $destination);
+                    if ($destinationHash === false || !hash_equals($destinationHash, $prepared[$relativePath])) {
+                        throw new RuntimeException(sprintf('Package image path already contains different content: %s', $relativePath));
+                    }
+                    continue;
+                }
+
+                if (!is_dir(dirname($destination)) && !mkdir(dirname($destination), 0777, true) && !is_dir(dirname($destination))) {
+                    throw new RuntimeException(sprintf('Unable to create package directory for: %s', $relativePath));
+                }
+                if (!copy($source, $destination)) {
+                    throw new RuntimeException(sprintf('Unable to copy image resource: %s', $source));
+                }
+                $created[] = $relativePath;
+            }
+        } catch (\Throwable $exception) {
+            $this->removePackageFiles($created);
+            throw $exception;
+        }
+
+        return $created;
+    }
+
+    /** @param list<string> $relativePaths */
+    public function removePreparedPackageFiles(array $relativePaths): void
+    {
+        $this->removePackageFiles($relativePaths);
+    }
+
+    /** @param list<string> $relativePaths */
+    private function removePackageFiles(array $relativePaths): void
+    {
+        foreach ($relativePaths as $relativePath) {
+            $path = $this->path($relativePath);
+            if (is_file($path)) {
+                unlink($path);
+            }
+        }
+    }
+
+    /**
      * Serialize the current document state and create a valid ODT archive.
      *
      * The caller remains responsible for domain-specific finalization such as

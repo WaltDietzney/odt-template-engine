@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OdtTemplateEngine\Document;
 
 use OdtTemplateEngine\OdtDocumentContext;
+use OdtTemplateEngine\OdtPackage;
 
 /**
  * Strictly resolves typed addressable handles against a current document
@@ -19,11 +20,11 @@ final class TypedTargetResolver
         $this->inspector = $inspector ?? new DocumentInspector();
     }
 
-    public function resolveSection(OdtDocumentContext $context, string $name): SectionTarget
+    public function resolveSection(OdtDocumentContext $context, string $name, ?OdtPackage $package = null): SectionTarget
     {
         $this->resolveSectionDescriptor($context, $name);
 
-        return new SectionTarget($context, $name);
+        return new SectionTarget($context, $name, $package);
     }
 
     public function resolveBookmark(OdtDocumentContext $context, string $name): BookmarkTarget

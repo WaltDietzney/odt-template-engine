@@ -147,7 +147,7 @@ class OdtTemplate
      */
     public function section(string $name): SectionTarget
     {
-        return (new TypedTargetResolver())->resolveSection($this->documentContext(), $name);
+        return (new TypedTargetResolver())->resolveSection($this->documentContext(), $name, $this->package);
     }
 
     /**
