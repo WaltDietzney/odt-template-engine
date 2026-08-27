@@ -23,6 +23,7 @@ use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Template\TemplateProcessor;
 use OdtTemplateEngine\Template\TemplateStructureInspection;
 use OdtTemplateEngine\Template\TemplateStructureInspector;
+use OdtTemplateEngine\Template\TemplateStructureNormalizer;
 use OdtTemplateEngine\Utils\StyleWriter;
 use OdtTemplateEngine\Utils\StyleMapper;
 
@@ -186,8 +187,8 @@ class OdtTemplate
     private function prepareLoadedTemplate(): void
     {
         $context = $this->documentContext();
-        $this->normalizeTemplateDom($context->contentDom());
-        $this->normalizeTemplateDom($context->stylesDom());
+        (new TemplateStructureNormalizer())->normalize($context->contentDom());
+        (new TemplateStructureNormalizer())->normalize($context->stylesDom());
         $this->ensureDefaultParagraphStyles();
         $this->ensureDefaultListStyles();
         $this->ensureDefaultListStylesForContentXml($context->contentDom());
@@ -294,8 +295,8 @@ class OdtTemplate
             $this->documentContext()->stylesDom(),
             $placeholder,
             $element,
-            function (DOMDocument $dom): void {
-                $this->fixBrokenVariables($dom);
+            function (DOMDocument $dom) use ($placeholder): void {
+                $this->normalizeStructuredPlaceholder($dom, $placeholder);
             },
             function (DOMDocument $dom, string $key, DOMNode $replacement): void {
                 $this->replacePlaceholderWithDom($dom, $key, $replacement);
@@ -343,6 +344,34 @@ class OdtTemplate
     protected function fixBrokenVariables(DOMNode $node): void
     {
         (new TemplateProcessor())->fixBrokenVariables($node);
+    }
+
+    /** Join only the requested structured placeholder for legacy materialization. */
+    private function normalizeStructuredPlaceholder(DOMDocument $dom, string $key): void
+    {
+        $token = '{{' . $key . '}}';
+        $xpath = new DOMXPath($dom);
+        foreach ($xpath->query('//text:p | //text:h') ?: [] as $scope) {
+            if (!$scope instanceof DOMElement) continue;
+            $run = [];
+            $text = '';
+            foreach ([...iterator_to_array($scope->childNodes), null] as $node) {
+                $isText = $node instanceof DOMNode
+                    && ($node->nodeType === XML_TEXT_NODE || ($node instanceof DOMElement && $node->nodeName === 'text:span'));
+                if ($isText) {
+                    $run[] = $node;
+                    $text .= $node->textContent;
+                    continue;
+                }
+                if ($run !== [] && $text === $token) {
+                    $first = $run[0];
+                    $scope->insertBefore($dom->createTextNode($text), $first);
+                    foreach ($run as $remove) $scope->removeChild($remove);
+                }
+                $run = [];
+                $text = '';
+            }
+        }
     }
 
     /**
@@ -1161,6 +1190,13 @@ class OdtTemplate
         $context = $this->documentContext();
         $contentDom = $context->contentDom();
         $stylesDom = $context->stylesDom();
+
+        foreach ($this->valueStack as $key => $value) {
+            if ($value instanceof OdtElement) {
+                $this->normalizeStructuredPlaceholder($contentDom, (string) $key);
+                $this->normalizeStructuredPlaceholder($stylesDom, (string) $key);
+            }
+        }
 
         $this->fixBrokenVariables($contentDom);
         $this->fixBrokenVariables($stylesDom);
