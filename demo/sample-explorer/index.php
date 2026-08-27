@@ -18,7 +18,7 @@ $sampleFiles = array_values(array_filter(
 
         $sampleNumber = (int) $matches[1];
 
-        return $sampleNumber >= 1 && $sampleNumber <= 22;
+        return $sampleNumber >= 1 && $sampleNumber <= 24;
     }
 ));
 
