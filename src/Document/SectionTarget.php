@@ -50,4 +50,19 @@ final class SectionTarget extends AbstractAddressableTarget
 
         return $this;
     }
+
+    /**
+     * Clone the prototype section into a uniquely addressable native section.
+     *
+     * This is intentionally distinct from future data-bound instantiation.
+     */
+    public function clone(): self
+    {
+        $clone = (new SectionCloneService())->cloneWithRewrittenIdentities(
+            $this->context,
+            $this->targetName
+        );
+
+        return new self($this->context, $clone->getAttribute('text:name'), $this->package);
+    }
 }
