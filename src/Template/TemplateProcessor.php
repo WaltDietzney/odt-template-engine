@@ -189,51 +189,13 @@ final class TemplateProcessor
      */
     public function replaceScalarTextInSubtree(DOMNode $root, array $values, callable $applyFilter): void
     {
-        foreach ($this->logicalTextGroups($root) as $nodes) {
-            $text = '';
-            $offsets = [];
-            foreach ($nodes as $node) {
-                $start = strlen($text);
-                $text .= $node->nodeValue ?? '';
-                $offsets[] = [$node, $start, strlen($text)];
+        (new TemplateExpressionReplacementService())->replace(
+            $root,
+            function (string $token) use ($values, $applyFilter): ?string {
+                $replaced = $this->replaceScalarText($token, $values, $applyFilter);
+                return $replaced === $token ? null : $replaced;
             }
-
-            preg_match_all('/{{(\w+)}}|{{(\w+):(\w+)(?:\|([^}]+))?}}/', $text, $matches, PREG_OFFSET_CAPTURE);
-            $tokens = [];
-            foreach ($matches[0] as $position => [$token, $start]) {
-                $key = $matches[1][$position][0] !== ''
-                    ? $matches[1][$position][0]
-                    : $matches[3][$position][0];
-                $filter = $matches[2][$position][0] !== '' ? $matches[2][$position][0] : null;
-                $option = $matches[4][$position][0] !== '' ? $matches[4][$position][0] : null;
-                $tokens[] = [$token, $start, $key, $filter, $option];
-            }
-
-            foreach (array_reverse($tokens) as [$token, $start, $key, $filter, $option]) {
-                if (!array_key_exists($key, $values)) {
-                    continue;
-                }
-                $value = (string) $values[$key];
-                if ($filter !== null) {
-                    $value = $applyFilter($filter, $value, $option);
-                }
-                $end = $start + strlen($token);
-                foreach ($offsets as [$node, $nodeStart, $nodeEnd]) {
-                    $overlapStart = max($start, $nodeStart);
-                    $overlapEnd = min($end, $nodeEnd);
-                    if ($overlapStart >= $overlapEnd) {
-                        continue;
-                    }
-                    $nodeValue = $node->nodeValue ?? '';
-                    $localStart = $overlapStart - $nodeStart;
-                    $localEnd = $overlapEnd - $nodeStart;
-                    $replacement = substr($nodeValue, 0, $localStart)
-                        . (($end <= $nodeEnd) ? $value : '')
-                        . substr($nodeValue, $localEnd);
-                    $node->nodeValue = $replacement;
-                }
-            }
-        }
+        );
     }
 
     /** @return list<list<DOMNode>> */

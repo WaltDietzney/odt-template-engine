@@ -53,6 +53,11 @@ final class SectionInstantiationTest extends TestCase
         self::assertStringContainsString('Company_1', $this->nestedObjectNames($instance));
         self::assertStringContainsString('Activity_1', $this->nestedObjectNames($instance));
         self::assertStringContainsString('{{activity}}', $template->section('ExperienceEntry')->text());
+
+        $activity = $this->section($this->contentDom($template), 'ActivityEntry_1');
+        self::assertSame('T29', $activity->getElementsByTagNameNS(self::TEXT_NAMESPACE, 'span')->item(0)?->getAttribute('text:style-name'));
+        self::assertNotNull($activity->getElementsByTagNameNS(self::TEXT_NAMESPACE, 'bookmark-start')->item(0));
+        self::assertNotNull($activity->getElementsByTagNameNS(self::TEXT_NAMESPACE, 'bookmark-end')->item(0));
     }
 
     public function testMissingRequiredValueFailsAtomically(): void

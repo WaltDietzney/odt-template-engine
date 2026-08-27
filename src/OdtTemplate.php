@@ -314,28 +314,20 @@ class OdtTemplate
      */
     protected function setValuesInDom(DOMDocument $dom, array $values): void
     {
-        $xpath = new DOMXPath($dom);
         $processor = new TemplateProcessor();
-
-        foreach ($xpath->query('//text()') as $textNode) {
-            $text = $textNode->nodeValue;
-            $scalarValues = [];
-
-            foreach ($values as $key => $value) {
-                if ($value instanceof OdtElement) {
-                    $this->replacePlaceholderWithDom($dom, $key, $value->toDomNode($dom));
-                } else {
-                    $scalarValues[$key] = $value;
-                }
+        $scalarValues = [];
+        foreach ($values as $key => $value) {
+            if ($value instanceof OdtElement) {
+                $this->replacePlaceholderWithDom($dom, (string) $key, $value->toDomNode($dom));
+            } else {
+                $scalarValues[(string) $key] = $value;
             }
-
-            $textNode->nodeValue = $processor->replaceScalarText(
-                $text,
-                $scalarValues,
-                fn (string $filter, mixed $value, ?string $option): string =>
-                    $this->applyFilter($filter, $value, $option)
-            );
         }
+        $processor->replaceScalarTextInSubtree(
+            $dom,
+            $scalarValues,
+            fn (string $filter, mixed $value, ?string $option): string => $this->applyFilter($filter, $value, $option)
+        );
     }
 
     /**
