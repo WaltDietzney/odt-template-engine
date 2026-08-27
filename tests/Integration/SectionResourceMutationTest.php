@@ -35,6 +35,23 @@ final class SectionResourceMutationTest extends TestCase
         $section = $template->section('Profile');
         self::assertSame($section, $section->replaceContent($image));
         self::assertSame('Profile', $section->name());
+        $dom = new DOMDocument();
+        self::assertTrue($dom->loadXML($template->contentXml()));
+        $xpath = new \DOMXPath($dom);
+        $xpath->registerNamespace('text', 'urn:oasis:names:tc:opendocument:xmlns:text:1.0');
+        $xpath->registerNamespace('draw', 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0');
+        $sectionNode = $xpath->query('//text:section[@text:name="Profile"]')->item(0);
+        self::assertSame('text:p', $sectionNode?->firstChild?->nodeName);
+        self::assertSame('urn:oasis:names:tc:opendocument:xmlns:text:1.0', $sectionNode?->firstChild?->namespaceURI);
+        self::assertSame(1, $xpath->query('//text:section[@text:name="Profile"]//draw:frame')->length);
+        self::assertSame(
+            'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0',
+            $xpath->query('//text:section[@text:name="Profile"]//draw:frame')->item(0)?->namespaceURI
+        );
+        self::assertSame(
+            'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0',
+            $xpath->query('//text:section[@text:name="Profile"]//draw:image')->item(0)?->namespaceURI
+        );
 
         $output = $this->outputPath();
         $template->save($output);

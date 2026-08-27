@@ -114,10 +114,24 @@ final class SectionMutationService
             if (!in_array($node->nodeName, ['text:p', 'text:h', 'text:list', 'table:table', 'draw:frame'], true)) {
                 $this->fail($name, 'replacement contains a node that is not legal section block content');
             }
-            $nodes[] = $node;
+            $nodes[] = $this->hostFrameInTextFlow($node);
         }
 
         return $nodes;
+    }
+
+    private function hostFrameInTextFlow(DOMElement $node): DOMElement
+    {
+        if ($node->nodeName !== 'draw:frame') {
+            return $node;
+        }
+
+        $document = $node->ownerDocument;
+        $paragraph = $document->createElementNS(self::TEXT_NAMESPACE, 'text:p');
+        $node->parentNode?->replaceChild($paragraph, $node);
+        $paragraph->appendChild($node);
+
+        return $paragraph;
     }
 
     /** @param list<DOMElement> $nodes */
