@@ -21,6 +21,8 @@ use OdtTemplateEngine\Document\TemplateTargetResolver;
 use OdtTemplateEngine\Document\TypedTargetResolver;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Template\TemplateProcessor;
+use OdtTemplateEngine\Template\TemplateStructureInspection;
+use OdtTemplateEngine\Template\TemplateStructureInspector;
 use OdtTemplateEngine\Utils\StyleWriter;
 use OdtTemplateEngine\Utils\StyleMapper;
 
@@ -132,6 +134,12 @@ class OdtTemplate
         $context = $this->documentContext();
 
         return (new DocumentInspector())->inspect($context->contentDom(), $context->stylesDom());
+    }
+
+    /** Inspect original template structure without exposing or mutating DOM nodes. */
+    public function inspectTemplateStructure(): TemplateStructureInspection
+    {
+        return (new TemplateStructureInspector())->inspect($this->package->sourceDom('content.xml'));
     }
 
     /**

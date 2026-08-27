@@ -80,6 +80,34 @@ final class OdtPackage
         return $this->context->metaDom();
     }
 
+    /** Read an XML part from the original archive without touching live state. */
+    public function sourceDom(string $filename): DOMDocument
+    {
+        $zip = new ZipArchive();
+        if ($zip->open($this->templatePath) !== true) {
+            throw new RuntimeException('Unable to open the original ODT template.');
+        }
+
+        try {
+            $xml = $zip->getFromName($filename);
+        } finally {
+            $zip->close();
+        }
+
+        if (!is_string($xml)) {
+            throw new RuntimeException(sprintf('Missing XML part in original ODT template: %s', $filename));
+        }
+
+        $dom = new DOMDocument('1.0', 'UTF-8');
+        $dom->preserveWhiteSpace = true;
+        $dom->formatOutput = false;
+        if (!$dom->loadXML($xml, LIBXML_NONET | LIBXML_NOBLANKS)) {
+            throw new RuntimeException(sprintf('Invalid XML part in original ODT template: %s', $filename));
+        }
+
+        return $dom;
+    }
+
     /**
      * Return a path inside the document-scoped package workspace.
      */
