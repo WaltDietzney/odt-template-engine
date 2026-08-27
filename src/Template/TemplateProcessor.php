@@ -161,6 +161,18 @@ final class TemplateProcessor
     }
 
     /** @return list<string> */
+    public function scalarVariableNamesOwnedBy(DOMElement $section): array
+    {
+        $variables = [];
+        foreach ($this->logicalTextGroups($section, true) as $nodes) {
+            $text = implode('', array_map(static fn (DOMNode $node): string => $node->nodeValue ?? '', $nodes));
+            preg_match_all('/{{(\w+)}}|{{\w+:(\w+)(?:\|[^}]+)?}}/', $text, $matches);
+            foreach ([...$matches[1], ...$matches[2]] as $variable) if ($variable !== '') $variables[$variable] = true;
+        }
+        return array_keys($variables);
+    }
+
+    /** @return list<string> */
     public function unsupportedExpressions(DOMNode $root): array
     {
         $unsupported = [];
@@ -198,12 +210,25 @@ final class TemplateProcessor
         );
     }
 
+    /** @param array<string, string> $values */
+    public function replaceScalarTextOwnedBy(DOMElement $section, array $values, callable $applyFilter): void
+    {
+        (new TemplateExpressionReplacementService())->replace(
+            $section,
+            function (string $token) use ($values, $applyFilter): ?string {
+                $replaced = $this->replaceScalarText($token, $values, $applyFilter);
+                return $replaced === $token ? null : $replaced;
+            },
+            true
+        );
+    }
+
     /** @return list<list<DOMNode>> */
-    private function logicalTextGroups(DOMNode $root): array
+    private function logicalTextGroups(DOMNode $root, bool $excludeNestedSections = false): array
     {
         /** @var array<int, list<DOMNode>> $groups */
         $groups = [];
-        $walk = function (DOMNode $node) use (&$walk, &$groups, $root): void {
+        $walk = function (DOMNode $node) use (&$walk, &$groups, $root, $excludeNestedSections): void {
             if ($node->nodeType === XML_TEXT_NODE) {
                 $scope = $root;
                 for ($current = $node->parentNode; $current !== null; $current = $current->parentNode) {
@@ -216,6 +241,9 @@ final class TemplateProcessor
                 return;
             }
             foreach ($node->childNodes as $child) {
+                if ($excludeNestedSections && $child instanceof DOMElement && $child->nodeName === 'text:section' && $child !== $root) {
+                    continue;
+                }
                 $walk($child);
             }
         };

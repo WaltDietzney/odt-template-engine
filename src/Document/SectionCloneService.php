@@ -65,6 +65,42 @@ final class SectionCloneService
         return $clone;
     }
 
+    /**
+     * Clone a section prototype that is owned by another section instance.
+     * The source name may already contain an outer clone suffix; the new
+     * identity is consequently formed by appending the local index.
+     */
+    public function cloneNestedWithRewrittenIdentities(
+        OdtDocumentContext $context,
+        string $ownerName,
+        string $name,
+        ?callable $beforeInsert = null,
+        ?DOMElement $insertionAnchor = null
+    ): DOMElement {
+        $owner = $this->uniqueSection($context, $ownerName);
+        $source = $this->uniqueDescendantSection($owner, $name);
+        $clone = $source->cloneNode(true);
+        if (!$clone instanceof DOMElement) {
+            throw new SectionCloneException($name, 'native nested subtree could not be cloned');
+        }
+
+        $index = $this->nextCloneIndex($context, $source);
+        $this->rewriteNativeIdentities($context, $source, $clone, $index);
+        (new TemplateExpressionIdentityRewriter())->rewrite($clone, $index, $name);
+        if ($beforeInsert !== null) $beforeInsert($clone, $index);
+
+        $anchor = $insertionAnchor ?? $this->lastCloneSibling($source);
+        if (!$anchor->parentNode || $anchor->parentNode !== $source->parentNode) {
+            throw new SectionCloneException($name, 'nested source has no parent insertion context');
+        }
+        try {
+            $anchor->parentNode->insertBefore($clone, $anchor->nextSibling);
+        } catch (\Throwable $exception) {
+            throw new SectionCloneException($name, 'rewritten nested subtree could not be inserted atomically');
+        }
+        return $clone;
+    }
+
     public function cloneExact(OdtDocumentContext $context, string $name): DOMElement
     {
         $matches = [];
@@ -129,6 +165,30 @@ final class SectionCloneService
         }
 
         return $matches[0];
+    }
+
+    private function uniqueDescendantSection(DOMElement $owner, string $name): DOMElement
+    {
+        $matches = [];
+        foreach ($owner->getElementsByTagNameNS(self::TEXT_NAMESPACE, 'section') as $node) {
+            if ($node instanceof DOMElement && $node->getAttribute('text:name') === $name) $matches[] = $node;
+        }
+        if ($matches === []) throw new TargetNotFoundException('section', $name);
+        if (count($matches) > 1) throw new AmbiguousAddressableTargetException('section', $name);
+        return $matches[0];
+    }
+
+    private function lastCloneSibling(DOMElement $source): DOMElement
+    {
+        $base = preg_replace('/_\d+$/', '', $source->getAttribute('text:name')) ?: $source->getAttribute('text:name');
+        $last = $source;
+        for ($sibling = $source->nextSibling; $sibling !== null; $sibling = $sibling->nextSibling) {
+            if ($sibling instanceof DOMElement && $sibling->nodeName === 'text:section'
+                && preg_match('/^' . preg_quote($base, '/') . '(?:_\d+)+$/', $sibling->getAttribute('text:name')) === 1) {
+                $last = $sibling;
+            }
+        }
+        return $last;
     }
 
     private function nextCloneIndex(OdtDocumentContext $context, DOMElement $source): int

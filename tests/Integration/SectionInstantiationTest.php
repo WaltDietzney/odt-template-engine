@@ -30,8 +30,8 @@ final class SectionInstantiationTest extends TestCase
     public function testInstancesBindUnsuffixedValuesLocallyAndReturnTypedTargets(): void
     {
         $template = new OdtTemplate($this->templatePath());
-        $first = $template->section('ExperienceEntry')->instantiate($this->values('Aktuelle Position', 'Senior Projektmanager', 'Leitung eines interdisziplinären Projektteams.'));
-        $second = $template->section('ExperienceEntry')->instantiate($this->values('Vorherige Position', 'Marketing-Spezialist', 'Entwicklung digitaler Marketingkampagnen.'));
+        $first = $template->section('ExperienceEntry')->instantiate(['note' => 'Aktuelle Position', 'position' => 'Senior Projektmanager']);
+        $second = $template->section('ExperienceEntry')->instantiate(['note' => 'Vorherige Position', 'position' => 'Marketing-Spezialist']);
 
         self::assertSame('ExperienceEntry_1', $first->name());
         self::assertSame('ExperienceEntry_2', $second->name());
@@ -46,10 +46,11 @@ final class SectionInstantiationTest extends TestCase
     public function testFragmentedActivityExpressionIsBoundAndBookmarkIdentitiesRemainSeparate(): void
     {
         $template = new OdtTemplate($this->templatePath());
-        $instance = $template->section('ExperienceEntry')->instantiate($this->values('Aktuelle Position', 'Senior Projektmanager', 'Teamleitung'));
+        $instance = $template->section('ExperienceEntry')->instantiate(['note' => 'Aktuelle Position', 'position' => 'Senior Projektmanager']);
+        $instance->section('ActivityEntry')->instantiate(['activity' => 'Teamleitung']);
 
         self::assertStringContainsString('Teamleitung', $instance->text());
-        self::assertStringNotContainsString('{{activity_1}}', $instance->text());
+        self::assertStringContainsString('{{activity_1}}', $instance->text());
         self::assertStringContainsString('Company_1', $this->nestedObjectNames($instance));
         self::assertStringContainsString('Activity_1', $this->nestedObjectNames($instance));
         self::assertStringContainsString('{{activity}}', $template->section('ExperienceEntry')->text());
@@ -63,11 +64,11 @@ final class SectionInstantiationTest extends TestCase
     public function testMissingRequiredValueFailsAtomically(): void
     {
         $template = new OdtTemplate($this->templatePath());
-        $before = $template->inspect()->toArray();
-
         try {
-            $template->section('ExperienceEntry')->instantiate(['note' => 'Only note', 'position' => 'Missing activity']);
-            self::fail('Expected missing clone-local value to fail.');
+            $instance = $template->section('ExperienceEntry')->instantiate(['note' => 'Only note', 'position' => 'Missing activity']);
+            $before = $template->inspect()->toArray();
+            $instance->section('ActivityEntry')->instantiate([]);
+            self::fail('Expected missing nested clone-local value to fail.');
         } catch (SectionInstantiationException $exception) {
             self::assertSame('missing required value', $exception->reason());
             self::assertSame('activity', $exception->variableName());
@@ -79,7 +80,7 @@ final class SectionInstantiationTest extends TestCase
     public function testExtraValuesAreIgnoredAndInvalidValuesAreRejected(): void
     {
         $template = new OdtTemplate($this->templatePath());
-        $values = $this->values('Aktuelle Position', 'Senior Projektmanager', 'Teamleitung');
+        $values = ['note' => 'Aktuelle Position', 'position' => 'Senior Projektmanager'];
         $values['unused'] = 'ignored';
         $instance = $template->section('ExperienceEntry')->instantiate($values);
         self::assertStringContainsString('Senior Projektmanager', $instance->text());
@@ -89,7 +90,6 @@ final class SectionInstantiationTest extends TestCase
             $template->section('ExperienceEntry')->instantiate([
                 'note' => 'Invalid',
                 'position' => ['not' => 'scalar'],
-                'activity' => 'Invalid',
             ]);
             self::fail('Expected invalid binding data to fail.');
         } catch (SectionInstantiationException $exception) {
@@ -110,7 +110,8 @@ final class SectionInstantiationTest extends TestCase
             }
         }
 
-        $instance = $template->section('ExperienceEntry')->instantiate($this->values('aktuelle position', 'Senior Projektmanager', 'Teamleitung'));
+        $instance = $template->section('ExperienceEntry')->instantiate(['note' => 'aktuelle position', 'position' => 'Senior Projektmanager']);
+        $instance->section('ActivityEntry')->instantiate(['activity' => 'Teamleitung']);
 
         self::assertStringContainsString('AKTUELLE POSITION', $instance->text());
     }
@@ -135,8 +136,8 @@ final class SectionInstantiationTest extends TestCase
     public function testInstancesRemainOrderedAndSurviveSaveReopen(): void
     {
         $template = new OdtTemplate($this->templatePath());
-        $template->section('ExperienceEntry')->instantiate($this->values('First', 'First role', 'First activity'));
-        $template->section('ExperienceEntry')->instantiate($this->values('Second', 'Second role', 'Second activity'));
+        $template->section('ExperienceEntry')->instantiate(['note' => 'First', 'position' => 'First role']);
+        $template->section('ExperienceEntry')->instantiate(['note' => 'Second', 'position' => 'Second role']);
         $output = $this->outputPath();
         $template->save($output);
 
@@ -152,11 +153,11 @@ final class SectionInstantiationTest extends TestCase
         $first = new OdtTemplate($this->templatePath());
         $prototype = $first->section('ExperienceEntry');
         $first->load();
-        $instance = $prototype->instantiate($this->values('Reloaded', 'Reloaded role', 'Reloaded activity'));
+        $instance = $prototype->instantiate(['note' => 'Reloaded', 'position' => 'Reloaded role']);
         self::assertSame('ExperienceEntry_1', $instance->name());
 
         $second = new OdtTemplate($this->templatePath());
-        self::assertSame('ExperienceEntry_1', $second->section('ExperienceEntry')->instantiate($this->values('Other', 'Other role', 'Other activity'))->name());
+        self::assertSame('ExperienceEntry_1', $second->section('ExperienceEntry')->instantiate(['note' => 'Other', 'position' => 'Other role'])->name());
         self::assertSame(2, count(array_filter($first->inspect()->sections(), static fn ($section): bool => str_starts_with($section->name(), 'ExperienceEntry'))));
         self::assertSame(2, count(array_filter($second->inspect()->sections(), static fn ($section): bool => str_starts_with($section->name(), 'ExperienceEntry'))));
     }

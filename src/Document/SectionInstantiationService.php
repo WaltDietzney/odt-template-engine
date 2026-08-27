@@ -44,7 +44,7 @@ final class SectionInstantiationService
                 }
 
                 $binding = [];
-                foreach ($this->processor->scalarVariableNames($clone) as $variable) {
+                foreach ($this->processor->scalarVariableNamesOwnedBy($clone) as $variable) {
                     if (!preg_match('/^(.*)_' . $index . '$/', $variable, $match)) {
                         throw new SectionInstantiationException($sectionName, 'unrewritten clone variable', $variable);
                     }
@@ -57,13 +57,60 @@ final class SectionInstantiationService
                         : (string) $values[$sourceVariable];
                 }
 
-                $this->processor->replaceScalarTextInSubtree(
+                $this->processor->replaceScalarTextOwnedBy(
                     $clone,
                     $binding,
                     [$this->processor, 'applyFilter']
                 );
             },
             $this->lastInstance($context, $sectionName)
+        );
+    }
+
+    /**
+     * Instantiate a nested prototype inside its owning section instance.
+     * Native identity allocation remains document-safe while the insertion
+     * order is scoped to the local prototype's sibling family.
+     *
+     * @param array<string, scalar|null> $values
+     */
+    public function instantiateNested(
+        OdtDocumentContext $context,
+        string $ownerName,
+        string $sectionName,
+        array $values
+    ): DOMElement {
+        foreach ($values as $key => $value) {
+            if ($key === '' || ($value !== null && !is_scalar($value))) {
+                throw new SectionInstantiationException($sectionName, 'invalid binding data', (string) $key);
+            }
+        }
+
+        return $this->cloneService->cloneNestedWithRewrittenIdentities(
+            $context,
+            $ownerName,
+            $sectionName,
+            function (DOMElement $clone) use ($values, $sectionName): void {
+                $unsupported = $this->processor->unsupportedExpressions($clone);
+                if ($unsupported !== []) {
+                    throw new SectionInstantiationException($sectionName, 'unsupported expression in clone', $unsupported[0]);
+                }
+
+                $binding = [];
+                foreach ($this->processor->scalarVariableNamesOwnedBy($clone) as $variable) {
+                    $sourceVariable = preg_replace('/(?:_\d+)+$/', '', $variable) ?: $variable;
+                    if (!array_key_exists($sourceVariable, $values)) {
+                        throw new SectionInstantiationException($sectionName, 'missing required value', $sourceVariable);
+                    }
+                    $binding[$variable] = $values[$sourceVariable] === null ? '' : (string) $values[$sourceVariable];
+                }
+
+                $this->processor->replaceScalarTextOwnedBy(
+                    $clone,
+                    $binding,
+                    [$this->processor, 'applyFilter']
+                );
+            }
         );
     }
 

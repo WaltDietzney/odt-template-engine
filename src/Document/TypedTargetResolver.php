@@ -53,6 +53,26 @@ final class TypedTargetResolver
         return $this->unique($this->inspect($context)->sections(), 'section', $name);
     }
 
+    public function resolveSectionElement(OdtDocumentContext $context, string $name): \DOMElement
+    {
+        $matches = [];
+        foreach ($context->contentDom()->getElementsByTagNameNS(
+            'urn:oasis:names:tc:opendocument:xmlns:text:1.0',
+            'section'
+        ) as $node) {
+            if ($node instanceof \DOMElement && $node->getAttribute('text:name') === $name) {
+                $matches[] = $node;
+            }
+        }
+        if ($matches === []) {
+            throw new TargetNotFoundException('section', $name);
+        }
+        if (count($matches) > 1) {
+            throw new AmbiguousAddressableTargetException('section', $name);
+        }
+        return $matches[0];
+    }
+
     public function resolveBookmarkDescriptor(OdtDocumentContext $context, string $name): BookmarkDescriptor
     {
         $descriptor = $this->unique($this->inspect($context)->bookmarks(), 'bookmark', $name);

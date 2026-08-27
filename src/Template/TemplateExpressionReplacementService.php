@@ -15,11 +15,11 @@ final class TemplateExpressionReplacementService
     /**
      * @param callable(string): ?string $evaluate Returns null when the token is not replaceable.
      */
-    public function replace(DOMNode $root, callable $evaluate): void
+    public function replace(DOMNode $root, callable $evaluate, bool $excludeNestedSections = false): void
     {
         foreach ($this->scopes($root) as $scope) {
             $events = [];
-            $this->collect($scope, $events);
+            $this->collect($scope, $events, $excludeNestedSections);
             $text = '';
             $fragments = [];
             foreach ($events as $event) {
@@ -71,14 +71,15 @@ final class TemplateExpressionReplacementService
     }
 
     /** @param list<array{0:string,1:DOMNode,2?:?string}> $events */
-    private function collect(DOMNode $node, array &$events): void
+    private function collect(DOMNode $node, array &$events, bool $excludeNestedSections = false): void
     {
         foreach ($node->childNodes as $child) {
             if ($child instanceof DOMElement && in_array($child->nodeName, self::SCOPES, true)) continue;
+            if ($excludeNestedSections && $child instanceof DOMElement && $child->nodeName === 'text:section') continue;
             if ($child->nodeType === XML_TEXT_NODE) {
                 $events[] = ['text', $child];
             } else {
-                $this->collect($child, $events);
+                $this->collect($child, $events, $excludeNestedSections);
             }
         }
     }
