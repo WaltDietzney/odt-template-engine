@@ -27,7 +27,12 @@ final class SectionCloneService
      * The source must be the unsuffixed prototype. The detached clone is
      * fully planned and rewritten before it is inserted into the document.
      */
-    public function cloneWithRewrittenIdentities(OdtDocumentContext $context, string $name): DOMElement
+    public function cloneWithRewrittenIdentities(
+        OdtDocumentContext $context,
+        string $name,
+        ?callable $beforeInsert = null,
+        ?DOMElement $insertionAnchor = null
+    ): DOMElement
     {
         if (preg_match('/_\d+$/', $name) === 1) {
             throw new SectionCloneException($name, 'only a prototype section may be cloned in this slice');
@@ -42,13 +47,17 @@ final class SectionCloneService
         $index = $this->nextCloneIndex($context, $source);
         $this->rewriteNativeIdentities($context, $source, $clone, $index);
         (new TemplateExpressionIdentityRewriter())->rewrite($clone, $index, $name);
+        if ($beforeInsert !== null) {
+            $beforeInsert($clone, $index);
+        }
 
-        if (!$source->parentNode) {
+        if (!$source->parentNode || ($insertionAnchor !== null && $insertionAnchor->parentNode !== $source->parentNode)) {
             throw new SectionCloneException($name, 'source section has no parent insertion context');
         }
 
         try {
-            $source->parentNode->insertBefore($clone, $source->nextSibling);
+            $anchor = $insertionAnchor ?? $source;
+            $anchor->parentNode->insertBefore($clone, $anchor->nextSibling);
         } catch (\Throwable $exception) {
             throw new SectionCloneException($name, 'rewritten subtree could not be inserted atomically');
         }

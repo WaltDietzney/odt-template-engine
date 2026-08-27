@@ -65,4 +65,22 @@ final class SectionTarget extends AbstractAddressableTarget
 
         return new self($this->context, $clone->getAttribute('text:name'), $this->package);
     }
+
+    /**
+     * Clone the prototype and bind scalar template values inside that clone.
+     *
+     * Caller keys are unsuffixed; clone identity suffixes are internal.
+     *
+     * @param array<string, scalar|null> $values
+     */
+    public function instantiate(array $values): self
+    {
+        $clone = (new SectionInstantiationService())->instantiate(
+            $this->context,
+            $this->targetName,
+            $values
+        );
+
+        return new self($this->context, $clone->getAttribute('text:name'), $this->package);
+    }
 }

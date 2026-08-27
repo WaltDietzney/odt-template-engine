@@ -15,6 +15,16 @@ use DOMXPath;
  */
 final class TemplateProcessor
 {
+    private const TEMPLATE_BOUNDARIES = [
+        'text:p',
+        'text:h',
+        'text:list-item',
+        'table:table-cell',
+        'table:covered-table-cell',
+        'text:section',
+        'draw:text-box',
+    ];
+
     /**
      * Normalize placeholder fragments split across paragraph children.
      */
@@ -126,6 +136,130 @@ final class TemplateProcessor
             },
             $text
         ) ?? $text;
+    }
+
+    /** @return list<string> */
+    public function scalarVariableNames(DOMNode $root): array
+    {
+        $variables = [];
+        foreach ($this->logicalTextGroups($root) as $nodes) {
+            $text = implode('', array_map(static fn (DOMNode $node): string => $node->nodeValue ?? '', $nodes));
+            preg_match_all('/{{(\w+)}}|{{\w+:(\w+)(?:\|[^}]+)?}}/', $text, $matches);
+            foreach ($matches[1] as $simple) {
+                if ($simple !== '') {
+                    $variables[$simple] = true;
+                }
+            }
+            foreach ($matches[2] as $filtered) {
+                if ($filtered !== '') {
+                    $variables[$filtered] = true;
+                }
+            }
+        }
+
+        return array_keys($variables);
+    }
+
+    /** @return list<string> */
+    public function unsupportedExpressions(DOMNode $root): array
+    {
+        $unsupported = [];
+        foreach ($this->logicalTextGroups($root) as $nodes) {
+            $text = implode('', array_map(static fn (DOMNode $node): string => $node->nodeValue ?? '', $nodes));
+            preg_match_all('/{{([^}]*)}}/', $text, $matches);
+            foreach ($matches[0] as $token) {
+                $body = substr($token, 2, -2);
+                if (preg_match('/^\w+$/', $body) === 1
+                    || preg_match('/^\w+:\w+(?:\|[^}]*)?$/', $body) === 1
+                ) {
+                    continue;
+                }
+                $unsupported[$token] = true;
+            }
+        }
+
+        return array_keys($unsupported);
+    }
+
+    /**
+     * Apply existing scalar/filter semantics to text nodes below one detached
+     * native subtree. Structural controls intentionally remain out of scope.
+     *
+     * @param array<string, string> $values
+     */
+    public function replaceScalarTextInSubtree(DOMNode $root, array $values, callable $applyFilter): void
+    {
+        foreach ($this->logicalTextGroups($root) as $nodes) {
+            $text = '';
+            $offsets = [];
+            foreach ($nodes as $node) {
+                $start = strlen($text);
+                $text .= $node->nodeValue ?? '';
+                $offsets[] = [$node, $start, strlen($text)];
+            }
+
+            preg_match_all('/{{(\w+)}}|{{(\w+):(\w+)(?:\|([^}]+))?}}/', $text, $matches, PREG_OFFSET_CAPTURE);
+            $tokens = [];
+            foreach ($matches[0] as $position => [$token, $start]) {
+                $key = $matches[1][$position][0] !== ''
+                    ? $matches[1][$position][0]
+                    : $matches[3][$position][0];
+                $filter = $matches[2][$position][0] !== '' ? $matches[2][$position][0] : null;
+                $option = $matches[4][$position][0] !== '' ? $matches[4][$position][0] : null;
+                $tokens[] = [$token, $start, $key, $filter, $option];
+            }
+
+            foreach (array_reverse($tokens) as [$token, $start, $key, $filter, $option]) {
+                if (!array_key_exists($key, $values)) {
+                    continue;
+                }
+                $value = (string) $values[$key];
+                if ($filter !== null) {
+                    $value = $applyFilter($filter, $value, $option);
+                }
+                $end = $start + strlen($token);
+                foreach ($offsets as [$node, $nodeStart, $nodeEnd]) {
+                    $overlapStart = max($start, $nodeStart);
+                    $overlapEnd = min($end, $nodeEnd);
+                    if ($overlapStart >= $overlapEnd) {
+                        continue;
+                    }
+                    $nodeValue = $node->nodeValue ?? '';
+                    $localStart = $overlapStart - $nodeStart;
+                    $localEnd = $overlapEnd - $nodeStart;
+                    $replacement = substr($nodeValue, 0, $localStart)
+                        . (($end <= $nodeEnd) ? $value : '')
+                        . substr($nodeValue, $localEnd);
+                    $node->nodeValue = $replacement;
+                }
+            }
+        }
+    }
+
+    /** @return list<list<DOMNode>> */
+    private function logicalTextGroups(DOMNode $root): array
+    {
+        /** @var array<int, list<DOMNode>> $groups */
+        $groups = [];
+        $walk = function (DOMNode $node) use (&$walk, &$groups, $root): void {
+            if ($node->nodeType === XML_TEXT_NODE) {
+                $scope = $root;
+                for ($current = $node->parentNode; $current !== null; $current = $current->parentNode) {
+                    if ($current === $root || in_array($current->nodeName, self::TEMPLATE_BOUNDARIES, true)) {
+                        $scope = $current;
+                        break;
+                    }
+                }
+                $groups[spl_object_id($scope)][] = $node;
+                return;
+            }
+            foreach ($node->childNodes as $child) {
+                $walk($child);
+            }
+        };
+        $walk($root);
+
+        return array_values($groups);
     }
 
     /**

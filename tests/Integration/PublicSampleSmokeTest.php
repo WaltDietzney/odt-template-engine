@@ -38,7 +38,7 @@ final class PublicSampleSmokeTest extends TestCase
         $sampleFiles = $this->publicSampleFiles($this->temporaryDirectory . '/samples');
         $beforeOutput = $this->directorySnapshot($repositoryRoot . '/samples/output');
 
-        self::assertCount(24, $sampleFiles);
+        self::assertCount(25, $sampleFiles);
 
         foreach ($sampleFiles as $sampleFile) {
             $sampleName = pathinfo($sampleFile, PATHINFO_FILENAME);
@@ -78,7 +78,7 @@ final class PublicSampleSmokeTest extends TestCase
             }
 
             $sampleNumber = (int) $matches[1];
-            if ($sampleNumber >= 1 && $sampleNumber <= 24) {
+            if ($sampleNumber >= 1 && $sampleNumber <= 25) {
                 $sampleFiles[] = $sampleFile;
             }
         }
