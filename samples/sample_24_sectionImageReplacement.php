@@ -16,6 +16,7 @@ $template = new OdtTemplate(__DIR__ . '/templates/sample_24_sectionImageReplacem
 $image = new ImageElement(__DIR__ . '/templates/sample_23_image.png', [
     'width' => '4cm',
     'height' => '3cm',
+    'anchor' => 'as-char',
 ]);
 
 $template->section('ImageSection')->replaceContent($image);
