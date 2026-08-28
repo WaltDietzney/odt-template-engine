@@ -52,7 +52,9 @@ final class SectionCloneTest extends TestCase
             self::assertSame(2, $this->sections($context->contentDom(), 'ActivityEntry')->length);
             self::assertSame(4, $this->elementsInSections($context->contentDom(), 'text:bookmark-start', 'ExperienceEntry'));
             self::assertSame(2, $this->elementsInSections($context->contentDom(), 'text:bookmark', 'ExperienceEntry'));
-            self::assertSame(4, $this->elementsInSections($context->contentDom(), 'text:list', 'ExperienceEntry'));
+            // Sample 25 intentionally contains one native activity list per
+            // ExperienceEntry after the showcase authoring cleanup.
+            self::assertSame(2, $this->elementsInSections($context->contentDom(), 'text:list', 'ExperienceEntry'));
         } finally {
             $package->cleanup();
         }
