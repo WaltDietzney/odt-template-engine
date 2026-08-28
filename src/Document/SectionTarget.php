@@ -94,6 +94,32 @@ final class SectionTarget extends AbstractAddressableTarget
     }
 
     /**
+     * Expand this section prototype into an ordered, finalized collection.
+     *
+     * @param list<array<string, mixed>> $items
+     * @return list<self>
+     */
+    public function instantiateMany(array $items): array
+    {
+        $nodes = (new SectionCollectionInstantiationService())->instantiateMany(
+            $this->context,
+            $this->targetName,
+            $items,
+            $this->ownerName
+        );
+
+        return array_map(
+            fn (\DOMElement $node): self => new self(
+                $this->context,
+                $node->getAttribute('text:name'),
+                $this->package,
+                $this->ownerName
+            ),
+            $nodes
+        );
+    }
+
+    /**
      * Resolve a named nested section relative to this section instance.
      * The caller uses the prototype's logical name; generated physical suffixes
      * are deliberately kept internal.

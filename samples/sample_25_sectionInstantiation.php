@@ -43,15 +43,19 @@ $experiences = [
     ],
 ];
 
-foreach ($experiences as $experienceData) {
-    $experience = $template->section('ExperienceEntry')->instantiate([
+$experienceInstances = $template->section('ExperienceEntry')->instantiateMany(array_map(
+    static fn (array $experienceData): array => [
         'note' => $experienceData['note'],
         'position' => $experienceData['position'],
-    ]);
-    $activities = $experience->section('ActivityEntry');
-    foreach ($experienceData['activities'] as $activity) {
-        $activities->instantiate(['activity' => $activity]);
-    }
+    ],
+    $experiences
+));
+
+foreach ($experienceInstances as $index => $experience) {
+    $experience->section('ActivityEntry')->instantiateMany(array_map(
+        static fn (string $activity): array => ['activity' => $activity],
+        $experiences[$index]['activities']
+    ));
 }
 
 $outputPath = __DIR__ . '/output/output_25_sectionInstantiation.odt';
