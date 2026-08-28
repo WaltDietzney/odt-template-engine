@@ -17,6 +17,7 @@ nav = [
     { "Installation" = "getting-started/installation.md" },
     { "Quick Start" = "getting-started/quick-start.md" },
     { "Creating Templates" = "getting-started/creating-templates.md" },
+    { "Template Authoring Guide" = "getting-started/template-authoring-guide.md" },
   ] },
   { "Template Language" = [
     { "Variables & Filters" = "template-language/variables-and-filters.md" },
@@ -24,6 +25,7 @@ nav = [
   ] },
   { "Rich Documents" = [
     { "RichText & Paragraphs" = "rich-documents/richtext-and-paragraphs.md" },
+    { "Named Sections" = "rich-documents/named-sections.md" },
     { "Lists" = "rich-documents/lists.md" },
     { "Tables" = "rich-documents/tables.md" },
     { "Images" = "rich-documents/images.md" },

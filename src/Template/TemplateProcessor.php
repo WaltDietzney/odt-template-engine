@@ -15,6 +15,16 @@ use DOMXPath;
  */
 final class TemplateProcessor
 {
+    private const TEMPLATE_BOUNDARIES = [
+        'text:p',
+        'text:h',
+        'text:list-item',
+        'table:table-cell',
+        'table:covered-table-cell',
+        'text:section',
+        'draw:text-box',
+    ];
+
     /**
      * Normalize placeholder fragments split across paragraph children.
      */
@@ -126,6 +136,120 @@ final class TemplateProcessor
             },
             $text
         ) ?? $text;
+    }
+
+    /** @return list<string> */
+    public function scalarVariableNames(DOMNode $root): array
+    {
+        $variables = [];
+        foreach ($this->logicalTextGroups($root) as $nodes) {
+            $text = implode('', array_map(static fn (DOMNode $node): string => $node->nodeValue ?? '', $nodes));
+            preg_match_all('/{{(\w+)}}|{{\w+:(\w+)(?:\|[^}]+)?}}/', $text, $matches);
+            foreach ($matches[1] as $simple) {
+                if ($simple !== '') {
+                    $variables[$simple] = true;
+                }
+            }
+            foreach ($matches[2] as $filtered) {
+                if ($filtered !== '') {
+                    $variables[$filtered] = true;
+                }
+            }
+        }
+
+        return array_keys($variables);
+    }
+
+    /** @return list<string> */
+    public function scalarVariableNamesOwnedBy(DOMElement $section): array
+    {
+        $variables = [];
+        foreach ($this->logicalTextGroups($section, true) as $nodes) {
+            $text = implode('', array_map(static fn (DOMNode $node): string => $node->nodeValue ?? '', $nodes));
+            preg_match_all('/{{(\w+)}}|{{\w+:(\w+)(?:\|[^}]+)?}}/', $text, $matches);
+            foreach ([...$matches[1], ...$matches[2]] as $variable) if ($variable !== '') $variables[$variable] = true;
+        }
+        return array_keys($variables);
+    }
+
+    /** @return list<string> */
+    public function unsupportedExpressions(DOMNode $root): array
+    {
+        $unsupported = [];
+        foreach ($this->logicalTextGroups($root) as $nodes) {
+            $text = implode('', array_map(static fn (DOMNode $node): string => $node->nodeValue ?? '', $nodes));
+            preg_match_all('/{{([^}]*)}}/', $text, $matches);
+            foreach ($matches[0] as $token) {
+                $body = substr($token, 2, -2);
+                if (preg_match('/^\w+$/', $body) === 1
+                    || preg_match('/^\w+:\w+(?:\|[^}]*)?$/', $body) === 1
+                ) {
+                    continue;
+                }
+                $unsupported[$token] = true;
+            }
+        }
+
+        return array_keys($unsupported);
+    }
+
+    /**
+     * Apply existing scalar/filter semantics to text nodes below one detached
+     * native subtree. Structural controls intentionally remain out of scope.
+     *
+     * @param array<string, string> $values
+     */
+    public function replaceScalarTextInSubtree(DOMNode $root, array $values, callable $applyFilter): void
+    {
+        (new TemplateExpressionReplacementService())->replace(
+            $root,
+            function (string $token) use ($values, $applyFilter): ?string {
+                $replaced = $this->replaceScalarText($token, $values, $applyFilter);
+                return $replaced === $token ? null : $replaced;
+            }
+        );
+    }
+
+    /** @param array<string, string> $values */
+    public function replaceScalarTextOwnedBy(DOMElement $section, array $values, callable $applyFilter): void
+    {
+        (new TemplateExpressionReplacementService())->replace(
+            $section,
+            function (string $token) use ($values, $applyFilter): ?string {
+                $replaced = $this->replaceScalarText($token, $values, $applyFilter);
+                return $replaced === $token ? null : $replaced;
+            },
+            true
+        );
+    }
+
+    /** @return list<list<DOMNode>> */
+    private function logicalTextGroups(DOMNode $root, bool $excludeNestedSections = false): array
+    {
+        /** @var array<int, list<DOMNode>> $groups */
+        $groups = [];
+        $walk = function (DOMNode $node) use (&$walk, &$groups, $root, $excludeNestedSections): void {
+            if ($node->nodeType === XML_TEXT_NODE) {
+                $scope = $root;
+                for ($current = $node->parentNode; $current !== null; $current = $current->parentNode) {
+                    if ($current === $root || in_array($current->nodeName, self::TEMPLATE_BOUNDARIES, true)) {
+                        $scope = $current;
+                        break;
+                    }
+                }
+                $groups[spl_object_id($scope)][] = $node;
+                return;
+            }
+            foreach ($node->childNodes as $child) {
+                if ($excludeNestedSections && $child instanceof DOMElement && $child->nodeName === 'text:section' && $child !== $root) {
+                    continue;
+                }
+                $walk($child);
+            }
+        };
+        $walk($root);
+
+        return array_values($groups);
     }
 
     /**

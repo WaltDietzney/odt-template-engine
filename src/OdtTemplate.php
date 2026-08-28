@@ -9,11 +9,21 @@ use DOMXPath;
 use Exception;
 use RuntimeException;
 use OdtTemplateEngine\Document\AmbiguousTemplateTargetException;
+use OdtTemplateEngine\Document\DocumentInspection;
+use OdtTemplateEngine\Document\DocumentInspector;
+use OdtTemplateEngine\Document\BookmarkTarget;
+use OdtTemplateEngine\Document\FrameTarget;
 use OdtTemplateEngine\Document\MetadataManager;
+use OdtTemplateEngine\Document\SectionTarget;
 use OdtTemplateEngine\Document\StructuredElementMaterializer;
+use OdtTemplateEngine\Document\TableTarget;
 use OdtTemplateEngine\Document\TemplateTargetResolver;
+use OdtTemplateEngine\Document\TypedTargetResolver;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Template\TemplateProcessor;
+use OdtTemplateEngine\Template\TemplateStructureInspection;
+use OdtTemplateEngine\Template\TemplateStructureInspector;
+use OdtTemplateEngine\Template\TemplateStructureNormalizer;
 use OdtTemplateEngine\Utils\StyleWriter;
 use OdtTemplateEngine\Utils\StyleMapper;
 
@@ -115,6 +125,57 @@ class OdtTemplate
     }
 
     /**
+     * Inspect native named structures in the current document state.
+     *
+     * Each call creates a read-only snapshot. No DOM or package state is
+     * changed, and the result does not expose internal DOM nodes.
+     */
+    public function inspect(): DocumentInspection
+    {
+        $context = $this->documentContext();
+
+        return (new DocumentInspector())->inspect($context->contentDom(), $context->stylesDom());
+    }
+
+    /** Inspect original template structure without exposing or mutating DOM nodes. */
+    public function inspectTemplateStructure(): TemplateStructureInspection
+    {
+        return (new TemplateStructureInspector())->inspect($this->package->sourceDom('content.xml'));
+    }
+
+    /**
+     * Resolve a named bookmark or range in the current document state.
+     */
+    public function bookmark(string $name): BookmarkTarget
+    {
+        return (new TypedTargetResolver())->resolveBookmark($this->documentContext(), $name);
+    }
+
+    /**
+     * Resolve a named native section in the current document state.
+     */
+    public function section(string $name): SectionTarget
+    {
+        return (new TypedTargetResolver())->resolveSection($this->documentContext(), $name, $this->package);
+    }
+
+    /**
+     * Resolve a named native table in the current document state.
+     */
+    public function table(string $name): TableTarget
+    {
+        return (new TypedTargetResolver())->resolveTable($this->documentContext(), $name);
+    }
+
+    /**
+     * Resolve a named native drawing frame in the current document state.
+     */
+    public function frame(string $name): FrameTarget
+    {
+        return (new TypedTargetResolver())->resolveFrame($this->documentContext(), $name);
+    }
+
+    /**
      * Prepare a constructed element's image resource without resolving a
      * named template target.
      */
@@ -126,8 +187,8 @@ class OdtTemplate
     private function prepareLoadedTemplate(): void
     {
         $context = $this->documentContext();
-        $this->normalizeTemplateDom($context->contentDom());
-        $this->normalizeTemplateDom($context->stylesDom());
+        (new TemplateStructureNormalizer())->normalize($context->contentDom());
+        (new TemplateStructureNormalizer())->normalize($context->stylesDom());
         $this->ensureDefaultParagraphStyles();
         $this->ensureDefaultListStyles();
         $this->ensureDefaultListStylesForContentXml($context->contentDom());
@@ -234,8 +295,8 @@ class OdtTemplate
             $this->documentContext()->stylesDom(),
             $placeholder,
             $element,
-            function (DOMDocument $dom): void {
-                $this->fixBrokenVariables($dom);
+            function (DOMDocument $dom) use ($placeholder): void {
+                $this->normalizeStructuredPlaceholder($dom, $placeholder);
             },
             function (DOMDocument $dom, string $key, DOMNode $replacement): void {
                 $this->replacePlaceholderWithDom($dom, $key, $replacement);
@@ -253,28 +314,20 @@ class OdtTemplate
      */
     protected function setValuesInDom(DOMDocument $dom, array $values): void
     {
-        $xpath = new DOMXPath($dom);
         $processor = new TemplateProcessor();
-
-        foreach ($xpath->query('//text()') as $textNode) {
-            $text = $textNode->nodeValue;
-            $scalarValues = [];
-
-            foreach ($values as $key => $value) {
-                if ($value instanceof OdtElement) {
-                    $this->replacePlaceholderWithDom($dom, $key, $value->toDomNode($dom));
-                } else {
-                    $scalarValues[$key] = $value;
-                }
+        $scalarValues = [];
+        foreach ($values as $key => $value) {
+            if ($value instanceof OdtElement) {
+                $this->replacePlaceholderWithDom($dom, (string) $key, $value->toDomNode($dom));
+            } else {
+                $scalarValues[(string) $key] = $value;
             }
-
-            $textNode->nodeValue = $processor->replaceScalarText(
-                $text,
-                $scalarValues,
-                fn (string $filter, mixed $value, ?string $option): string =>
-                    $this->applyFilter($filter, $value, $option)
-            );
         }
+        $processor->replaceScalarTextInSubtree(
+            $dom,
+            $scalarValues,
+            fn (string $filter, mixed $value, ?string $option): string => $this->applyFilter($filter, $value, $option)
+        );
     }
 
     /**
@@ -283,6 +336,34 @@ class OdtTemplate
     protected function fixBrokenVariables(DOMNode $node): void
     {
         (new TemplateProcessor())->fixBrokenVariables($node);
+    }
+
+    /** Join only the requested structured placeholder for legacy materialization. */
+    private function normalizeStructuredPlaceholder(DOMDocument $dom, string $key): void
+    {
+        $token = '{{' . $key . '}}';
+        $xpath = new DOMXPath($dom);
+        foreach ($xpath->query('//text:p | //text:h') ?: [] as $scope) {
+            if (!$scope instanceof DOMElement) continue;
+            $run = [];
+            $text = '';
+            foreach ([...iterator_to_array($scope->childNodes), null] as $node) {
+                $isText = $node instanceof DOMNode
+                    && ($node->nodeType === XML_TEXT_NODE || ($node instanceof DOMElement && $node->nodeName === 'text:span'));
+                if ($isText) {
+                    $run[] = $node;
+                    $text .= $node->textContent;
+                    continue;
+                }
+                if ($run !== [] && $text === $token) {
+                    $first = $run[0];
+                    $scope->insertBefore($dom->createTextNode($text), $first);
+                    foreach ($run as $remove) $scope->removeChild($remove);
+                }
+                $run = [];
+                $text = '';
+            }
+        }
     }
 
     /**
@@ -1101,6 +1182,13 @@ class OdtTemplate
         $context = $this->documentContext();
         $contentDom = $context->contentDom();
         $stylesDom = $context->stylesDom();
+
+        foreach ($this->valueStack as $key => $value) {
+            if ($value instanceof OdtElement) {
+                $this->normalizeStructuredPlaceholder($contentDom, (string) $key);
+                $this->normalizeStructuredPlaceholder($stylesDom, (string) $key);
+            }
+        }
 
         $this->fixBrokenVariables($contentDom);
         $this->fixBrokenVariables($stylesDom);
