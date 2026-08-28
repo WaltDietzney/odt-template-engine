@@ -58,6 +58,17 @@ final class PublicSampleSmokeTest extends TestCase
             );
             self::assertNotFalse($archive->locateName('content.xml'), $sampleName . ' is missing content.xml.');
             self::assertNotFalse($archive->locateName('styles.xml'), $sampleName . ' is missing styles.xml.');
+            if ($sampleName === 'sample_25_sectionInstantiation') {
+                $content = $archive->getFromName('content.xml');
+                self::assertIsString($content);
+                self::assertStringNotContainsString('{{', $content, 'Sample 25 contains unresolved template expressions at position ' . strpos($content, '{{') . '.');
+                self::assertStringContainsString('Max', $content);
+                self::assertStringContainsString('Mustermann', $content);
+                self::assertStringContainsString('+49 151 12345678', $content);
+                self::assertStringContainsString('max.mustermann@example.com', $content);
+                self::assertStringNotContainsString('text:name="ExperienceEntry"', $content);
+                self::assertSame(3, substr_count($content, 'text:name="ExperienceEntry_'));
+            }
             $archive->close();
         }
 

@@ -1,10 +1,11 @@
 <?php
 
 /**
- * Sample 25 - Instantiate a native CV section with local template values.
+ * Sample 25 - Complete CV showcase with scalar and native section collections.
  *
- * The LibreOffice-authored section remains the visible prototype. Each call
- * clones its native structure, rewrites identities, and binds only that clone.
+ * This demonstrates a LibreOffice-authored CV template, scalar replacement,
+ * native ExperienceEntry and nested ActivityEntry collection instantiation,
+ * collection finalization, and preservation of native ODT structure.
  */
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
@@ -12,6 +13,15 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
 use OdtTemplateEngine\OdtTemplate;
 
 $template = new OdtTemplate(__DIR__ . '/templates/sample_25_sectionClone.odt');
+
+$template->assign([
+    'firstname' => 'Max',
+    'lastname' => 'Mustermann',
+    'profession' => 'Senior Projektmanager',
+    'phone' => '+49 151 12345678',
+    'adress' => 'Musterstraße 12, 33602 Bielefeld',
+    'mail' => 'max.mustermann@example.com',
+]);
 
 $experiences = [
     [
@@ -57,6 +67,8 @@ foreach ($experienceInstances as $index => $experience) {
         $experiences[$index]['activities']
     ));
 }
+
+$template->render();
 
 $outputPath = __DIR__ . '/output/output_25_sectionInstantiation.odt';
 $template->save($outputPath);
