@@ -17,6 +17,7 @@ nav = [
     { "Installation" = "getting-started/installation.md" },
     { "Quick Start" = "getting-started/quick-start.md" },
     { "Creating Templates" = "getting-started/creating-templates.md" },
+    { "Template Authoring Guide" = "getting-started/template-authoring-guide.md" },
   ] },
   { "Template Language" = [
     { "Variables & Filters" = "template-language/variables-and-filters.md" },
