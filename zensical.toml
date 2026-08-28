@@ -25,6 +25,7 @@ nav = [
   ] },
   { "Rich Documents" = [
     { "RichText & Paragraphs" = "rich-documents/richtext-and-paragraphs.md" },
+    { "Named Sections" = "rich-documents/named-sections.md" },
     { "Lists" = "rich-documents/lists.md" },
     { "Tables" = "rich-documents/tables.md" },
     { "Images" = "rich-documents/images.md" },
