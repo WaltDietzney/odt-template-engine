@@ -101,7 +101,7 @@ final class OdtPackage
         $dom = new DOMDocument('1.0', 'UTF-8');
         $dom->preserveWhiteSpace = true;
         $dom->formatOutput = false;
-        if (!$dom->loadXML($xml, LIBXML_NONET | LIBXML_NOBLANKS)) {
+        if (!$dom->loadXML($xml, LIBXML_NONET)) {
             throw new RuntimeException(sprintf('Invalid XML part in original ODT template: %s', $filename));
         }
 
@@ -427,7 +427,10 @@ final class OdtPackage
         }
 
         $dom = new DOMDocument('1.0', 'UTF-8');
-        $dom->preserveWhiteSpace = false;
+        // Whitespace-only ODF text nodes can be authored content (for example
+        // a literal separator span between two template expressions). Do not
+        // let libxml discard them as formatting whitespace.
+        $dom->preserveWhiteSpace = true;
         $dom->formatOutput = false;
 
         if (!$dom->load($path, LIBXML_NOENT | LIBXML_NOCDATA)) {
@@ -444,7 +447,9 @@ final class OdtPackage
             throw new RuntimeException(sprintf('Unable to serialize XML for %s.', $path));
         }
 
-        $xml = preg_replace('/>\s+</', '><', $xml) ?? $xml;
+        // Only remove serializer indentation containing a line break. A
+        // single whitespace text node between ODF elements is document data.
+        $xml = preg_replace('/>[\r\n\t ]*[\r\n]+[\r\n\t ]*</', '><', $xml) ?? $xml;
         $xml = preg_replace('/[\r\n\t]+/', '', $xml) ?? $xml;
         $xml = preg_replace('/ {2,}/', ' ', $xml) ?? $xml;
 
