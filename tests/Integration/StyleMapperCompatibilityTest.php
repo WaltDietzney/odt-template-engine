@@ -38,7 +38,7 @@ final class StyleMapperCompatibilityTest extends TestCase
     }
 
     #[RunInSeparateProcess]
-    public function testParagraphRegistrationRemainsInAggregatedFacadeResults():void
+    public function testParagraphRegistrationRemainsInAggregatedFacadeResults(): void
     {
         $style = '01E_Aggregated_' . bin2hex(random_bytes(4));
         $definition = ['margin-left' => '5cm'];
