@@ -4,28 +4,35 @@ This roadmap describes the planned development direction of the ODT Template Eng
 
 It complements [`FUTURE_DEVELOPMENT.md`](FUTURE_DEVELOPMENT.md):
 
-- `FUTURE_DEVELOPMENT.md` is the issue-oriented backlog of known limitations, technical debt, and possible improvements.
-- `ROADMAP.md` defines the strategic sequence in which larger architectural work should be approached.
+- `FUTURE_DEVELOPMENT.md` is the issue-oriented backlog of known limitations, technical debt, research topics, and possible improvements.
+- `ROADMAP.md` defines the strategic sequence in which larger architectural and product work should be approached.
 
-The roadmap is intentionally conservative about public API changes. Existing application-facing APIs should remain stable while internal responsibilities are extracted and clarified.
+The roadmap is intentionally conservative about public API changes. Existing application-facing APIs should remain stable where practical, and future APIs shown here are conceptual unless explicitly documented as implemented.
 
 ## Current baseline
 
-The current stable line already provides:
+The project has moved beyond treating ODT primarily as text with placeholders. The current `develop` line combines the classic template language with an increasingly addressable structured document model.
 
-- variable replacement and filters;
-- conditions and repeating blocks;
-- native rich text and paragraphs;
-- native ODT lists;
-- generated tables and styled table cells;
-- image insertion and replacement;
+Established capabilities include:
+
+- variable replacement, filters, conditions, and repeating blocks;
+- native rich text, paragraphs, lists, tables, images, frames, and text boxes;
 - HTML import;
-- document metadata;
-- page-layout adjustments;
-- public Samples 01–21 with smoke-test coverage;
-- developer documentation and a real-world complex-document example.
+- document metadata and page-layout adjustments;
+- package/document ownership through `OdtPackage` and `OdtDocumentContext`;
+- composed services behind the public `OdtTemplate` facade;
+- typed resolution of native template targets;
+- named section and bookmark inspection;
+- exact native section cloning and deterministic identity rewriting;
+- data-bound section instantiation;
+- nested section ownership and nested collection instantiation;
+- collection lifecycle semantics in which authoring prototypes are removed from final output;
+- structure-aware template-expression inspection, normalization, and replacement;
+- preservation of authored whitespace and fragmented styled expressions in the supported scalar-expression path;
+- a complete CV showcase proving the structured-section model against a realistic LibreOffice-authored document;
+- practical template-authoring and named-section documentation.
 
-The project also has an established rendering-sensitive validation workflow:
+The rendering-sensitive validation workflow remains:
 
 ```text
 automated tests
@@ -43,22 +50,13 @@ Poppler PNG pages
 visual review
 ```
 
-The current local/reference baseline covers 22 public samples and variants, 22
-input templates, 22 generated output ODTs, 22 template PDFs, 22 output PDFs,
-23 template PNG pages and 25 output PNG pages. These generated files are local
-validation artifacts, not committed permanent golden-master binaries.
-
-The next phase is not primarily about adding isolated features. It is about
-preparing the engine for more complex document composition on top of the
-completed facade and ownership boundaries established by ARCH-07.
+Generated sample outputs and visual baselines are validation artifacts. In particular, locally modified files under `samples/output/` are not normal source changes and must not be committed, restored, deleted, or regenerated unless a task explicitly concerns those artifacts.
 
 ## Development branch model
 
-The repository uses `master` as the stable public baseline.
+The repository uses `master` as the conservative stable/public line and `develop` as the integration branch for architectural development.
 
-The long-running `develop` branch is the integration branch for the next architectural development phase.
-
-Feature and refactoring work should normally branch from `develop` and return to `develop` through focused pull requests.
+Feature, architecture, refactoring, and documentation work should normally branch from `develop` and return to `develop` through focused pull requests.
 
 ```text
 master
@@ -70,261 +68,19 @@ master
   ├── architecture/*
   ├── refactor/*
   ├── feature/*
-  └── documentation/*
+  ├── product/*
+  └── docs/*
 ```
 
-A larger development milestone should be merged from `develop` to `master` only after automated tests, public sample smoke tests, representative generated ODT documents, and LibreOffice regression checks are green.
+A larger development milestone should reach `master` only after the relevant automated tests, public sample smoke tests, representative generated ODT documents, and LibreOffice regression checks are green.
 
-## Phase A — Architecture and responsibility boundaries
+## Completed foundation
 
-### ARCH-01 — Responsibility audit — COMPLETE
+### Phase A — Architecture and responsibility boundaries — COMPLETE
 
-Goal: map every responsibility currently located in `AbstractOdtTemplate`, `OdtTemplate`, and `PageLayoutOdtTemplate` before moving code.
+ARCH-01 through ARCH-07 established the structural foundation of the engine.
 
-The audit is recorded in [`architecture/ARCH-01_RESPONSIBILITY_AUDIT.md`](architecture/ARCH-01_RESPONSIBILITY_AUDIT.md).
-
-Confirmed findings include:
-
-- document/package state has no single owner;
-- package lifecycle and template-language rendering are mixed in `OdtTemplate`;
-- basic placeholder processing and structured element insertion are mixed into `AbstractOdtTemplate`;
-- style serialization still has multiple compatibility/direct paths;
-- page-layout behavior is a coherent domain responsibility but currently depends on inheritance for document access;
-- several legacy/compatibility paths require characterization before removal;
-- composition behind the existing `OdtTemplate` facade is the preferred direction.
-
-The audit confirms ARCH-02 as the first implementation milestone.
-
-### ARCH-02 — Extract ODT package / document context — COMPLETE
-
-Goal: separate physical ODT package handling from template rendering.
-
-Likely responsibilities include:
-
-```text
-ODT package
-├── template extraction
-├── temporary working directory
-├── content.xml
-├── styles.xml
-├── meta.xml
-├── META-INF/manifest.xml
-├── Pictures/
-├── ZIP rebuild
-└── cleanup
-```
-
-ARCH-02 introduced `OdtPackage` and `OdtDocumentContext` as the owners of
-package/workspace state and the core document DOMs.
-
-Completed responsibilities include:
-
-- template extraction and temporary workspace ownership;
-- `content.xml`, `styles.xml`, and `meta.xml` access through
-  `OdtDocumentContext`;
-- XML persistence;
-- manifest synchronization;
-- ZIP rebuild with ODT `mimetype` handling;
-- idempotent cleanup;
-- reset-from-source behavior for the compatible public `load()` lifecycle.
-
-Public `OdtTemplate` usage should remain unchanged during this extraction.
-
-ARCH-01 further constrains ARCH-02:
-
-- do not redesign template-language processing in this step;
-- do not solve `StyleMapper` static state in this step;
-- do not remove `AbstractOdtTemplate` yet;
-- preserve constructor, render, and save behavior;
-- add characterization/integration coverage for extraction, XML ownership, ZIP rebuild, `mimetype`, and cleanup.
-
-### ARCH-03 — Technical ODT document layer — COMPLETE
-
-ARCH-03 established and characterized the technical document layer between
-the public template facade and the physical package lifecycle. The audit is
-recorded in [`architecture/ARCH-03_DOCUMENT_CORE_AUDIT.md`](architecture/ARCH-03_DOCUMENT_CORE_AUDIT.md).
-
-#### ARCH-03A — Technical ODT document layer audit — COMPLETE
-
-The audit separated technical ODT document responsibilities from
-template-language processing and confirmed that package persistence belongs
-to `OdtPackage`, while the core XML documents belong to `OdtDocumentContext`.
-
-#### ARCH-03B — Extract metadata and page-layout services — COMPLETE
-
-Completed services:
-
-- `MetadataManager`;
-- `PageLayoutManager`;
-- public facade compatibility for `OdtTemplate` and
-  `PageLayoutOdtTemplate`.
-
-The change contract is recorded in
-[`architecture/ARCH-03B_CHANGE_CONTRACT.md`](architecture/ARCH-03B_CHANGE_CONTRACT.md).
-
-#### ARCH-03C — Document finalization boundary — COMPLETE
-
-The finalization sequence was characterized and remains orchestrated by
-`OdtTemplate`. No `DocumentFinalizer` was extracted because current style and
-image finalization still depends on process-wide static `StyleMapper` state.
-`STYLE-CONTEXT-01` is therefore a prerequisite for a sound document-scoped
-finalization boundary.
-
-The decision is recorded in
-[`architecture/ARCH-03C_FINALIZATION_DECISION.md`](architecture/ARCH-03C_FINALIZATION_DECISION.md).
-
-### ARCH-04 — Extract template-language processing — COMPLETE
-
-ARCH-04 extracted the active template-language operations behind the
-stateless `TemplateProcessor` while preserving the public `OdtTemplate`
-facade and protected compatibility seams.
-
-Completed slices include:
-
-- ARCH-04A — template-processing audit;
-- ARCH-04B — extraction design contract;
-- ARCH-04B1 — scalar replacement, normalization and scalar filters;
-- ARCH-04B2 — `nl2br` and `ul`/`ol` structural placeholders;
-- ARCH-04B3A — control-structure characterization;
-- ARCH-04B3B1 — active condition processing and evaluation;
-- ARCH-04B3B2 — active foreach block processing;
-- ARCH-04B4 — facade and compatibility final review.
-
-The public workflow remains compatible:
-
-```php
-$template->assign(...);
-$template->assignRepeating(...);
-$template->render();
-```
-
-The audit, change contract, control-structure characterization and final
-review are recorded in:
-
-- [`architecture/ARCH-04_TEMPLATE_PROCESSING_AUDIT.md`](architecture/ARCH-04_TEMPLATE_PROCESSING_AUDIT.md);
-- [`architecture/ARCH-04B_CHANGE_CONTRACT.md`](architecture/ARCH-04B_CHANGE_CONTRACT.md);
-- [`architecture/ARCH-04B3_CONTROL_STRUCTURE_CHARACTERIZATION.md`](architecture/ARCH-04B3_CONTROL_STRUCTURE_CHARACTERIZATION.md);
-- [`architecture/ARCH-04B_FINAL_REVIEW.md`](architecture/ARCH-04B_FINAL_REVIEW.md).
-
-Structured `OdtElement` insertion remains explicitly outside ARCH-04 and is
-the responsibility of ARCH-05. Formatting preservation and template-authoring
-UX remain future work under `TEMPLATE-FORMAT-PRESERVATION-01` and
-`TEMPLATE-AUTHORING-UX-01`.
-
-### ARCH-05 — Structured elements / structured insertion — COMPLETE
-
-ARCH-05 established the structured-document boundary without changing the
-public facade or claiming a universal named-object API.
-
-The milestone includes:
-
-- structured-element audit and identity/replacement semantics;
-- the distinction between constructed ODF materialization and existing native
-  template-object resolution;
-- `StructuredElementMaterializer` for constructed `OdtElement` insertion;
-- typed native target resolution through `TemplateTargetResolver`;
-- frame targets identified by `draw:name`;
-- table targets identified by `table:name`;
-- integration of the existing `replaceImageByName()` operation through typed
-  frame resolution;
-- explicit separation between target resolution and operation capability;
-- structured image resource preparation through `OdtPackage`;
-- preservation of existing public, protected, package, image, and manifest
-  compatibility behavior.
-
-The research and contract history is recorded in:
-
-- [`architecture/ARCH-05A_STRUCTURED_ELEMENTS_AUDIT.md`](architecture/ARCH-05A_STRUCTURED_ELEMENTS_AUDIT.md);
-- [`architecture/ARCH-05B_ELEMENT_IDENTITY_AND_REPLACEMENT_SEMANTICS.md`](architecture/ARCH-05B_ELEMENT_IDENTITY_AND_REPLACEMENT_SEMANTICS.md);
-- [`architecture/ARCH-05C_CHANGE_CONTRACT.md`](architecture/ARCH-05C_CHANGE_CONTRACT.md).
-
-The following remain future work and were not implemented by ARCH-05:
-
-- public generic named-object APIs;
-- named text-box replacement;
-- table-target mutation;
-- whole-object replacement or removal;
-- Exact Clone, Template Clone / Template Instance, and Structural Clone;
-- generalized drawing-object operations or capability frameworks.
-
-### ARCH-06 — Reassess `AbstractOdtTemplate` — COMPLETE
-
-ARCH-06 reassessed the inheritance and compatibility role of
-`AbstractOdtTemplate` after ARCH-02 through ARCH-05 extracted the major package,
-document, template-language, and structured-element responsibilities.
-
-The milestone established that:
-
-- `AbstractOdtTemplate` is formally abstract but does not currently express a
-  meaningful mandatory subclass contract;
-- new abstract methods must not be invented merely to justify the class name;
-- current inherited public behavior and protected dispatch are real
-  compatibility surfaces;
-- authoritative package/document state belongs to `OdtPackage` and
-  `OdtDocumentContext`;
-- historical DOM/path properties are compatibility mirrors, not independent
-  owners;
-- `OdtTemplate::documentContext()` is already the appropriate protected context
-  boundary;
-- retaining `AbstractOdtTemplate` as a compatibility base is a migration state,
-  not the desired permanent structural solution.
-
-ARCH-06C characterized protected polymorphism, lifecycle behavior and state
-mirrors. ARCH-06D confirmed that no production change was justified merely to
-make the existing state-access boundary look different.
-
-The milestone history is recorded in:
-
-- [`architecture/ARCH-06A_ABSTRACT_ODT_TEMPLATE_AUDIT.md`](architecture/ARCH-06A_ABSTRACT_ODT_TEMPLATE_AUDIT.md);
-- [`architecture/ARCH-06B_BASE_CLASS_CONTRACT.md`](architecture/ARCH-06B_BASE_CLASS_CONTRACT.md);
-- [`architecture/ARCH-06C_COMPATIBILITY_CHARACTERIZATION.md`](architecture/ARCH-06C_COMPATIBILITY_CHARACTERIZATION.md);
-- [`architecture/ARCH-06D_FACADE_STATE_ACCESS_BOUNDARY.md`](architecture/ARCH-06D_FACADE_STATE_ACCESS_BOUNDARY.md);
-- [`architecture/ARCH-06_CLOSEOUT.md`](architecture/ARCH-06_CLOSEOUT.md).
-
-### ARCH-07 — Template facade / base structure consolidation — COMPLETE
-
-ARCH-07 is the final structural-foundation milestone before Phase B.
-
-Goal: leave the engine with a coherent, presentable and explainable template
-facade/base structure before document defaults, document-scoped style state,
-asset state and higher-level document composition are built on top of it.
-
-ARCH-07 must decide and implement, in small characterized slices, the final
-structural direction of the current inheritance arrangement. It must examine:
-
-- whether `AbstractOdtTemplate` should be removed from the active architecture;
-- whether any remaining common base type has genuine semantics;
-- which responsibilities belong directly to `OdtTemplate` as the public
-  facade;
-- which responsibilities belong to composed services;
-- which inherited public methods remain part of the supported facade;
-- which protected seams are intentional extension points and which are
-  migration-only compatibility seams;
-- which historical state mirrors and legacy helpers can be retired safely;
-- which pre-1.0 compatibility changes are acceptable and how they are
-  documented.
-
-ARCH-06C is the characterization baseline for these decisions. ARCH-07 must not
-preserve inheritance solely because it exists, but it must also not discard
-observable behavior without an explicit migration decision.
-
-ARCH-07 remains structural work. It must not absorb document defaults, style
-context, asset-context redesign, named-object feature work, cloning, or page
-structure merely because related code is currently located in the template
-hierarchy.
-
-ARCH-07 was completed through the following bounded slices:
-
-- ARCH-07A — template-facade end-state audit;
-- ARCH-07B — structural change contract;
-- ARCH-07C — migration-gap characterization;
-- ARCH-07D — concrete `OdtTemplate` facade ownership;
-- ARCH-07E — processing and structured-facade migration;
-- ARCH-07F — state-mirror migration;
-- ARCH-07G — PageLayout compatibility resolution;
-- ARCH-07H — complete removal of `AbstractOdtTemplate`.
-
-The resulting structure is:
+The resulting active structure is centered on composition:
 
 ```text
 OdtTemplate
@@ -340,20 +96,96 @@ OdtTemplate
 PageLayoutOdtTemplate extends OdtTemplate
 ```
 
-`AbstractOdtTemplate` is no longer part of the active source tree. Package,
-document DOM, and template-session state have distinct owners; the historical
-DOM/path mirrors and `synchronizePackageState()` were removed. Core public
-workflows remain covered by the full test suite and public sample validation.
-The removal of the old base type, its type identity, direct subclassing, and
-the unused `ensureTableCellStyleNodesExist()` helper are deliberate documented
-pre-1.0 compatibility changes. Style and finalization helpers remain a
-temporary implementation boundary until `STYLE-CONTEXT-01`.
+Important outcomes include:
 
-## Phase B — Document-scoped defaults, style and asset state
+- package/workspace ownership is separated from template-language processing;
+- document DOM ownership is explicit;
+- metadata and page-layout responsibilities are extracted;
+- template-language processing is behind `TemplateProcessor`;
+- constructed ODF materialization is separated from existing native template-object resolution;
+- `AbstractOdtTemplate` has been removed from the active architecture;
+- historical state mirrors were removed;
+- style/finalization state remains the main known temporary architectural boundary.
+
+The detailed ARCH-01 through ARCH-07 audit, characterization, change-contract, and closeout documents remain the authoritative history for those decisions.
+
+### Product / structured-document milestone — COMPLETE
+
+The PRODUCT-01 / SECTION-03 development cycle established a practical addressable document model on top of the architecture foundation.
+
+The completed milestone includes:
+
+- non-mutating template-structure inspection;
+- native named section discovery and typed section targets;
+- bookmark/range understanding and identity handling;
+- exact native section cloning;
+- deterministic rewriting of section, bookmark, table, frame, and template-expression identities where required by instantiation;
+- local data binding inside cloned section ownership boundaries;
+- nested section lookup and nested instantiation;
+- collection instantiation with terminal prototype removal;
+- transactional behavior and rollback for collection operations;
+- structure-preserving scalar expression replacement;
+- safe normalization of proven repairable fragmented expressions;
+- preservation of ODF whitespace and authored literal spaces;
+- practical authoring guidance;
+- the Sample 25 complete CV showcase.
+
+This milestone changes the starting point for future work: sections are no longer merely a possible future document-structure primitive. They are an implemented structured-template capability with defined cloning, instantiation, nesting, and collection semantics.
+
+## Strategic development direction
+
+The next phase is not a feature checklist. The engine should gain capabilities in layers while preserving native ODF semantics and keeping LibreOffice useful as the visual template designer.
+
+The current preferred sequence is:
+
+```text
+STYLE-CONTEXT-01
+        ↓
+DOCUMENT-DEFAULTS-01
+        ↓
+layout-critical ODF capabilities
+        ├── FRAME-LAYOUT-01
+        └── TABLE-LAYOUT-* / TABLE-CELL-01
+        ↓
+template authoring / format-preservation re-audit
+        ↓
+higher document structure and page flow
+        ↓
+named-object operations and dynamic content
+        ↓
+document import / round-trip workflows
+```
+
+This order is a planning preference, not a promise that every milestone must be completed before any smaller independent slice can proceed. Findings from one milestone may justify reordering later work.
+
+## Phase B — Document-scoped style, defaults, and asset state
+
+### STYLE-CONTEXT-01 — Document-scoped style context — PREFERRED NEXT ARCHITECTURE BLOCK
+
+Goal: replace process-wide explicit style-registration state with document-scoped ownership while preserving compatibility where practical.
+
+This work is now preferred before `DOCUMENT-DEFAULTS-01` because document defaults should not be built on top of mutable process-wide style state.
+
+Expected investigation and implementation slices include:
+
+1. audit current explicit style-registration and finalization paths;
+2. characterize cross-document behavior and compatibility surfaces;
+3. define document ownership and lifecycle semantics;
+4. introduce an internal document-scoped style context;
+5. integrate element/materializer/finalization paths incrementally;
+6. preserve legacy `StyleMapper` entry points through compatibility facades where justified;
+7. add multi-document regression coverage.
+
+Do not solve this by resetting static state in constructors. The goal is ownership, not a timing-dependent cleanup workaround.
+
+Related backlog:
+
+- `STYLE-CONTEXT-01`
+- `STYLE-API-02`
 
 ### DOCUMENT-DEFAULTS-01 — Document-level default settings
 
-Goal: allow an application to define document-wide defaults once instead of repeating the same style and layout options on every generated element.
+Goal: allow applications to define document-wide defaults once instead of repeating common style and layout options on every generated element.
 
 Representative defaults include:
 
@@ -376,32 +208,7 @@ Page defaults
 └── orientation
 ```
 
-The design should distinguish document defaults from explicit element styles. Explicit element options must continue to override defaults.
-
-A possible future usage might look conceptually like:
-
-```php
-$template->setDocumentDefaults([
-    'text' => [
-        'font-family' => 'Arial',
-        'font-size' => '10pt',
-    ],
-    'paragraph' => [
-        'line-height' => '110%',
-        'margin-bottom' => '0.08cm',
-    ],
-    'page' => [
-        'margin-top' => '1cm',
-        'margin-right' => '1cm',
-        'margin-bottom' => '1cm',
-        'margin-left' => '1cm',
-    ],
-]);
-```
-
-This example is illustrative only; the public API is not fixed by this roadmap entry.
-
-The important semantics are:
+The important semantic order is:
 
 ```text
 document defaults
@@ -411,22 +218,7 @@ element-specific style
 explicit local override
 ```
 
-The resulting values should be resolved in a document-scoped context rather than through new process-wide static defaults.
-
-This milestone should be coordinated with ARCH-02 and STYLE-CONTEXT-01 so that default settings have a natural document owner. It should not be implemented by adding more global state to `StyleMapper`.
-
-The long-term purpose is larger than convenience: document-wide defaults are a prerequisite for treating the engine as a coherent document composition system and for allowing multiple renderers to consume the same visual/document semantics later.
-
-### STYLE-CONTEXT-01 — Document-scoped style context
-
-Replace process-wide explicit style registration with document-scoped state while preserving compatibility with existing public registration behavior where practical.
-
-This work should be coordinated with the architectural extraction rather than implemented as an isolated static reset.
-
-Related backlog:
-
-- `STYLE-CONTEXT-01`
-- `STYLE-API-02`
+The exact public API remains undecided. Defaults must have a natural document owner and must not introduce new process-wide global state.
 
 ### ASSET-CONTEXT — Document-scoped asset lifecycle
 
@@ -439,165 +231,206 @@ Related backlog:
 - `TEMP-ASSET-01`
 - `SAMPLE-INFRA-01`
 
-## Phase C — Page structure and document composition
+## Phase C — Layout-critical ODF capabilities
 
-This phase introduces concepts that are larger than individual text or table elements.
+Professional documents expose layout gaps quickly. CVs remain an important practical benchmark, but the capabilities must be generic ODF features rather than CV-specific shortcuts.
+
+### FRAME-LAYOUT-01 — Unified frame positioning
+
+Goal: define consistent frame semantics across images, text boxes, and other drawing content.
+
+Research must start from real LibreOffice-authored ODF and existing engine behavior. Topics include:
+
+- anchor types;
+- horizontal and vertical position;
+- position relation/reference area;
+- wrapping;
+- size;
+- existing-template frame mutation versus constructed frames;
+- interoperability with LibreOffice and Word round-trips where relevant.
+
+`ImageElement` and `DrawTextBox` should not evolve separate incompatible positioning models.
+
+### TABLE-LAYOUT — Reliable table geometry
+
+Priority topics are:
+
+- `TABLE-LAYOUT-02` — explicit/reliable column widths;
+- `TABLE-LAYOUT-01` — explicit table width;
+- `TABLE-LAYOUT-04` — reliable relative width;
+- `TABLE-LAYOUT-03` — row/minimum height;
+- `TABLE-CELL-01` — vertical cell alignment.
+
+The existing table-column/style path must be investigated before introducing a new public API. Workarounds should not be mistaken for native ODF semantics.
+
+### Smaller layout topics
+
+The following can be taken as bounded slices when useful:
+
+- `LIST-LAYOUT-01` — list indentation;
+- `LIST-LAYOUT-02` — nested list style control;
+- `IMAGE-LAYOUT-01` — image-specific anchor/wrap/position behavior not already absorbed by the frame model.
+
+## Phase D — Template authoring and format preservation
+
+### TEMPLATE-FORMAT-PRESERVATION-01 — RE-AUDIT REQUIRED
+
+The original backlog item predates the completed template-structure work.
+
+Scalar expressions split across compatible or differently styled text nodes, bookmark markers, and authored whitespace are no longer accurately described as a generally unsolved problem. The completed projector, inspector, safe normalizer, and replacement service changed that baseline substantially.
+
+Before further implementation, re-audit the remaining active template-language paths, especially:
+
+- conditions;
+- foreach/control blocks;
+- `nl2br`;
+- `ul` / `ol` structural placeholders;
+- expressions interacting with more complex ODF boundaries.
+
+Do not reopen already solved scalar-expression behavior without evidence.
+
+### TEMPLATE-AUTHORING-UX-01 — Research and design
+
+Goal: make powerful templates understandable and practical to author in LibreOffice without turning the template syntax into a layout language.
+
+Research topics include:
+
+- naming conventions for structured template objects;
+- template validation and diagnostics;
+- inspection tooling;
+- clear distinction between simple template expressions and structured objects;
+- discoverability of section/bookmark/frame/table capabilities;
+- authoring guidance for fixed-layout versus flow-based content;
+- realistic maximum-content testing for professional templates.
+
+This milestone should begin as research/design. It must not assume that a new template syntax is required.
+
+## Phase E — Higher document structure and page flow
 
 ### DOC-STRUCTURE-01 — Page styles and master pages
 
-Goal: support explicit document/page-style concepts rather than treating page layout only as margin changes.
+Support explicit page/master-style concepts rather than treating page layout only as isolated attribute changes.
 
-Future use cases include:
+### DOC-STRUCTURE-02 — Headers and footers
 
-- first-page layout different from following pages;
-- different page styles for document sections;
-- controlled master-page transitions;
-- page-style-aware headers and footers.
+Support header/footer content tied to page/master styles.
 
-### DOC-STRUCTURE-02 — Header and footer content
+### DOC-STRUCTURE-03 — Page-flow semantics
 
-Goal: provide a reliable model for dynamic header/footer content tied to page styles or master pages.
+The section portion of the older roadmap entry has been superseded by the completed structured-section milestone.
 
-A representative target use case is:
+Future work under this heading should focus on remaining page-flow semantics such as:
 
-```text
-Page 1
-└── Header A
-
-Page 2+
-└── Header B
-```
-
-This should be designed as ODF page/master-page behavior, not as a visual workaround using normal body tables or text boxes.
-
-### DOC-STRUCTURE-03 — Sections and explicit page breaks
-
-Investigate higher-level document structures such as:
-
-- sections;
-- explicit page breaks;
+- page breaks;
 - keep-with-next;
 - keep-together;
-- controlled page-style changes.
+- page-style transitions;
+- interactions between structured content and page/master styles.
 
-The API should express semantic document intent rather than manually manipulating XML from application code.
+Any further section work should extend proven section semantics rather than restarting section discovery from scratch.
 
-## Phase D — Layout-critical existing features
+## Phase F — Named object operations and dynamic content
 
-Once the architecture provides clear ownership, revisit existing layout limitations.
+### NAMED-OBJECT-OPERATIONS-01 — Research direction
 
-### Tables
+The addressable section model suggests a broader future capability for native named template objects.
 
-Priority work:
-
-- reliable explicit table width;
-- reliable physical column widths;
-- explicit row height/minimum row height;
-- improved relative width distribution;
-- vertical cell alignment.
-
-Related backlog:
-
-- `TABLE-LAYOUT-01`
-- `TABLE-LAYOUT-02`
-- `TABLE-LAYOUT-03`
-- `TABLE-LAYOUT-04`
-- `TABLE-CELL-01`
-
-### Frames and images
-
-Priority work:
-
-- unified frame positioning model;
-- reliable text-box positioning;
-- reliable image anchors, wrapping, and positioning.
-
-Related backlog:
-
-- `FRAME-LAYOUT-01`
-- `FRAME-LAYOUT-02`
-- `IMAGE-LAYOUT-01`
-
-### Lists
-
-Priority work:
-
-- explicit indentation controls;
-- improved nested-list style control.
-
-Related backlog:
-
-- `LIST-LAYOUT-01`
-- `LIST-LAYOUT-02`
-
-## Phase E — Shared document model and additional renderers
-
-This is a longer-term direction and should not be started before the earlier responsibilities are sufficiently separated.
-
-A possible future architecture is a semantic document model consumed by more than one renderer:
+The important semantic distinction is between operations, not a single universal `replaceElementByName()` method:
 
 ```text
-Application data
-      ↓
-Document model
-      ├── Paragraph
-      ├── List
-      ├── Table
-      ├── Image
-      ├── Section
-      ├── PageBreak
-      ├── Header / Footer
-      └── PageStyle
-          │
-          ├── ODT renderer
-          └── HTML renderer
+replace content
+    → preserve the authored container/layout where possible
+
+replace object
+    → replace the complete native object
+
+clone
+    → duplicate according to object-specific identity semantics
+
+remove
+    → remove the addressed object safely
 ```
 
-The important objective is not to make ODT behave like HTML. It is to allow ODT output and browser previews to consume the same document semantics where that is useful.
+Potential addressable object families include frames, text boxes, tables, images/drawing objects, and other native objects for which ODF semantics and LibreOffice authoring provide a stable identity.
 
-### HTML preview and pagination
+The public API is intentionally undecided. Typed targets and object-specific capabilities are preferred over an unbounded generic operation that assumes every ODF object supports every mutation.
 
-A browser preview may eventually need page-aware rendering.
+### DYNAMIC-CONTENT-01 — Graphs, QR codes, and generated graphics
 
-This should not be implemented as a simplistic content counter. Actual pagination depends on rendered height, fonts, line-height, paragraphs, tables, images, margins, and header/footer geometry.
+Dynamic graphics are a use case of named-object/content replacement, not yet a separate document architecture.
 
-A future HTML renderer should therefore distinguish:
+Potential content types include:
 
-- semantic page-control hints from the document model;
-- browser-side measurement for preview pagination;
-- ODF-native pagination behavior in the ODT renderer.
+- generated images;
+- circular/profile images;
+- QR codes;
+- charts and graphs;
+- small infographics.
 
-Exact cross-renderer page equivalence should not be promised unless it can be demonstrated reliably.
+For charts/graphs, the rendering strategy remains deliberately open:
 
-## Development principles
+- SVG;
+- PNG;
+- native ODF chart structures.
 
-The following principles apply across all phases:
+Before choosing native ODF charts, inspect real LibreOffice-authored chart packages and round-trip behavior. Do not implement a chart model from specification assumptions alone.
 
-1. Preserve the current public API unless an explicit migration plan exists.
-2. Prefer composition over adding more responsibilities to large inheritance-based classes.
-3. Prefer native ODF structures over visual simulations.
-4. Keep LibreOffice responsible for stable document design where appropriate.
-5. Use PHP for dynamic structure, data, and application-driven variation.
-6. Do not add abstractions only to reduce file size; extract real responsibilities.
-7. Every architectural extraction must keep the public sample suite green.
-8. Validate non-trivial ODF changes with tests, package/XML inspection, and LibreOffice.
-9. Document known limitations rather than presenting uncertain layout behavior as guaranteed functionality.
-10. Treat `FUTURE_DEVELOPMENT.md` as the issue backlog and this roadmap as the sequencing document.
-11. Prefer document-scoped defaults and state over process-wide configuration.
-12. Explicit element settings must override document defaults predictably.
-13. Before document/style feature work expands, keep the public facade/base
-    structure semantically explainable rather than preserving misleading
-    inheritance solely for historical compatibility.
+A desirable design direction is that LibreOffice owns position, size, frame style, and surrounding page layout while PHP supplies dynamic content.
+
+## Phase G — Import, round-trip, and shared document models
+
+### DOCUMENT-IMPORT-01 — Engine document identification and structured data extraction
+
+Future workflow:
+
+```text
+engine-generated ODT
+        ↓
+identify engine/schema metadata
+        ↓
+inspect known structured objects
+        ↓
+reconstruct application data
+        ↓
+select another template
+        ↓
+render again
+```
+
+Identification and integrity are separate concerns. A full-file hash is not a suitable identity mechanism for documents that may be opened and saved by LibreOffice.
+
+No public import API is approved yet.
+
+### Shared semantic document model / additional renderers — Later
+
+A future renderer-independent semantic layer may eventually describe concepts such as:
+
+- Paragraph;
+- List;
+- Table;
+- Image;
+- Section;
+- PageBreak;
+- Header/Footer;
+- PageStyle.
+
+ODT and HTML could then consume the same semantic input where that is genuinely useful. This remains a later direction and must not force premature abstraction into the current ODT model.
 
 ## Immediate next milestone
 
-The next recommended step is:
+The preferred next architecture milestone is `STYLE-CONTEXT-01`.
 
-> **DOCUMENT-DEFAULTS-01 — Document-level default settings**
+Before implementation:
 
-ARCH-07 is complete and provides the structural foundation for Phase B. The
-next milestone should define document-scoped defaults with explicit element
-overrides, coordinating with `STYLE-CONTEXT-01` so that defaults do not add
-new process-wide state. `STYLE-CONTEXT-01` and `ASSET-CONTEXT` remain separate
-follow-up milestones and are not implicitly included in
-`DOCUMENT-DEFAULTS-01`.
+1. inspect the current `StyleMapper`, `StyleWriter`, element style registration, and finalization paths;
+2. identify active, legacy, and compatibility behavior;
+3. add or confirm characterization tests for cross-document style leakage;
+4. define document ownership and lifecycle semantics;
+5. document a change contract;
+6. implement in small slices;
+7. run focused and full automated validation;
+8. perform LibreOffice regression checks for rendering-sensitive changes.
+
+`DOCUMENT-DEFAULTS-01` follows naturally once document-scoped style ownership is sound.
+
+The exact ordering of later FRAME, TABLE, authoring, document-structure, and named-object milestones should be revisited after each major architecture block rather than treated as immutable.
