@@ -259,6 +259,9 @@ class OdtTemplate
         $paragraphStyles = method_exists($element, 'getRequiredParagraphStyles')
             ? $element->getRequiredParagraphStyles()
             : [];
+        foreach ($paragraphStyles as $name => $definition) {
+            $this->documentContext()->styleContext()->registerParagraphStyle($name, $definition);
+        }
         if ($element instanceof HasStyles) {
             $this->registerStyles($element->getStyleDefinitions());
         }
