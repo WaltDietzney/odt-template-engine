@@ -17,8 +17,15 @@ class StyleWriter
 
     /**
      * Writes all necessary styles and font declarations.
+     *
+     * The default retains the legacy static paragraph-style compatibility
+     * path. Document finalization can opt out and rely on its own
+     * document-scoped paragraph requirements.
      */
-    public static function writeAllStyles(DOMDocument $domStyles): void
+    public static function writeAllStyles(
+        DOMDocument $domStyles,
+        bool $includeLegacyParagraphStyles = true
+    ): void
     {
         $xpath = new DOMXPath($domStyles);
         $xpath->registerNamespace('office', 'urn:oasis:names:tc:opendocument:xmlns:office:1.0');
@@ -53,39 +60,41 @@ class StyleWriter
         }
 
         // === 2) PARAGRAPH Styles ===
-        foreach (StyleMapper::getParagraphStyles() as $name => $options) {
-            if (self::styleAlreadyExists($domStyles, $name, 'paragraph')) {
-                continue;
-            }
-
-            $style = $domStyles->createElement('style:style');
-            $style->setAttribute('style:name', $name);
-            $style->setAttribute('style:family', 'paragraph');
-            $style->setAttribute('style:parent-style-name', 'Standard');
-            $style->setAttribute('style:class', 'text');
-
-            $paragraphProps = $domStyles->createElement('style:paragraph-properties');
-            $mappedOptions = StyleMapper::mapParagraphStyle($options);
-
-            foreach ($mappedOptions as $key => $value) {
-                if ($key === 'style:tab-stops' && is_array($value)) {
-                    $tabStops = $domStyles->createElement('style:tab-stops');
-                    foreach ($value as $tabStop) {
-                        $tabStopElement = $domStyles->createElement('style:tab-stop');
-                        foreach ($tabStop as $attribute => $attributeValue) {
-                            $tabStopElement->setAttribute($attribute, $attributeValue);
-                        }
-                        $tabStops->appendChild($tabStopElement);
-                    }
-                    $paragraphProps->appendChild($tabStops);
+        if ($includeLegacyParagraphStyles) {
+            foreach (StyleMapper::getParagraphStyles() as $name => $options) {
+                if (self::styleAlreadyExists($domStyles, $name, 'paragraph')) {
                     continue;
                 }
 
-                $paragraphProps->setAttribute($key, $value);
-            }
+                $style = $domStyles->createElement('style:style');
+                $style->setAttribute('style:name', $name);
+                $style->setAttribute('style:family', 'paragraph');
+                $style->setAttribute('style:parent-style-name', 'Standard');
+                $style->setAttribute('style:class', 'text');
 
-            $style->appendChild($paragraphProps);
-            $officeStyles->appendChild($style);
+                $paragraphProps = $domStyles->createElement('style:paragraph-properties');
+                $mappedOptions = StyleMapper::mapParagraphStyle($options);
+
+                foreach ($mappedOptions as $key => $value) {
+                    if ($key === 'style:tab-stops' && is_array($value)) {
+                        $tabStops = $domStyles->createElement('style:tab-stops');
+                        foreach ($value as $tabStop) {
+                            $tabStopElement = $domStyles->createElement('style:tab-stop');
+                            foreach ($tabStop as $attribute => $attributeValue) {
+                                $tabStopElement->setAttribute($attribute, $attributeValue);
+                            }
+                            $tabStops->appendChild($tabStopElement);
+                        }
+                        $paragraphProps->appendChild($tabStops);
+                        continue;
+                    }
+
+                    $paragraphProps->setAttribute($key, $value);
+                }
+
+                $style->appendChild($paragraphProps);
+                $officeStyles->appendChild($style);
+            }
         }
 
         // === 3) GRAPHIC Styles ===
