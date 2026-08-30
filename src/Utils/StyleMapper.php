@@ -2,6 +2,8 @@
 
 namespace OdtTemplateEngine\Utils;
 
+use OdtTemplateEngine\Style\LegacyStyleRegistry;
+
 /**
  * StyleMapper is a utility class responsible for mapping and registering various styles (text, paragraph, and table-cell) 
  * for use in an OpenDocument Text (ODT) document. It allows you to define styles and map them to the required formatting 
@@ -15,11 +17,6 @@ class StyleMapper
     protected static array $registeredTextStyles = [];
 
     private static array $textStyles = [];
-
-    /**
-     * @var array Holds registered paragraph styles.
-     */
-    protected static array $registeredParagraphStyles = [];
 
     /**
      * @var array Holds registered table cell styles.
@@ -630,9 +627,7 @@ class StyleMapper
      */
     public static function registerParagraphStyle(string $styleName, array $style): void
     {
-        if (!isset(self::$registeredParagraphStyles[$styleName])) {
-            self::$registeredParagraphStyles[$styleName] = $style;
-        }
+        LegacyStyleRegistry::registerParagraphStyle($styleName, $style);
     }
 
 
@@ -643,7 +638,7 @@ class StyleMapper
      */
     public static function getRegisteredStyles(): array
     {
-        return array_merge(self::$registeredTextStyles, self::$registeredParagraphStyles);
+        return array_merge(self::$registeredTextStyles, LegacyStyleRegistry::paragraphStyles());
     }
 
     /**
@@ -663,7 +658,7 @@ class StyleMapper
      */
     public static function getParagraphStyles(): array
     {
-        return self::$registeredParagraphStyles;
+        return LegacyStyleRegistry::paragraphStyles();
     }
 
     /**
@@ -675,7 +670,7 @@ class StyleMapper
     {
         return [
             'text' => self::$registeredTextStyles,
-            'paragraph' => self::$registeredParagraphStyles,
+            'paragraph' => LegacyStyleRegistry::paragraphStyles(),
             'table-cell' => self::$registeredTableCellStyles,
         ];
     }
