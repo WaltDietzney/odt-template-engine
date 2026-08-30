@@ -1,10 +1,16 @@
-# STYLE-CONTEXT-01F — Finalization Audit and Decision Gate
+# STYLE-CONTEXT-01F-A — Final Style-State Inventory and Target Architecture
 
 ## Purpose
 
-This document records the evidence gathered before defining the implementation contract for STYLE-CONTEXT-01F.
+This document replaces the earlier narrow STYLE-CONTEXT-01F finalization proposal with a complete inventory of mutable style state before the remaining migration is designed.
 
-01F is expected to address style finalization and multi-document isolation. The audit deliberately separates current behavior, compatibility constraints, and unresolved decisions before implementation starts.
+STYLE-CONTEXT-01A through 01E established the document ownership boundary and introduced `StyleContext`, but they deliberately migrated only one narrow path. The project has now chosen to complete the architecture semantically rather than stop after fixing paragraph leakage.
+
+The goal is therefore stronger:
+
+> All mutable style requirements created while editing an ODT document must have an unambiguous document owner. Process-wide mutable style registries must not remain part of the active document-generation architecture.
+
+This audit is evidence and planning. It does not change runtime behavior.
 
 ## Repository baseline
 
@@ -14,239 +20,353 @@ Audit baseline:
 - commit: `13108b730b5a8ed2a89943525cbd6b89f3f47961`
 - includes STYLE-CONTEXT-01A through 01E
 
-## Current finalization path
+The audit branch is `architecture/style-context-01f-finalization-audit`.
 
-`OdtTemplate::save()` currently performs:
+## Architectural target
+
+The target ownership model is:
+
+```text
+application / element
+        ↓ declares requirement
+materialization boundary
+        ↓
+OdtDocumentContext
+        └── StyleContext
+              ├── text requirements
+              ├── paragraph requirements
+              ├── graphic requirements
+              ├── table requirements
+              ├── table-cell requirements
+              ├── font requirements
+              └── related style-resource requirements where appropriate
+        ↓
+document-aware finalization
+        ↓
+styles.xml / content.xml / package resources
+```
+
+`styles.xml` and `content.xml` remain authoritative for styles already present in the loaded ODF document. `StyleContext` should own pending/generated requirements, not duplicate the complete XML style model.
+
+`StyleMapper` should ultimately be a mapping/value-transformation utility. Mapping methods should not create document state as a side effect.
+
+Elements are producers of requirements, not owners of document-global registries.
+
+## Current save/finalization path
+
+`OdtTemplate::save()` currently combines two different models:
 
 ```text
 injectImageStyles()
-    ↓
+    ↓ reads process-wide image/fill-image registries
 StyleWriter::writeAllStyles(stylesDom)
-    ↓
+    ↓ reads process-wide text/paragraph/frame/table-cell/table registries
 adjustBulletIndentation()
     ↓
 OdtPackage::saveAs()
 ```
 
-`refresh()` also calls `StyleWriter::writeAllStyles()` before persisting and then resetting through `load()`.
+`refresh()` also invokes style writing before its existing reset behavior.
 
-`StyleWriter::writeAllStyles()` still discovers multiple pending style families through process-wide `StyleMapper` registries:
+This means the final saved document can still depend on mutable state created by unrelated elements or documents earlier in the same PHP process.
 
-- text styles;
-- legacy paragraph styles;
-- frame / graphic styles;
-- table-cell styles;
-- table styles.
+## Inventory matrix
 
-Image/fill-image styles are also still injected from process-wide `StyleMapper` registries by `OdtTemplate::injectImageStyles()` before `StyleWriter` runs.
+| Family / state | Requirement producer today | Current mutable owner | Current materialization | ODF destination | Target owner | Status / risk |
+| --- | --- | --- | --- | --- | --- | --- |
+| Paragraph styles | `Paragraph`, `RichText`, legacy callers | modern `StyleContext` plus legacy `LegacyStyleRegistry` | structured path immediately through `ensureParagraphStylesExist()`; legacy path through `StyleWriter::writeAllStyles()` | primarily `styles.xml` / `office:styles` | `StyleContext` | partially migrated; legacy ambiguity remains |
+| Text styles | `Paragraph` text parts, RichText aggregation, compatibility callers | element-local `textStyleMap` plus process-wide `StyleMapper` text registries | structured path can be written immediately by `ensureTextStylesExist()`; fallback/legacy paths register globally; `StyleWriter` also consumes globals | `styles.xml` / `office:styles` | `StyleContext` | mixed path; element-local requirements already provide a migration seam |
+| Fonts | text style mapping and writer paths | `StyleMapper::$registeredFonts`; `StyleWriter::$fontsUsed`; document DOM scan in `writeAllStyles()` | `writeAllStyles()` now scans the current DOM; older writer helpers still use process-wide caches | `styles.xml` / `office:font-face-decls` | document-owned requirements derived from document styles | mixed; current main writer is more document-local than legacy helpers |
+| Graphic / frame styles | `DrawTextBox` and frame-related elements | public process-wide `StyleMapper::$frameStyles` | `StyleWriter::writeAllStyles()` | `styles.xml` / graphic styles | `StyleContext` | active global registration occurs during construction, mutation and rendering |
+| Image graphic styles | `ImageElement` | process-wide `StyleMapper::$registeredImageStyles` | `OdtTemplate::injectImageStyles()` | `styles.xml` / `office:automatic-styles` | `StyleContext` or document-scoped graphic requirement registry | active global side effects in both `setStyle()` and `toDomNode()` |
+| Fill-image definitions | image/frame bitmap-fill paths | process-wide `StyleMapper::$registeredFillImages` | `OdtTemplate::injectImageStyles()` | `styles.xml` `draw:fill-image` plus package image resource | document context; style metadata may live under `StyleContext`, asset ownership under package/document asset lifecycle | crosses STYLE-CONTEXT and future ASSET-CONTEXT boundary; do not collapse both concerns blindly |
+| Table styles | table APIs / compatibility callers | public process-wide `StyleMapper::$tableStyles` | `StyleWriter::writeAllStyles()` | `styles.xml` / table styles | `StyleContext` | global save-time input |
+| Table-cell styles | `RichTableCell` | element-local definition plus process-wide `StyleMapper::$tableCellStyles`; a second `registeredTableCellStyles` array also exists | cells can emit style DOM directly into the target content DOM; `StyleWriter` separately consumes global table-cell registry | `content.xml` automatic styles and/or `styles.xml` depending path | document-owned requirement with ODF-aware placement | highest duplication risk; existing dual registries and dual materialization paths must be characterized, not normalized casually |
+| Table-column styles | `RichTable` column widths | no persistent registry; direct writer call | `StyleWriter::writeColumnStyles($contentDom, ...)` during `toDomNode()` | `content.xml` / `office:automatic-styles` | current document DOM is already the owner | largely document-local; not a migration target merely because it is called StyleWriter |
+| List styles | Paragraph list flags and OdtTemplate helpers | mixed constants/direct DOM behavior | direct ensure helpers in `styles.xml` and `content.xml` | both core XML documents according to path | document DOM / document-aware helper | not primarily registry leakage; must be regression-covered but should not be forced into a generic style registry |
+| Generated writer caches | `StyleWriter::writeTextStyles()` / `writeFontFaces()` | static `generatedTextStyles`, static `fontsUsed` | specialized/legacy writer helpers | `styles.xml` | no process-wide mutable cache; derive from target document/context | dangerous if reachable across documents; main `writeAllStyles()` already avoids part of this problem |
 
-Therefore paragraph-style migration alone is not equivalent to complete document-scoped style ownership across all existing style families.
+## Detailed findings
 
-## Current document-scoped paragraph path
+### 1. Paragraph styles are only partially migrated
 
-`OdtDocumentContext` owns one `StyleContext` for the lifetime of one logical editable ODT document.
+The modern structured path already follows the intended ownership direction:
 
-`StyleContext` currently owns pending paragraph requirements only.
+```text
+Paragraph / RichText
+    ↓ getRequiredParagraphStyles()
+OdtTemplate::setElement()
+    ↓
+current OdtDocumentContext::styleContext()
+```
 
-`OdtTemplate::setElement()` performs two distinct actions for structured paragraph styles:
+`StyleContext` enforces document-local idempotency and rejects same-name conflicting pending definitions.
 
-1. registers each paragraph requirement in the current document's `StyleContext`;
-2. immediately calls `ensureParagraphStylesExist()`, which writes missing paragraph styles directly into the current document's `styles.xml` DOM.
+However, `setElement()` then immediately writes those requirements to the current `styles.xml` through `ensureParagraphStylesExist()`. Therefore `StyleContext` is currently an ownership/conflict boundary, not yet the sole source consumed by save-time finalization.
 
-Thus the current `StyleContext` is an ownership and conflict boundary, but it is not yet the source consumed by save-time finalization for this path. The generated paragraph style is normally already present in the document DOM before `save()` is called.
-
-## Legacy paragraph compatibility path
-
-STYLE-CONTEXT-01E moved legacy paragraph storage out of `StyleMapper` into `LegacyStyleRegistry`, while preserving the public/static facade:
+The legacy static path remains distinct:
 
 ```text
 StyleMapper::registerParagraphStyle()
     ↓
 LegacyStyleRegistry
     ↓
-StyleMapper::getParagraphStyles()
-    ↓
 StyleWriter::writeAllStyles()
 ```
 
-The historical semantics remain deliberately process-wide and first-registration-wins.
+The process-wide leakage characterized in 01A is still intentional current behavior.
 
-The existing STYLE-CONTEXT-01A characterization proves that a legacy paragraph style registered before document A is saved is also written into a later unrelated document B in the same PHP process.
+### 2. Text styles already have a useful element-local seam
 
-This leakage is currently intentional compatibility behavior, not an accidental untested side effect.
+`Paragraph` stores generated inline text requirements in its own `textStyleMap` and exposes them through `getRequiredStyles()`. This is already close to the desired producer model.
 
-## Fundamental compatibility constraint
+Normal structured materialization can consume those requirements directly into the current document. However, `Paragraph::registerStyles()` still pushes them to `StyleMapper`, and the `toDomNode()` fallback can call `StyleMapper::registerTextStyle()` if a styled part lacks a precomputed style name.
 
-A call such as:
+This means text migration should prefer the existing requirement API and characterize whether the fallback is reachable before removing it.
+
+### 3. Font mapping is not pure
+
+`StyleMapper::mapTextStyleOptions()` maps text options but also mutates the process-wide registered-font set when `font-family` or the monospace shortcut is encountered.
+
+That side effect violates the target role of `StyleMapper` as a pure mapping helper.
+
+At the same time, the main `StyleWriter::writeAllStyles()` font phase has already evolved in a better direction: it scans font references from the current target DOM and writes missing `font-face` declarations for that document. This is a strong candidate for preservation or extraction into document-aware finalization.
+
+The specialized `writeTextStyles()` / `writeFontFaces()` path still relies on static `generatedTextStyles` and `fontsUsed`, so its reachability and compatibility surface must be characterized before removal or migration.
+
+### 4. DrawTextBox is strongly process-global today
+
+`DrawTextBox` registers its frame style in the constructor, on every relevant fluent mutation, and again during `toDomNode()`. It writes directly to public static `StyleMapper::$frameStyles`.
+
+This is a clear violation of the desired element-producer model: constructing an element that has not yet been attached to any document mutates process-wide document-generation state.
+
+The class already exposes `getStyleDefinitions()` and `toStyleDomNode()`, so there are existing seams for a document-aware migration. FRAME-LAYOUT-01 should later build on the cleaned ownership model rather than invent another registry.
+
+### 5. ImageElement has both style and asset concerns
+
+`ImageElement::setStyle()` maps options, generates a style name, and immediately registers the image style globally. `toDomNode()` registers the style globally again.
+
+The element separately exposes image assets through `getImageAssets()`. That distinction is useful:
+
+- graphic style requirement belongs to document style ownership;
+- physical picture/resource lifecycle belongs to the document/package asset boundary.
+
+Fill-image definitions touch both. STYLE-CONTEXT should establish ownership of the style/resource requirement without prematurely redesigning the full ASSET-CONTEXT lifecycle.
+
+### 6. RichTableCell has duplicated materialization paths
+
+`RichTableCell::setStyle()` and `registerStylesAndRefresh()` register mapped table-cell styles globally. The cell also exposes `getStyleDefinitions()` and can directly create a `style:style` DOM node with `toStyleDomNode()`.
+
+`RichTable::toDomNode()` collects these cell style nodes and appends them to the target document's `office:automatic-styles`. Separately, `StyleWriter::writeAllStyles()` consumes the process-wide table-cell registry and writes table-cell styles into `styles.xml`.
+
+This is not merely an ownership issue; it is an ODF placement/duplication issue. The migration must first characterize which path is active for which APIs and preserve actual LibreOffice rendering before choosing one canonical placement.
+
+The existing `StyleMapper` also contains both `registeredTableCellStyles` and `tableCellStyles`; current active register/get behavior must be verified rather than assuming both are meaningful.
+
+### 7. RichTable column styles are already document-local
+
+`RichTable::toDomNode()` calls `StyleWriter::writeColumnStyles()` with the target DOM. The helper writes automatic table-column styles directly into that DOM and does not use a process-wide registry.
+
+This demonstrates an important rule for the migration: not every method in `StyleWriter` is architecturally wrong. The problem is process-wide mutable ownership, not the existence of ODF-writing helpers.
+
+### 8. List styles should remain ODF-aware
+
+List helpers currently ensure required structures directly in `styles.xml` and `content.xml`. Their placement is ODF-specific and they are not primarily driven by the global registries being removed.
+
+They should be covered by regression tests during finalization work, but STYLE-CONTEXT must not force them into one generic registry simply for uniformity.
+
+## Active, legacy and compatibility paths
+
+The migration must label paths explicitly rather than treating every method equally.
+
+### Clearly active / important
+
+- `OdtTemplate::setElement()` requirement collection;
+- `StyleContext` paragraph ownership;
+- `ensureTextStylesExist()` / `ensureParagraphStylesExist()` current DOM materialization;
+- `StyleWriter::writeAllStyles()` from save/finalization;
+- `OdtTemplate::injectImageStyles()`;
+- `Paragraph` local style requirement maps;
+- `ImageElement` global registration;
+- `DrawTextBox` global frame registration;
+- `RichTableCell` global registration plus direct automatic-style generation;
+- `RichTable` direct table-column generation.
+
+### Explicit compatibility / legacy
+
+- `LegacyStyleRegistry` paragraph storage;
+- static `StyleMapper` registration entry points;
+- `Paragraph::registerStyles()` and other `HasStyles::registerStyles()` methods where normal structured materialization already has requirement APIs;
+- specialized `StyleWriter::writeTextStyles()` / `writeFontFaces()` unless reachability proves otherwise.
+
+### Suspicious and requiring characterization
+
+- duplicated table-cell registries in `StyleMapper`;
+- context-free `OdtTemplate::registerStyles()` compatibility code identified in earlier audits;
+- writer static generated-style/font caches;
+- fallback registration inside `Paragraph::toDomNode()`;
+- direct public static `$frameStyles` and `$tableStyles` access.
+
+Suspicious behavior must not be fixed opportunistically during a family migration. Characterize first.
+
+## Target responsibilities
+
+### OdtDocumentContext
+
+Owns the lifetime of document-scoped mutable collaborators. It remains the semantic document boundary.
+
+### StyleContext
+
+Owns pending/generated style requirements belonging to that document. It may use separate internal registries by family; a single undifferentiated array is not required or desirable.
+
+It should enforce family-appropriate duplicate/conflict semantics without pretending all ODF style families have identical rules.
+
+### StyleMapper
+
+Target role: mapping and deterministic naming/value transformation.
+
+It should not be the authoritative owner of mutable document state. Mapping operations should become free of process-wide registration side effects.
+
+### Elements
+
+Own their own configuration and expose requirements/assets. Constructing or mutating an unattached element should not change another document's future output.
+
+### Finalization
+
+Finalization is a document operation. A finalizer may use ODF-specific writer helpers, but all pending requirements must be derived from the current document/context, not unrelated process-wide registries.
+
+The finalizer must preserve authored styles already present in the loaded DOM and merge generated requirements idempotently into the correct ODF location.
+
+## Legacy API consequence
+
+A context-free call such as:
 
 ```php
 StyleMapper::registerParagraphStyle('Example', $definition);
 ```
 
-contains no document identity.
+cannot be made truly document-scoped because no document identity is present.
 
-The STYLE-CONTEXT-01B contract already prohibits pretending that such a call can be transparently document-scoped through:
+The project must not introduce a process-global current-document pointer, constructor resets, or last-created-document semantics.
 
-- a process-global current-document pointer;
-- constructor-time resets;
-- last-created-document semantics;
-- timing-dependent ownership guesses.
+The final migration will therefore require an explicit legacy API strategy. The semantically clean direction is a document-aware registration facade, conceptually for example:
 
-Therefore eliminating legacy paragraph leakage necessarily requires an explicit compatibility decision.
-
-There is no implementation-only trick that can simultaneously guarantee all of the following:
-
-1. context-free static registration remains unchanged;
-2. the registered style is automatically materialized into the intended document;
-3. unrelated documents never see the style;
-4. no document identity is supplied anywhere.
-
-At least one of those assumptions must change.
-
-## Decision gate before implementation
-
-Before 01F implementation begins, the project must explicitly choose the fate of context-free legacy paragraph registration.
-
-The principal options are:
-
-### Option A — Preserve legacy global finalization
-
-Keep `StyleWriter::writeAllStyles()` consuming `LegacyStyleRegistry`.
-
-Consequence:
-
-- strongest backward compatibility;
-- existing leakage remains;
-- STYLE-CONTEXT-01 cannot claim complete cross-document isolation for legacy callers.
-
-### Option B — Stop automatic legacy materialization
-
-Keep the static APIs callable and keep their compatibility registry, but stop save-time finalization from importing legacy paragraph registrations into arbitrary documents.
-
-Consequence:
-
-- document isolation becomes achievable;
-- callers relying on `StyleMapper::registerParagraphStyle()` followed by `OdtTemplate::save()` lose existing behavior;
-- this is a deliberate backward-compatibility change and must be documented as such.
-
-### Option C — Introduce explicit document transfer / registration
-
-Keep legacy static storage for compatibility, but require an explicit document-aware operation to transfer selected legacy styles into one `OdtTemplate` / `OdtDocumentContext` before finalization.
-
-Consequence:
-
-- ownership becomes explicit;
-- legacy static APIs can remain available;
-- automatic historical behavior cannot remain fully transparent;
-- exact public/protected API shape would require a separately approved design and must not be invented inside 01F without review.
-
-The audit does not select one of these options automatically.
-
-## Scope problem beyond paragraphs
-
-Even after resolving legacy paragraph finalization, process-wide mutable style state still exists for other families used during save/finalization.
-
-Therefore the project must also distinguish two possible meanings of "01F complete":
-
-### Narrow 01F
-
-Complete the paragraph-style migration only:
-
-- finalization consumes document-owned paragraph requirements;
-- modern paragraph styles are proven isolated across documents;
-- legacy paragraph behavior follows the approved compatibility decision;
-- remaining global text/image/frame/table/table-cell/fill-image/font paths remain explicit follow-up work.
-
-This is the smaller, safer slice.
-
-### Full STYLE-CONTEXT closeout in 01F
-
-Migrate all remaining global style families involved in finalization into document-scoped ownership.
-
-This would touch several independently complex ODF families and would mix paragraph finalization with image/frame/table/text/font behavior.
-
-That would be a substantially larger architecture slice and conflicts with the established incremental-migration principle unless preceded by family-specific characterization.
-
-Audit recommendation: prefer the narrow paragraph-focused 01F and do not silently claim that all style families have become document-scoped. If the strategic milestone must mean complete isolation for every family, define additional STYLE-CONTEXT slices rather than expanding 01F into a rewrite.
-
-## Required paragraph finalization semantics
-
-For the modern document-aware paragraph path, the desired invariant remains:
-
-```text
-OdtDocumentContext
-    ↓ owns
-StyleContext
-    ↓ pending paragraph requirements
-finalization(documentContext)
-    ↓
-current styles.xml only
+```php
+$template->registerParagraphStyle('Example', $definition);
 ```
 
-Required behavior:
+The exact public API is not approved by this audit. It requires a dedicated compatibility/change contract. Existing static methods may remain deprecated/compatibility surfaces, but they cannot remain authoritative automatic inputs to unrelated document saves if complete isolation is claimed.
 
-- document A requirements never appear in document B;
-- document B requirements never appear in document A;
-- save order does not affect output ownership;
-- interleaved editing and saving does not cross-contaminate documents;
-- repeated save of one unchanged document is style-idempotent;
-- `load()` resets pending requirements consistently with the restored template;
-- existing template-authored styles in `styles.xml` remain authoritative document data;
-- same-name equivalent pending requirements remain idempotent;
-- same-name conflicting pending requirements remain explicit conflicts according to the existing StyleContext contract.
+## Proposed implementation sequence
 
-## Immediate materialization versus deferred finalization
+The complete semantic closeout should remain incremental.
 
-The current structured-element path writes paragraph styles to `styles.xml` immediately in `setElement()` via `ensureParagraphStylesExist()`.
+### 01F-B — Paragraph finalization and legacy paragraph contract
 
-01F must not remove that immediate write merely for architectural purity without first characterizing observable behavior between `setElement()` and `save()`.
+- make current-document paragraph requirements the authoritative finalization input;
+- characterize immediate pre-save DOM observability before changing it;
+- define the explicit compatibility fate of context-free legacy paragraph registration;
+- invert/replace the 01A leakage characterization only under an approved contract;
+- add save-order, interleaving, repeated-save and load-reset regressions.
 
-Two implementation strategies are possible:
+### 01F-C — Text styles and font requirements
 
-1. retain immediate DOM materialization and make finalization document-aware/idempotent;
-2. defer paragraph style writing until finalization and change the pre-save DOM lifecycle.
+- route local text requirements into document ownership;
+- characterize/remove global text fallback dependencies;
+- make `mapTextStyleOptions()` side-effect free;
+- preserve current document-DOM font discovery where appropriate;
+- characterize specialized writer caches before removal.
 
-The second strategy has broader behavioral implications and should not be chosen without characterization tests. The smaller compatible strategy is to preserve current immediate materialization unless evidence requires otherwise.
+### 01F-D — Graphic, frame, image and fill-image requirements
 
-## Regression tests required for 01F
+- stop unattached `DrawTextBox` / `ImageElement` instances from mutating process-wide state;
+- register graphic/image requirements at the document materialization boundary;
+- keep physical image asset lifecycle distinct from style ownership;
+- preserve rendering and prepare a clean foundation for FRAME-LAYOUT-01.
 
-At minimum, focused tests should cover:
+### 01F-E — Table and table-cell requirements
 
-1. two simultaneous documents with distinct structured paragraph styles;
-2. save A then B and assert no A-only style in B and no B-only style in A;
-3. save B then A to prove order independence;
-4. interleaved save A → save B → save A again;
-5. repeated save of one unchanged document without duplicate or missing paragraph styles;
-6. `load()` reset behavior;
-7. equivalent repeated paragraph registration;
-8. conflicting same-name document-scoped requirements;
-9. the approved legacy `StyleMapper::registerParagraphStyle()` compatibility behavior;
-10. saved `styles.xml` remains ODF-valid and contains the expected paragraph properties.
+- characterize global versus direct automatic-style paths;
+- determine correct ODF placement from current behavior and LibreOffice-authored structures;
+- migrate ownership without mixing in TABLE-LAYOUT feature work;
+- leave column geometry semantics unchanged.
 
-The existing STYLE-CONTEXT-01A leakage characterization must either:
+### 01F-F — Legacy facade and obsolete global-state removal
 
-- remain intentionally green if Option A is selected; or
-- be explicitly replaced/inverted by a new approved regression if Option B or C changes the behavior.
+- audit all remaining `StyleMapper` registration APIs and direct public static registry access;
+- define/document deprecation or document-aware replacements where needed;
+- remove process-wide mutable registries from active finalization;
+- remove obsolete writer caches only after reachability/compatibility proof.
 
-It must not simply be deleted to make the suite pass.
+### 01F-G — Full multi-document and visual closeout
 
-## Existing tests that form the preflight set
+- prove isolation across every migrated family with two or more simultaneous documents;
+- test interleaved save order and repeated saves;
+- run lifecycle/reset tests;
+- run all public samples;
+- run rendering-sensitive visual regression;
+- perform final architecture review proving that active document output no longer depends on process-wide mutable style state.
 
-The current style-context regression set includes:
+The lettering is planning terminology. Each slice should receive its own characterization/change contract before implementation.
 
-- `tests/Document/StyleContextTest.php`;
-- `tests/Integration/StyleContextCharacterizationTest.php`;
-- `tests/Integration/StyleContextElementIntegrationTest.php`;
-- `tests/Integration/StyleMapperCompatibilityTest.php`;
-- `tests/Integration/StylePipelineP2BTest.php`;
-- relevant package/lifecycle/finalization tests;
-- `tests/Integration/PublicSampleSmokeTest.php`.
+## Cross-document end-state invariant
 
-`PublicSampleSmokeTest` currently executes all 25 public sample scripts in an isolated temporary copy, validates generated ODT/ZIP structure, checks `content.xml` and `styles.xml`, applies additional Sample 25 assertions, and verifies that repository `samples/output/` was not modified.
+After STYLE-CONTEXT-01 is fully closed:
 
-## Rendering-sensitive validation
+> Operations performed on document A must not change style output of document B unless application code explicitly transfers data, an element, or a style requirement from A to B.
 
-The current roadmap defines the rendering-sensitive workflow as:
+This must hold for interleaved usage:
+
+```text
+construct A
+construct B
+edit A
+edit B
+save A
+edit A
+save B
+save A again
+```
+
+It must also hold when styled elements are constructed before attachment to either document.
+
+## Compatibility invariants during migration
+
+Unless a slice explicitly approves a behavior change:
+
+- public `OdtTemplate` APIs remain stable;
+- protected facade behavior relevant to subclasses remains stable;
+- loaded LibreOffice-authored styles remain authoritative;
+- normal single-document ODF output and rendering remain unchanged;
+- repeated `render()` / `save()` behavior remains compatible;
+- `load()` remains a reset boundary for document-scoped pending requirements;
+- `refresh()` is not redesigned incidentally;
+- `content.xml` versus `styles.xml` placement is not normalized without ODF evidence;
+- table/layout/image/frame feature semantics are not redesigned as part of ownership migration.
+
+## Test and visual-regression strategy
+
+Every family migration needs focused characterization plus the existing compatibility suite.
+
+The final closeout must include at least:
+
+- `StyleContextTest`;
+- `StyleContextCharacterizationTest`, deliberately evolved rather than silently deleted;
+- `StyleContextElementIntegrationTest`;
+- `StyleMapperCompatibilityTest` while legacy APIs remain;
+- `StylePipelineP2BTest`;
+- relevant paragraph/text/image/frame/table/list integration tests;
+- package/lifecycle/finalization tests;
+- `PublicSampleSmokeTest`;
+- full `composer test`;
+- PHP lint for `src/` and `tests/`;
+- `composer validate`;
+- `git diff --check`;
+- documentation build when docs change.
+
+`PublicSampleSmokeTest` currently executes all 25 public samples in an isolated temporary repository copy, validates their generated ODT ZIP structure and core XML, and verifies that the repository's `samples/output/` files are not changed.
+
+Rendering-sensitive validation remains:
 
 ```text
 automated tests
@@ -264,39 +384,52 @@ Poppler PNG pages
 visual review
 ```
 
-For 01F, existing correctly rendered samples should be visually unchanged. The style-ownership refactor is not intended to alter the appearance of a single correctly generated document.
+The repository documents this workflow but the audit did not find a versioned implementation of the local PDF/PNG conversion helper. Preflight reports must record the actual local command/tool used rather than inventing one.
 
-Therefore acceptance should include the existing ODT → LibreOffice → PDF → PNG visual-regression workflow for representative style-heavy samples, plus the complete public sample smoke test.
+For ownership-only slices, correctly generated single-document samples are expected to remain visually unchanged. Any visual difference must be investigated as a possible semantic change, not accepted as incidental refactoring noise.
 
-The repository documents the pipeline but this audit did not find a versioned repository script or command that implements the local PDF/PNG conversion helper. If that helper is intentionally external/local tooling, the implementation/preflight report should record the exact command used rather than inventing a repository command.
+## Non-goals of STYLE-CONTEXT semantic closeout
 
-## Non-goals for the narrow 01F recommendation
+The migration does not by itself introduce:
 
-Unless a broader contract is separately approved, 01F should not:
+- DOCUMENT-DEFAULTS-01;
+- STYLE-API-02 as a broad public styling redesign;
+- FRAME-LAYOUT-01 positioning semantics;
+- TABLE-LAYOUT width/geometry features;
+- generic named-object replacement;
+- a rewritten asset manager;
+- new list feature semantics;
+- template-format-preservation features;
+- changes to Sample 25 authoring/layout limitations.
 
-- migrate text styles;
-- migrate image or fill-image registries;
-- migrate frame/graphic styles;
-- migrate table or table-cell styles;
-- redesign font registration;
-- redesign `StyleMapper` mapping helpers;
-- redesign `refresh()` semantics;
-- introduce document defaults;
-- redesign image/frame/table APIs;
-- alter sample layouts;
-- touch `samples/output/` as source files.
+Those later strands should consume the cleaned document-scoped ownership model rather than being pulled into this refactor.
+
+## Architectural consequence for later work
+
+Completing STYLE-CONTEXT semantically reduces architectural burden in later milestones:
+
+- `DOCUMENT-DEFAULTS-01` gains a natural document owner and precedence foundation;
+- `FRAME-LAYOUT-01` can define layout semantics without inheriting global graphic-style state;
+- table layout work can focus on geometry instead of ownership leakage;
+- image/frame content replacement can reuse document-owned style/resource requirements;
+- long-running workers and multi-document processes no longer require timing-dependent global cleanup.
+
+This is why the broader migration is justified even though it requires more slices than the original narrow 01F proposal.
 
 ## Audit conclusion
 
-The repository is ready for a small finalization slice, but there is one real architecture decision that must be made before implementation:
+The repository contains enough existing seams to migrate incrementally without a rewrite:
 
-> What compatibility behavior should remain for context-free legacy `StyleMapper::registerParagraphStyle()` calls once document-scoped finalization is enforced?
+- `OdtDocumentContext` already owns `StyleContext`;
+- `Paragraph` and composite elements already expose local style requirements;
+- the main writer already derives font faces partly from the target document;
+- several elements can already expose style definitions or direct style DOM nodes;
+- table-column generation demonstrates a document-local writer path.
 
-In addition, 01F should not be described as eliminating all process-wide style state unless the remaining text/image/frame/table/table-cell/fill-image/font paths are also migrated in separately characterized work.
+The main architectural debt is not lack of ODF-writing capability. It is mixed ownership: element-local requirements, document-local requirements, direct DOM writes, legacy registries and process-wide writer caches coexist.
 
-Recommended next action:
+The approved direction is therefore:
 
-1. approve the legacy paragraph compatibility strategy;
-2. define 01F as a narrow paragraph finalization + multi-document regression slice;
-3. capture remaining global style families as explicit subsequent STYLE-CONTEXT work rather than expanding 01F opportunistically;
-4. only then issue the coding-agent implementation prompt.
+> Finish STYLE-CONTEXT-01 as a sequence of characterized family migrations until active document generation no longer depends on process-wide mutable style state.
+
+Recommended next action: define the focused change contract for **STYLE-CONTEXT-01F-B — Paragraph finalization and legacy paragraph semantics**. Do not begin text, frame/image or table migration inside that slice.
