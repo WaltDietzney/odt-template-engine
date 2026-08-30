@@ -10,6 +10,7 @@ use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\RichText;
 use OdtTemplateEngine\OdtTemplate;
 use PHPUnit\Framework\TestCase;
+use ZipArchive;
 
 final class StyleContextElementIntegrationTest extends TestCase
 {
@@ -81,6 +82,35 @@ final class StyleContextElementIntegrationTest extends TestCase
         $template->load();
 
         self::assertArrayNotHasKey($style, $template->paragraphStyles());
+    }
+
+    public function testSetElementPersistsRegisteredParagraphStyleInSavedStylesXml(): void
+    {
+        $style = '01D_Persisted_' . bin2hex(random_bytes(4));
+        $output = sys_get_temp_dir() . '/odt-style-context-element-' . bin2hex(random_bytes(6)) . '.odt';
+
+        try {
+            $template = new StyleContextInspectableTemplate($this->templatePath());
+            $template->setElement('my_list', $this->richText($style, ['margin-left' => '8cm']));
+            $template->save($output);
+
+            $archive = new ZipArchive();
+            self::assertSame(true, $archive->open($output));
+
+            try {
+                $stylesXml = $archive->getFromName('styles.xml');
+
+                self::assertIsString($stylesXml);
+                self::assertStringContainsString('style:name="' . $style . '"', $stylesXml);
+                self::assertStringContainsString('fo:margin-left="8cm"', $stylesXml);
+            } finally {
+                $archive->close();
+            }
+        } finally {
+            if (is_file($output)) {
+                unlink($output);
+            }
+        }
     }
 
     private function richText(string $style, array $options): RichText
