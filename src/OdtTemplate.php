@@ -1104,14 +1104,14 @@ class OdtTemplate
     public function save(string $outputPath): void
     {
         $this->injectImageStyles();
-        StyleWriter::writeAllStyles($this->documentContext()->stylesDom());
+        StyleWriter::writeAllStyles($this->documentContext()->stylesDom(), false);
         $this->adjustBulletIndentation();
         $this->package->saveAs($outputPath);
     }
 
     public function refresh()
     {
-        StyleWriter::writeAllStyles($this->documentContext()->stylesDom());
+        StyleWriter::writeAllStyles($this->documentContext()->stylesDom(), false);
         $this->package->persistCoreDocuments();
         $this->load();
     }

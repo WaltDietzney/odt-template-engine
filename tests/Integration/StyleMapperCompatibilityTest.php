@@ -68,7 +68,7 @@ final class StyleMapperCompatibilityTest extends TestCase
     }
 
     #[RunInSeparateProcess]
-    public function testLegacyStyleRemainsVisibleWhenASecondDocumentIsSaved(): void
+    public function testOdtTemplateFinalizationDoesNotImportLegacyParagraphStyle(): void
     {
         $style = '01E_Leak_' . bin2hex(random_bytes(4));
         StyleMapper::registerParagraphStyle($style, ['margin-left' => '7cm']);
@@ -83,7 +83,7 @@ final class StyleMapperCompatibilityTest extends TestCase
             try {
                 $styles = $archive->getFromName('styles.xml');
                 self::assertIsString($styles);
-                self::assertStringContainsString($style, $styles);
+                self::assertStringNotContainsString($style, $styles);
             } finally {
                 $archive->close();
             }

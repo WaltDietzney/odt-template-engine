@@ -29,7 +29,7 @@ final class StyleContextCharacterizationTest extends TestCase
     }
 
     #[RunInSeparateProcess]
-    public function testExplicitParagraphRegistrationLeaksIntoLaterDocumentInSameProcess(): void
+    public function testExplicitParagraphRegistrationDoesNotEnterOdtTemplateFinalization(): void
     {
         $styleName = 'StyleContextLeak_' . bin2hex(random_bytes(4));
 
@@ -38,13 +38,13 @@ final class StyleContextCharacterizationTest extends TestCase
         ]);
 
         $stylesA = $this->readStyles($this->saveUnmodifiedTemplate('A'));
-        self::assertStringContainsString($styleName, $stylesA);
+        self::assertStringNotContainsString($styleName, $stylesA);
 
         $stylesB = $this->readStyles($this->saveUnmodifiedTemplate('B'));
-        self::assertStringContainsString(
+        self::assertStringNotContainsString(
             $styleName,
             $stylesB,
-            'Current behavior: explicit StyleMapper registrations remain process-wide and are written into later documents.'
+            'OdtTemplate finalization must not import context-free legacy paragraph registrations.'
         );
     }
 
