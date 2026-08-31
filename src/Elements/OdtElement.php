@@ -67,6 +67,59 @@ abstract class OdtElement implements HasStyles
     }
 
     /**
+     * Returns frame graphic-style requirements from this element's subtree.
+     *
+     * Composite elements may override this method to expose their own
+     * requirement and still use the embedded-element convention for child
+     * requirements.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public function getFrameStyleRequirements(): array
+    {
+        return $this->collectGraphicRequirements('getFrameStyleRequirements');
+    }
+
+    /**
+     * Returns image graphic-style requirements from this element's subtree.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public function getImageStyleRequirements(): array
+    {
+        return $this->collectGraphicRequirements('getImageStyleRequirements');
+    }
+
+    /**
+     * Returns fill-image declaration requirements from this element's subtree.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public function getFillImageRequirements(): array
+    {
+        return $this->collectGraphicRequirements('getFillImageRequirements');
+    }
+
+    /**
+     * Collect one graphic requirement family from embedded elements.
+     *
+     * @param non-empty-string $method
+     * @return array<string, array<string, mixed>>
+     */
+    private function collectGraphicRequirements(string $method): array
+    {
+        $requirements = [];
+
+        foreach ($this->getEmbeddedElements() as $element) {
+            if (method_exists($element, $method)) {
+                $requirements = array_merge($requirements, $element->{$method}());
+            }
+        }
+
+        return $requirements;
+    }
+
+    /**
      * Optional: Returns the placeholder name that this element should replace.
      * For example, returns 'textblock' if it replaces {{textblock}}.
      *
@@ -113,4 +166,3 @@ abstract class OdtElement implements HasStyles
         return $styles;
     }
 }
-
