@@ -58,7 +58,7 @@ final class StyleContextTextFontCharacterizationTest extends TestCase
     }
 
     #[RunInSeparateProcess]
-    public function testMappingFontFamilyCurrentlyMutatesLegacyFontState(): void
+    public function testMappingFontFamilyIsNowFreeOfLegacyFontStateMutation(): void
     {
         $font = '01FC Mapping Font ' . bin2hex(random_bytes(3));
 
@@ -66,11 +66,11 @@ final class StyleContextTextFontCharacterizationTest extends TestCase
 
         StyleMapper::mapTextStyleOptions(['font-family' => $font]);
 
-        self::assertStringContainsString($font, StyleMapper::getRegisteredFontsXml());
+        self::assertSame('', StyleMapper::getRegisteredFontsXml());
     }
 
     #[RunInSeparateProcess]
-    public function testLegacyTextRegistrationIsConsumedByDirectWriterAndTemplateSave(): void
+    public function testLegacyTextRegistrationIsConsumedByDirectWriterButNotTemplateSave(): void
     {
         $style = '01FC_LegacyText_' . bin2hex(random_bytes(3));
         StyleMapper::setTextStyle($style, ['fo:color' => '#123456']);
@@ -86,7 +86,7 @@ final class StyleContextTextFontCharacterizationTest extends TestCase
         $template = new OdtTemplate(dirname(__DIR__, 2) . '/samples/templates/template_18_ListStyles.odt');
         $template->save($output);
 
-        self::assertStringContainsString($style, $this->readStyles($output));
+        self::assertStringNotContainsString($style, $this->readStyles($output));
     }
 
     #[RunInSeparateProcess]

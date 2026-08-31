@@ -19,6 +19,9 @@ final class StyleContext
     /** @var array<string, array<string, mixed>> */
     private array $paragraphStyles = [];
 
+    /** @var array<string, array<string, mixed>> */
+    private array $textStyles = [];
+
     /**
      * Register one pending paragraph style definition.
      *
@@ -52,10 +55,40 @@ final class StyleContext
     }
 
     /**
+     * Register one pending text style definition for this document.
+     *
+     * @param array<string, mixed> $definition
+     */
+    public function registerTextStyle(string $name, array $definition): void
+    {
+        if (!isset($this->textStyles[$name])) {
+            $this->textStyles[$name] = $definition;
+
+            return;
+        }
+
+        if ($this->textStyles[$name] === $definition) {
+            return;
+        }
+
+        throw new LogicException(sprintf(
+            'Text style "%s" is already registered with a different definition.',
+            $name
+        ));
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function textStyles(): array
+    {
+        return $this->textStyles;
+    }
+
+    /**
      * Clear pending requirements after the logical document has been reset.
      */
     public function reset(): void
     {
         $this->paragraphStyles = [];
+        $this->textStyles = [];
     }
 }

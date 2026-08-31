@@ -24,7 +24,8 @@ class StyleWriter
      */
     public static function writeAllStyles(
         DOMDocument $domStyles,
-        bool $includeLegacyParagraphStyles = true
+        bool $includeLegacyParagraphStyles = true,
+        bool $includeLegacyTextStyles = true
     ): void
     {
         $xpath = new DOMXPath($domStyles);
@@ -38,25 +39,28 @@ class StyleWriter
         }
 
         // === 1) TEXT Styles ===
-        foreach (StyleMapper::getTextStyles() as $name => $props) {
-            if (self::styleAlreadyExists($domStyles, $name, 'text')) {
-                continue;
-            }
-            $style = $domStyles->createElement('style:style');
-            $style->setAttribute('style:name', $name);
-            $style->setAttribute('style:family', 'text');
-            $style->setAttribute('style:parent-style-name', 'Standard');
-
-            $textProps = $domStyles->createElement('style:text-properties');
-            foreach ($props as $key => $value) {
-                $textProps->setAttribute($key, $value);
-                if ($key === 'style:font-name') {
-                    $textProps->setAttribute('fo:font-family', $value);
-                    self::$fontsUsed[$value] = true;
+        if ($includeLegacyTextStyles) {
+            foreach (StyleMapper::getTextStyles() as $name => $props) {
+                if (self::styleAlreadyExists($domStyles, $name, 'text')) {
+                    continue;
                 }
+
+                $style = $domStyles->createElement('style:style');
+                $style->setAttribute('style:name', $name);
+                $style->setAttribute('style:family', 'text');
+                $style->setAttribute('style:parent-style-name', 'Standard');
+
+                $textProps = $domStyles->createElement('style:text-properties');
+                foreach ($props as $key => $value) {
+                    $textProps->setAttribute($key, $value);
+                    if ($key === 'style:font-name') {
+                        $textProps->setAttribute('fo:font-family', $value);
+                        self::$fontsUsed[$value] = true;
+                    }
+                }
+                $style->appendChild($textProps);
+                $officeStyles->appendChild($style);
             }
-            $style->appendChild($textProps);
-            $officeStyles->appendChild($style);
         }
 
         // === 2) PARAGRAPH Styles ===

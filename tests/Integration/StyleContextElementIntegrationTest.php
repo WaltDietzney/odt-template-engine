@@ -24,6 +24,21 @@ final class StyleContextElementIntegrationTest extends TestCase
         self::assertSame(['margin-left' => '1cm'], $template->paragraphStyles()[$style]);
     }
 
+    public function testSetElementRegistersTextRequirementInCurrentDocument(): void
+    {
+        $template = new StyleContextInspectableTemplate($this->templatePath());
+        $textStyle = ['font-family' => '01FC Context Font', 'color' => '#123456'];
+        $element = (new RichText())->addParagraph(
+            (new Paragraph())->addText('Document-local text', $textStyle)
+        );
+        $style = array_key_first($element->getRequiredStyles());
+
+        self::assertIsString($style);
+        $template->setElement('my_list', $element);
+
+        self::assertSame([$style => $textStyle], $template->textStyles());
+    }
+
     public function testStructuredElementRequirementsAreDocumentIsolated(): void
     {
         $styleA = '01D_A_' . bin2hex(random_bytes(4));
@@ -133,6 +148,12 @@ final class StyleContextInspectableTemplate extends OdtTemplate
     public function paragraphStyles(): array
     {
         return $this->documentContext()->styleContext()->paragraphStyles();
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function textStyles(): array
+    {
+        return $this->documentContext()->styleContext()->textStyles();
     }
 
     public function appendPlaceholder(string $name): void

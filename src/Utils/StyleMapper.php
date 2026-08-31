@@ -268,7 +268,6 @@ class StyleMapper
         if (!empty($options['font-family'])) {
             $mapped['style:font-name'] = $options['font-family'];
             $mapped['fo:font-family'] = $options['font-family'];
-            self::$registeredFonts[$options['font-family']] = true;
         }
 
         // Durchgestrichen (<del>, <s>)
@@ -290,7 +289,6 @@ class StyleMapper
         if (!empty($options['monospace']) && $options['monospace'] === true) {
             $mapped['style:font-name'] = 'Courier New';
             $mapped['fo:font-family'] = 'Courier New';
-            self::$registeredFonts['Courier New'] = true;
         }
 
         return $mapped;
