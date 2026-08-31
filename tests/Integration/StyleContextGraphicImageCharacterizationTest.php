@@ -41,7 +41,7 @@ final class StyleContextGraphicImageCharacterizationTest extends TestCase
     }
 
     #[RunInSeparateProcess]
-    public function testUnattachedDrawTextBoxLeaksItsFrameStyleIntoAnUnrelatedDocument(): void
+    public function testUnattachedDrawTextBoxDoesNotLeakIntoNormalDocumentFinalization(): void
     {
         $box = new DrawTextBox('D1ForeignBox', ['background-color' => '#d101fd']);
         $style = array_key_first($box->getStyleDefinitions());
@@ -50,12 +50,11 @@ final class StyleContextGraphicImageCharacterizationTest extends TestCase
         $output = $this->saveTemplate(new OdtTemplate($this->templatePath('template_18_ListStyles.odt')));
         $styles = $this->zipEntry($output, 'styles.xml');
 
-        self::assertStringContainsString('style:name="' . $style . '"', $styles);
-        self::assertStringContainsString('fo:background-color="#d101fd"', $styles);
+        self::assertStringNotContainsString('style:name="' . $style . '"', $styles);
     }
 
     #[RunInSeparateProcess]
-    public function testUnattachedImageElementLeaksItsGraphicStyleIntoAnUnrelatedDocument(): void
+    public function testUnattachedImageElementDoesNotLeakIntoNormalDocumentFinalization(): void
     {
         $image = new ImageElement($this->imagePath(), ['width' => '2cm', 'wrap' => 'left']);
         $style = $image->getImageOptions()['style-name'];
@@ -63,12 +62,11 @@ final class StyleContextGraphicImageCharacterizationTest extends TestCase
         $output = $this->saveTemplate(new OdtTemplate($this->templatePath('template_18_ListStyles.odt')));
         $styles = $this->zipEntry($output, 'styles.xml');
 
-        self::assertStringContainsString('style:name="' . $style . '"', $styles);
-        self::assertStringContainsString('style:wrap="left"', $styles);
+        self::assertStringNotContainsString('style:name="' . $style . '"', $styles);
     }
 
     #[RunInSeparateProcess]
-    public function testInterleavedImageStylesAreVisibleInBothDocuments(): void
+    public function testInterleavedUnattachedImageStylesAreAbsentFromBothDocuments(): void
     {
         $imageA = new ImageElement($this->imagePath(), ['width' => '2cm']);
         $imageB = new ImageElement($this->imagePath(), ['width' => '7cm']);
@@ -82,8 +80,8 @@ final class StyleContextGraphicImageCharacterizationTest extends TestCase
 
         foreach ([$outputA, $outputB] as $output) {
             $styles = $this->zipEntry($output, 'styles.xml');
-            self::assertStringContainsString('style:name="' . $styleA . '"', $styles);
-            self::assertStringContainsString('style:name="' . $styleB . '"', $styles);
+            self::assertStringNotContainsString('style:name="' . $styleA . '"', $styles);
+            self::assertStringNotContainsString('style:name="' . $styleB . '"', $styles);
         }
     }
 
@@ -103,7 +101,7 @@ final class StyleContextGraphicImageCharacterizationTest extends TestCase
         $template = new OdtTemplate($this->templatePath('template_18_ListStyles.odt'));
         $image = new ImageElement($this->imagePath(), ['width' => '3cm']);
         $box = new DrawTextBox('D1RepeatedBox', ['background-color' => '#d10d1f']);
-        $template->setElement('my_list', (new \OdtTemplateEngine\Elements\RichText())->addImage($image));
+        $template->setElement('my_list', $image);
         $first = $this->saveTemplate($template);
         $second = $this->saveTemplate($template);
 
@@ -111,7 +109,7 @@ final class StyleContextGraphicImageCharacterizationTest extends TestCase
             $styles = $this->zipEntry($output, 'styles.xml');
             $dom = new DOMDocument();
             self::assertTrue($dom->loadXML($styles));
-            self::assertSame($index + 1, substr_count($styles, 'style:name="' . $image->getImageOptions()['style-name'] . '"'));
+            self::assertSame(1, substr_count($styles, 'style:name="' . $image->getImageOptions()['style-name'] . '"'));
         }
 
         // Construction itself registers the frame style even when the box is not inserted.
@@ -132,7 +130,7 @@ final class StyleContextGraphicImageCharacterizationTest extends TestCase
         self::assertStringNotContainsString('style:name="' . $style . '"', $afterRefresh);
 
         $output = $this->saveTemplate($template);
-        self::assertStringContainsString('style:name="' . $style . '"', $this->zipEntry($output, 'styles.xml'));
+        self::assertStringNotContainsString('style:name="' . $style . '"', $this->zipEntry($output, 'styles.xml'));
     }
 
     #[RunInSeparateProcess]
@@ -144,7 +142,7 @@ final class StyleContextGraphicImageCharacterizationTest extends TestCase
         $template->load();
         $output = $this->saveTemplate($template);
 
-        self::assertStringContainsString('style:name="' . $style . '"', $this->zipEntry($output, 'styles.xml'));
+        self::assertStringNotContainsString('style:name="' . $style . '"', $this->zipEntry($output, 'styles.xml'));
     }
 
     public function testRepeatedImageDomMaterializationStabilizesResolvedOptions(): void
@@ -201,7 +199,7 @@ final class StyleContextGraphicImageCharacterizationTest extends TestCase
         $output = $this->saveTemplateWithElement('test1', $box, 'frame-path');
         $styles = $this->zipEntry($output, 'styles.xml');
 
-        self::assertSame(2, substr_count($styles, 'style:name="' . $style . '"'));
+        self::assertSame(1, substr_count($styles, 'style:name="' . $style . '"'));
         self::assertStringContainsString('draw:style-name="' . $style . '"', $this->zipEntry($output, 'content.xml'));
     }
 

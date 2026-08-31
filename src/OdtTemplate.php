@@ -283,18 +283,6 @@ class OdtTemplate
             }
         }
 
-        if (method_exists($element, 'toStyleDomNode')) {
-            $stylesDom = $this->documentContext()->stylesDom();
-            $styleNode = $element->toStyleDomNode($stylesDom);
-            if ($styleNode instanceof DOMElement) {
-                $xpath = new DOMXPath($stylesDom);
-                $stylesRoot = $xpath->query('//office:automatic-styles')->item(0);
-                if ($stylesRoot) {
-                    $stylesRoot->appendChild($styleNode);
-                }
-            }
-        }
-
         $materializer = new StructuredElementMaterializer();
         $materializer->insert(
             $this->documentContext()->contentDom(),
@@ -309,6 +297,8 @@ class OdtTemplate
             },
             fn (DOMDocument $dom, string $key): bool => $this->hasPlaceholder($dom, $key)
         );
+
+        $this->adoptTopLevelGraphicRequirements($element);
     }
 
     /**
@@ -1107,14 +1097,16 @@ class OdtTemplate
     public function save(string $outputPath): void
     {
         $this->injectImageStyles();
-        StyleWriter::writeAllStyles($this->documentContext()->stylesDom(), false, false);
+        $this->injectDocumentGraphicStyles();
+        StyleWriter::writeAllStyles($this->documentContext()->stylesDom(), false, false, false);
         $this->adjustBulletIndentation();
         $this->package->saveAs($outputPath);
     }
 
     public function refresh()
     {
-        StyleWriter::writeAllStyles($this->documentContext()->stylesDom(), false, false);
+        $this->injectDocumentGraphicStyles();
+        StyleWriter::writeAllStyles($this->documentContext()->stylesDom(), false, false, false);
         $this->package->persistCoreDocuments();
         $this->load();
     }
@@ -1442,7 +1434,16 @@ class OdtTemplate
     /**
      * Write registered image styles into the authoritative styles DOM.
      */
+    /**
+     * Retained as a protected compatibility hook; active save finalization is
+     * document-owned and is performed by injectDocumentGraphicStyles().
+     */
     protected function injectImageStyles(): void
+    {
+    }
+
+    /** @deprecated Legacy implementation retained for source reference only. */
+    protected function injectLegacyImageStyles(): void
     {
         $stylesDom = $this->documentContext()->stylesDom();
         $xpath = new DOMXPath($stylesDom);
@@ -1486,6 +1487,112 @@ class OdtTemplate
             $style->appendChild($props);
             $automaticStyles->appendChild($style);
         }
+    }
+
+    /** Adopt only the element's own graphic/image requirements after materialization. */
+    private function adoptTopLevelGraphicRequirements(OdtElement $element): void
+    {
+        $styleContext = $this->documentContext()->styleContext();
+
+        if (method_exists($element, 'getFrameStyleRequirements')) {
+            foreach ($element->getFrameStyleRequirements() as $name => $definition) {
+                $styleContext->registerFrameStyle($name, $definition);
+            }
+        }
+
+        if (method_exists($element, 'getImageStyleRequirements')) {
+            foreach ($element->getImageStyleRequirements() as $name => $definition) {
+                $styleContext->registerImageStyle($name, $definition);
+            }
+        }
+
+        if (method_exists($element, 'getFillImageRequirements')) {
+            foreach ($element->getFillImageRequirements() as $name => $definition) {
+                $styleContext->registerFillImage($name, $definition);
+            }
+        }
+    }
+
+    /** Write document-owned graphic requirements using the existing ODF placement. */
+    private function injectDocumentGraphicStyles(): void
+    {
+        $stylesDom = $this->documentContext()->stylesDom();
+        $xpath = new DOMXPath($stylesDom);
+        $this->prepareNamespaces($xpath);
+        $officeStyles = $xpath->query('//office:styles')->item(0);
+        $automaticStyles = $xpath->query('//office:automatic-styles')->item(0);
+        $styleContext = $this->documentContext()->styleContext();
+
+        if ($officeStyles) {
+            foreach ($styleContext->frameStyles() as $name => $properties) {
+                $this->appendGraphicStyleIfMissing($stylesDom, $xpath, $officeStyles, $name, 'Frame', $properties);
+            }
+        }
+
+        if ($automaticStyles) {
+            foreach ($styleContext->imageStyles() as $name => $properties) {
+                $this->appendGraphicStyleIfMissing($stylesDom, $xpath, $automaticStyles, $name, 'Standard', $properties);
+            }
+        }
+
+        if ($officeStyles) {
+            foreach ($styleContext->fillImages() as $name => $definition) {
+                if ($xpath->query("//draw:fill-image[@draw:name='$name']")->length > 0) {
+                    continue;
+                }
+                $fillImage = $stylesDom->createElement('draw:fill-image');
+                $fillImage->setAttribute('draw:name', $definition['name'] ?? $name);
+                $fillImage->setAttribute('xlink:href', 'Pictures/' . ($definition['filename'] ?? basename((string) ($definition['path'] ?? ''))));
+                $fillImage->setAttribute('xlink:type', 'simple');
+                $fillImage->setAttribute('xlink:show', 'embed');
+                $fillImage->setAttribute('xlink:actuate', 'onLoad');
+                $officeStyles->insertBefore($fillImage, $officeStyles->firstChild);
+            }
+        }
+    }
+
+    private function appendGraphicStyleIfMissing(
+        DOMDocument $dom,
+        DOMXPath $xpath,
+        DOMElement $parent,
+        string $name,
+        string $parentStyle,
+        array $properties
+    ): void {
+        foreach ($dom->getElementsByTagName('*') as $existingStyle) {
+            if (!$existingStyle instanceof DOMElement
+                || !in_array($existingStyle->localName, ['style', 'style:style'], true)) {
+                continue;
+            }
+            $existingName = $this->graphicStyleAttribute($existingStyle, 'style:name', 'name');
+            $existingFamily = $this->graphicStyleAttribute($existingStyle, 'style:family', 'family');
+            if ($existingName === $name && $existingFamily === 'graphic') {
+                return;
+            }
+        }
+        $style = $dom->createElement('style:style');
+        $style->setAttribute('style:name', $name);
+        $style->setAttribute('style:family', 'graphic');
+        $style->setAttribute('style:parent-style-name', $parentStyle);
+        $graphicProperties = $dom->createElement('style:graphic-properties');
+        foreach ($properties as $key => $value) {
+            if (is_scalar($value)) {
+                $graphicProperties->setAttribute($key, (string) $value);
+            }
+        }
+        $style->appendChild($graphicProperties);
+        $parent->appendChild($style);
+    }
+
+    private function graphicStyleAttribute(DOMElement $element, string $qualifiedName, string $localName): string
+    {
+        foreach ($element->attributes as $attribute) {
+            if ($attribute->nodeName === $qualifiedName || $attribute->localName === $localName) {
+                return $attribute->nodeValue;
+            }
+        }
+
+        return '';
     }
 
     protected function adjustBulletIndentation(): void

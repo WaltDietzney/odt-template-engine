@@ -8,6 +8,13 @@ use DOMNode;
 
 class CircularImageElement extends ImageElement
 {
+    private string $fillImageName = '';
+
+    /** @var array<string, mixed> */
+    private array $circularStyleOptions = [];
+
+    private string $circularStyleName = '';
+
     public function __construct(string $imagePath, array $options = [])
     {
         parent::__construct($imagePath, $options);
@@ -23,10 +30,7 @@ class CircularImageElement extends ImageElement
         $fillImageName = 'cv_photo_' . pathinfo($this->filename, PATHINFO_FILENAME);
 
         // Register the fill-image (creates <draw:fill-image> in styles.xml)
-        \OdtTemplateEngine\Utils\StyleMapper::registerFillImage(
-            $fillImageName,
-            $this->imagePath
-        );
+        $this->fillImageName = $fillImageName;
 
         // Register a graphic style with bitmap fill referencing the fill-image by name
         $styleOptions = [
@@ -38,7 +42,8 @@ class CircularImageElement extends ImageElement
             'draw:stroke' => 'none',
         ];
         $styleName = \OdtTemplateEngine\Utils\StyleMapper::generateStyleName($styleOptions);
-        \OdtTemplateEngine\Utils\StyleMapper::registerImageStyle($styleName, $styleOptions);
+        $this->circularStyleName = $styleName;
+        $this->circularStyleOptions = $styleOptions;
 
         // Create the draw:custom-shape element
         $shape = $dom->createElement('draw:custom-shape');
@@ -67,6 +72,30 @@ class CircularImageElement extends ImageElement
         $shape->appendChild($geo);
 
         return $shape;
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function getImageStyleRequirements(): array
+    {
+        if ($this->circularStyleName === '') {
+            return [];
+        }
+
+        return [$this->circularStyleName => $this->circularStyleOptions];
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function getFillImageRequirements(): array
+    {
+        if ($this->fillImageName === '') {
+            return [];
+        }
+
+        return [$this->fillImageName => [
+            'name' => $this->fillImageName,
+            'path' => $this->imagePath,
+            'filename' => $this->filename,
+        ]];
     }
 
     /**

@@ -25,7 +25,8 @@ class StyleWriter
     public static function writeAllStyles(
         DOMDocument $domStyles,
         bool $includeLegacyParagraphStyles = true,
-        bool $includeLegacyTextStyles = true
+        bool $includeLegacyTextStyles = true,
+        bool $includeLegacyFrameStyles = true
     ): void
     {
         $xpath = new DOMXPath($domStyles);
@@ -102,7 +103,7 @@ class StyleWriter
         }
 
         // === 3) GRAPHIC Styles ===
-        foreach (StyleMapper::getFrameStyles() as $name => $props) {
+        foreach ($includeLegacyFrameStyles ? StyleMapper::getFrameStyles() : [] as $name => $props) {
             if (self::styleAlreadyExists($domStyles, $name, 'graphic')) {
                 continue;
             }
