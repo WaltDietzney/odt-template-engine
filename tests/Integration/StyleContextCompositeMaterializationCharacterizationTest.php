@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OdtTemplateEngine\Tests\Integration;
 
 use DOMDocument;
+use OdtTemplateEngine\Elements\CircularImageElement;
 use OdtTemplateEngine\Elements\DrawTextBox;
 use OdtTemplateEngine\Elements\ImageElement;
 use OdtTemplateEngine\Elements\ListElement;
@@ -107,6 +108,48 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
 
         self::assertStringContainsString('text:style-name="' . $textStyleName . '"', $content);
         self::assertStringNotContainsString('style:name="' . $textStyleName . '"', $styles);
+    }
+
+    public function testParagraphCircularImageCurrentStyleAndResourcePropagation(): void
+    {
+        $image = new CircularImageElement(self::imagePath(), ['width' => '3cm', 'height' => '3cm']);
+        $template = new OdtTemplate($this->templatePath('template_18_ListStyles.odt'));
+        $template->setElement('my_list', (new Paragraph())->addElement($image));
+        $output = $this->save($template, 'paragraph-circular-image');
+
+        $content = $this->entry($output, 'content.xml');
+        $styles = $this->entry($output, 'styles.xml');
+        $manifest = $this->entry($output, 'META-INF/manifest.xml');
+        $imageStyleName = (string) array_key_first($image->getImageStyleRequirements());
+        $fillImageName = (string) array_key_first($image->getFillImageRequirements());
+
+        self::assertStringContainsString('draw:custom-shape', $content);
+        self::assertSame(1, substr_count($styles, 'style:name="' . $imageStyleName . '"'));
+        self::assertSame(1, substr_count($styles, 'draw:name="' . $fillImageName . '"'));
+        self::assertTrue($this->contains($output, 'Pictures/WaltDietzney.png'));
+        self::assertStringContainsString('Pictures/WaltDietzney.png', $manifest);
+    }
+
+    public function testDrawTextBoxCircularImageCurrentStyleAndResourcePropagation(): void
+    {
+        $image = new CircularImageElement(self::imagePath(), ['width' => '3cm', 'height' => '3cm']);
+        $box = (new DrawTextBox('TextBoxCircularImage', ['background-color' => '#d5f5e3']))
+            ->addElement($image);
+        $template = new OdtTemplate($this->templatePath('template_18_ListStyles.odt'));
+        $template->setElement('my_list', $box);
+        $output = $this->save($template, 'textbox-circular-image');
+
+        $content = $this->entry($output, 'content.xml');
+        $styles = $this->entry($output, 'styles.xml');
+        $manifest = $this->entry($output, 'META-INF/manifest.xml');
+        $imageStyleName = (string) array_key_first($image->getImageStyleRequirements());
+        $fillImageName = (string) array_key_first($image->getFillImageRequirements());
+
+        self::assertStringContainsString('draw:custom-shape', $content);
+        self::assertStringNotContainsString('style:name="' . $imageStyleName . '"', $styles);
+        self::assertStringNotContainsString('draw:name="' . $fillImageName . '"', $styles);
+        self::assertFalse($this->contains($output, 'Pictures/WaltDietzney.png'));
+        self::assertStringNotContainsString('Pictures/WaltDietzney.png', $manifest);
     }
 
     /**

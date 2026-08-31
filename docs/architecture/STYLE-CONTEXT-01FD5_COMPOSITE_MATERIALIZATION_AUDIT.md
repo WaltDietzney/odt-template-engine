@@ -109,10 +109,21 @@ the referenced generated style is present exactly once in `styles.xml`.
 | nested `ListElement -> ListElement -> Paragraph -> ImageElement` | yes | no | yes | yes |
 | `RichTable -> RichTableCell -> Paragraph -> ImageElement` | yes | no | no | no |
 | `RichTable -> RichTableCell -> RichText -> ImageElement` | yes | no | no | no |
+| `Paragraph -> CircularImageElement` | yes (`draw:custom-shape`) | yes (image and fill-image) | yes | yes |
+| `DrawTextBox -> CircularImageElement` | yes (`draw:custom-shape`) | no (nested image and fill-image) | no | no |
 
 The matrix separates node materialization from requirement/resource
 propagation. A nested node can be present and valid while its style or package
 resource is absent.
+
+For `Paragraph -> CircularImageElement`, the paragraph's shared embedded-child
+storage reaches the current graphic requirement and asset paths. The native
+custom shape, generated image graphic style, `draw:fill-image` declaration,
+bitmap, and manifest entry are all present. For
+`DrawTextBox -> CircularImageElement`, the textbox renders the custom shape,
+but its private `$paragraphs` child storage is not exposed by the current
+graphic or asset collectors; the nested style declarations and physical
+resource are absent.
 
 An additional characterization shows that a styled paragraph inside a
 `DrawTextBox` emits a `text:style-name` reference, but the corresponding text
@@ -162,7 +173,11 @@ this; it does not implement nested resource propagation.
 ### Element-specific ODF semantics
 
 These responsibilities are localized in their concrete elements and should
-remain semantically close to them:
+remain semantically close to them. The elements retain native ODF semantic
+competence, but the final placement of that competence is intentionally open
+for the neutral A/B/C evaluation below: it may remain in each element's
+`toDomNode()`, move to an element-specific collaborator, or use shared
+materialization mechanics around the element semantics.
 
 * `Paragraph`: `text:p`, spans, breaks, tabs, list wrapping, and embedded
   insertion order;
