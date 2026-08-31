@@ -62,6 +62,13 @@ class OdtTemplate
      */
     protected array $repeatStack = [];   // Repeating structures (foreach data)
 
+    /**
+     * Whether the legacy assign/render path materialized a structured element.
+     * This enables its explicit compatibility finalization without affecting
+     * the document-owned setElement() path.
+     */
+    private bool $legacyStructuredValuesMaterialized = false;
+
     /** @var list<string> */
     private array $log = [];
 
@@ -113,6 +120,7 @@ class OdtTemplate
     public function load(): void
     {
         $this->package->resetFromTemplate();
+        $this->legacyStructuredValuesMaterialized = false;
         $this->prepareLoadedTemplate();
     }
 
@@ -314,6 +322,7 @@ class OdtTemplate
         $scalarValues = [];
         foreach ($values as $key => $value) {
             if ($value instanceof OdtElement) {
+                $this->legacyStructuredValuesMaterialized = true;
                 $this->replacePlaceholderWithDom($dom, (string) $key, $value->toDomNode($dom));
             } else {
                 $scalarValues[(string) $key] = $value;
@@ -1098,7 +1107,12 @@ class OdtTemplate
     {
         $this->injectImageStyles();
         $this->injectDocumentGraphicStyles();
-        StyleWriter::writeAllStyles($this->documentContext()->stylesDom(), false, false, false);
+        StyleWriter::writeAllStyles(
+            $this->documentContext()->stylesDom(),
+            false,
+            false,
+            $this->legacyStructuredValuesMaterialized
+        );
         $this->adjustBulletIndentation();
         $this->package->saveAs($outputPath);
     }
@@ -1440,6 +1454,9 @@ class OdtTemplate
      */
     protected function injectImageStyles(): void
     {
+        if ($this->legacyStructuredValuesMaterialized) {
+            $this->injectLegacyImageStyles();
+        }
     }
 
     /** @deprecated Legacy implementation retained for source reference only. */
