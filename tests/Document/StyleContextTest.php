@@ -34,6 +34,28 @@ final class StyleContextTest extends TestCase
         $context->registerParagraphStyle('Heading', ['font-weight' => 'normal']);
     }
 
+    public function testEquivalentTextRegistrationIsIdempotent(): void
+    {
+        $context = new StyleContext();
+        $definition = ['fo:color' => '#123456'];
+
+        $context->registerTextStyle('Inline', $definition);
+        $context->registerTextStyle('Inline', $definition);
+
+        self::assertSame(['Inline' => $definition], $context->textStyles());
+    }
+
+    public function testConflictingTextRegistrationIsRejected(): void
+    {
+        $context = new StyleContext();
+        $context->registerTextStyle('Inline', ['fo:color' => '#123456']);
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('Text style "Inline" is already registered with a different definition.');
+
+        $context->registerTextStyle('Inline', ['fo:color' => '#654321']);
+    }
+
     public function testTwoDocumentsOwnIndependentStyleContexts(): void
     {
         $documentA = $this->documentContext();
@@ -52,6 +74,7 @@ final class StyleContextTest extends TestCase
         $document = $this->documentContext();
         $styleContext = $document->styleContext();
         $styleContext->registerParagraphStyle('Temporary', ['font-style' => 'italic']);
+        $styleContext->registerTextStyle('TemporaryInline', ['fo:color' => '#123456']);
 
         $document->replaceCoreDocuments(
             $this->dom('<office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"/>'),
@@ -61,6 +84,7 @@ final class StyleContextTest extends TestCase
 
         self::assertSame($styleContext, $document->styleContext());
         self::assertSame([], $document->styleContext()->paragraphStyles());
+        self::assertSame([], $document->styleContext()->textStyles());
     }
 
     private function documentContext(): OdtDocumentContext
