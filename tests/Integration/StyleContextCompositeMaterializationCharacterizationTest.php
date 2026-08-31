@@ -93,7 +93,7 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
         );
     }
 
-    public function testDrawTextBoxNestedParagraphTextStyleIsReferencedButNotCollected(): void
+    public function testDrawTextBoxNestedParagraphTextStyleIsCollectedTransitively(): void
     {
         $paragraph = (new Paragraph())->addText('nested', ['bold' => true]);
         $box = (new DrawTextBox('TextBoxStyledParagraph', ['background-color' => '#d5f5e3']))
@@ -107,7 +107,7 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
         $textStyleName = (string) array_key_first($paragraph->getRequiredStyles());
 
         self::assertStringContainsString('text:style-name="' . $textStyleName . '"', $content);
-        self::assertStringNotContainsString('style:name="' . $textStyleName . '"', $styles);
+        self::assertStringContainsString('style:name="' . $textStyleName . '"', $styles);
     }
 
     public function testParagraphCircularImageCurrentStyleAndResourcePropagation(): void
@@ -146,8 +146,8 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
         $fillImageName = (string) array_key_first($image->getFillImageRequirements());
 
         self::assertStringContainsString('draw:custom-shape', $content);
-        self::assertStringNotContainsString('style:name="' . $imageStyleName . '"', $styles);
-        self::assertStringNotContainsString('draw:name="' . $fillImageName . '"', $styles);
+        self::assertSame(1, substr_count($styles, 'style:name="' . $imageStyleName . '"'));
+        self::assertSame(1, substr_count($styles, 'draw:name="' . $fillImageName . '"'));
         self::assertFalse($this->contains($output, 'Pictures/WaltDietzney.png'));
         self::assertStringNotContainsString('Pictures/WaltDietzney.png', $manifest);
     }
@@ -188,7 +188,7 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
                     $imageElement = $image();
                     return [
                         (new RichText())->addParagraph((new Paragraph())->addElement($imageElement)),
-                        [self::materializedImageStyleName($imageElement) => false],
+                        [self::materializedImageStyleName($imageElement) => true],
                         true,
                     ];
                 },
@@ -199,7 +199,7 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
                 'RichText -> direct ImageElement',
                 static function () use ($image): array {
                     $imageElement = $image();
-                    return [(new RichText())->addElement($imageElement), [self::materializedImageStyleName($imageElement) => false], true];
+                    return [(new RichText())->addElement($imageElement), [self::materializedImageStyleName($imageElement) => true], true];
                 },
                 false,
                 false,
@@ -208,7 +208,7 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
                 'RichText -> Paragraph -> DrawTextBox',
                 static function (): array {
                     $box = new DrawTextBox('RichTextBox', ['background-color' => '#d5f5e3']);
-                    return [(new RichText())->addParagraph((new Paragraph())->addElement($box)), [self::frameStyleName($box) => false], false];
+                    return [(new RichText())->addParagraph((new Paragraph())->addElement($box)), [self::frameStyleName($box) => true], false];
                 },
                 false,
                 false,
@@ -229,7 +229,7 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
                     $imageElement = $image();
                     $box = (new DrawTextBox('TextBoxImage', ['background-color' => '#d5f5e3']))
                         ->addElement($imageElement);
-                    return [$box, [self::frameStyleName($box) => true, self::materializedImageStyleName($imageElement) => false], true];
+                    return [$box, [self::frameStyleName($box) => true, self::materializedImageStyleName($imageElement) => true], true];
                 },
                 false,
                 false,
@@ -240,7 +240,7 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
                     $imageElement = $image();
                     $box = (new DrawTextBox('TextBoxRichImage', ['background-color' => '#d5f5e3']))
                         ->addElement((new RichText())->addImage($imageElement));
-                    return [$box, [self::frameStyleName($box) => true, self::materializedImageStyleName($imageElement) => false], true];
+                    return [$box, [self::frameStyleName($box) => true, self::materializedImageStyleName($imageElement) => true], true];
                 },
                 false,
                 false,
@@ -251,7 +251,7 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
                     $imageElement = $image();
                     return [
                         (new ListElement())->addItem((new Paragraph())->addElement($imageElement)),
-                        [self::materializedImageStyleName($imageElement) => false],
+                        [self::materializedImageStyleName($imageElement) => true],
                         true,
                     ];
                 },
@@ -263,7 +263,7 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
                 static function () use ($image): array {
                     $imageElement = $image();
                     $inner = (new ListElement())->addItem((new Paragraph())->addElement($imageElement));
-                    return [(new ListElement())->addSubList($inner), [self::materializedImageStyleName($imageElement) => false], true];
+                    return [(new ListElement())->addSubList($inner), [self::materializedImageStyleName($imageElement) => true], true];
                 },
                 true,
                 true,
@@ -276,7 +276,7 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
                         (new RichTable())->addRow([
                             new RichTableCell((new Paragraph())->addElement($imageElement)),
                         ]),
-                        [self::materializedImageStyleName($imageElement) => false],
+                        [self::materializedImageStyleName($imageElement) => true],
                         true,
                     ];
                 },
@@ -291,7 +291,7 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
                         (new RichTable())->addRow([
                             new RichTableCell((new RichText())->addImage($imageElement)),
                         ]),
-                        [self::materializedImageStyleName($imageElement) => false],
+                        [self::materializedImageStyleName($imageElement) => true],
                         true,
                     ];
                 },

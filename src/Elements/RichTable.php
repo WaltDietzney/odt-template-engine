@@ -354,6 +354,18 @@ class RichTable extends OdtElement implements HasStyles
         return $styles;
     }
 
+    /** @return array<string, array> */
+    public function getOwnRequiredStyles(): array
+    {
+        return [];
+    }
+
+    /** @return array<string, array> */
+    public function getOwnRequiredParagraphStyles(): array
+    {
+        return [];
+    }
+
     public function registerStyles(): void
     {
         foreach ($this->rows as $row) {

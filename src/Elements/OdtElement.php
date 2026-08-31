@@ -79,6 +79,36 @@ abstract class OdtElement implements HasStyles
         return [];
     }
 
+    /** @return array<string, array<string, mixed>> */
+    public function getOwnRequiredStyles(): array
+    {
+        return $this->getRequiredStyles();
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function getOwnRequiredParagraphStyles(): array
+    {
+        return [];
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function getOwnFrameStyleRequirements(): array
+    {
+        return [];
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function getOwnImageStyleRequirements(): array
+    {
+        return [];
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function getOwnFillImageRequirements(): array
+    {
+        return [];
+    }
+
     /**
      * Returns frame graphic-style requirements from this element's subtree.
      *

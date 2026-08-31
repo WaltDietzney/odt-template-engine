@@ -161,7 +161,7 @@ final class StyleContextGraphicImageCharacterizationTest extends TestCase
         self::assertSame($afterFirst, $afterSecond);
     }
 
-    public function testNestedStyledParagraphInDrawTextBoxUsesGlobalSideEffectButItsTextStyleIsNotMaterialized(): void
+    public function testNestedStyledParagraphInDrawTextBoxIsMaterializedTransitively(): void
     {
         $paragraph = (new Paragraph())->addText('nested styled text', [
             'font-family' => 'D1 Nested Font',
@@ -174,7 +174,7 @@ final class StyleContextGraphicImageCharacterizationTest extends TestCase
 
         self::assertStringContainsString('nested styled text', $content);
         self::assertStringContainsString('text:style-name="', $content);
-        self::assertStringNotContainsString('D1 Nested Font', $styles);
+        self::assertStringContainsString('D1 Nested Font', $styles);
     }
 
     public function testNestedImageInDrawTextBoxIsMaterializedWithoutTopLevelAssetPreparation(): void

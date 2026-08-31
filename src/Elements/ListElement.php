@@ -90,6 +90,18 @@ class ListElement extends OdtElement implements HasStyles
         return $styles;
     }
 
+    /** @return array<string, array> */
+    public function getOwnRequiredStyles(): array
+    {
+        return [];
+    }
+
+    /** @return array<string, array> */
+    public function getOwnRequiredParagraphStyles(): array
+    {
+        return [];
+    }
+
     /**
      * Collect paragraph styles from all list items.
      *

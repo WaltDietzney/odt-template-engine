@@ -432,6 +432,12 @@ public function setParagraphStyleOptions(array $options): self
         return $this->textStyleMap;
     }
 
+    /** @return array<string, array> */
+    public function getOwnRequiredParagraphStyles(): array
+    {
+        return $this->getRequiredParagraphStyles();
+    }
+
     /**
      * Returns all paragraph style definitions.
      *

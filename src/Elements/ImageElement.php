@@ -302,6 +302,12 @@ class ImageElement extends OdtElement implements HasStyles
         return [$styleName => $this->imageOptions];
     }
 
+    /** @return array<string, array<string, mixed>> */
+    public function getOwnImageStyleRequirements(): array
+    {
+        return $this->getImageStyleRequirements();
+    }
+
 
 
 

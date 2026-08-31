@@ -16,6 +16,7 @@ use OdtTemplateEngine\Document\FrameTarget;
 use OdtTemplateEngine\Document\MetadataManager;
 use OdtTemplateEngine\Document\SectionTarget;
 use OdtTemplateEngine\Document\StructuredElementMaterializer;
+use OdtTemplateEngine\Document\StyleRequirementCollector;
 use OdtTemplateEngine\Document\TableTarget;
 use OdtTemplateEngine\Document\TemplateTargetResolver;
 use OdtTemplateEngine\Document\TypedTargetResolver;
@@ -263,26 +264,28 @@ class OdtTemplate
      */
     public function setElement(string $placeholder, OdtElement $element): void
     {
-        $textStyles = $element->getRequiredStyles() ?? [];
-        $paragraphStyles = method_exists($element, 'getRequiredParagraphStyles')
-            ? $element->getRequiredParagraphStyles()
-            : [];
-        foreach ($paragraphStyles as $name => $definition) {
-            $this->documentContext()->styleContext()->registerParagraphStyle($name, $definition);
-        }
-        foreach ($textStyles as $name => $definition) {
-            $this->documentContext()->styleContext()->registerTextStyle($name, $definition);
+        $collector = new StyleRequirementCollector();
+        foreach ($collector->collect($element) as $requirement) {
+            if ($requirement['family'] === 'paragraph') {
+                $this->documentContext()->styleContext()->registerParagraphStyle(
+                    $requirement['name'],
+                    $requirement['definition']
+                );
+                $this->ensureParagraphStylesExist([
+                    $requirement['name'] => $requirement['definition'],
+                ]);
+            } elseif ($requirement['family'] === 'text') {
+                $this->documentContext()->styleContext()->registerTextStyle(
+                    $requirement['name'],
+                    $requirement['definition']
+                );
+                $this->ensureTextStylesExist([
+                    $requirement['name'] => $requirement['definition'],
+                ]);
+            }
         }
         if ($element instanceof HasStyles) {
             $this->registerStyles($element->getStyleDefinitions());
-        }
-
-        if (!empty($textStyles)) {
-            $this->ensureTextStylesExist($textStyles);
-        }
-
-        if (!empty($paragraphStyles)) {
-            $this->ensureParagraphStylesExist($paragraphStyles);
         }
 
         if (method_exists($element, 'getImageAssets')) {
@@ -306,7 +309,26 @@ class OdtTemplate
             fn (DOMDocument $dom, string $key): bool => $this->hasPlaceholder($dom, $key)
         );
 
-        $this->adoptTopLevelGraphicRequirements($element);
+        foreach ($collector->collect($element) as $requirement) {
+            $styleContext = $this->documentContext()->styleContext();
+            switch ($requirement['family']) {
+                case 'paragraph':
+                    $styleContext->registerParagraphStyle($requirement['name'], $requirement['definition']);
+                    break;
+                case 'text':
+                    $styleContext->registerTextStyle($requirement['name'], $requirement['definition']);
+                    break;
+                case 'frame':
+                    $styleContext->registerFrameStyle($requirement['name'], $requirement['definition']);
+                    break;
+                case 'image':
+                    $styleContext->registerImageStyle($requirement['name'], $requirement['definition']);
+                    break;
+                case 'fill-image':
+                    $styleContext->registerFillImage($requirement['name'], $requirement['definition']);
+                    break;
+            }
+        }
     }
 
     /**

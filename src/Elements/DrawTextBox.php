@@ -58,6 +58,12 @@ class DrawTextBox extends OdtElement implements HasStyles
         return [$this->frameStyleName => StyleMapper::mapFrameStyleOptions($this->frameOptions)];
     }
 
+    /** @return array<string, array<string, mixed>> */
+    public function getOwnFrameStyleRequirements(): array
+    {
+        return $this->getFrameStyleRequirements();
+    }
+
     /**
      * HasStyles interface: define style definitions for this DrawTextBox.
      */
