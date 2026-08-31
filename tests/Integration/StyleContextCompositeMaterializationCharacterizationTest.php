@@ -148,8 +148,8 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
         self::assertStringContainsString('draw:custom-shape', $content);
         self::assertSame(1, substr_count($styles, 'style:name="' . $imageStyleName . '"'));
         self::assertSame(1, substr_count($styles, 'draw:name="' . $fillImageName . '"'));
-        self::assertFalse($this->contains($output, 'Pictures/WaltDietzney.png'));
-        self::assertStringNotContainsString('Pictures/WaltDietzney.png', $manifest);
+        self::assertTrue($this->contains($output, 'Pictures/WaltDietzney.png'));
+        self::assertStringContainsString('Pictures/WaltDietzney.png', $manifest);
     }
 
     /**
@@ -201,8 +201,8 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
                     $imageElement = $image();
                     return [(new RichText())->addElement($imageElement), [self::materializedImageStyleName($imageElement) => true], true];
                 },
-                false,
-                false,
+                true,
+                true,
             ],
             'richtext-paragraph-textbox' => [
                 'RichText -> Paragraph -> DrawTextBox',
@@ -231,8 +231,8 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
                         ->addElement($imageElement);
                     return [$box, [self::frameStyleName($box) => true, self::materializedImageStyleName($imageElement) => true], true];
                 },
-                false,
-                false,
+                true,
+                true,
             ],
             'textbox-richtext-image' => [
                 'DrawTextBox -> RichText -> ImageElement',
@@ -242,8 +242,8 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
                         ->addElement((new RichText())->addImage($imageElement));
                     return [$box, [self::frameStyleName($box) => true, self::materializedImageStyleName($imageElement) => true], true];
                 },
-                false,
-                false,
+                true,
+                true,
             ],
             'list-paragraph-image' => [
                 'ListElement -> Paragraph -> ImageElement',
@@ -280,8 +280,8 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
                         true,
                     ];
                 },
-                false,
-                false,
+                true,
+                true,
             ],
             'table-cell-richtext-image' => [
                 'RichTable -> RichTableCell -> RichText -> ImageElement',
@@ -295,8 +295,8 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
                         true,
                     ];
                 },
-                false,
-                false,
+                true,
+                true,
             ],
         ];
     }

@@ -16,6 +16,7 @@ use OdtTemplateEngine\Document\FrameTarget;
 use OdtTemplateEngine\Document\MetadataManager;
 use OdtTemplateEngine\Document\SectionTarget;
 use OdtTemplateEngine\Document\StructuredElementMaterializer;
+use OdtTemplateEngine\Document\StructuredResourceCollector;
 use OdtTemplateEngine\Document\StyleRequirementCollector;
 use OdtTemplateEngine\Document\TableTarget;
 use OdtTemplateEngine\Document\TemplateTargetResolver;
@@ -288,10 +289,9 @@ class OdtTemplate
             $this->registerStyles($element->getStyleDefinitions());
         }
 
-        if (method_exists($element, 'getImageAssets')) {
-            foreach ($element->getImageAssets() as $img) {
-                $this->copyImageResource($img['path']);
-            }
+        $resources = iterator_to_array((new StructuredResourceCollector())->collect($element), false);
+        if ($resources !== []) {
+            $this->package->copyImageResourcesAtomically($resources);
         }
 
         $materializer = new StructuredElementMaterializer();

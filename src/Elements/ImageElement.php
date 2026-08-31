@@ -236,6 +236,12 @@ class ImageElement extends OdtElement implements HasStyles
         ];
     }
 
+    /** @return array<int, array{id: string, path: string}> */
+    public function getOwnImageAssets(): array
+    {
+        return $this->getImageAssets();
+    }
+
     /**
      * Returns style definitions (if any) associated with this image.
      *

@@ -192,6 +192,20 @@ abstract class OdtElement implements HasStyles
     }
 
     /**
+     * Returns physical image resources produced directly by this element.
+     *
+     * Composite traversal is intentionally supplied by the resource collector
+     * through ownedElements(). Existing getImageAssets() compatibility
+     * semantics remain unchanged.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getOwnImageAssets(): array
+    {
+        return [];
+    }
+
+    /**
      * Returns the style definitions for this element and its embedded elements.
      *
      * @return array An array of style definitions.
