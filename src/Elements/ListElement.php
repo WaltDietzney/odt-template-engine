@@ -44,6 +44,12 @@ class ListElement extends OdtElement implements HasStyles
         return $this->addItem($list);
     }
 
+    /** @return iterable<int, OdtElement> */
+    public function ownedElements(): iterable
+    {
+        return $this->items;
+    }
+
 
     public function toDomNode(DOMDocument $dom): DOMNode
     {

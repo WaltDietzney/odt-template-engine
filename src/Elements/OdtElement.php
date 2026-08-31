@@ -38,6 +38,19 @@ abstract class OdtElement implements HasStyles
     }
 
     /**
+     * Returns the OdtElements logically owned by this element.
+     *
+     * Concrete composites may map their natural internal storage to this
+     * semantic view without changing their rendering-oriented storage model.
+     *
+     * @return iterable<int, OdtElement>
+     */
+    public function ownedElements(): iterable
+    {
+        return $this->getEmbeddedElements();
+    }
+
+    /**
      * Abstract method that should be implemented by subclasses to generate the ODT-compatible DOM node (e.g., text:p, table:table, etc.)
      *
      * @param DOMDocument $dom The target DOM document.

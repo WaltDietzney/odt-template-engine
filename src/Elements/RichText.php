@@ -276,6 +276,12 @@ class RichText extends OdtElement implements HasStyles
         return $this;
     }
 
+    /** @return iterable<int, OdtElement> */
+    public function ownedElements(): iterable
+    {
+        return $this->elements;
+    }
+
     /**
      * Applies paragraph options to direct paragraph children.
      *
