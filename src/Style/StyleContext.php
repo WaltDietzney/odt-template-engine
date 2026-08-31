@@ -22,6 +22,15 @@ final class StyleContext
     /** @var array<string, array<string, mixed>> */
     private array $textStyles = [];
 
+    /** @var array<string, array<string, mixed>> */
+    private array $frameStyles = [];
+
+    /** @var array<string, array<string, mixed>> */
+    private array $imageStyles = [];
+
+    /** @var array<string, array<string, mixed>> */
+    private array $fillImages = [];
+
     /**
      * Register one pending paragraph style definition.
      *
@@ -84,11 +93,89 @@ final class StyleContext
     }
 
     /**
+     * Register one pending frame graphic style definition for this document.
+     *
+     * @param array<string, mixed> $definition
+     */
+    public function registerFrameStyle(string $name, array $definition): void
+    {
+        $this->registerGraphicRequirement($this->frameStyles, 'Frame style', $name, $definition);
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function frameStyles(): array
+    {
+        return $this->frameStyles;
+    }
+
+    /**
+     * Register one pending image graphic style definition for this document.
+     *
+     * @param array<string, mixed> $definition
+     */
+    public function registerImageStyle(string $name, array $definition): void
+    {
+        $this->registerGraphicRequirement($this->imageStyles, 'Image style', $name, $definition);
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function imageStyles(): array
+    {
+        return $this->imageStyles;
+    }
+
+    /**
+     * Register one pending fill-image declaration for this document.
+     *
+     * @param array<string, mixed> $definition
+     */
+    public function registerFillImage(string $name, array $definition): void
+    {
+        $this->registerGraphicRequirement($this->fillImages, 'Fill-image declaration', $name, $definition);
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function fillImages(): array
+    {
+        return $this->fillImages;
+    }
+
+    /**
      * Clear pending requirements after the logical document has been reset.
      */
     public function reset(): void
     {
         $this->paragraphStyles = [];
         $this->textStyles = [];
+        $this->frameStyles = [];
+        $this->imageStyles = [];
+        $this->fillImages = [];
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $requirements
+     * @param array<string, mixed> $definition
+     */
+    private function registerGraphicRequirement(
+        array &$requirements,
+        string $family,
+        string $name,
+        array $definition
+    ): void {
+        if (!isset($requirements[$name])) {
+            $requirements[$name] = $definition;
+
+            return;
+        }
+
+        if ($requirements[$name] === $definition) {
+            return;
+        }
+
+        throw new LogicException(sprintf(
+            '%s "%s" is already registered with a different definition.',
+            $family,
+            $name
+        ));
     }
 }

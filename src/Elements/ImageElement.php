@@ -217,10 +217,6 @@ class ImageElement extends OdtElement implements HasStyles
 
         $frame->appendChild($image);
 
-        // ✅ Registriere den Style für späteren Export in styles.xml
-        StyleMapper::registerImageStyle($styleName, $this->imageOptions);
-
-
         return $frame;
     }
 
@@ -295,9 +291,15 @@ class ImageElement extends OdtElement implements HasStyles
         $styleName = StyleMapper::generateStyleName($this->imageOptions);
         $this->imageOptions['style-name'] = $styleName;
 
-        StyleMapper::registerImageStyle($styleName, $this->imageOptions);
-
         return $this;
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function getImageStyleRequirements(): array
+    {
+        $styleName = $this->imageOptions['style-name'] ?? StyleMapper::generateStyleName($this->imageOptions);
+
+        return [$styleName => $this->imageOptions];
     }
 
 
