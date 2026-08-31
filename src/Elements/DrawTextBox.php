@@ -66,9 +66,6 @@ class DrawTextBox extends OdtElement implements HasStyles
     public function toDomNode(DOMDocument $dom): DOMNode
     {
         $this->registerFrameStyle();
-        // Preserve explicit legacy structured-value compatibility. Normal
-        // setElement() finalization does not consume this global registry.
-        StyleMapper::$frameStyles[$this->frameStyleName] = StyleMapper::mapFrameStyleOptions($this->frameOptions);
 
         $anchor = $this->frameOptions['anchor'] ?? 'paragraph';
 

@@ -217,10 +217,6 @@ class ImageElement extends OdtElement implements HasStyles
 
         $frame->appendChild($image);
 
-        // ✅ Registriere den Style für späteren Export in styles.xml
-        StyleMapper::registerImageStyle($styleName, $this->imageOptions);
-
-
         return $frame;
     }
 

@@ -323,7 +323,9 @@ class OdtTemplate
         foreach ($values as $key => $value) {
             if ($value instanceof OdtElement) {
                 $this->legacyStructuredValuesMaterialized = true;
-                $this->replacePlaceholderWithDom($dom, (string) $key, $value->toDomNode($dom));
+                $replacement = $value->toDomNode($dom);
+                $this->registerLegacyGraphicRequirements($value);
+                $this->replacePlaceholderWithDom($dom, (string) $key, $replacement);
             } else {
                 $scalarValues[(string) $key] = $value;
             }
@@ -1456,6 +1458,31 @@ class OdtTemplate
     {
         if ($this->legacyStructuredValuesMaterialized) {
             $this->injectLegacyImageStyles();
+        }
+    }
+
+    /** Register requirements materialized through the explicit legacy path. */
+    private function registerLegacyGraphicRequirements(OdtElement $element): void
+    {
+        if (method_exists($element, 'getFrameStyleRequirements')) {
+            foreach ($element->getFrameStyleRequirements() as $name => $definition) {
+                StyleMapper::$frameStyles[$name] = $definition;
+            }
+        }
+
+        if (method_exists($element, 'getImageStyleRequirements')) {
+            foreach ($element->getImageStyleRequirements() as $name => $definition) {
+                StyleMapper::registerImageStyle($name, $definition);
+            }
+        }
+
+        if (method_exists($element, 'getFillImageRequirements')) {
+            foreach ($element->getFillImageRequirements() as $name => $definition) {
+                $path = $definition['path'] ?? null;
+                if (is_string($path)) {
+                    StyleMapper::registerFillImage($name, $path);
+                }
+            }
         }
     }
 

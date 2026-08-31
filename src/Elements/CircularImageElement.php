@@ -31,12 +31,6 @@ class CircularImageElement extends ImageElement
 
         // Register the fill-image (creates <draw:fill-image> in styles.xml)
         $this->fillImageName = $fillImageName;
-        // Preserve the explicit legacy structured-value path. The normal
-        // setElement() path adopts the element-local requirements instead.
-        \OdtTemplateEngine\Utils\StyleMapper::registerFillImage(
-            $fillImageName,
-            $this->imagePath
-        );
 
         // Register a graphic style with bitmap fill referencing the fill-image by name
         $styleOptions = [
@@ -50,7 +44,6 @@ class CircularImageElement extends ImageElement
         $styleName = \OdtTemplateEngine\Utils\StyleMapper::generateStyleName($styleOptions);
         $this->circularStyleName = $styleName;
         $this->circularStyleOptions = $styleOptions;
-        \OdtTemplateEngine\Utils\StyleMapper::registerImageStyle($styleName, $styleOptions);
 
         // Create the draw:custom-shape element
         $shape = $dom->createElement('draw:custom-shape');

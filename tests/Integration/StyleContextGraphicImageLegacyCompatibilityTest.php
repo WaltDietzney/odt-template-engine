@@ -105,6 +105,43 @@ final class StyleContextGraphicImageLegacyCompatibilityTest extends TestCase
         self::assertTrue($this->isWellFormedXml($styles));
     }
 
+    public function testSetElementRequirementsDoNotContaminateLaterLegacyFinalization(): void
+    {
+        $documentA = new OdtTemplate($this->templatePath('sample_textfeld.odt'));
+        $this->templates[] = $documentA;
+
+        $frame = new DrawTextBox('IsolationFrame', ['background-color' => '#d4a102']);
+        $image = new ImageElement($this->imagePath('banner.png'), ['width' => '13cm']);
+        $circular = new CircularImageElement($this->imagePath('Logo.png'));
+        $documentA->setElement('test1', $frame);
+        $frameName = array_key_first($frame->getFrameStyleRequirements());
+        $documentA->load();
+        $documentA->setElement('test1', $image);
+        $imageName = array_key_first($image->getImageStyleRequirements());
+        $documentA->load();
+        $documentA->setElement('test1', $circular);
+        $circularImageName = array_key_first($circular->getImageStyleRequirements());
+        $circularFillName = array_key_first($circular->getFillImageRequirements());
+        $this->save($documentA);
+
+        self::assertIsString($frameName);
+        self::assertIsString($imageName);
+        self::assertIsString($circularImageName);
+        self::assertIsString($circularFillName);
+
+        $documentB = new OdtTemplate($this->templatePath('sample_textfeld.odt'));
+        $this->templates[] = $documentB;
+        $documentB->assign(['test1' => new CircularImageElement($this->imagePath('WaltDietzney.png'))]);
+        $documentB->render();
+        $output = $this->save($documentB);
+        $styles = $this->entry($output, 'styles.xml');
+
+        self::assertStringNotContainsString('style:name="' . $frameName . '"', $styles);
+        self::assertStringNotContainsString('style:name="' . $imageName . '"', $styles);
+        self::assertStringNotContainsString('style:name="' . $circularImageName . '"', $styles);
+        self::assertStringNotContainsString('draw:name="' . $circularFillName . '"', $styles);
+    }
+
     private function legacyTemplate(object $element): OdtTemplate
     {
         $template = new OdtTemplate($this->templatePath('sample_textfeld.odt'));
@@ -150,8 +187,8 @@ final class StyleContextGraphicImageLegacyCompatibilityTest extends TestCase
         return dirname(__DIR__, 2) . '/samples/templates/' . $name;
     }
 
-    private function imagePath(): string
+    private function imagePath(string $filename = 'WaltDietzney.png'): string
     {
-        return dirname(__DIR__, 2) . '/assets/WaltDietzney.png';
+        return dirname(__DIR__, 2) . '/assets/' . $filename;
     }
 }
