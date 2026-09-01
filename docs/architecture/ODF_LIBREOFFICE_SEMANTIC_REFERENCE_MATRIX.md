@@ -21,8 +21,8 @@ decisions remain separate.
 Reference fixtures describe observed LibreOffice/ODF semantics; they do not
 describe what the current engine happens to generate.
 
-This framework is intentionally created before the Phase 1 fixtures. No binary
-ODT fixture is included by this change.
+The framework predates the fixture sweep. STYLE-01 is the first captured
+fixture; this research update adds no binary ODT fixtures.
 
 ## Materialization channels
 
@@ -145,6 +145,70 @@ draw:frame
 
 Exact storage locations and attribute combinations must be taken from the
 fixture and normative ODF evidence, not assumed from these diagrams.
+
+## Phase-1 research overview
+
+Detailed findings and source-by-source reasoning are recorded in
+[ODF_LIBREOFFICE_PHASE1_RESEARCH_FINDINGS.md](ODF_LIBREOFFICE_PHASE1_RESEARCH_FINDINGS.md).
+The table below is an index, not a replacement for the case records.
+
+| ID | Normative status | Reference evidence | Serialization freedom | Additional LO fixture | Reason |
+| --- | --- | --- | --- | --- | --- |
+| STYLE-01 | NORMATIVE CLEAR; fixture captured | Local STYLE-01 fixture; OASIS Part 3 §§3.15, 16.30.2 | Names and defaults are free; family/reference semantics are not | NO ADDITIONAL LO FIXTURE REQUIRED | Control case already records the practical serialization. |
+| STYLE-02 | NORMATIVE PARTIAL | OASIS Part 3 §16.30.2; LibreOffice Style Inspector | Direct formatting may be serialized through automatic styles or legal local properties | TARGETED LO FIXTURE USEFUL | Exact Writer encoding and parent relation remain practical details. |
+| STYLE-03 | NORMATIVE CLEAR | OASIS Part 3 §16.30.1; LibreOffice Writer style help | Names and placement of equivalent definitions are free within ODF rules | TARGETED LO FIXTURE USEFUL | Confirms Writer's character-style reference topology. |
+| STYLE-04 | NORMATIVE PARTIAL | OASIS Part 3 §16.30.1; LibreOffice Style Inspector | Automatic-style grouping and span boundaries are implementation choices | TARGETED LO FIXTURE USEFUL | Useful for mixed direct formatting and span merging. |
+| STYLE-05 | NORMATIVE PARTIAL | OASIS Part 3 §§3.15, 16.30.2 | Base-style plus local override has several legal representations | TARGETED LO FIXTURE REQUIRED | The parent/automatic-style topology is architecture-relevant. |
+| STYLE-06 | NORMATIVE CLEAR | OASIS Part 3 §3.15; `style:parent-style-name` | Names and unrelated defaults are free | NO ADDITIONAL LO FIXTURE REQUIRED | Inheritance mechanism is normatively defined; STYLE-01 supplies a parent example. |
+| STYLE-07 | NORMATIVE CLEAR | OASIS Part 3 §§3.15, 16.30 | Reference count and generated names are free | NO ADDITIONAL LO FIXTURE REQUIRED | Reuse is ordinary named-style reference semantics. |
+| FONT-01 | NORMATIVE PARTIAL | OASIS Part 3 §16.23; LibreOffice Writer style help | Declaration placement and font fallback are implementation-sensitive | TARGETED LO FIXTURE REQUIRED | The font-face/reference dependency needs one practical check. |
+| TABLE-02 | NORMATIVE PARTIAL | OASIS Part 3 §§16.30, 16.38; LibreOffice Writer style help | Equivalent formatting can be split across compatible style families | TARGETED LO FIXTURE REQUIRED | Cell/paragraph/text responsibility is central to current architecture. |
+| FRAME-01 | NORMATIVE PARTIAL | OASIS Part 3 §§16.39, 10.4; LibreOffice core QA | Names, defaults, and some placement details are free | TARGETED LO FIXTURE USEFUL | Confirms basic frame/text-box topology. |
+| FRAME-02 | NORMATIVE PARTIAL | OASIS Part 3 §§16.39, 19.750–19.755 | Position values depend on anchor and relation choices | TARGETED LO FIXTURE REQUIRED | Writer's anchor/position serialization must be observed. |
+| IMAGE-01 | NORMATIVE CLEAR for dependency graph | OASIS Part 2 §§3–4; Part 3 `draw:image`/`xlink:href`; LibreOffice core QA | Graphic-style use and package conventions have some freedom | TARGETED LO FIXTURE REQUIRED | Package/resource/manifest topology is compatibility-critical. |
+| PAGE-01 | NORMATIVE CLEAR | OASIS Part 3 §§16.5, 16.9 | Property defaults and generated names are free | TARGETED LO FIXTURE USEFUL | Confirms Writer's page-layout property grouping. |
+| PAGE-02 | NORMATIVE CLEAR | OASIS Part 3 §§16.9, 16.5 | Header/footer content placement and defaults vary by editor | TARGETED LO FIXTURE USEFUL | One combined page/master fixture can verify practical topology. |
+
+## Source register
+
+| Source | Version/section | URL | Use |
+| --- | --- | --- | --- |
+| OASIS OpenDocument Format, Part 1: Introduction | ODF 1.3, normative overview | [OASIS Part 1](https://docs.oasis-open.org/office/OpenDocument/v1.3/os/part1-introduction/OpenDocument-v1.3-os-part1-introduction.html) | Specification status and relationship of the ODF parts. |
+| OASIS OpenDocument Format, Part 2: Packages | ODF 1.3, §§3–4 | [OASIS Part 2](https://docs.oasis-open.org/office/OpenDocument/v1.3/OpenDocument-v1.3-part2-packages.html) | ZIP package, manifest, mimetype, and relative-IRI semantics. |
+| OASIS OpenDocument Format, Part 3: Schema | ODF 1.3, §§3.15, 10.4, 16.5, 16.9, 16.23, 16.30, 16.38–16.39, 19.750–19.755 | [OASIS Part 3](https://docs.oasis-open.org/office/OpenDocument/v1.3/os/part3-schema/OpenDocument-v1.3-os-part3-schema.html) | Normative elements, attributes, style families, placement, and dependencies. |
+| OASIS ODF Technical Committee repository | current repository; ODF 1.2–1.4 resources | [oasis-tcs/odf-tc](https://github.com/oasis-tcs/odf-tc) | Existing OASIS test/reference-document infrastructure; no binary is copied here. |
+| LibreOffice Help, Style Inspector | current Writer help | [Style Inspector](https://help.libreoffice.org/latest/en-GB/text/swriter/01/style_inspector.html?DbPAR=WRITER) | Practical distinction between style properties and direct formatting. |
+| LibreOffice Help, Styles in Writer | current Writer help | [Styles in Writer](https://help.libreoffice.org/latest/en-GB/text/swriter/01/05130000.html) | Writer's paragraph, character, frame, page, and list style categories. |
+| LibreOffice Help, Character Styles | current Writer help | [Character styles](https://help.libreoffice.org/latest/en-GB/text/swriter/01/05130002.html) | Override ordering for paragraph, character, and direct formatting. |
+| LibreOffice core QA layout fixture | current `master` | [keep-with-next-fly.fodt](https://github.com/LibreOffice/core/blob/master/sw/qa/extras/layout/data/keep-with-next-fly.fodt) | Implementation evidence for a real frame/image flat-ODF topology. |
+| LibreOffice core QA documentation | current `master` | [layout QA README](https://github.com/LibreOffice/core/blob/master/sw/qa/extras/README) | Context for interpreting LibreOffice test documents as implementation evidence. |
+
+The STYLE-01 fixture reports ODF 1.3. The relevant ODF 1.4 style, package, and
+master-page concepts are treated as compatible for this sweep; no conclusion
+here depends on a version-specific 1.4 change. ODF 1.3 remains the normative
+reference for interpreting the captured fixture.
+
+## Minimum additional fixture plan
+
+Only the following targeted fixtures are currently justified by unresolved
+practical serialization questions. A fixture may cover multiple matrix cases:
+
+1. STYLE-02 + STYLE-04: direct paragraph and direct character formatting in
+   one document, including mixed spans.
+2. STYLE-05: a named paragraph style with one direct local override.
+3. FONT-01: a named style using a non-default font.
+4. TABLE-02: one formatted table cell with distinct cell, paragraph, and text
+   formatting.
+5. FRAME-01 + FRAME-02: basic and positioned text boxes with different
+   anchors/relations.
+6. IMAGE-01: one embedded image with its complete package and manifest
+   topology.
+7. PAGE-01 + PAGE-02: page layout plus a master-page header/footer.
+
+STYLE-03, STYLE-06, and STYLE-07 are sufficiently constrained by the ODF
+style model, existing STYLE-01 evidence, and authoritative Writer
+documentation that additional fixtures are useful but not presently required.
+No fixture is created by this research update.
 
 ## Provenance requirements
 
