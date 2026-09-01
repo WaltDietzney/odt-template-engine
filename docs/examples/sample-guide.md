@@ -48,6 +48,41 @@ samples/output/
 
 Open the resulting `.odt` file in LibreOffice to verify both structure and visual behavior.
 
+## Visual regression workflow
+
+For changes that affect rendered ODT output, automated PHPUnit and integration
+tests are necessary but are not sufficient for visual approval. Use the
+repository renderer after generating the ODT through the normal sample or CLI
+path:
+
+```bash
+tools/visual-regression/render-odt.sh path/to/document.odt
+```
+
+The renderer performs:
+
+```text
+ODT → LibreOffice (headless) → PDF → pdftoppm → PNG
+```
+
+Inspect the actual rendered PNG files before issuing a Visual GO. Visual review
+means checking the complete rendered output against the intended sample
+semantics and, where available, a known-good baseline—not only confirming that
+the feature changed in the current slice is visible. The sample code and its
+corresponding LibreOffice template are authoritative evidence for those
+semantics. A report, successful XML or ZIP validation, automated tests, or
+merely opening or generating the ODT does not substitute for inspection.
+
+Project visual-regression artifacts belong under `tmp/visual-regression/`;
+do not use system `/tmp` for them. Visual-regression work must preserve
+unrelated local artifacts in the primary checkout and must not clean, reset,
+restore, regenerate, or delete them.
+
+If LibreOffice cannot execute in an agent or sandbox environment, report the
+visual check as **BLOCKED BY ENVIRONMENT**, not PASS or FAIL. The ODT may then
+be rendered from a working local environment with the same repository tool;
+the resulting PNG files remain the evidence for visual review.
+
 ## Samples and templates belong together
 
 Most numbered samples have a corresponding LibreOffice template in:
