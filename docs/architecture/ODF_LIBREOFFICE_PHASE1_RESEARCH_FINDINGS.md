@@ -319,3 +319,190 @@ no additional fixture at present. This is a plan only; no ODT is created here.
 The durable source register is maintained in the overview matrix. The
 primary references are OASIS ODF 1.3 Parts 1–3, the OASIS ODF TC repository,
 and the cited LibreOffice Writer/core QA material.
+
+## Captured fixture evidence
+
+All seven files report `office:version="1.3"` in `content.xml` and
+`styles.xml`, manifest version `1.3`, and generator
+`LibreOffice/24.2.7.2$Linux_X86_64 LibreOffice_project/420$Build-2`. Each has
+17 ZIP entries except IMAGE-01, which has 18. In every case `mimetype` is the
+first entry, is stored (method 0), and contains
+`application/vnd.oasis.opendocument.text`. Raw files are under the
+corresponding `extracted/<ID>/` directory and are not normalized.
+
+The common manual procedure was to create a new Writer document in the
+documented de-DE LibreOffice environment, perform the operation named by the
+fixture, and save it as the listed ODT. The visible results were the requested
+text, formatting, table, frame, image, or page/header/footer content described
+below. Every package manifest contains the root document plus
+`content.xml`, `styles.xml`, `meta.xml`, `settings.xml`, `manifest.rdf`, and a
+thumbnail; only IMAGE-01 adds a document resource. No fixture has been
+reopened or resaved by this study.
+
+| Fixture | Affected channels | Manifest/package observation |
+| --- | --- | --- |
+| STYLE-02-04 | CONTENT, STYLE, FONT, MANIFEST, PACKAGE | No additional resource; thumbnail only. |
+| STYLE-05 | CONTENT, STYLE, FONT, MANIFEST, PACKAGE | No additional resource; thumbnail only. |
+| FONT-01 | CONTENT, STYLE, FONT, MANIFEST, PACKAGE | No additional resource; thumbnail only. |
+| TABLE-02 | CONTENT, STYLE, FONT, MANIFEST, PACKAGE | No additional resource; thumbnail only. |
+| FRAME-01-02 | CONTENT, STYLE, FONT, MANIFEST, PACKAGE | No additional resource; thumbnail only. |
+| IMAGE-01 | CONTENT, STYLE, FONT, RESOURCE, MANIFEST, PACKAGE | JPEG resource and matching manifest entry. |
+| PAGE-01-02 | CONTENT, STYLE, FONT, PAGE/MASTER, MANIFEST, PACKAGE | Header/footer live in master-page; no additional resource. |
+
+The embedded creation timestamps are: STYLE-02-04
+`2026-09-01T18:09:16.037631657`, STYLE-05
+`2026-09-01T18:12:00.589936800`, FONT-01
+`2026-09-01T18:16:30.310320989`, TABLE-02
+`2026-09-01T18:18:50.634728821`, FRAME-01-02
+`2026-09-01T18:22:52.289319358`, IMAGE-01
+`2026-09-01T18:26:12.475492331`, and PAGE-01-02
+`2026-09-01T18:29:47.843198730`.
+
+### STYLE-02 + STYLE-04 — direct formatting
+
+The original `STYLE-02-04-direct-formatting.odt` is 12,119 bytes with SHA-256
+`12e48079af090d25c42186e81052a8d3d8a356be1e2298986eedbf1c3b0bdb9f`.
+The first `text:p` references automatic paragraph style `P1` in
+`content.xml` `office:automatic-styles`; it contains `fo:text-align="end"`
+and `fo:margin-bottom="0.7cm"`. The directly formatted middle run is a
+`text:span text:style-name="T3"`; T3 is an automatic `text` style in
+`content.xml` with `fo:color="#cc0000"`, `fo:font-size="16pt"`, and
+`fo:font-weight="bold"`. Intermediate automatic text styles T1 and T2 are
+also present for partial formatting states. The second paragraph references
+`Standard`. No P1/T1/T2/T3 definition is in `styles.xml`.
+
+This **CONFIRMS** the normative model and refines it with concrete Writer
+behavior: direct formatting uses content-owned automatic styles, while span
+segmentation and intermediate styles are LibreOffice choices. Round-trip:
+**Not performed yet**.
+
+### STYLE-05 — named style plus direct override
+
+The original `STYLE-05-named-style-direct-override.odt` is 10,249 bytes with
+SHA-256 `7ae5f32ddd9ef99f3db5ddcdd9b340d52425b5075bffa97c1e9899bf36b99a02`.
+The paragraph references automatic paragraph style `P1` in content.xml.
+P1 has `style:parent-style-name="RefOverrideBase"` and only the local
+`fo:color="#cc0000"` text property, plus LibreOffice opacity. Common
+`RefOverrideBase` remains in `styles.xml`, family `paragraph`, parent
+`Standard`, with `fo:color="#123456"`, `fo:font-size="14pt"`, and
+`fo:margin-bottom="0.499cm"`. No text-span indirection is used.
+
+This **CONFIRMS** the prior expectation of an automatic child style and
+refines it: LibreOffice emits only the override in that child. Round-trip:
+**Not performed yet**.
+
+### FONT-01 — non-default font
+
+The original `FONT-01-non-default-font.odt` is 10,408 bytes with SHA-256
+`4680810fd77fc32ff2502d142f80c59a16fde883777f45e9eb487016710c3231`.
+`text:p` references common paragraph style `RefFont` in `styles.xml`; its
+text properties use `style:font-name="Liberation Sans1"` and
+`fo:font-family="'Liberation Sans'"`. The matching `style:font-face` is in
+both content.xml and styles.xml `office:font-face-decls`, alongside default
+and fallback declarations. The property is the reference and font-face is
+the declaration; this is not font embedding. The result **CONFIRMS** the
+dependency model and refines it with duplicate per-part declarations.
+Round-trip: **Not performed yet**.
+
+### TABLE-02 — formatted cell
+
+The original `TABLE-02-formatted-cell.odt` is 10,272 bytes with SHA-256
+`dba70c9fe41026bda5a3f41bf2d1f2502c152f99e6d4e4272b0849d6f2f05c9b`.
+Content contains `table:table` style `Tabelle1`, column style `Tabelle1.A`,
+row style `Tabelle1.1`, and one cell style `Tabelle1.A1`; these are automatic
+styles in content.xml. A1 has `fo:background-color="#ffd546"`,
+`fo:padding="0.199cm"`, and `fo:border="1pt solid #000000"`.
+
+The cell contains `text:p text:style-name="P1"`; P1 is an automatic paragraph
+style parented by `Table_20_Contents` and carries `fo:color="#cc0000"` and
+bold properties. No text span is needed. The requested paragraph centering
+was not observed in P1's emitted properties, so this is recorded rather than
+corrected. This **REFINES** the prior model. Round-trip: **Not performed yet**.
+
+### FRAME-01 + FRAME-02 — text box and position
+
+The original `FRAME-01-02-text-box-position.odt` is 10,811 bytes with SHA-256
+`a12b50088eed794fb74799ae8feb91db5ac0be3e48a900e99e9c3d270560f7b3`.
+Content contains `draw:frame` named `Textrahmen 1`,
+`text:anchor-type="paragraph"`, `draw:style-name="gr1"`, and
+`draw:text-style-name="P1"`. Its size is 6.002cm by 2.001cm and direct
+coordinates are x=2cm, y=1cm. It contains a `draw:text-box` with
+`Positioned text box`.
+
+Automatic graphic style gr1 in content.xml carries horizontal position
+`from-left` relative to `paragraph`, vertical position `from-top` relative to
+`paragraph`, and `style:wrap="run-through"`; P1 supplies text-box writing
+mode. This separates anchor, size/coordinates, graphic style, and text
+content. The single frame is combined evidence for FRAME-01/02. This
+**CONFIRMS** and refines the prior model. Round-trip: **Not performed yet**.
+
+### IMAGE-01 — embedded image
+
+The original `IMAGE-01-embedded-image.odt` is 93,272 bytes with SHA-256
+`2e4554d7494f28ebee77bc063dc93816e9a77986d3f9b0b707cff3287dd2bbeb`.
+Content contains a character-anchored 3cm by 3cm `draw:frame` with
+`draw:style-name="fr1"`, containing `draw:image` whose href is
+`Pictures/100000000000028000000280B8169D6C.jpg` and media type `image/jpeg`.
+fr1 is an automatic graphic style in content.xml, parented by `Graphics`.
+The href resolves to the package resource and the manifest has the same path
+and media type.
+
+The embedded resource is JPEG, 640x640, 90,207 bytes, SHA-256
+`0227b05d69f45b2acdc56ec7dcb966ed8d284b7054a6ac8c8e7ffa6cfa3c3bef`.
+No `IMAGE-01-source.png` was supplied, so source-byte comparison is
+unavailable. This **CONFIRMS** the dependency graph and refines it with
+Writer's generated JPEG package name and content-owned graphic style.
+Round-trip: **Not performed yet**.
+
+### PAGE-01 + PAGE-02 — page layout and master page
+
+The original `PAGE-01-02-layout-master-page.odt` is 11,092 bytes with SHA-256
+`e4f5476cbbf7971461998df99a8f7d5eaf7d0eedf64476cfd0c38a5ce9ce9a81`.
+`styles.xml` contains automatic page layout `Mpm1` with landscape dimensions
+29.7cm by 21.001cm, margins top/bottom 2.499cm and left/right 2cm, and
+`style:print-orientation="landscape"`. It contains master page `Standard`
+with `style:page-layout-name="Mpm1"`.
+
+The master page contains header/footer structures with visible texts
+`Reference Header` and `Reference Footer`; their paragraph styles are
+`Header` and `Footer`, derived from `Header_20_and_20_Footer`. The body uses
+`Standard`, and content.xml has no automatic styles for this case. This
+**CONFIRMS** the prior model and demonstrates that an automatic page layout
+belongs in styles.xml rather than content.xml. Round-trip: **Not performed yet**.
+
+## Cross-fixture empirical comparison
+
+| Semantic object | ODF family | LO placement | Observed reference | Dependency |
+| --- | --- | --- | --- | --- |
+| RefParagraph | paragraph | common, styles.xml | text:p/@text:style-name | parent Standard; paragraph/text properties |
+| Direct paragraph P1 | paragraph | automatic, content.xml | text:p/@text:style-name | local paragraph properties |
+| Direct text T3 | text | automatic, content.xml | text:span/@text:style-name | local text properties |
+| RefOverrideBase | paragraph | common, styles.xml | automatic child P1 | P1 parent reference |
+| RefFont font face | font declaration | duplicated in content/styles | style:text-properties/@style:font-name | style property to style:font-face |
+| Tabelle1.A1 | table-cell | automatic, content.xml | table:table-cell/@table:style-name | cell properties |
+| P1 in table | paragraph | automatic, content.xml | text:p/@text:style-name | parent Table_20_Contents |
+| gr1 | graphic | automatic, content.xml | draw:frame/@draw:style-name | frame graphic properties |
+| IMAGE-01 resource | package file | package + manifest | draw:image/@xlink:href | href to manifest entry |
+| Mpm1 | page-layout | automatic, styles.xml | master/@style:page-layout-name | page properties |
+| Standard master page | master-page | master styles, styles.xml | master-page context | Mpm1, header, footer |
+
+This is an empirical LibreOffice 24.2 view. ODF 1.3 defines the families,
+containers, and references, but not these generated names, property grouping,
+or duplicate font-face choices.
+
+## Phase-1 empirical completion assessment
+
+| Question | Status | Reason |
+| --- | --- | --- |
+| Common style semantics sufficiently evidenced? | SUFFICIENT | STYLE-01, STYLE-05, and FONT-01 show common definitions, parents, and references. |
+| Automatic style semantics sufficiently evidenced? | SUFFICIENT | Direct formatting, table/frame styles, and a styles.xml page layout are captured. |
+| Named + direct override sufficiently evidenced? | SUFFICIENT | STYLE-05 captures automatic child P1 parented by RefOverrideBase. |
+| Font dependencies sufficiently evidenced? | SUFFICIENT | FONT-01 records property, declaration, duplicate containers, and hash. |
+| Table-cell/paragraph/text boundaries sufficiently evidenced? | SUFFICIENT | TABLE-02 records separate cell and paragraph styles and text properties. |
+| Frame ownership/positioning sufficiently evidenced? | SUFFICIENT | FRAME-01/02 records topology, anchor, size, coordinates, and relations. |
+| Image package/resource/manifest dependencies sufficiently evidenced? | SUFFICIENT | IMAGE-01 records href, resource, media type, manifest, and hash. |
+| Page-layout/master-page semantics sufficiently evidenced? | SUFFICIENT | PAGE-01/02 records layout, master, reference, header, and footer. |
+
+No additional Phase-1 fixture is currently justified. Round-trip observation
+remains a separate future decision. Engine implications remain **Not decided
+yet**.

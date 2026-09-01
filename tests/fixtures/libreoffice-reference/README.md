@@ -1,7 +1,7 @@
 # LibreOffice ODF Reference Fixtures
 
-This directory will contain small, manually created LibreOffice documents used
-as empirical references for native ODF serialization.
+This directory contains small, manually created LibreOffice documents used as
+empirical references for native ODF serialization.
 
 The fixtures are independent of current ODT Template Engine output. They are
 not expected-output snapshots for the engine and must not be silently adjusted
@@ -13,7 +13,8 @@ LibreOffice serialization provides practical implementation evidence.
 - `odt/` — original reference ODT files;
 - `extracted/` — raw and, later, normalized evidence extracted from those ODTs.
 
-No binary fixtures are created by the initial framework change.
+Raw extraction preserves the original serialized XML; it is not a generated
+engine snapshot.
 
 ## Captured fixtures
 
@@ -23,6 +24,72 @@ No binary fixtures are created by the initial framework change.
 - LibreOffice: 24.2.7.2 (X86_64), Community, Build 420(Build:2)
 - Platform: Ubuntu 24.04, package `4:24.2.7-0ubuntu0.24.04.6`
 - SHA-256: `1782fa8733db3e88752284e76d72e7fff649ef3fe4aee38976263fcdf6ce53eb`
+- Status: original fixture captured
+- Round-trip: not yet performed
+
+### STYLE-02 + STYLE-04 — Direct formatting
+
+- File: `odt/STYLE-02-04-direct-formatting.odt`
+- LibreOffice: 24.2.7.2 (X86_64), Community, Build 420(Build:2)
+- Platform: Ubuntu 24.04, package `4:24.2.7-0ubuntu0.24.04.6`
+- SHA-256: `12e48079af090d25c42186e81052a8d3d8a356be1e2298986eedbf1c3b0bdb9f`
+- Status: original fixture captured
+- Round-trip: not yet performed
+
+### STYLE-05 — Named style with direct override
+
+- File: `odt/STYLE-05-named-style-direct-override.odt`
+- LibreOffice: 24.2.7.2 (X86_64), Community, Build 420(Build:2)
+- Platform: Ubuntu 24.04, package `4:24.2.7-0ubuntu0.24.04.6`
+- SHA-256: `7ae5f32ddd9ef99f3db5ddcdd9b340d52425b5075bffa97c1e9899bf36b99a02`
+- Status: original fixture captured
+- Round-trip: not yet performed
+
+### FONT-01 — Non-default font
+
+- File: `odt/FONT-01-non-default-font.odt`
+- LibreOffice: 24.2.7.2 (X86_64), Community, Build 420(Build:2)
+- Platform: Ubuntu 24.04, package `4:24.2.7-0ubuntu0.24.04.6`
+- SHA-256: `4680810fd77fc32ff2502d142f80c59a16fde883777f45e9eb487016710c3231`
+- Status: original fixture captured
+- Round-trip: not yet performed
+
+### TABLE-02 — Formatted cell
+
+- File: `odt/TABLE-02-formatted-cell.odt`
+- LibreOffice: 24.2.7.2 (X86_64), Community, Build 420(Build:2)
+- Platform: Ubuntu 24.04, package `4:24.2.7-0ubuntu0.24.04.6`
+- SHA-256: `dba70c9fe41026bda5a3f41bf2d1f2502c152f99e6d4e4272b0849d6f2f05c9b`
+- Status: original fixture captured
+- Round-trip: not yet performed
+
+### FRAME-01 + FRAME-02 — Text-box position
+
+- File: `odt/FRAME-01-02-text-box-position.odt`
+- LibreOffice: 24.2.7.2 (X86_64), Community, Build 420(Build:2)
+- Platform: Ubuntu 24.04, package `4:24.2.7-0ubuntu0.24.04.6`
+- SHA-256: `a12b50088eed794fb74799ae8feb91db5ac0be3e48a900e99e9c3d270560f7b3`
+- Status: original fixture captured
+- Round-trip: not yet performed
+
+### IMAGE-01 — Embedded image
+
+- File: `odt/IMAGE-01-embedded-image.odt`
+- LibreOffice: 24.2.7.2 (X86_64), Community, Build 420(Build:2)
+- Platform: Ubuntu 24.04, package `4:24.2.7-0ubuntu0.24.04.6`
+- SHA-256: `2e4554d7494f28ebee77bc063dc93816e9a77986d3f9b0b707cff3287dd2bbeb`
+- Embedded resource: `Pictures/100000000000028000000280B8169D6C.jpg`, JPEG,
+  640x640, SHA-256 `0227b05d69f45b2acdc56ec7dcb966ed8d284b7054a6ac8c8e7ffa6cfa3c3bef`
+- Source PNG: not supplied; byte-for-byte source comparison not available
+- Status: original fixture captured
+- Round-trip: not yet performed
+
+### PAGE-01 + PAGE-02 — Layout and master page
+
+- File: `odt/PAGE-01-02-layout-master-page.odt`
+- LibreOffice: 24.2.7.2 (X86_64), Community, Build 420(Build:2)
+- Platform: Ubuntu 24.04, package `4:24.2.7-0ubuntu0.24.04.6`
+- SHA-256: `e4f5476cbbf7971461998df99a8f7d5eaf7d0eedf64476cfd0c38a5ce9ce9a81`
 - Status: original fixture captured
 - Round-trip: not yet performed
 

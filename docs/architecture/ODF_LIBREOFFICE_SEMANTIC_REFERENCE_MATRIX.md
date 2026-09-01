@@ -169,6 +169,23 @@ The table below is an index, not a replacement for the case records.
 | PAGE-01 | NORMATIVE CLEAR | OASIS Part 3 §§16.5, 16.9 | Property defaults and generated names are free | TARGETED LO FIXTURE USEFUL | Confirms Writer's page-layout property grouping. |
 | PAGE-02 | NORMATIVE CLEAR | OASIS Part 3 §§16.9, 16.5 | Header/footer content placement and defaults vary by editor | TARGETED LO FIXTURE USEFUL | One combined page/master fixture can verify practical topology. |
 
+## Phase-1 captured fixture register
+
+| IDs | Fixture | Observed empirical result | Provenance |
+| --- | --- | --- | --- |
+| STYLE-02, STYLE-04 | `STYLE-02-04-direct-formatting.odt` | `P1` paragraph and `T1`–`T3` text automatic styles are in `content.xml`; paragraph references P1 and the formatted run references T3. | 12,119 bytes; SHA-256 `12e48079af090d25c42186e81052a8d3d8a356be1e2298986eedbf1c3b0bdb9f` |
+| STYLE-05 | `STYLE-05-named-style-direct-override.odt` | Automatic P1 in `content.xml` is parented by common `RefOverrideBase` in `styles.xml` and contains only the red override. | 10,249 bytes; SHA-256 `7ae5f32ddd9ef99f3db5ddcdd9b340d52425b5075bffa97c1e9899bf36b99a02` |
+| FONT-01 | `FONT-01-non-default-font.odt` | Common `RefFont` references `Liberation Sans1`; matching font-face declarations occur in both document parts. | 10,408 bytes; SHA-256 `4680810fd77fc32ff2502d142f80c59a16fde883777f45e9eb487016710c3231` |
+| TABLE-02 | `TABLE-02-formatted-cell.odt` | Automatic table/table-column/table-row/table-cell styles are in `content.xml`; cell A1 owns background/padding/border and paragraph P1 owns text color/bold. | 10,272 bytes; SHA-256 `dba70c9fe41026bda5a3f41bf2d1f2502c152f99e6d4e4272b0849d6f2f05c9b` |
+| FRAME-01, FRAME-02 | `FRAME-01-02-text-box-position.odt` | Paragraph-anchored `draw:frame` contains `draw:text-box`; direct size/coordinates and automatic graphic style `gr1` carry distinct data. | 10,811 bytes; SHA-256 `a12b50088eed794fb74799ae8feb91db5ac0be3e48a900e99e9c3d270560f7b3` |
+| IMAGE-01 | `IMAGE-01-embedded-image.odt` | Character-anchored frame references automatic graphic style `fr1`; `draw:image` href resolves to a JPEG package resource with matching manifest entry. | 93,272 bytes; SHA-256 `2e4554d7494f28ebee77bc063dc93816e9a77986d3f9b0b707cff3287dd2bbeb` |
+| PAGE-01, PAGE-02 | `PAGE-01-02-layout-master-page.odt` | Automatic page layout `Mpm1` in `styles.xml` is referenced by master page `Standard`, which contains header/footer content. | 11,092 bytes; SHA-256 `e4f5476cbbf7971461998df99a8f7d5eaf7d0eedf64476cfd0c38a5ce9ce9a81` |
+
+All seven fixtures report ODF 1.3 and manifest version 1.3, use the stated
+LibreOffice 24.2.7.2 provenance, and have no non-thumbnail resource except
+IMAGE-01. Detailed content/style/package observations are in
+[the Phase-1 findings](ODF_LIBREOFFICE_PHASE1_RESEARCH_FINDINGS.md).
+
 ## Source register
 
 | Source | Version/section | URL | Use |
