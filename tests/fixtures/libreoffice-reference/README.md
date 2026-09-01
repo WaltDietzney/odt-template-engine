@@ -15,6 +15,17 @@ LibreOffice serialization provides practical implementation evidence.
 
 No binary fixtures are created by the initial framework change.
 
+## Captured fixtures
+
+### STYLE-01 — Named paragraph style
+
+- File: `odt/STYLE-01-named-paragraph-style.odt`
+- LibreOffice: 24.2.7.2 (X86_64), Community, Build 420(Build:2)
+- Platform: Ubuntu 24.04, package `4:24.2.7-0ubuntu0.24.04.6`
+- SHA-256: `1782fa8733db3e88752284e76d72e7fff649ef3fe4aee38976263fcdf6ce53eb`
+- Status: original fixture captured
+- Round-trip: not yet performed
+
 ## Naming
 
 Use the stable reference ID followed by a descriptive name, for example:

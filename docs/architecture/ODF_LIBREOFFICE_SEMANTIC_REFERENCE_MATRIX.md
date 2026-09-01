@@ -176,6 +176,157 @@ normalization is allowed only in addition to retaining the raw extracted XML;
 normalization must not hide semantically relevant data. The helper is not part
 of this framework slice.
 
+## STYLE-01 — Named paragraph style
+
+### Purpose
+
+Record how LibreOffice represents a reusable named paragraph style and how a
+content paragraph references that definition.
+
+### LibreOffice procedure
+
+In LibreOffice Writer 24.2.7.2 Community on Ubuntu 24.04 with the de-DE UI,
+create a document with two visible paragraphs. Create a paragraph style named
+`RefParagraph`, assign it to the first paragraph, and set font size to 14 pt,
+bold, font color `#123456`, and paragraph spacing below to 0.50 cm. Leave the
+second visible paragraph in the standard paragraph style and apply no direct
+formatting after assigning `RefParagraph`.
+
+### Visible result
+
+The document contains the visible paragraphs `Named paragraph style` and
+`Standard paragraph`. The package also contains one empty standard paragraph
+between them, as serialized by LibreOffice.
+
+### Affected channels
+
+`CONTENT`, `STYLE`, `FONT`, `MANIFEST`, and `PACKAGE` are present in the
+fixture. `RESOURCE` is limited to LibreOffice's thumbnail; no image resource
+was introduced by this case. No page/master, metadata, or settings behavior
+was attributed to the named style.
+
+### content.xml observations
+
+The root is `office:document-content` with `office:version="1.3"`. The two
+visible paragraphs are serialized as:
+
+```xml
+<text:p text:style-name="RefParagraph">Named paragraph style</text:p>
+<text:p text:style-name="Standard">Standard paragraph</text:p>
+```
+
+There is no direct paragraph-formatting attribute, child `text:span`, or
+automatic-style indirection on either visible paragraph. `RefParagraph` is
+referenced once directly through `text:style-name`. The standard paragraph is
+referenced directly through `text:style-name="Standard"`.
+
+`office:automatic-styles` in `content.xml` is empty.
+
+### styles.xml observations
+
+The root is `office:document-styles` with `office:version="1.3"`.
+`RefParagraph` is defined directly under `office:styles`:
+
+```xml
+<style:style style:name="RefParagraph"
+             style:family="paragraph"
+             style:parent-style-name="Standard"
+             style:master-page-name="">
+  <style:paragraph-properties
+      fo:margin-top="0cm"
+      fo:margin-bottom="0.499cm"
+      style:contextual-spacing="false"
+      style:page-number="auto"/>
+  <style:text-properties
+      fo:color="#123456"
+      loext:opacity="100%"
+      fo:font-size="14pt"
+      fo:font-weight="bold"/>
+</style:style>
+```
+
+The requested 0.50 cm spacing is serialized as `fo:margin-bottom="0.499cm"`.
+The style has no `style:display-name`, no `style:next-style-name`, and no
+explicit font-family property. Its parent is the common `Standard` paragraph
+style. The `Standard` definition itself has no explicit paragraph or text
+properties in this fixture; defaults provide inherited baseline formatting.
+
+`office:automatic-styles` in `styles.xml` contains the page layout `Mpm1`, not
+a style caused by `RefParagraph`. It defines the document's page geometry and
+is unrelated to this paragraph-style requirement.
+
+### Font-face observations
+
+Both `content.xml` and `styles.xml` contain the same six LibreOffice font-face
+declarations, including `Liberation Serif`, `Liberation Sans`, `FreeSans`, and
+CJK/complex-script fallback faces. `RefParagraph` introduces no new font-face
+dependency: it changes size, weight, and color but does not select a font
+family. The paragraph style therefore inherits the default font family.
+
+### Manifest and package observations
+
+`META-INF/manifest.xml` has `manifest:version="1.3"` and entries for `/`,
+`styles.xml`, `content.xml`, `meta.xml`, `settings.xml`, configuration data,
+`manifest.rdf`, and `Thumbnails/thumbnail.png`. There are no `Pictures/`
+entries and no additional resource introduced by STYLE-01.
+
+The ODT is a ZIP package with 17 entries. `mimetype` is the first entry, has
+the exact value `application/vnd.oasis.opendocument.text`, and is stored
+uncompressed. The original fixture size is 10,879 bytes.
+
+### Reference topology
+
+The observed topology is:
+
+```text
+content.xml
+  text:p text:style-name="RefParagraph"
+        |
+        v
+styles.xml / office:styles
+  style:style style:name="RefParagraph" style:family="paragraph"
+        |
+        +-- style:paragraph-properties
+        |     +-- fo:margin-bottom="0.499cm"
+        |     +-- style:contextual-spacing="false"
+        |     +-- style:page-number="auto"
+        |
+        +-- style:text-properties
+              +-- fo:font-size="14pt"
+              +-- fo:font-weight="bold"
+              +-- fo:color="#123456"
+```
+
+The style inherits from `Standard`. There is no automatic-style or font-face
+indirection specific to `RefParagraph`, and no physical resource dependency.
+
+### ODF interpretation
+
+Observed `style:family="paragraph"` identifies a paragraph-family style
+definition. The content paragraph's `text:style-name` supplies the reference
+to that named definition. The `style:parent-style-name="Standard"` expresses
+inheritance from the common paragraph style, while the paragraph and text
+property children carry the family-specific formatting. These statements are
+the normative ODF interpretation of the observed vocabulary; LibreOffice's
+choice to serialize 0.50 cm as 0.499 cm is an implementation observation.
+
+### Provenance
+
+| Field | Value |
+| --- | --- |
+| Reference ID | STYLE-01 |
+| LibreOffice | 24.2.7.2 (X86_64), Community, Build 420(Build:2) |
+| Platform | Ubuntu 24.04, package `4:24.2.7-0ubuntu0.24.04.6` |
+| UI/locale | de-DE |
+| Creation date | 2026-09-01 |
+| SHA-256 | `1782fa8733db3e88752284e76d72e7fff649ef3fe4aee38976263fcdf6ce53eb` |
+| ODF version | `1.3` in content, styles, meta, and settings; manifest version `1.3` |
+| Round-trip | Not performed yet. |
+
+### Engine implication
+
+Not decided yet.
+
 ## Deferred reference cases
 
 The following are explicitly deferred and are not Phase 1 execution items:
