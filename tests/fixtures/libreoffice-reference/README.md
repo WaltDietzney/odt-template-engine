@@ -59,7 +59,8 @@ engine snapshot.
 - File: `odt/TABLE-02-formatted-cell.odt`
 - LibreOffice: 24.2.7.2 (X86_64), Community, Build 420(Build:2)
 - Platform: Ubuntu 24.04, package `4:24.2.7-0ubuntu0.24.04.6`
-- SHA-256: `dba70c9fe41026bda5a3f41bf2d1f2502c152f99e6d4e4272b0849d6f2f05c9b`
+- SHA-256: `54faedde6930b7812bec91a7fca3aca727128f34b1483e9b7e15027f30444765`
+- Size: 10,283 bytes
 - Status: original fixture captured
 - Round-trip: not yet performed
 

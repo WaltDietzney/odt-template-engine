@@ -406,18 +406,22 @@ Round-trip: **Not performed yet**.
 
 ### TABLE-02 — formatted cell
 
-The original `TABLE-02-formatted-cell.odt` is 10,272 bytes with SHA-256
-`dba70c9fe41026bda5a3f41bf2d1f2502c152f99e6d4e4272b0849d6f2f05c9b`.
+The corrected original `TABLE-02-formatted-cell.odt` is 10,283 bytes with
+SHA-256
+`54faedde6930b7812bec91a7fca3aca727128f34b1483e9b7e15027f30444765`.
 Content contains `table:table` style `Tabelle1`, column style `Tabelle1.A`,
 row style `Tabelle1.1`, and one cell style `Tabelle1.A1`; these are automatic
 styles in content.xml. A1 has `fo:background-color="#ffd546"`,
 `fo:padding="0.199cm"`, and `fo:border="1pt solid #000000"`.
 
 The cell contains `text:p text:style-name="P1"`; P1 is an automatic paragraph
-style parented by `Table_20_Contents` and carries `fo:color="#cc0000"` and
-bold properties. No text span is needed. The requested paragraph centering
-was not observed in P1's emitted properties, so this is recorded rather than
-corrected. This **REFINES** the prior model. Round-trip: **Not performed yet**.
+style parented by `Table_20_Contents` and carries
+`fo:text-align="center"`, `fo:color="#cc0000"`, and bold properties. No text
+span is needed. This demonstrates all three semantic property domains in the
+fixture: cell background/padding/border, paragraph alignment, and text
+color/weight, even though paragraph and text properties share one
+paragraph-family style definition. This **CONFIRMS** the prior model and
+corrects the incomplete earlier capture. Round-trip: **Not performed yet**.
 
 ### FRAME-01 + FRAME-02 — text box and position
 
@@ -480,7 +484,7 @@ belongs in styles.xml rather than content.xml. Round-trip: **Not performed yet**
 | RefOverrideBase | paragraph | common, styles.xml | automatic child P1 | P1 parent reference |
 | RefFont font face | font declaration | duplicated in content/styles | style:text-properties/@style:font-name | style property to style:font-face |
 | Tabelle1.A1 | table-cell | automatic, content.xml | table:table-cell/@table:style-name | cell properties |
-| P1 in table | paragraph | automatic, content.xml | text:p/@text:style-name | parent Table_20_Contents |
+| P1 in table | paragraph | automatic, content.xml | text:p/@text:style-name | parent Table_20_Contents; centered paragraph and text properties |
 | gr1 | graphic | automatic, content.xml | draw:frame/@draw:style-name | frame graphic properties |
 | IMAGE-01 resource | package file | package + manifest | draw:image/@xlink:href | href to manifest entry |
 | Mpm1 | page-layout | automatic, styles.xml | master/@style:page-layout-name | page properties |
@@ -498,7 +502,7 @@ or duplicate font-face choices.
 | Automatic style semantics sufficiently evidenced? | SUFFICIENT | Direct formatting, table/frame styles, and a styles.xml page layout are captured. |
 | Named + direct override sufficiently evidenced? | SUFFICIENT | STYLE-05 captures automatic child P1 parented by RefOverrideBase. |
 | Font dependencies sufficiently evidenced? | SUFFICIENT | FONT-01 records property, declaration, duplicate containers, and hash. |
-| Table-cell/paragraph/text boundaries sufficiently evidenced? | SUFFICIENT | TABLE-02 records separate cell and paragraph styles and text properties. |
+| Table-cell/paragraph/text boundaries sufficiently evidenced? | SUFFICIENT | Corrected TABLE-02 records cell properties, centered paragraph properties, and text properties. |
 | Frame ownership/positioning sufficiently evidenced? | SUFFICIENT | FRAME-01/02 records topology, anchor, size, coordinates, and relations. |
 | Image package/resource/manifest dependencies sufficiently evidenced? | SUFFICIENT | IMAGE-01 records href, resource, media type, manifest, and hash. |
 | Page-layout/master-page semantics sufficiently evidenced? | SUFFICIENT | PAGE-01/02 records layout, master, reference, header, and footer. |
