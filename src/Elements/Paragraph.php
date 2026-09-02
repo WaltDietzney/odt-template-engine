@@ -3,7 +3,9 @@
 namespace OdtTemplateEngine\Elements;
 
 use OdtTemplateEngine\Utils\StyleMapper;
+use OdtTemplateEngine\Utils\StyleOptionSplitter;
 use OdtTemplateEngine\Contracts\HasStyles;
+use OdtTemplateEngine\Document\StyleRequirement;
 use DOMDocument;
 use DOMNode;
 
@@ -436,6 +438,63 @@ public function setParagraphStyleOptions(array $options): self
     public function getOwnRequiredParagraphStyles(): array
     {
         return $this->getRequiredParagraphStyles();
+    }
+
+    /**
+     * Returns semantic style requirements owned directly by this paragraph.
+     *
+     * @return iterable<int, StyleRequirement>
+     */
+    public function getOwnStyleRequirements(): iterable
+    {
+        if ($this->paragraphStyle !== null) {
+            if ($this->paragraphStyleOptions !== []) {
+                $split = StyleOptionSplitter::split($this->paragraphStyleOptions, 'paragraph');
+                $propertyGroups = [];
+
+                if ($split['paragraph'] !== []) {
+                    $propertyGroups['style:paragraph-properties'] = StyleMapper::mapParagraphStyle(
+                        $split['paragraph']
+                    );
+                }
+
+                if ($split['text'] !== []) {
+                    $propertyGroups['style:text-properties'] = StyleMapper::mapTextStyleOptions(
+                        $split['text']
+                    );
+                }
+
+                yield new StyleRequirement(
+                    StyleRequirement::KIND_DEFINITION,
+                    StyleRequirement::SCOPE_COMMON,
+                    'paragraph',
+                    StyleRequirement::PART_STYLES,
+                    $this->paragraphStyle,
+                    'Standard',
+                    $propertyGroups
+                );
+            } else {
+                yield new StyleRequirement(
+                    StyleRequirement::KIND_REFERENCE,
+                    null,
+                    'paragraph',
+                    null,
+                    $this->paragraphStyle
+                );
+            }
+        }
+
+        foreach ($this->textStyleMap as $styleName => $style) {
+            yield new StyleRequirement(
+                StyleRequirement::KIND_DEFINITION,
+                StyleRequirement::SCOPE_COMMON,
+                'text',
+                StyleRequirement::PART_STYLES,
+                $styleName,
+                'Standard',
+                ['style:text-properties' => StyleMapper::mapTextStyleOptions($style)]
+            );
+        }
     }
 
     /**

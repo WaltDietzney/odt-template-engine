@@ -120,6 +120,49 @@ final class StyleRequirementTest extends TestCase
         self::assertSame([], $requirement->propertyGroups());
     }
 
+    public function testUnresolvedReferenceMayOmitScopeAndDocumentPart(): void
+    {
+        $requirement = new StyleRequirement(
+            StyleRequirement::KIND_REFERENCE,
+            null,
+            'paragraph',
+            null,
+            'CVMainHeading'
+        );
+
+        self::assertNull($requirement->scope());
+        self::assertNull($requirement->documentPart());
+        self::assertSame([], $requirement->propertyGroups());
+    }
+
+    public function testDefinitionMustSpecifyScope(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('must specify a scope');
+
+        new StyleRequirement(
+            StyleRequirement::KIND_DEFINITION,
+            null,
+            'paragraph',
+            StyleRequirement::PART_STYLES,
+            'Name'
+        );
+    }
+
+    public function testDefinitionMustSpecifyDocumentPart(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('must specify a document part');
+
+        new StyleRequirement(
+            StyleRequirement::KIND_DEFINITION,
+            StyleRequirement::SCOPE_COMMON,
+            'paragraph',
+            null,
+            'Name'
+        );
+    }
+
     #[DataProvider('invalidRequirementProvider')]
     public function testInvalidRequirementsAreRejected(callable $factory, string $message): void
     {

@@ -5,6 +5,7 @@ namespace OdtTemplateEngine\Elements;
 use DOMDocument;
 use DOMNode;
 use OdtTemplateEngine\Contracts\HasStyles;
+use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Elements\DOMElement;
 
 
@@ -83,6 +84,19 @@ abstract class OdtElement implements HasStyles
     public function getOwnRequiredStyles(): array
     {
         return $this->getRequiredStyles();
+    }
+
+    /**
+     * Returns semantic style requirements owned directly by this element.
+     *
+     * Traversal of owned elements belongs to StyleRequirementCollector; leaf
+     * and composite elements only describe their own requirements here.
+     *
+     * @return iterable<int, StyleRequirement>
+     */
+    public function getOwnStyleRequirements(): iterable
+    {
+        return [];
     }
 
     /** @return array<string, array<string, mixed>> */

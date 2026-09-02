@@ -31,9 +31,9 @@ final readonly class StyleRequirement
      */
     public function __construct(
         private string $kind,
-        private string $scope,
+        private ?string $scope,
         private string $family,
-        private string $documentPart,
+        private ?string $documentPart,
         private string $name,
         private ?string $parentStyleName = null,
         private array $propertyGroups = []
@@ -46,7 +46,7 @@ final readonly class StyleRequirement
         return $this->kind;
     }
 
-    public function scope(): string
+    public function scope(): ?string
     {
         return $this->scope;
     }
@@ -56,7 +56,7 @@ final readonly class StyleRequirement
         return $this->family;
     }
 
-    public function documentPart(): string
+    public function documentPart(): ?string
     {
         return $this->documentPart;
     }
@@ -88,7 +88,11 @@ final readonly class StyleRequirement
             ));
         }
 
-        if (!in_array($this->scope, [self::SCOPE_COMMON, self::SCOPE_AUTOMATIC], true)) {
+        if ($this->kind === self::KIND_DEFINITION && $this->scope === null) {
+            throw new InvalidArgumentException('Definition style requirements must specify a scope.');
+        }
+
+        if ($this->scope !== null && !in_array($this->scope, [self::SCOPE_COMMON, self::SCOPE_AUTOMATIC], true)) {
             throw new InvalidArgumentException(sprintf(
                 'Unsupported style requirement scope "%s".',
                 $this->scope
@@ -99,7 +103,11 @@ final readonly class StyleRequirement
             throw new InvalidArgumentException('Style requirement family must not be empty.');
         }
 
-        if (!in_array($this->documentPart, [self::PART_CONTENT, self::PART_STYLES], true)) {
+        if ($this->kind === self::KIND_DEFINITION && $this->documentPart === null) {
+            throw new InvalidArgumentException('Definition style requirements must specify a document part.');
+        }
+
+        if ($this->documentPart !== null && !in_array($this->documentPart, [self::PART_CONTENT, self::PART_STYLES], true)) {
             throw new InvalidArgumentException(sprintf(
                 'Unsupported style requirement document part "%s".',
                 $this->documentPart
