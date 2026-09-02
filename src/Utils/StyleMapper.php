@@ -206,6 +206,12 @@ class StyleMapper
     {
         $mapped = [];
 
+        foreach ($options as $key => $value) {
+            if (preg_match('/^(fo:|style:)/', (string) $key)) {
+                $mapped[(string) $key] = $value;
+            }
+        }
+
         // Fett
         if (!empty($options['bold'])) {
             $mapped['fo:font-weight'] = 'bold';

@@ -160,6 +160,31 @@ final class ParagraphTest extends TestCase
         }
     }
 
+    public function testNativeInlineTextPropertiesArePreservedAsSemanticProperties(): void
+    {
+        $paragraph = (new Paragraph())->addText('native', [
+            'fo:color' => '#123456',
+            'fo:font-size' => '13pt',
+            'fo:font-weight' => 'bold',
+            'fo:font-style' => 'italic',
+            'style:font-name' => 'Liberation Sans',
+            'style:text-underline-style' => 'solid',
+        ]);
+
+        $requirements = iterator_to_array($paragraph->getOwnStyleRequirements(), false);
+
+        self::assertSame([
+            'style:text-properties' => [
+                'fo:color' => '#123456',
+                'fo:font-size' => '13pt',
+                'fo:font-weight' => 'bold',
+                'fo:font-style' => 'italic',
+                'style:font-name' => 'Liberation Sans',
+                'style:text-underline-style' => 'solid',
+            ],
+        ], $requirements[0]->propertyGroups());
+    }
+
     public function testSemanticDiscoveryDoesNotMutateLegacyStyleRegistries(): void
     {
         $paragraph = new Paragraph('SemanticOnlyParagraph', ['text-align' => 'center']);
