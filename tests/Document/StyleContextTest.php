@@ -243,6 +243,73 @@ final class StyleContextTest extends TestCase
         self::assertSame([], $second->unresolvedReferences());
     }
 
+    public function testMultipleDocumentLocalCandidatesAreAmbiguousRegardlessOfRegistrationOrder(): void
+    {
+        $common = $this->paragraphRequirement('Foo', [
+            'style:paragraph-properties' => ['fo:text-align' => 'center'],
+        ]);
+        $automatic = new StyleRequirement(
+            StyleRequirement::KIND_DEFINITION,
+            StyleRequirement::SCOPE_AUTOMATIC,
+            'paragraph',
+            StyleRequirement::PART_CONTENT,
+            'Foo',
+            null,
+            ['style:paragraph-properties' => ['fo:text-align' => 'right']]
+        );
+        $reference = new StyleRequirement(StyleRequirement::KIND_REFERENCE, null, 'paragraph', null, 'Foo');
+
+        $first = new StyleContext();
+        $first->registerRequirement($common);
+        $first->registerRequirement($automatic);
+        $first->registerRequirement($reference);
+
+        $second = new StyleContext();
+        $second->registerRequirement($automatic);
+        $second->registerRequirement($common);
+        $second->registerRequirement($reference);
+
+        self::assertSame([$reference], $first->ambiguousReferences());
+        self::assertSame([$reference], $second->ambiguousReferences());
+        self::assertCount(2, $first->ambiguousReferenceCandidates($reference));
+        self::assertCount(2, $second->ambiguousReferenceCandidates($reference));
+        self::assertNull($first->referenceResolution($reference));
+        self::assertNull($second->referenceResolution($reference));
+        self::assertSame([], $first->unresolvedReferences());
+        self::assertSame([], $second->unresolvedReferences());
+    }
+
+    public function testNarrowedReferenceSelectsOneOfMultipleSemanticDefinitions(): void
+    {
+        $common = $this->paragraphRequirement('Foo', [
+            'style:paragraph-properties' => ['fo:text-align' => 'center'],
+        ]);
+        $automatic = new StyleRequirement(
+            StyleRequirement::KIND_DEFINITION,
+            StyleRequirement::SCOPE_AUTOMATIC,
+            'paragraph',
+            StyleRequirement::PART_CONTENT,
+            'Foo',
+            null,
+            ['style:paragraph-properties' => ['fo:text-align' => 'right']]
+        );
+        $reference = new StyleRequirement(
+            StyleRequirement::KIND_REFERENCE,
+            StyleRequirement::SCOPE_COMMON,
+            'paragraph',
+            StyleRequirement::PART_STYLES,
+            'Foo'
+        );
+        $context = new StyleContext();
+        $context->registerRequirement($common);
+        $context->registerRequirement($automatic);
+        $context->registerRequirement($reference);
+
+        self::assertSame([], $context->ambiguousReferences());
+        self::assertSame('document-local', $context->referenceResolution($reference));
+        self::assertSame($common, $context->referenceCandidate($reference));
+    }
+
     public function testReferenceRecognizesExistingStylesAndContentAutomaticStyles(): void
     {
         $styles = $this->dom('<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"><office:styles><style:style style:name="Existing" style:family="paragraph"/></office:styles></office:document-styles>');
@@ -256,6 +323,36 @@ final class StyleContextTest extends TestCase
 
         self::assertSame('document', $context->referenceResolution($existing));
         self::assertSame('document', $context->referenceResolution($automatic));
+    }
+
+    public function testMultipleExistingDocumentStylesAreAmbiguous(): void
+    {
+        $styles = $this->dom('<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"><office:styles><style:style style:name="Duplicate" style:family="paragraph"/><style:style style:name="Duplicate" style:family="paragraph"/></office:styles></office:document-styles>');
+        $context = new StyleContext(null, $styles);
+        $reference = new StyleRequirement(StyleRequirement::KIND_REFERENCE, null, 'paragraph', null, 'Duplicate');
+
+        $context->registerRequirement($reference);
+
+        self::assertSame([$reference], $context->ambiguousReferences());
+        self::assertCount(2, $context->ambiguousReferenceCandidates($reference));
+        self::assertNull($context->referenceResolution($reference));
+    }
+
+    public function testExistingDocumentCandidateWinsOverLowerPriorityCandidates(): void
+    {
+        $name = 'Precedence_' . bin2hex(random_bytes(4));
+        \OdtTemplateEngine\Utils\StyleMapper::registerParagraphStyle($name, ['text-align' => 'left']);
+        $styles = $this->dom('<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"><office:styles><style:style style:name="' . $name . '" style:family="paragraph"/></office:styles></office:document-styles>');
+        $context = new StyleContext(null, $styles);
+        $local = $this->paragraphRequirement($name, []);
+        $reference = new StyleRequirement(StyleRequirement::KIND_REFERENCE, null, 'paragraph', null, $name);
+
+        $context->registerRequirement($local);
+        $context->registerRequirement($reference);
+
+        self::assertSame('document', $context->referenceResolution($reference));
+        self::assertSame('document', $context->referenceCandidate($reference)['source']);
+        self::assertSame(StyleRequirement::PART_STYLES, $context->referenceCandidate($reference)['documentPart']);
     }
 
     public function testReferenceCanUseBoundedLegacyParagraphCompatibilitySource(): void

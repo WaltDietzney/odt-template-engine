@@ -30,6 +30,12 @@ final class StyleContext
     /** @var array<int, array{requirement: StyleRequirement, source: string}> */
     private array $referenceResolutions = [];
 
+    /** @var array<int, list<array<string, mixed>>> */
+    private array $referenceCandidates = [];
+
+    /** @var array<int, list<array<string, mixed>>> */
+    private array $ambiguousReferenceCandidates = [];
+
     public function __construct(
         private ?DOMDocument $contentDom = null,
         private ?DOMDocument $stylesDom = null
@@ -100,10 +106,48 @@ final class StyleContext
     }
 
     /** @return list<StyleRequirement> */
+    public function ambiguousReferences(): array
+    {
+        $references = [];
+        foreach (array_keys($this->ambiguousReferenceCandidates) as $index) {
+            $references[] = $this->semanticReferences[$index];
+        }
+
+        return $references;
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function ambiguousReferenceCandidates(StyleRequirement $reference): array
+    {
+        foreach ($this->semanticReferences as $index => $candidateReference) {
+            if ($candidateReference === $reference) {
+                return $this->ambiguousReferenceCandidates[$index] ?? [];
+            }
+        }
+
+        return [];
+    }
+
+    /** @return StyleRequirement|array<string, mixed>|null */
+    public function referenceCandidate(StyleRequirement $reference): StyleRequirement|array|null
+    {
+        foreach ($this->semanticReferences as $index => $candidateReference) {
+            if ($candidateReference === $reference) {
+                return $this->referenceCandidates[$index] ?? null;
+            }
+        }
+
+        return null;
+    }
+
+    /** @return list<StyleRequirement> */
     public function unresolvedReferences(): array
     {
         $resolved = [];
         foreach (array_keys($this->referenceResolutions) as $index) {
+            $resolved[$index] = true;
+        }
+        foreach (array_keys($this->ambiguousReferenceCandidates) as $index) {
             $resolved[$index] = true;
         }
 
@@ -253,6 +297,8 @@ final class StyleContext
         $this->semanticDefinitions = [];
         $this->semanticReferences = [];
         $this->referenceResolutions = [];
+        $this->referenceCandidates = [];
+        $this->ambiguousReferenceCandidates = [];
         $this->paragraphStyles = [];
         $this->textStyles = [];
         $this->frameStyles = [];
@@ -284,34 +330,48 @@ final class StyleContext
     private function refreshReferenceResolutions(): void
     {
         $this->referenceResolutions = [];
+        $this->referenceCandidates = [];
+        $this->ambiguousReferenceCandidates = [];
         foreach ($this->semanticReferences as $index => $reference) {
-            $source = $this->resolveReferenceSource($reference);
-            if ($source !== null) {
+            [$source, $candidates] = $this->resolveReference($reference);
+            if (count($candidates) > 1) {
+                $this->ambiguousReferenceCandidates[$index] = $candidates;
+                continue;
+            }
+
+            if ($source !== null && $candidates !== []) {
                 $this->referenceResolutions[$index] = [
                     'requirement' => $reference,
                     'source' => $source,
                 ];
+                $this->referenceCandidates[$index] = $candidates[0];
             }
         }
     }
 
-    private function resolveReferenceSource(StyleRequirement $reference): ?string
+    /** @return array{0: string|null, 1: list<array<string, mixed>>} */
+    private function resolveReference(StyleRequirement $reference): array
     {
-        if ($this->existingDocumentStyleExists($reference)) {
-            return 'document';
+        $documentCandidates = $this->existingDocumentStyleCandidates($reference);
+        if ($documentCandidates !== []) {
+            return ['document', $documentCandidates];
         }
 
+        $localCandidates = [];
         foreach ($this->semanticDefinitions as $definition) {
             if ($this->referenceMatchesDefinition($reference, $definition)) {
-                return 'document-local';
+                $localCandidates[] = $definition;
             }
+        }
+        if ($localCandidates !== []) {
+            return ['document-local', $localCandidates];
         }
 
         if ($this->legacyStyleExists($reference)) {
-            return 'legacy';
+            return ['legacy', [$this->legacyCandidate($reference)]];
         }
 
-        return null;
+        return [null, []];
     }
 
     private function referenceMatchesDefinition(
@@ -325,22 +385,40 @@ final class StyleContext
                 || $reference->documentPart() === $definition->documentPart());
     }
 
-    private function existingDocumentStyleExists(StyleRequirement $reference): bool
+    /** @return list<array<string, mixed>> */
+    private function existingDocumentStyleCandidates(StyleRequirement $reference): array
     {
-        foreach ([$this->stylesDom, $this->contentDom] as $dom) {
+        $candidates = [];
+        foreach ([StyleRequirement::PART_STYLES => $this->stylesDom, StyleRequirement::PART_CONTENT => $this->contentDom] as $part => $dom) {
             if (!$dom) {
                 continue;
             }
 
             foreach ($dom->getElementsByTagNameNS(self::STYLE_NAMESPACE, 'style') as $style) {
-                if ($style->getAttributeNS(self::STYLE_NAMESPACE, 'name') === $reference->name()
-                    && $style->getAttributeNS(self::STYLE_NAMESPACE, 'family') === $reference->family()) {
-                    return true;
+                if ($style->getAttributeNS(self::STYLE_NAMESPACE, 'name') !== $reference->name()
+                    || $style->getAttributeNS(self::STYLE_NAMESPACE, 'family') !== $reference->family()) {
+                    continue;
                 }
+
+                $scope = $this->documentStyleScope($style);
+                if ($reference->documentPart() !== null && $reference->documentPart() !== $part) {
+                    continue;
+                }
+                if ($reference->scope() !== null && $reference->scope() !== $scope) {
+                    continue;
+                }
+
+                $candidates[] = [
+                    'source' => 'document',
+                    'family' => $reference->family(),
+                    'name' => $reference->name(),
+                    'scope' => $scope,
+                    'documentPart' => $part,
+                ];
             }
         }
 
-        return false;
+        return $candidates;
     }
 
     private function legacyStyleExists(StyleRequirement $reference): bool
@@ -354,6 +432,35 @@ final class StyleContext
         }
 
         return false;
+    }
+
+    /** @return array<string, mixed> */
+    private function legacyCandidate(StyleRequirement $reference): array
+    {
+        return [
+            'source' => 'legacy',
+            'family' => $reference->family(),
+            'name' => $reference->name(),
+            'scope' => null,
+            'documentPart' => null,
+        ];
+    }
+
+    private function documentStyleScope(\DOMElement $style): ?string
+    {
+        $parent = $style->parentNode;
+        while ($parent instanceof \DOMElement) {
+            $localName = $parent->localName;
+            if ($localName === 'styles' && $parent->namespaceURI === 'urn:oasis:names:tc:opendocument:xmlns:office:1.0') {
+                return StyleRequirement::SCOPE_COMMON;
+            }
+            if ($localName === 'automatic-styles' && $parent->namespaceURI === 'urn:oasis:names:tc:opendocument:xmlns:office:1.0') {
+                return StyleRequirement::SCOPE_AUTOMATIC;
+            }
+            $parent = $parent->parentNode;
+        }
+
+        return null;
     }
 
     /**

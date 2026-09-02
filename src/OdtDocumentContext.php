@@ -60,7 +60,7 @@ final class OdtDocumentContext
         $this->contentDom = $contentDom;
         $this->stylesDom = $stylesDom;
         $this->metaDom = $metaDom;
-        $this->styleContext->replaceDocumentParts($contentDom, $stylesDom);
         $this->styleContext->reset();
+        $this->styleContext->replaceDocumentParts($contentDom, $stylesDom);
     }
 }
