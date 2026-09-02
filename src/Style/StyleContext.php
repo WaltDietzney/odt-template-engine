@@ -141,6 +141,30 @@ final class StyleContext
     }
 
     /** @return list<StyleRequirement> */
+    public function materializationRequirements(): array
+    {
+        $requirements = array_values($this->semanticDefinitions);
+        $identities = [];
+        foreach ($requirements as $requirement) {
+            $identities[$this->semanticIdentity($requirement)] = true;
+        }
+
+        foreach ($this->semanticReferences as $reference) {
+            if ($this->referenceResolution($reference) !== 'legacy') {
+                continue;
+            }
+            $requirement = $this->legacyRequirement($reference);
+            $identity = $this->semanticIdentity($requirement);
+            if (!isset($identities[$identity])) {
+                $requirements[] = $requirement;
+                $identities[$identity] = true;
+            }
+        }
+
+        return $requirements;
+    }
+
+    /** @return list<StyleRequirement> */
     public function unresolvedReferences(): array
     {
         $resolved = [];
@@ -444,6 +468,26 @@ final class StyleContext
             'scope' => null,
             'documentPart' => null,
         ];
+    }
+
+    private function legacyRequirement(StyleRequirement $reference): StyleRequirement
+    {
+        $properties = $reference->family() === 'paragraph'
+            ? StyleMapper::mapParagraphStyle(StyleMapper::getParagraphStyles()[$reference->name()])
+            : StyleMapper::mapTextStyleOptions(StyleMapper::getTextStyles()[$reference->name()]);
+        $group = $reference->family() === 'paragraph'
+            ? 'style:paragraph-properties'
+            : 'style:text-properties';
+
+        return new StyleRequirement(
+            StyleRequirement::KIND_DEFINITION,
+            StyleRequirement::SCOPE_COMMON,
+            $reference->family(),
+            StyleRequirement::PART_STYLES,
+            $reference->name(),
+            'Standard',
+            [$group => $properties]
+        );
     }
 
     private function documentStyleScope(\DOMElement $style): ?string

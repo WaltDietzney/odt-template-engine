@@ -18,6 +18,7 @@ use OdtTemplateEngine\Document\SectionTarget;
 use OdtTemplateEngine\Document\StructuredElementMaterializer;
 use OdtTemplateEngine\Document\StructuredResourceCollector;
 use OdtTemplateEngine\Document\StyleRequirementCollector;
+use OdtTemplateEngine\Document\StyleRequirementMaterializer;
 use OdtTemplateEngine\Document\TableTarget;
 use OdtTemplateEngine\Document\TemplateTargetResolver;
 use OdtTemplateEngine\Document\TypedTargetResolver;
@@ -268,6 +269,11 @@ class OdtTemplate
         $collector = new StyleRequirementCollector();
         foreach ($collector->collectSemantic($element) as $requirement) {
             $this->documentContext()->styleContext()->registerRequirement($requirement);
+        }
+
+        $materializer = new StyleRequirementMaterializer();
+        foreach ($this->documentContext()->styleContext()->materializationRequirements() as $requirement) {
+            $materializer->materialize($this->documentContext(), $requirement);
         }
 
         foreach ($collector->collect($element) as $requirement) {
