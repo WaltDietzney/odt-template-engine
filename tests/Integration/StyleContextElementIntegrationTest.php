@@ -53,6 +53,23 @@ final class StyleContextElementIntegrationTest extends TestCase
         self::assertSame(['style:paragraph-properties' => ['fo:margin-left' => '1cm']], $requirements[0]->propertyGroups());
     }
 
+    public function testSemanticParagraphAndTextDefinitionsDoNotCallLegacyPhysicalEnsurers(): void
+    {
+        $style = '01D_Owner_' . bin2hex(random_bytes(4));
+        $template = new StyleContextMaterializationOwnershipProbe($this->templatePath());
+        $element = (new RichText())->addParagraph(
+            (new Paragraph($style, ['margin-left' => '1cm']))->addText('Owned text', ['color' => '#123456'])
+        );
+        $template->resetEnsureCounters();
+
+        $template->setElement('my_list', $element);
+
+        self::assertSame(0, $template->paragraphEnsureCalls);
+        self::assertSame(0, $template->textEnsureCalls);
+        self::assertArrayHasKey($style, $template->paragraphStyles());
+        self::assertCount(2, $template->semanticDefinitions());
+    }
+
     public function testMissingSemanticParagraphReferenceRemainsNonFatal(): void
     {
         $template = new StyleContextInspectableTemplate($this->templatePath());
@@ -214,5 +231,41 @@ final class StyleContextInspectableTemplate extends OdtTemplate
     public function contentXml(): string
     {
         return $this->documentContext()->contentDom()->saveXML() ?: '';
+    }
+}
+
+final class StyleContextMaterializationOwnershipProbe extends OdtTemplate
+{
+    public int $paragraphEnsureCalls = 0;
+    public int $textEnsureCalls = 0;
+
+    public function resetEnsureCounters(): void
+    {
+        $this->paragraphEnsureCalls = 0;
+        $this->textEnsureCalls = 0;
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function paragraphStyles(): array
+    {
+        return $this->documentContext()->styleContext()->paragraphStyles();
+    }
+
+    /** @return array<string, \OdtTemplateEngine\Document\StyleRequirement> */
+    public function semanticDefinitions(): array
+    {
+        return $this->documentContext()->styleContext()->semanticDefinitions();
+    }
+
+    public function ensureParagraphStylesExist(array $styleMap): void
+    {
+        $this->paragraphEnsureCalls++;
+        parent::ensureParagraphStylesExist($styleMap);
+    }
+
+    protected function ensureTextStylesExist(array $styleMap): void
+    {
+        $this->textEnsureCalls++;
+        parent::ensureTextStylesExist($styleMap);
     }
 }

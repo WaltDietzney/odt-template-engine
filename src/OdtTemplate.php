@@ -19,6 +19,7 @@ use OdtTemplateEngine\Document\StructuredElementMaterializer;
 use OdtTemplateEngine\Document\StructuredResourceCollector;
 use OdtTemplateEngine\Document\StyleRequirementCollector;
 use OdtTemplateEngine\Document\StyleRequirementMaterializer;
+use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Document\TableTarget;
 use OdtTemplateEngine\Document\TemplateTargetResolver;
 use OdtTemplateEngine\Document\TypedTargetResolver;
@@ -267,7 +268,9 @@ class OdtTemplate
     public function setElement(string $placeholder, OdtElement $element): void
     {
         $collector = new StyleRequirementCollector();
-        foreach ($collector->collectSemantic($element) as $requirement) {
+        $semanticRequirements = iterator_to_array($collector->collectSemantic($element), false);
+        $semanticOwnedLegacyStyles = $this->semanticOwnedLegacyStyles($semanticRequirements);
+        foreach ($semanticRequirements as $requirement) {
             $this->documentContext()->styleContext()->registerRequirement($requirement);
         }
 
@@ -282,17 +285,21 @@ class OdtTemplate
                     $requirement['name'],
                     $requirement['definition']
                 );
-                $this->ensureParagraphStylesExist([
-                    $requirement['name'] => $requirement['definition'],
-                ]);
+                if (!$this->isSemanticParagraphTextRequirement($requirement, $semanticOwnedLegacyStyles)) {
+                    $this->ensureParagraphStylesExist([
+                        $requirement['name'] => $requirement['definition'],
+                    ]);
+                }
             } elseif ($requirement['family'] === 'text') {
                 $this->documentContext()->styleContext()->registerTextStyle(
                     $requirement['name'],
                     $requirement['definition']
                 );
-                $this->ensureTextStylesExist([
-                    $requirement['name'] => $requirement['definition'],
-                ]);
+                if (!$this->isSemanticParagraphTextRequirement($requirement, $semanticOwnedLegacyStyles)) {
+                    $this->ensureTextStylesExist([
+                        $requirement['name'] => $requirement['definition'],
+                    ]);
+                }
             }
         }
         if ($element instanceof HasStyles) {
@@ -339,6 +346,46 @@ class OdtTemplate
                     break;
             }
         }
+    }
+
+    /**
+     * Return the bounded legacy identities superseded by semantic producers.
+     *
+     * Current Paragraph/Text producers materialize definitions as common
+     * styles in styles.xml. The legacy collector has no scope or document
+     * part dimensions, so this bridge intentionally applies only to that
+     * current producer contract.
+     *
+     * @param list<\OdtTemplateEngine\Document\StyleRequirement> $requirements
+     * @return array<string, true>
+     */
+    private function semanticOwnedLegacyStyles(array $requirements): array
+    {
+        $owned = [];
+        foreach ($requirements as $requirement) {
+            if ($requirement->kind() !== StyleRequirement::KIND_DEFINITION
+                || $requirement->scope() !== StyleRequirement::SCOPE_COMMON
+                || $requirement->documentPart() !== StyleRequirement::PART_STYLES
+                || !in_array($requirement->family(), ['paragraph', 'text'], true)) {
+                continue;
+            }
+            $owned[$requirement->family() . "\0" . $requirement->name()] = true;
+        }
+
+        return $owned;
+    }
+
+    /**
+     * @param array{family: string, name: string, definition: array<string, mixed>} $requirement
+     * @param array<string, true> $semanticOwnedLegacyStyles
+     */
+    private function isSemanticParagraphTextRequirement(array $requirement, array $semanticOwnedLegacyStyles): bool
+    {
+        if (!in_array($requirement['family'], ['paragraph', 'text'], true)) {
+            return false;
+        }
+
+        return isset($semanticOwnedLegacyStyles[$requirement['family'] . "\0" . $requirement['name']]);
     }
 
     /**
