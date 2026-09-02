@@ -39,6 +39,30 @@ final class StyleContextElementIntegrationTest extends TestCase
         self::assertSame([$style => $textStyle], $template->textStyles());
     }
 
+    public function testSetElementRegistersSemanticParagraphRequirementInCurrentDocument(): void
+    {
+        $style = '01D_Semantic_' . bin2hex(random_bytes(4));
+        $template = new StyleContextInspectableTemplate($this->templatePath());
+
+        $template->setElement('my_list', $this->richText($style, ['margin-left' => '1cm']));
+
+        $requirements = array_values($template->semanticDefinitions());
+        self::assertCount(1, $requirements);
+        self::assertSame('paragraph', $requirements[0]->family());
+        self::assertSame($style, $requirements[0]->name());
+        self::assertSame(['style:paragraph-properties' => ['fo:margin-left' => '1cm']], $requirements[0]->propertyGroups());
+    }
+
+    public function testMissingSemanticParagraphReferenceRemainsNonFatal(): void
+    {
+        $template = new StyleContextInspectableTemplate($this->templatePath());
+        $template->setElement('my_list', new Paragraph('MissingSemanticStyle'));
+
+        self::assertCount(1, $template->semanticReferences());
+        self::assertCount(1, $template->unresolvedSemanticReferences());
+        self::assertSame('MissingSemanticStyle', $template->semanticReferences()[0]->name());
+    }
+
     public function testStructuredElementRequirementsAreDocumentIsolated(): void
     {
         $styleA = '01D_A_' . bin2hex(random_bytes(4));
@@ -154,6 +178,24 @@ final class StyleContextInspectableTemplate extends OdtTemplate
     public function textStyles(): array
     {
         return $this->documentContext()->styleContext()->textStyles();
+    }
+
+    /** @return array<string, \OdtTemplateEngine\Document\StyleRequirement> */
+    public function semanticDefinitions(): array
+    {
+        return $this->documentContext()->styleContext()->semanticDefinitions();
+    }
+
+    /** @return list<\OdtTemplateEngine\Document\StyleRequirement> */
+    public function semanticReferences(): array
+    {
+        return $this->documentContext()->styleContext()->semanticReferences();
+    }
+
+    /** @return list<\OdtTemplateEngine\Document\StyleRequirement> */
+    public function unresolvedSemanticReferences(): array
+    {
+        return $this->documentContext()->styleContext()->unresolvedReferences();
     }
 
     public function appendPlaceholder(string $name): void

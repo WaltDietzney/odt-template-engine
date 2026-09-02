@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace OdtTemplateEngine\Style;
 
+use DOMDocument;
 use LogicException;
+use OdtTemplateEngine\Document\StyleRequirement;
+use OdtTemplateEngine\Utils\StyleMapper;
 
 /**
  * Holds pending style requirements for one logical ODT document.
@@ -16,6 +19,23 @@ use LogicException;
  */
 final class StyleContext
 {
+    private const STYLE_NAMESPACE = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
+
+    /** @var array<string, StyleRequirement> */
+    private array $semanticDefinitions = [];
+
+    /** @var list<StyleRequirement> */
+    private array $semanticReferences = [];
+
+    /** @var array<int, array{requirement: StyleRequirement, source: string}> */
+    private array $referenceResolutions = [];
+
+    public function __construct(
+        private ?DOMDocument $contentDom = null,
+        private ?DOMDocument $stylesDom = null
+    ) {
+    }
+
     /** @var array<string, array<string, mixed>> */
     private array $paragraphStyles = [];
 
@@ -30,6 +50,91 @@ final class StyleContext
 
     /** @var array<string, array<string, mixed>> */
     private array $fillImages = [];
+
+    /**
+     * Register one semantic requirement owned by this document.
+     *
+     * Definitions are keyed by their semantic identity. References are kept
+     * as occurrences and re-evaluated whenever the document-local definition
+     * set changes, making resolution independent of registration order.
+     */
+    public function registerRequirement(StyleRequirement $requirement): void
+    {
+        if ($requirement->kind() === StyleRequirement::KIND_DEFINITION) {
+            $identity = $this->semanticIdentity($requirement);
+            if (isset($this->semanticDefinitions[$identity])) {
+                $existing = $this->semanticDefinitions[$identity];
+                if (!$this->sameSemanticDefinition($existing, $requirement)) {
+                    throw new LogicException(sprintf(
+                        '%s style "%s" is already registered with a different definition (semantic requirements conflict).',
+                        ucfirst($requirement->family()),
+                        $requirement->name()
+                    ));
+                }
+            } else {
+                $this->semanticDefinitions[$identity] = $requirement;
+            }
+        } else {
+            $this->semanticReferences[] = $requirement;
+        }
+
+        $this->refreshReferenceResolutions();
+    }
+
+    /** @return array<string, StyleRequirement> */
+    public function semanticDefinitions(): array
+    {
+        return $this->semanticDefinitions;
+    }
+
+    /** @return list<StyleRequirement> */
+    public function semanticReferences(): array
+    {
+        return $this->semanticReferences;
+    }
+
+    /** @return list<array{requirement: StyleRequirement, source: string}> */
+    public function resolvedReferences(): array
+    {
+        return array_values($this->referenceResolutions);
+    }
+
+    /** @return list<StyleRequirement> */
+    public function unresolvedReferences(): array
+    {
+        $resolved = [];
+        foreach (array_keys($this->referenceResolutions) as $index) {
+            $resolved[$index] = true;
+        }
+
+        $unresolved = [];
+        foreach ($this->semanticReferences as $index => $reference) {
+            if (!isset($resolved[$index])) {
+                $unresolved[] = $reference;
+            }
+        }
+
+        return $unresolved;
+    }
+
+    public function referenceResolution(StyleRequirement $reference): ?string
+    {
+        foreach ($this->referenceResolutions as $resolution) {
+            if ($resolution['requirement'] === $reference) {
+                return $resolution['source'];
+            }
+        }
+
+        return null;
+    }
+
+    /** Update the document parts consulted for existing style definitions. */
+    public function replaceDocumentParts(DOMDocument $contentDom, DOMDocument $stylesDom): void
+    {
+        $this->contentDom = $contentDom;
+        $this->stylesDom = $stylesDom;
+        $this->refreshReferenceResolutions();
+    }
 
     /**
      * Register one pending paragraph style definition.
@@ -145,11 +250,110 @@ final class StyleContext
      */
     public function reset(): void
     {
+        $this->semanticDefinitions = [];
+        $this->semanticReferences = [];
+        $this->referenceResolutions = [];
         $this->paragraphStyles = [];
         $this->textStyles = [];
         $this->frameStyles = [];
         $this->imageStyles = [];
         $this->fillImages = [];
+    }
+
+    private function semanticIdentity(StyleRequirement $requirement): string
+    {
+        return implode("\0", [
+            $requirement->family(),
+            $requirement->name(),
+            $requirement->scope() ?? '',
+            $requirement->documentPart() ?? '',
+        ]);
+    }
+
+    private function sameSemanticDefinition(StyleRequirement $left, StyleRequirement $right): bool
+    {
+        return $left->kind() === $right->kind()
+            && $left->scope() === $right->scope()
+            && $left->family() === $right->family()
+            && $left->documentPart() === $right->documentPart()
+            && $left->name() === $right->name()
+            && $left->parentStyleName() === $right->parentStyleName()
+            && $left->propertyGroups() === $right->propertyGroups();
+    }
+
+    private function refreshReferenceResolutions(): void
+    {
+        $this->referenceResolutions = [];
+        foreach ($this->semanticReferences as $index => $reference) {
+            $source = $this->resolveReferenceSource($reference);
+            if ($source !== null) {
+                $this->referenceResolutions[$index] = [
+                    'requirement' => $reference,
+                    'source' => $source,
+                ];
+            }
+        }
+    }
+
+    private function resolveReferenceSource(StyleRequirement $reference): ?string
+    {
+        if ($this->existingDocumentStyleExists($reference)) {
+            return 'document';
+        }
+
+        foreach ($this->semanticDefinitions as $definition) {
+            if ($this->referenceMatchesDefinition($reference, $definition)) {
+                return 'document-local';
+            }
+        }
+
+        if ($this->legacyStyleExists($reference)) {
+            return 'legacy';
+        }
+
+        return null;
+    }
+
+    private function referenceMatchesDefinition(
+        StyleRequirement $reference,
+        StyleRequirement $definition
+    ): bool {
+        return $reference->family() === $definition->family()
+            && $reference->name() === $definition->name()
+            && ($reference->scope() === null || $reference->scope() === $definition->scope())
+            && ($reference->documentPart() === null
+                || $reference->documentPart() === $definition->documentPart());
+    }
+
+    private function existingDocumentStyleExists(StyleRequirement $reference): bool
+    {
+        foreach ([$this->stylesDom, $this->contentDom] as $dom) {
+            if (!$dom) {
+                continue;
+            }
+
+            foreach ($dom->getElementsByTagNameNS(self::STYLE_NAMESPACE, 'style') as $style) {
+                if ($style->getAttributeNS(self::STYLE_NAMESPACE, 'name') === $reference->name()
+                    && $style->getAttributeNS(self::STYLE_NAMESPACE, 'family') === $reference->family()) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private function legacyStyleExists(StyleRequirement $reference): bool
+    {
+        if ($reference->family() === 'paragraph') {
+            return array_key_exists($reference->name(), StyleMapper::getParagraphStyles());
+        }
+
+        if ($reference->family() === 'text') {
+            return array_key_exists($reference->name(), StyleMapper::getTextStyles());
+        }
+
+        return false;
     }
 
     /**

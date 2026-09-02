@@ -23,7 +23,7 @@ final class OdtDocumentContext
         private DOMDocument $stylesDom,
         private DOMDocument $metaDom
     ) {
-        $this->styleContext = new StyleContext();
+        $this->styleContext = new StyleContext($contentDom, $stylesDom);
     }
 
     public function contentDom(): DOMDocument
@@ -60,6 +60,7 @@ final class OdtDocumentContext
         $this->contentDom = $contentDom;
         $this->stylesDom = $stylesDom;
         $this->metaDom = $metaDom;
+        $this->styleContext->replaceDocumentParts($contentDom, $stylesDom);
         $this->styleContext->reset();
     }
 }

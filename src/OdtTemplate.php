@@ -266,6 +266,10 @@ class OdtTemplate
     public function setElement(string $placeholder, OdtElement $element): void
     {
         $collector = new StyleRequirementCollector();
+        foreach ($collector->collectSemantic($element) as $requirement) {
+            $this->documentContext()->styleContext()->registerRequirement($requirement);
+        }
+
         foreach ($collector->collect($element) as $requirement) {
             if ($requirement['family'] === 'paragraph') {
                 $this->documentContext()->styleContext()->registerParagraphStyle(

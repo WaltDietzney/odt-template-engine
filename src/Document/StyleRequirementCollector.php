@@ -16,6 +16,30 @@ use OdtTemplateEngine\Elements\OdtElement;
 final class StyleRequirementCollector
 {
     /**
+     * Collect semantic requirements from one ownership subtree.
+     *
+     * The legacy collect() method remains available for the existing graphic
+     * and compatibility pipeline. This projection is intentionally separate
+     * until those families receive semantic producer contracts.
+     *
+     * @return iterable<int, StyleRequirement>
+     */
+    public function collectSemantic(OdtElement $root): iterable
+    {
+        yield from $this->collectSemanticElement($root);
+    }
+
+    /** @return iterable<int, StyleRequirement> */
+    private function collectSemanticElement(OdtElement $element): iterable
+    {
+        yield from $element->getOwnStyleRequirements();
+
+        foreach ($element->ownedElements() as $child) {
+            yield from $this->collectSemanticElement($child);
+        }
+    }
+
+    /**
      * @return iterable<int, array{family: string, name: string, definition: array<string, mixed>}>
      */
     public function collect(OdtElement $root): iterable
