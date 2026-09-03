@@ -12,6 +12,7 @@ use OdtTemplateEngine\Document\AmbiguousTemplateTargetException;
 use OdtTemplateEngine\Document\DocumentInspection;
 use OdtTemplateEngine\Document\DocumentInspector;
 use OdtTemplateEngine\Document\FontFaceRequirementDiscovery;
+use OdtTemplateEngine\Document\FontFaceRequirementMaterializer;
 use OdtTemplateEngine\Document\BookmarkTarget;
 use OdtTemplateEngine\Document\FrameTarget;
 use OdtTemplateEngine\Document\MetadataManager;
@@ -1194,6 +1195,10 @@ class OdtTemplate
     {
         $this->injectImageStyles();
         $this->injectDocumentGraphicStyles();
+        (new FontFaceRequirementMaterializer())->materializeAll(
+            $this->documentContext(),
+            $this->documentContext()->fontFaceRequirements()->requirements()
+        );
         StyleWriter::writeAllStyles(
             $this->documentContext()->stylesDom(),
             false,
@@ -1207,6 +1212,10 @@ class OdtTemplate
     public function refresh()
     {
         $this->injectDocumentGraphicStyles();
+        (new FontFaceRequirementMaterializer())->materializeAll(
+            $this->documentContext(),
+            $this->documentContext()->fontFaceRequirements()->requirements()
+        );
         StyleWriter::writeAllStyles($this->documentContext()->stylesDom(), false, false, false);
         $this->package->persistCoreDocuments();
         $this->load();

@@ -84,7 +84,7 @@ final class StyleRequirementFontCurrentBehaviorCharacterizationTest extends Test
         self::assertSame(1, $this->fontFaceCount($styles, $fontB));
     }
 
-    public function testNativeFontFaceIdentityAndFamilyAreCollapsedByCurrentWriter(): void
+    public function testSemanticFontFaceIdentityAndFamilyArePreservedBySemanticMaterializer(): void
     {
         $identity = 'SR05A_NativeIdentity_' . bin2hex(random_bytes(3));
         $family = 'DejaVu Serif';
@@ -103,7 +103,7 @@ final class StyleRequirementFontCurrentBehaviorCharacterizationTest extends Test
 
         $fontFace = $this->fontFace($styles, $identity);
         self::assertSame($identity, $fontFace->getAttributeNS($this->namespace('style'), 'name'));
-        self::assertSame($identity, $fontFace->getAttributeNS($this->namespace('svg'), 'font-family'));
+        self::assertSame($family, $fontFace->getAttributeNS($this->namespace('svg'), 'font-family'));
     }
 
     public function testExistingStylesXmlFontFaceIsPreservedWithoutDuplication(): void
