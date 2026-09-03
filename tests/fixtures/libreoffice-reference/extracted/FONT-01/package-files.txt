@@ -1,0 +1,7 @@
+Thumbnails/thumbnail.png
+content.xml
+manifest.rdf
+meta.xml
+mimetype
+settings.xml
+styles.xml
