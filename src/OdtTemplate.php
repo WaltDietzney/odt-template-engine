@@ -274,7 +274,8 @@ class OdtTemplate
         $fontDiscovery = new FontFaceRequirementDiscovery();
         foreach ($semanticRequirements as $requirement) {
             $this->documentContext()->styleContext()->registerRequirement($requirement);
-            foreach ($fontDiscovery->discoverAll([$requirement]) as $fontRequirement) {
+            $fontRequirement = $fontDiscovery->discover($requirement);
+            if ($fontRequirement !== null) {
                 $this->documentContext()->registerFontFaceRequirement($fontRequirement);
             }
         }
