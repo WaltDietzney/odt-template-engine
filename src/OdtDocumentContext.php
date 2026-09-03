@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace OdtTemplateEngine;
 
 use DOMDocument;
+use OdtTemplateEngine\Document\FontFaceRequirement;
+use OdtTemplateEngine\Document\FontFaceRequirementRegistry;
 use OdtTemplateEngine\Style\StyleContext;
 
 /**
@@ -18,12 +20,15 @@ final class OdtDocumentContext
 {
     private StyleContext $styleContext;
 
+    private FontFaceRequirementRegistry $fontFaceRequirements;
+
     public function __construct(
         private DOMDocument $contentDom,
         private DOMDocument $stylesDom,
         private DOMDocument $metaDom
     ) {
         $this->styleContext = new StyleContext($contentDom, $stylesDom);
+        $this->fontFaceRequirements = new FontFaceRequirementRegistry();
     }
 
     public function contentDom(): DOMDocument
@@ -46,6 +51,16 @@ final class OdtDocumentContext
         return $this->styleContext;
     }
 
+    public function registerFontFaceRequirement(FontFaceRequirement $requirement): void
+    {
+        $this->fontFaceRequirements->register($requirement);
+    }
+
+    public function fontFaceRequirements(): FontFaceRequirementRegistry
+    {
+        return $this->fontFaceRequirements;
+    }
+
     /**
      * Replace the core XML documents after a package reload.
      *
@@ -60,6 +75,7 @@ final class OdtDocumentContext
         $this->contentDom = $contentDom;
         $this->stylesDom = $stylesDom;
         $this->metaDom = $metaDom;
+        $this->fontFaceRequirements->reset();
         $this->styleContext->reset();
         $this->styleContext->replaceDocumentParts($contentDom, $stylesDom);
     }
