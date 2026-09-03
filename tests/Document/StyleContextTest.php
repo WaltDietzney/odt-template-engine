@@ -6,6 +6,7 @@ namespace OdtTemplateEngine\Tests\Document;
 
 use DOMDocument;
 use LogicException;
+use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\OdtDocumentContext;
 use OdtTemplateEngine\Style\StyleContext;
 use PHPUnit\Framework\TestCase;
@@ -167,6 +168,251 @@ final class StyleContextTest extends TestCase
         self::assertSame([], $document->styleContext()->frameStyles());
         self::assertSame([], $document->styleContext()->imageStyles());
         self::assertSame([], $document->styleContext()->fillImages());
+    }
+
+    public function testSemanticDefinitionRegistrationPreservesAllDimensions(): void
+    {
+        $context = new StyleContext();
+        $requirement = $this->paragraphRequirement('SemanticHeading', [
+            'style:paragraph-properties' => ['fo:text-align' => 'center'],
+        ]);
+
+        $context->registerRequirement($requirement);
+
+        self::assertSame([$this->semanticKey($requirement) => $requirement], $context->semanticDefinitions());
+        self::assertSame([], $context->semanticReferences());
+    }
+
+    public function testEquivalentSemanticDefinitionsAreIdempotent(): void
+    {
+        $context = new StyleContext();
+        $first = $this->paragraphRequirement('Same', ['style:paragraph-properties' => ['fo:text-align' => 'center']]);
+        $second = $this->paragraphRequirement('Same', ['style:paragraph-properties' => ['fo:text-align' => 'center']]);
+
+        $context->registerRequirement($first);
+        $context->registerRequirement($second);
+
+        self::assertCount(1, $context->semanticDefinitions());
+    }
+
+    public function testConflictingSemanticDefinitionsAreRejectedBySemanticIdentity(): void
+    {
+        $context = new StyleContext();
+        $context->registerRequirement($this->paragraphRequirement('Same', [
+            'style:paragraph-properties' => ['fo:text-align' => 'center'],
+        ]));
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('Paragraph style "Same" is already registered with a different definition');
+        $context->registerRequirement($this->paragraphRequirement('Same', [
+            'style:paragraph-properties' => ['fo:text-align' => 'right'],
+        ]));
+    }
+
+    public function testUnresolvedReferenceIsTrackedWithoutInventingDefinition(): void
+    {
+        $context = new StyleContext();
+        $reference = new StyleRequirement(StyleRequirement::KIND_REFERENCE, null, 'paragraph', null, 'Missing');
+
+        $context->registerRequirement($reference);
+
+        self::assertSame([$reference], $context->semanticReferences());
+        self::assertSame([], $context->semanticDefinitions());
+        self::assertSame([$reference], $context->unresolvedReferences());
+    }
+
+    public function testReferenceResolvesToDocumentLocalDefinitionInEitherOrder(): void
+    {
+        $definition = $this->paragraphRequirement('LocalHeading', [
+            'style:paragraph-properties' => ['fo:text-align' => 'center'],
+        ]);
+        $reference = new StyleRequirement(StyleRequirement::KIND_REFERENCE, null, 'paragraph', null, 'LocalHeading');
+
+        $first = new StyleContext();
+        $first->registerRequirement($reference);
+        self::assertSame([], $first->resolvedReferences());
+        $first->registerRequirement($definition);
+
+        $second = new StyleContext();
+        $second->registerRequirement($definition);
+        $second->registerRequirement($reference);
+
+        self::assertSame('document-local', $first->referenceResolution($reference));
+        self::assertSame('document-local', $second->referenceResolution($reference));
+        self::assertSame([], $first->unresolvedReferences());
+        self::assertSame([], $second->unresolvedReferences());
+    }
+
+    public function testMultipleDocumentLocalCandidatesAreAmbiguousRegardlessOfRegistrationOrder(): void
+    {
+        $common = $this->paragraphRequirement('Foo', [
+            'style:paragraph-properties' => ['fo:text-align' => 'center'],
+        ]);
+        $automatic = new StyleRequirement(
+            StyleRequirement::KIND_DEFINITION,
+            StyleRequirement::SCOPE_AUTOMATIC,
+            'paragraph',
+            StyleRequirement::PART_CONTENT,
+            'Foo',
+            null,
+            ['style:paragraph-properties' => ['fo:text-align' => 'right']]
+        );
+        $reference = new StyleRequirement(StyleRequirement::KIND_REFERENCE, null, 'paragraph', null, 'Foo');
+
+        $first = new StyleContext();
+        $first->registerRequirement($common);
+        $first->registerRequirement($automatic);
+        $first->registerRequirement($reference);
+
+        $second = new StyleContext();
+        $second->registerRequirement($automatic);
+        $second->registerRequirement($common);
+        $second->registerRequirement($reference);
+
+        self::assertSame([$reference], $first->ambiguousReferences());
+        self::assertSame([$reference], $second->ambiguousReferences());
+        self::assertCount(2, $first->ambiguousReferenceCandidates($reference));
+        self::assertCount(2, $second->ambiguousReferenceCandidates($reference));
+        self::assertNull($first->referenceResolution($reference));
+        self::assertNull($second->referenceResolution($reference));
+        self::assertSame([], $first->unresolvedReferences());
+        self::assertSame([], $second->unresolvedReferences());
+    }
+
+    public function testNarrowedReferenceSelectsOneOfMultipleSemanticDefinitions(): void
+    {
+        $common = $this->paragraphRequirement('Foo', [
+            'style:paragraph-properties' => ['fo:text-align' => 'center'],
+        ]);
+        $automatic = new StyleRequirement(
+            StyleRequirement::KIND_DEFINITION,
+            StyleRequirement::SCOPE_AUTOMATIC,
+            'paragraph',
+            StyleRequirement::PART_CONTENT,
+            'Foo',
+            null,
+            ['style:paragraph-properties' => ['fo:text-align' => 'right']]
+        );
+        $reference = new StyleRequirement(
+            StyleRequirement::KIND_REFERENCE,
+            StyleRequirement::SCOPE_COMMON,
+            'paragraph',
+            StyleRequirement::PART_STYLES,
+            'Foo'
+        );
+        $context = new StyleContext();
+        $context->registerRequirement($common);
+        $context->registerRequirement($automatic);
+        $context->registerRequirement($reference);
+
+        self::assertSame([], $context->ambiguousReferences());
+        self::assertSame('document-local', $context->referenceResolution($reference));
+        self::assertSame($common, $context->referenceCandidate($reference));
+    }
+
+    public function testReferenceRecognizesExistingStylesAndContentAutomaticStyles(): void
+    {
+        $styles = $this->dom('<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"><office:styles><style:style style:name="Existing" style:family="paragraph"/></office:styles></office:document-styles>');
+        $content = $this->dom('<office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"><office:automatic-styles><style:style style:name="Automatic" style:family="text"/></office:automatic-styles></office:document-content>');
+        $context = new StyleContext($content, $styles);
+        $existing = new StyleRequirement(StyleRequirement::KIND_REFERENCE, null, 'paragraph', null, 'Existing');
+        $automatic = new StyleRequirement(StyleRequirement::KIND_REFERENCE, null, 'text', null, 'Automatic');
+
+        $context->registerRequirement($existing);
+        $context->registerRequirement($automatic);
+
+        self::assertSame('document', $context->referenceResolution($existing));
+        self::assertSame('document', $context->referenceResolution($automatic));
+    }
+
+    public function testMultipleExistingDocumentStylesAreAmbiguous(): void
+    {
+        $styles = $this->dom('<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"><office:styles><style:style style:name="Duplicate" style:family="paragraph"/><style:style style:name="Duplicate" style:family="paragraph"/></office:styles></office:document-styles>');
+        $context = new StyleContext(null, $styles);
+        $reference = new StyleRequirement(StyleRequirement::KIND_REFERENCE, null, 'paragraph', null, 'Duplicate');
+
+        $context->registerRequirement($reference);
+
+        self::assertSame([$reference], $context->ambiguousReferences());
+        self::assertCount(2, $context->ambiguousReferenceCandidates($reference));
+        self::assertNull($context->referenceResolution($reference));
+    }
+
+    public function testExistingDocumentCandidateWinsOverLowerPriorityCandidates(): void
+    {
+        $name = 'Precedence_' . bin2hex(random_bytes(4));
+        \OdtTemplateEngine\Utils\StyleMapper::registerParagraphStyle($name, ['text-align' => 'left']);
+        $styles = $this->dom('<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"><office:styles><style:style style:name="' . $name . '" style:family="paragraph"/></office:styles></office:document-styles>');
+        $context = new StyleContext(null, $styles);
+        $local = $this->paragraphRequirement($name, []);
+        $reference = new StyleRequirement(StyleRequirement::KIND_REFERENCE, null, 'paragraph', null, $name);
+
+        $context->registerRequirement($local);
+        $context->registerRequirement($reference);
+
+        self::assertSame('document', $context->referenceResolution($reference));
+        self::assertSame('document', $context->referenceCandidate($reference)['source']);
+        self::assertSame(StyleRequirement::PART_STYLES, $context->referenceCandidate($reference)['documentPart']);
+    }
+
+    public function testReferenceCanUseBoundedLegacyParagraphCompatibilitySource(): void
+    {
+        $name = 'LegacySemantic_' . bin2hex(random_bytes(4));
+        \OdtTemplateEngine\Utils\StyleMapper::registerParagraphStyle($name, ['text-align' => 'center']);
+        $context = new StyleContext();
+        $reference = new StyleRequirement(StyleRequirement::KIND_REFERENCE, null, 'paragraph', null, $name);
+
+        $context->registerRequirement($reference);
+
+        self::assertSame('legacy', $context->referenceResolution($reference));
+    }
+
+    public function testSemanticStateIsResetWhenCoreDocumentsAreReplaced(): void
+    {
+        $document = $this->documentContext();
+        $reference = new StyleRequirement(StyleRequirement::KIND_REFERENCE, null, 'paragraph', null, 'Temporary');
+        $document->styleContext()->registerRequirement($reference);
+
+        $document->replaceCoreDocuments(
+            $this->dom('<office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"/>'),
+            $this->dom('<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"/>'),
+            $this->dom('<office:document-meta xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"/>')
+        );
+
+        self::assertSame([], $document->styleContext()->semanticDefinitions());
+        self::assertSame([], $document->styleContext()->semanticReferences());
+        self::assertSame([], $document->styleContext()->unresolvedReferences());
+    }
+
+    public function testSemanticRequirementsAreIsolatedBetweenDocumentContexts(): void
+    {
+        $documentA = $this->documentContext();
+        $documentB = $this->documentContext();
+        $definition = $this->paragraphRequirement('OnlyA', []);
+
+        $documentA->styleContext()->registerRequirement($definition);
+
+        self::assertArrayHasKey($this->semanticKey($definition), $documentA->styleContext()->semanticDefinitions());
+        self::assertArrayNotHasKey($this->semanticKey($definition), $documentB->styleContext()->semanticDefinitions());
+    }
+
+    /** @param array<string, array<string, mixed>> $groups */
+    private function paragraphRequirement(string $name, array $groups): StyleRequirement
+    {
+        return new StyleRequirement(
+            StyleRequirement::KIND_DEFINITION,
+            StyleRequirement::SCOPE_COMMON,
+            'paragraph',
+            StyleRequirement::PART_STYLES,
+            $name,
+            'Standard',
+            $groups
+        );
+    }
+
+    private function semanticKey(StyleRequirement $requirement): string
+    {
+        return implode("\0", [$requirement->family(), $requirement->name(), $requirement->scope(), $requirement->documentPart()]);
     }
 
     private function documentContext(): OdtDocumentContext

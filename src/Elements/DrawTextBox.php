@@ -35,6 +35,12 @@ class DrawTextBox extends OdtElement implements HasStyles
         return $this;
     }
 
+    /** @return iterable<int, OdtElement> */
+    public function ownedElements(): iterable
+    {
+        return $this->paragraphs;
+    }
+
     /**
      * Map frame options into a style and register it.
      */
@@ -50,6 +56,12 @@ class DrawTextBox extends OdtElement implements HasStyles
         $this->registerFrameStyle();
 
         return [$this->frameStyleName => StyleMapper::mapFrameStyleOptions($this->frameOptions)];
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function getOwnFrameStyleRequirements(): array
+    {
+        return $this->getFrameStyleRequirements();
     }
 
     /**

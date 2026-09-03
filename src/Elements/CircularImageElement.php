@@ -98,6 +98,12 @@ class CircularImageElement extends ImageElement
         ]];
     }
 
+    /** @return array<string, array<string, mixed>> */
+    public function getOwnFillImageRequirements(): array
+    {
+        return $this->getFillImageRequirements();
+    }
+
     /**
      * No custom style node needed here – fill-image and graphic style are
      * handled by injectImageStyles() via StyleMapper registrations.

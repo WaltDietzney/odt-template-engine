@@ -161,7 +161,7 @@ final class StyleContextGraphicImageCharacterizationTest extends TestCase
         self::assertSame($afterFirst, $afterSecond);
     }
 
-    public function testNestedStyledParagraphInDrawTextBoxUsesGlobalSideEffectButItsTextStyleIsNotMaterialized(): void
+    public function testNestedStyledParagraphInDrawTextBoxIsMaterializedTransitively(): void
     {
         $paragraph = (new Paragraph())->addText('nested styled text', [
             'font-family' => 'D1 Nested Font',
@@ -174,10 +174,10 @@ final class StyleContextGraphicImageCharacterizationTest extends TestCase
 
         self::assertStringContainsString('nested styled text', $content);
         self::assertStringContainsString('text:style-name="', $content);
-        self::assertStringNotContainsString('D1 Nested Font', $styles);
+        self::assertStringContainsString('D1 Nested Font', $styles);
     }
 
-    public function testNestedImageInDrawTextBoxIsMaterializedWithoutTopLevelAssetPreparation(): void
+    public function testNestedImageInDrawTextBoxReceivesTransitiveAssetPreparation(): void
     {
         $image = new ImageElement($this->imagePath(), ['width' => '2cm', 'anchor' => 'as-char']);
         $box = (new DrawTextBox('D1NestedImageBox'))->addElement($image);
@@ -187,8 +187,8 @@ final class StyleContextGraphicImageCharacterizationTest extends TestCase
 
         self::assertStringContainsString('draw:image', $content);
         self::assertStringContainsString('Pictures/' . basename($this->imagePath()), $content);
-        self::assertFalse($this->archiveContains($output, 'Pictures/' . basename($this->imagePath())));
-        self::assertStringNotContainsString('Pictures/' . basename($this->imagePath()), $manifest);
+        self::assertTrue($this->archiveContains($output, 'Pictures/' . basename($this->imagePath())));
+        self::assertStringContainsString('Pictures/' . basename($this->imagePath()), $manifest);
     }
 
     public function testDrawTextBoxFrameStyleIsMaterializedOnceByItsStyleNodePath(): void

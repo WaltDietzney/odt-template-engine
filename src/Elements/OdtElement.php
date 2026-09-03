@@ -5,6 +5,7 @@ namespace OdtTemplateEngine\Elements;
 use DOMDocument;
 use DOMNode;
 use OdtTemplateEngine\Contracts\HasStyles;
+use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Elements\DOMElement;
 
 
@@ -38,6 +39,19 @@ abstract class OdtElement implements HasStyles
     }
 
     /**
+     * Returns the OdtElements logically owned by this element.
+     *
+     * Concrete composites may map their natural internal storage to this
+     * semantic view without changing their rendering-oriented storage model.
+     *
+     * @return iterable<int, OdtElement>
+     */
+    public function ownedElements(): iterable
+    {
+        return $this->getEmbeddedElements();
+    }
+
+    /**
      * Abstract method that should be implemented by subclasses to generate the ODT-compatible DOM node (e.g., text:p, table:table, etc.)
      *
      * @param DOMDocument $dom The target DOM document.
@@ -62,6 +76,49 @@ abstract class OdtElement implements HasStyles
      * @return array An array of style definitions for this element.
      */
     public function getRequiredStyles(): array
+    {
+        return [];
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function getOwnRequiredStyles(): array
+    {
+        return $this->getRequiredStyles();
+    }
+
+    /**
+     * Returns semantic style requirements owned directly by this element.
+     *
+     * Traversal of owned elements belongs to StyleRequirementCollector; leaf
+     * and composite elements only describe their own requirements here.
+     *
+     * @return iterable<int, StyleRequirement>
+     */
+    public function getOwnStyleRequirements(): iterable
+    {
+        return [];
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function getOwnRequiredParagraphStyles(): array
+    {
+        return [];
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function getOwnFrameStyleRequirements(): array
+    {
+        return [];
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function getOwnImageStyleRequirements(): array
+    {
+        return [];
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function getOwnFillImageRequirements(): array
     {
         return [];
     }
@@ -146,6 +203,20 @@ abstract class OdtElement implements HasStyles
         }
 
         return $assets;
+    }
+
+    /**
+     * Returns physical image resources produced directly by this element.
+     *
+     * Composite traversal is intentionally supplied by the resource collector
+     * through ownedElements(). Existing getImageAssets() compatibility
+     * semantics remain unchanged.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getOwnImageAssets(): array
+    {
+        return [];
     }
 
     /**

@@ -236,6 +236,12 @@ class ImageElement extends OdtElement implements HasStyles
         ];
     }
 
+    /** @return array<int, array{id: string, path: string}> */
+    public function getOwnImageAssets(): array
+    {
+        return $this->getImageAssets();
+    }
+
     /**
      * Returns style definitions (if any) associated with this image.
      *
@@ -300,6 +306,12 @@ class ImageElement extends OdtElement implements HasStyles
         $styleName = $this->imageOptions['style-name'] ?? StyleMapper::generateStyleName($this->imageOptions);
 
         return [$styleName => $this->imageOptions];
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function getOwnImageStyleRequirements(): array
+    {
+        return $this->getImageStyleRequirements();
     }
 
 

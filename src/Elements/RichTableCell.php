@@ -119,6 +119,14 @@ class RichTableCell extends OdtElement implements HasStyles
         return $this->content;
     }
 
+    /** @return iterable<int, OdtElement> */
+    public function ownedElements(): iterable
+    {
+        if ($this->content instanceof OdtElement) {
+            yield $this->content;
+        }
+    }
+
     /**
      * Applies a style array to the cell.
      *

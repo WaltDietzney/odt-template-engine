@@ -11,11 +11,17 @@ use RuntimeException;
 use OdtTemplateEngine\Document\AmbiguousTemplateTargetException;
 use OdtTemplateEngine\Document\DocumentInspection;
 use OdtTemplateEngine\Document\DocumentInspector;
+use OdtTemplateEngine\Document\FontFaceRequirementDiscovery;
+use OdtTemplateEngine\Document\FontFaceRequirementMaterializer;
 use OdtTemplateEngine\Document\BookmarkTarget;
 use OdtTemplateEngine\Document\FrameTarget;
 use OdtTemplateEngine\Document\MetadataManager;
 use OdtTemplateEngine\Document\SectionTarget;
 use OdtTemplateEngine\Document\StructuredElementMaterializer;
+use OdtTemplateEngine\Document\StructuredResourceCollector;
+use OdtTemplateEngine\Document\StyleRequirementCollector;
+use OdtTemplateEngine\Document\StyleRequirementMaterializer;
+use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Document\TableTarget;
 use OdtTemplateEngine\Document\TemplateTargetResolver;
 use OdtTemplateEngine\Document\TypedTargetResolver;
@@ -263,32 +269,53 @@ class OdtTemplate
      */
     public function setElement(string $placeholder, OdtElement $element): void
     {
-        $textStyles = $element->getRequiredStyles() ?? [];
-        $paragraphStyles = method_exists($element, 'getRequiredParagraphStyles')
-            ? $element->getRequiredParagraphStyles()
-            : [];
-        foreach ($paragraphStyles as $name => $definition) {
-            $this->documentContext()->styleContext()->registerParagraphStyle($name, $definition);
+        $collector = new StyleRequirementCollector();
+        $semanticRequirements = iterator_to_array($collector->collectSemantic($element), false);
+        $semanticOwnedLegacyStyles = $this->semanticOwnedLegacyStyles($semanticRequirements);
+        $fontDiscovery = new FontFaceRequirementDiscovery();
+        foreach ($semanticRequirements as $requirement) {
+            $this->documentContext()->styleContext()->registerRequirement($requirement);
+            $fontRequirement = $fontDiscovery->discover($requirement);
+            if ($fontRequirement !== null) {
+                $this->documentContext()->registerFontFaceRequirement($fontRequirement);
+            }
         }
-        foreach ($textStyles as $name => $definition) {
-            $this->documentContext()->styleContext()->registerTextStyle($name, $definition);
+
+        $materializer = new StyleRequirementMaterializer();
+        foreach ($this->documentContext()->styleContext()->materializationRequirements() as $requirement) {
+            $materializer->materialize($this->documentContext(), $requirement);
+        }
+
+        foreach ($collector->collect($element) as $requirement) {
+            if ($requirement['family'] === 'paragraph') {
+                $this->documentContext()->styleContext()->registerParagraphStyle(
+                    $requirement['name'],
+                    $requirement['definition']
+                );
+                if (!$this->isSemanticParagraphTextRequirement($requirement, $semanticOwnedLegacyStyles)) {
+                    $this->ensureParagraphStylesExist([
+                        $requirement['name'] => $requirement['definition'],
+                    ]);
+                }
+            } elseif ($requirement['family'] === 'text') {
+                $this->documentContext()->styleContext()->registerTextStyle(
+                    $requirement['name'],
+                    $requirement['definition']
+                );
+                if (!$this->isSemanticParagraphTextRequirement($requirement, $semanticOwnedLegacyStyles)) {
+                    $this->ensureTextStylesExist([
+                        $requirement['name'] => $requirement['definition'],
+                    ]);
+                }
+            }
         }
         if ($element instanceof HasStyles) {
             $this->registerStyles($element->getStyleDefinitions());
         }
 
-        if (!empty($textStyles)) {
-            $this->ensureTextStylesExist($textStyles);
-        }
-
-        if (!empty($paragraphStyles)) {
-            $this->ensureParagraphStylesExist($paragraphStyles);
-        }
-
-        if (method_exists($element, 'getImageAssets')) {
-            foreach ($element->getImageAssets() as $img) {
-                $this->copyImageResource($img['path']);
-            }
+        $resources = iterator_to_array((new StructuredResourceCollector())->collect($element), false);
+        if ($resources !== []) {
+            $this->package->copyImageResourcesAtomically($resources);
         }
 
         $materializer = new StructuredElementMaterializer();
@@ -306,7 +333,66 @@ class OdtTemplate
             fn (DOMDocument $dom, string $key): bool => $this->hasPlaceholder($dom, $key)
         );
 
-        $this->adoptTopLevelGraphicRequirements($element);
+        foreach ($collector->collect($element) as $requirement) {
+            $styleContext = $this->documentContext()->styleContext();
+            switch ($requirement['family']) {
+                case 'paragraph':
+                    $styleContext->registerParagraphStyle($requirement['name'], $requirement['definition']);
+                    break;
+                case 'text':
+                    $styleContext->registerTextStyle($requirement['name'], $requirement['definition']);
+                    break;
+                case 'frame':
+                    $styleContext->registerFrameStyle($requirement['name'], $requirement['definition']);
+                    break;
+                case 'image':
+                    $styleContext->registerImageStyle($requirement['name'], $requirement['definition']);
+                    break;
+                case 'fill-image':
+                    $styleContext->registerFillImage($requirement['name'], $requirement['definition']);
+                    break;
+            }
+        }
+    }
+
+    /**
+     * Return the bounded legacy identities superseded by semantic producers.
+     *
+     * Current Paragraph/Text producers materialize definitions as common
+     * styles in styles.xml. The legacy collector has no scope or document
+     * part dimensions, so this bridge intentionally applies only to that
+     * current producer contract.
+     *
+     * @param list<\OdtTemplateEngine\Document\StyleRequirement> $requirements
+     * @return array<string, true>
+     */
+    private function semanticOwnedLegacyStyles(array $requirements): array
+    {
+        $owned = [];
+        foreach ($requirements as $requirement) {
+            if ($requirement->kind() !== StyleRequirement::KIND_DEFINITION
+                || $requirement->scope() !== StyleRequirement::SCOPE_COMMON
+                || $requirement->documentPart() !== StyleRequirement::PART_STYLES
+                || !in_array($requirement->family(), ['paragraph', 'text'], true)) {
+                continue;
+            }
+            $owned[$requirement->family() . "\0" . $requirement->name()] = true;
+        }
+
+        return $owned;
+    }
+
+    /**
+     * @param array{family: string, name: string, definition: array<string, mixed>} $requirement
+     * @param array<string, true> $semanticOwnedLegacyStyles
+     */
+    private function isSemanticParagraphTextRequirement(array $requirement, array $semanticOwnedLegacyStyles): bool
+    {
+        if (!in_array($requirement['family'], ['paragraph', 'text'], true)) {
+            return false;
+        }
+
+        return isset($semanticOwnedLegacyStyles[$requirement['family'] . "\0" . $requirement['name']]);
     }
 
     /**
@@ -1109,6 +1195,10 @@ class OdtTemplate
     {
         $this->injectImageStyles();
         $this->injectDocumentGraphicStyles();
+        (new FontFaceRequirementMaterializer())->materializeAll(
+            $this->documentContext(),
+            $this->documentContext()->fontFaceRequirements()->requirements()
+        );
         StyleWriter::writeAllStyles(
             $this->documentContext()->stylesDom(),
             false,
@@ -1122,6 +1212,10 @@ class OdtTemplate
     public function refresh()
     {
         $this->injectDocumentGraphicStyles();
+        (new FontFaceRequirementMaterializer())->materializeAll(
+            $this->documentContext(),
+            $this->documentContext()->fontFaceRequirements()->requirements()
+        );
         StyleWriter::writeAllStyles($this->documentContext()->stylesDom(), false, false, false);
         $this->package->persistCoreDocuments();
         $this->load();

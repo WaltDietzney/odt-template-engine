@@ -224,6 +224,18 @@ class RichText extends OdtElement implements HasStyles
         return $styles;
     }
 
+    /** @return array<string, array> */
+    public function getOwnRequiredStyles(): array
+    {
+        return [];
+    }
+
+    /** @return array<string, array> */
+    public function getOwnRequiredParagraphStyles(): array
+    {
+        return [];
+    }
+
     /**
      * Get all required paragraph styles.
      *
@@ -274,6 +286,12 @@ class RichText extends OdtElement implements HasStyles
     {
         $this->elements[] = $element;
         return $this;
+    }
+
+    /** @return iterable<int, OdtElement> */
+    public function ownedElements(): iterable
+    {
+        return $this->elements;
     }
 
     /**

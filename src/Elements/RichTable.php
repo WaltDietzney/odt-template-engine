@@ -131,6 +131,18 @@ class RichTable extends OdtElement implements HasStyles
         return $this;
     }
 
+    /** @return iterable<int, OdtElement> */
+    public function ownedElements(): iterable
+    {
+        foreach ($this->rows as $row) {
+            foreach ($row['cells'] as $cell) {
+                if ($cell instanceof RichTableCell) {
+                    yield $cell;
+                }
+            }
+        }
+    }
+
     private function calculateColspansFromRatios(int $virtualColCount): array
     {
         $sum = array_sum($this->columnWidthRatios);
@@ -340,6 +352,18 @@ class RichTable extends OdtElement implements HasStyles
         }
 
         return $styles;
+    }
+
+    /** @return array<string, array> */
+    public function getOwnRequiredStyles(): array
+    {
+        return [];
+    }
+
+    /** @return array<string, array> */
+    public function getOwnRequiredParagraphStyles(): array
+    {
+        return [];
     }
 
     public function registerStyles(): void
