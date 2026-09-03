@@ -11,6 +11,7 @@ use RuntimeException;
 use OdtTemplateEngine\Document\AmbiguousTemplateTargetException;
 use OdtTemplateEngine\Document\DocumentInspection;
 use OdtTemplateEngine\Document\DocumentInspector;
+use OdtTemplateEngine\Document\FontFaceRequirementDiscovery;
 use OdtTemplateEngine\Document\BookmarkTarget;
 use OdtTemplateEngine\Document\FrameTarget;
 use OdtTemplateEngine\Document\MetadataManager;
@@ -270,8 +271,12 @@ class OdtTemplate
         $collector = new StyleRequirementCollector();
         $semanticRequirements = iterator_to_array($collector->collectSemantic($element), false);
         $semanticOwnedLegacyStyles = $this->semanticOwnedLegacyStyles($semanticRequirements);
+        $fontDiscovery = new FontFaceRequirementDiscovery();
         foreach ($semanticRequirements as $requirement) {
             $this->documentContext()->styleContext()->registerRequirement($requirement);
+            foreach ($fontDiscovery->discoverAll([$requirement]) as $fontRequirement) {
+                $this->documentContext()->registerFontFaceRequirement($fontRequirement);
+            }
         }
 
         $materializer = new StyleRequirementMaterializer();
