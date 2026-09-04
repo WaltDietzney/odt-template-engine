@@ -116,12 +116,15 @@ final class StyleContextGraphicDrawingBoundaryCharacterizationTest extends TestC
         self::assertSame('right', $frame->getAttribute('style:horizontal-pos'));
         self::assertSame('paragraph', $frame->getAttribute('style:horizontal-rel'));
 
+        $semantic = iterator_to_array($box->getOwnStyleRequirements(), false)[0];
+        self::assertSame($semantic->name(), $frame->getAttribute('draw:style-name'));
+
         $styleDom = new DOMDocument('1.0', 'UTF-8');
-        $style = $box->toStyleDomNode($styleDom);
-        self::assertInstanceOf(DOMElement::class, $style);
-        self::assertSame($frame->getAttribute('draw:style-name'), $style->getAttribute('style:name'));
-        self::assertSame('graphic', $style->getAttribute('style:family'));
-        $properties = $style->getElementsByTagName('style:graphic-properties')->item(0);
+        $legacyStyle = $box->toStyleDomNode($styleDom);
+        self::assertInstanceOf(DOMElement::class, $legacyStyle);
+        self::assertNotSame($frame->getAttribute('draw:style-name'), $legacyStyle->getAttribute('style:name'));
+        self::assertSame('graphic', $legacyStyle->getAttribute('style:family'));
+        $properties = $legacyStyle->getElementsByTagName('style:graphic-properties')->item(0);
         self::assertInstanceOf(DOMElement::class, $properties);
         self::assertSame('#123456', $properties->getAttribute('fo:background-color'));
         self::assertSame('solid', $properties->getAttribute('draw:fill'));
