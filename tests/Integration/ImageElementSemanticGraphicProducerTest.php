@@ -24,7 +24,7 @@ final class ImageElementSemanticGraphicProducerTest extends TestCase
             'vertical-rel' => 'page',
         ]);
 
-        self::assertSame([], iterator_to_array($image->getOwnStyleRequirements()));
+        self::assertSame([], $image->getOwnStyleRequirements());
     }
 
     public function testLegacyImageStyleIdentityRemainsAvailableWithoutSemanticGraphicDefinition(): void
@@ -44,8 +44,8 @@ final class ImageElementSemanticGraphicProducerTest extends TestCase
         self::assertCount(1, $firstLegacy);
         self::assertCount(1, $secondLegacy);
         self::assertNotSame(array_key_first($firstLegacy), array_key_first($secondLegacy));
-        self::assertSame([], iterator_to_array($first->getOwnStyleRequirements()));
-        self::assertSame([], iterator_to_array($second->getOwnStyleRequirements()));
+        self::assertSame([], $first->getOwnStyleRequirements());
+        self::assertSame([], $second->getOwnStyleRequirements());
     }
 
     public function testResolvedAlignmentMutationDoesNotCreateSemanticGraphicRequirement(): void
@@ -55,7 +55,7 @@ final class ImageElementSemanticGraphicProducerTest extends TestCase
             'align' => 'right',
         ]);
 
-        self::assertSame([], iterator_to_array($image->getOwnStyleRequirements()));
+        self::assertSame([], $image->getOwnStyleRequirements());
 
         $dom = new DOMDocument('1.0', 'UTF-8');
         $image->toDomNode($dom);
@@ -64,7 +64,7 @@ final class ImageElementSemanticGraphicProducerTest extends TestCase
         self::assertSame('left', $options['style:wrap']);
         self::assertSame('right', $options['style:horizontal-pos']);
         self::assertSame('paragraph', $options['style:horizontal-rel']);
-        self::assertSame([], iterator_to_array($image->getOwnStyleRequirements()));
+        self::assertSame([], $image->getOwnStyleRequirements());
     }
 
     private function imagePath(): string
