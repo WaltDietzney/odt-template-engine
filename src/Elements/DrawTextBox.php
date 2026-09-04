@@ -6,6 +6,7 @@ use DOMDocument;
 use DOMElement;
 use DOMNode;
 use OdtTemplateEngine\Contracts\HasStyles;
+use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Utils\StyleMapper;
 
 /**
@@ -39,6 +40,34 @@ class DrawTextBox extends OdtElement implements HasStyles
     public function ownedElements(): iterable
     {
         return $this->paragraphs;
+    }
+
+    /**
+     * Produce the semantic graphic appearance owned by this text box.
+     *
+     * Drawing structure, size, anchor, placement, flow, overlap, and geometry
+     * remain outside semantic graphic style identity during SR-06C.
+     *
+     * @return iterable<int, StyleRequirement>
+     */
+    public function getOwnStyleRequirements(): iterable
+    {
+        $properties = $this->semanticGraphicProperties();
+        if ($properties === []) {
+            return [];
+        }
+
+        $styleName = StyleMapper::generateStyleName($properties);
+
+        return [new StyleRequirement(
+            StyleRequirement::KIND_DEFINITION,
+            StyleRequirement::SCOPE_COMMON,
+            'graphic',
+            StyleRequirement::PART_STYLES,
+            $styleName,
+            'Frame',
+            ['style:graphic-properties' => $properties]
+        )];
     }
 
     /**
@@ -108,7 +137,6 @@ class DrawTextBox extends OdtElement implements HasStyles
             $frame->setAttribute('style:vertical-rel', $this->frameOptions['vertical-rel']);
         }
 
-
         // Textbox-Inhalt
         $textBox = $dom->createElement('draw:text-box');
         foreach ($this->paragraphs as $element) {
@@ -133,9 +161,6 @@ class DrawTextBox extends OdtElement implements HasStyles
         $p->appendChild($frame);
         return $p;
     }
-
-
-
 
     /**
      * Inserts the style definition into styles.xml
@@ -208,7 +233,6 @@ class DrawTextBox extends OdtElement implements HasStyles
         return $this->setHorizontalPos($pos, $rel);
     }
 
-
     /**
      * Set vertical position properties (e.g. style:vertical-pos and style:vertical-rel).
      */
@@ -227,10 +251,44 @@ class DrawTextBox extends OdtElement implements HasStyles
         return $this;
     }
 
-
     public function registerStyles(): void
     {
         $this->registerFrameStyle();
         StyleMapper::$frameStyles[$this->frameStyleName] = StyleMapper::mapFrameStyleOptions($this->frameOptions);
+    }
+
+    /** @return array<string, mixed> */
+    private function semanticGraphicProperties(): array
+    {
+        $semantic = [];
+        foreach (StyleMapper::mapFrameStyleOptions($this->frameOptions) as $key => $value) {
+            if ($this->isSemanticGraphicProperty((string) $key)) {
+                $semantic[(string) $key] = $value;
+            }
+        }
+        ksort($semantic);
+
+        return $semantic;
+    }
+
+    private function isSemanticGraphicProperty(string $key): bool
+    {
+        if (in_array($key, [
+            'fo:background-color',
+            'draw:fill',
+            'draw:fill-color',
+            'draw:stroke',
+            'draw:fill-image-name',
+            'draw:fill-image-width',
+            'draw:fill-image-height',
+            'style:repeat',
+        ], true)) {
+            return true;
+        }
+
+        return str_starts_with($key, 'fo:border')
+            || str_starts_with($key, 'fo:padding')
+            || str_starts_with($key, 'draw:stroke-')
+            || str_starts_with($key, 'svg:stroke-');
     }
 }
