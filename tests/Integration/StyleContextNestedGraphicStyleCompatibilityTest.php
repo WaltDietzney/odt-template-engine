@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OdtTemplateEngine\Tests\Integration;
 
+use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Elements\DrawTextBox;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\OdtTemplate;
@@ -12,7 +13,7 @@ use ZipArchive;
 
 final class StyleContextNestedGraphicStyleCompatibilityTest extends TestCase
 {
-    public function testNestedDrawTextBoxStyleIsPersistedWhenParagraphIsInserted(): void
+    public function testNestedDrawTextBoxSemanticStyleIsPersistedWhenParagraphIsInserted(): void
     {
         $template = new OdtTemplate($this->templatePath('template_17_textfield.odt'));
         $output = sys_get_temp_dir() . '/odt-style-nested-graphic-' . bin2hex(random_bytes(6)) . '.odt';
@@ -33,6 +34,14 @@ final class StyleContextNestedGraphicStyleCompatibilityTest extends TestCase
             ->addElement($box)
             ->addText(' und weiter geht’s mit normalem Text.', ['bold' => true, 'italic' => true]);
 
+        $semanticRequirements = iterator_to_array($box->getOwnStyleRequirements(), false);
+        self::assertCount(1, $semanticRequirements);
+        $semantic = $semanticRequirements[0];
+        self::assertInstanceOf(StyleRequirement::class, $semantic);
+        $legacyName = array_key_first($box->getFrameStyleRequirements());
+        self::assertIsString($legacyName);
+        self::assertNotSame($semantic->name(), $legacyName);
+
         try {
             $template->setElement('INLINE_BOX', $paragraph);
             $template->save($output);
@@ -45,10 +54,12 @@ final class StyleContextNestedGraphicStyleCompatibilityTest extends TestCase
                 self::assertIsString($content);
                 self::assertIsString($styles);
 
-                $frameStyleName = array_key_first($box->getFrameStyleRequirements());
-                self::assertIsString($frameStyleName);
-                self::assertStringContainsString('draw:style-name="' . $frameStyleName . '"', $content);
-                self::assertSame(1, substr_count($styles, 'style:name="' . $frameStyleName . '"'));
+                self::assertStringContainsString('draw:style-name="' . $semantic->name() . '"', $content);
+                self::assertSame(1, substr_count($styles, 'style:name="' . $semantic->name() . '"'));
+
+                // The legacy carrier remains compatibility state during D.3/F,
+                // even though this nested frame no longer references it.
+                self::assertSame(1, substr_count($styles, 'style:name="' . $legacyName . '"'));
             } finally {
                 $zip->close();
             }
