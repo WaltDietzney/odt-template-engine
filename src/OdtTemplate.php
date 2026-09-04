@@ -1599,11 +1599,19 @@ class OdtTemplate
         }
 
         if (method_exists($element, 'getFillImageRequirements')) {
+            $fillImageAssets = [];
             foreach ($element->getFillImageRequirements() as $name => $definition) {
                 $path = $definition['path'] ?? null;
                 if (is_string($path)) {
                     StyleMapper::registerFillImage($name, $path);
+                    $fillImageAssets[] = [
+                        'id' => basename($path),
+                        'path' => $path,
+                    ];
                 }
+            }
+            if ($fillImageAssets !== []) {
+                $this->package->copyImageResourcesAtomically($fillImageAssets);
             }
         }
     }
@@ -1618,8 +1626,8 @@ class OdtTemplate
         $xpath->registerNamespace('xlink', 'http://www.w3.org/1999/xlink');
 
         $officeStyles = $xpath->query('//office:styles')->item(0);
-        foreach (StyleMapper::getRegisteredFillImages() as $name => $image) {
-            if (!$officeStyles || $xpath->query("//draw:fill-image[@draw:name='$name']")->length > 0) {
+        foreach ($this->legacyFillImagesReferencedByCurrentDocument() as $name => $image) {
+            if (!$officeStyles || $this->hasFillImageDeclaration($stylesDom, $name)) {
                 continue;
             }
             $fillImage = $stylesDom->createElement('draw:fill-image');
@@ -1699,6 +1707,72 @@ class OdtTemplate
         }
 
         return $adopted;
+    }
+
+    /**
+     * Adopt only legacy fill-image declarations referenced by this document.
+     * A fill-image can be referenced directly by a graphic property or
+     * indirectly through a legacy graphic style used by a drawing object.
+     *
+     * @return array<string, array{name: string, path: string, filename: string}>
+     */
+    private function legacyFillImagesReferencedByCurrentDocument(): array
+    {
+        $fillNames = [];
+        $graphicStyleNames = [];
+
+        foreach ([$this->documentContext()->contentDom(), $this->documentContext()->stylesDom()] as $dom) {
+            foreach ($dom->getElementsByTagName('*') as $element) {
+                if (!$element instanceof DOMElement) {
+                    continue;
+                }
+                foreach ($element->attributes as $attribute) {
+                    if ($attribute->nodeName === 'draw:fill-image-name'
+                        || ($attribute->localName === 'fill-image-name'
+                            && $attribute->namespaceURI === 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0')) {
+                        $fillNames[$attribute->nodeValue] = true;
+                    }
+                    if ($attribute->nodeName === 'draw:style-name'
+                        || ($attribute->localName === 'style-name'
+                            && $attribute->namespaceURI === 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0')) {
+                        $graphicStyleNames[$attribute->nodeValue] = true;
+                    }
+                }
+            }
+        }
+
+        foreach (StyleMapper::getRegisteredImageStyles() as $styleName => $options) {
+            if (isset($graphicStyleNames[$styleName]) && isset($options['draw:fill-image-name'])) {
+                $fillNames[$options['draw:fill-image-name']] = true;
+            }
+        }
+
+        $adopted = [];
+        foreach (StyleMapper::getRegisteredFillImages() as $name => $image) {
+            if (isset($fillNames[$name])) {
+                $adopted[$name] = $image;
+            }
+        }
+
+        return $adopted;
+    }
+
+    private function hasFillImageDeclaration(DOMDocument $dom, string $name): bool
+    {
+        foreach ($dom->getElementsByTagName('*') as $element) {
+            if (!$element instanceof DOMElement
+                || !in_array($element->localName, ['fill-image', 'draw:fill-image'], true)) {
+                continue;
+            }
+            foreach ($element->attributes as $attribute) {
+                if (($attribute->nodeName === 'draw:name' || $attribute->localName === 'name')
+                    && $attribute->nodeValue === $name) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /** Adopt only the element's own graphic/image requirements after materialization. */
