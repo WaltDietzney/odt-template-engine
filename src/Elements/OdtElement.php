@@ -5,6 +5,7 @@ namespace OdtTemplateEngine\Elements;
 use DOMDocument;
 use DOMNode;
 use OdtTemplateEngine\Contracts\HasStyles;
+use OdtTemplateEngine\Document\FillImageRequirement;
 use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Elements\DOMElement;
 
@@ -95,6 +96,20 @@ abstract class OdtElement implements HasStyles
      * @return iterable<int, StyleRequirement>
      */
     public function getOwnStyleRequirements(): iterable
+    {
+        return [];
+    }
+
+    /**
+     * Returns semantic fill-image dependencies owned directly by this element.
+     *
+     * This typed hook is deliberately separate from the historical
+     * getOwnFillImageRequirements() array API. Transitive traversal belongs to
+     * FillImageRequirementCollector through ownedElements().
+     *
+     * @return iterable<int, FillImageRequirement>
+     */
+    public function getOwnFillImageDependencies(): iterable
     {
         return [];
     }
