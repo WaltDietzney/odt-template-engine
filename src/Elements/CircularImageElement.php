@@ -5,6 +5,8 @@ namespace OdtTemplateEngine\Elements;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
+use OdtTemplateEngine\Document\StyleRequirement;
+use OdtTemplateEngine\Utils\StyleMapper;
 
 class CircularImageElement extends ImageElement
 {
@@ -22,26 +24,45 @@ class CircularImageElement extends ImageElement
         $this->height = $options['height'] ?? '3.4cm';
     }
 
+    /**
+     * Produce the semantic bitmap-fill graphic style owned by this circular image.
+     *
+     * The referenced fill-image declaration remains a separate dependency and
+     * its lifecycle is intentionally left to SR-06E.
+     *
+     * @return iterable<int, StyleRequirement>
+     */
+    public function getOwnStyleRequirements(): iterable
+    {
+        $properties = $this->semanticGraphicProperties();
+        $styleName = StyleMapper::generateStyleName($properties);
+
+        return [new StyleRequirement(
+            StyleRequirement::KIND_DEFINITION,
+            StyleRequirement::SCOPE_COMMON,
+            'graphic',
+            StyleRequirement::PART_STYLES,
+            $styleName,
+            'Frame',
+            ['style:graphic-properties' => $properties]
+        )];
+    }
+
     public function toDomNode(DOMDocument $dom): DOMNode
     {
         // Use a draw:custom-shape with draw:type="ellipse" and fill the shape
         // with the image as a bitmap. This is how LibreOffice creates circular
         // images natively.
-        $fillImageName = 'cv_photo_' . pathinfo($this->filename, PATHINFO_FILENAME);
+        $fillImageName = $this->resolvedFillImageName();
 
         // Register the fill-image (creates <draw:fill-image> in styles.xml)
         $this->fillImageName = $fillImageName;
 
-        // Register a graphic style with bitmap fill referencing the fill-image by name
-        $styleOptions = [
-            'draw:fill' => 'bitmap',
-            'draw:fill-image-name' => $fillImageName,
-            'draw:fill-image-width' => '100%',
-            'draw:fill-image-height' => '100%',
-            'style:repeat' => 'stretch',
-            'draw:stroke' => 'none',
-        ];
-        $styleName = \OdtTemplateEngine\Utils\StyleMapper::generateStyleName($styleOptions);
+        // Register the legacy graphic style. The definition intentionally uses
+        // the same semantic properties while legacy materialization remains
+        // authoritative until SR-06D/F.
+        $styleOptions = $this->semanticGraphicProperties();
+        $styleName = StyleMapper::generateStyleName($styleOptions);
         $this->circularStyleName = $styleName;
         $this->circularStyleOptions = $styleOptions;
 
@@ -114,5 +135,23 @@ class CircularImageElement extends ImageElement
     public function toStyleDomNode(DOMDocument $dom): ?DOMElement
     {
         return null;
+    }
+
+    private function resolvedFillImageName(): string
+    {
+        return 'cv_photo_' . pathinfo($this->filename, PATHINFO_FILENAME);
+    }
+
+    /** @return array<string, mixed> */
+    private function semanticGraphicProperties(): array
+    {
+        return [
+            'draw:fill' => 'bitmap',
+            'draw:fill-image-name' => $this->resolvedFillImageName(),
+            'draw:fill-image-width' => '100%',
+            'draw:fill-image-height' => '100%',
+            'style:repeat' => 'stretch',
+            'draw:stroke' => 'none',
+        ];
     }
 }
