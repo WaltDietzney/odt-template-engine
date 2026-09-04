@@ -11,6 +11,8 @@ use RuntimeException;
 use OdtTemplateEngine\Document\AmbiguousTemplateTargetException;
 use OdtTemplateEngine\Document\DocumentInspection;
 use OdtTemplateEngine\Document\DocumentInspector;
+use OdtTemplateEngine\Document\FillImageRequirementCollector;
+use OdtTemplateEngine\Document\FillImageRequirementMaterializer;
 use OdtTemplateEngine\Document\FontFaceRequirementDiscovery;
 use OdtTemplateEngine\Document\FontFaceRequirementMaterializer;
 use OdtTemplateEngine\Document\BookmarkTarget;
@@ -279,6 +281,16 @@ class OdtTemplate
             if ($fontRequirement !== null) {
                 $this->documentContext()->registerFontFaceRequirement($fontRequirement);
             }
+        }
+
+        $fillImageCollector = new FillImageRequirementCollector();
+        foreach ($fillImageCollector->collect($element) as $requirement) {
+            $this->documentContext()->registerFillImageRequirement($requirement);
+        }
+
+        $fillImageMaterializer = new FillImageRequirementMaterializer();
+        foreach ($this->documentContext()->fillImageRequirements()->requirements() as $requirement) {
+            $fillImageMaterializer->materialize($this->documentContext(), $requirement);
         }
 
         $materializer = new StyleRequirementMaterializer();
