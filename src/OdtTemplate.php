@@ -347,23 +347,39 @@ class OdtTemplate
 
         foreach ($collector->collect($element) as $requirement) {
             $styleContext = $this->documentContext()->styleContext();
-            switch ($requirement['family']) {
-                case 'paragraph':
-                    $styleContext->registerParagraphStyle($requirement['name'], $requirement['definition']);
-                    break;
-                case 'text':
-                    $styleContext->registerTextStyle($requirement['name'], $requirement['definition']);
-                    break;
-                case 'frame':
-                    $styleContext->registerFrameStyle($requirement['name'], $requirement['definition']);
-                    break;
-                case 'image':
-                    $styleContext->registerImageStyle($requirement['name'], $requirement['definition']);
-                    break;
-                case 'fill-image':
-                    $styleContext->registerFillImage($requirement['name'], $requirement['definition']);
-                    break;
+            if ($requirement['family'] === 'paragraph') {
+                $styleContext->registerParagraphStyle($requirement['name'], $requirement['definition']);
+            } elseif ($requirement['family'] === 'text') {
+                $styleContext->registerTextStyle($requirement['name'], $requirement['definition']);
+            } else {
+                $this->registerLegacyGraphicCompatibilityState($requirement);
             }
+        }
+    }
+
+    /**
+     * Preserve the legacy graphic carriers collected on the normal path.
+     *
+     * This boundary is intentionally limited to the still-unmigrated graphic
+     * requirement families. Semantic requirements and paragraph/text legacy
+     * handling remain owned by their existing orchestration paths.
+     *
+     * @param array{family: string, name: string, definition: array<string, mixed>} $requirement
+     */
+    private function registerLegacyGraphicCompatibilityState(array $requirement): void
+    {
+        $styleContext = $this->documentContext()->styleContext();
+
+        switch ($requirement['family']) {
+            case 'frame':
+                $styleContext->registerFrameStyle($requirement['name'], $requirement['definition']);
+                break;
+            case 'image':
+                $styleContext->registerImageStyle($requirement['name'], $requirement['definition']);
+                break;
+            case 'fill-image':
+                $styleContext->registerFillImage($requirement['name'], $requirement['definition']);
+                break;
         }
     }
 
