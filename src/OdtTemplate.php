@@ -77,6 +77,9 @@ class OdtTemplate
      */
     private bool $legacyStructuredValuesMaterialized = false;
 
+    /** @var array<string, true> */
+    private array $legacyFrameStylesMaterialized = [];
+
     /** @var list<string> */
     private array $log = [];
 
@@ -129,6 +132,7 @@ class OdtTemplate
     {
         $this->package->resetFromTemplate();
         $this->legacyStructuredValuesMaterialized = false;
+        $this->legacyFrameStylesMaterialized = [];
         $this->prepareLoadedTemplate();
     }
 
@@ -1223,6 +1227,13 @@ class OdtTemplate
     {
         $this->injectImageStyles();
         $this->injectDocumentGraphicStyles();
+        $legacyFrameStyleNames = $this->legacyStructuredValuesMaterialized
+            ? $this->legacyFrameStylesReferencedByCurrentDocument()
+            : [];
+        $pendingLegacyFrameStyleNames = array_diff_key(
+            $legacyFrameStyleNames,
+            $this->legacyFrameStylesMaterialized
+        );
         (new FontFaceRequirementMaterializer())->materializeAll(
             $this->documentContext(),
             $this->documentContext()->fontFaceRequirements()->requirements()
@@ -1231,8 +1242,12 @@ class OdtTemplate
             $this->documentContext()->stylesDom(),
             false,
             false,
+            $this->legacyStructuredValuesMaterialized,
             $this->legacyStructuredValuesMaterialized
+                ? $pendingLegacyFrameStyleNames
+                : null
         );
+        $this->legacyFrameStylesMaterialized += $legacyFrameStyleNames;
         $this->adjustBulletIndentation();
         $this->package->saveAs($outputPath);
     }
@@ -1684,6 +1699,31 @@ class OdtTemplate
     private function legacyImageStylesReferencedByCurrentDocument(): array
     {
         $referencedNames = [];
+        $graphicStyleNames = $this->graphicStyleNamesReferencedByCurrentDocument();
+        foreach ($graphicStyleNames as $name => $_true) {
+            $referencedNames[$name] = true;
+        }
+
+        $adopted = [];
+        foreach (StyleMapper::getRegisteredImageStyles() as $styleName => $options) {
+            if (isset($referencedNames[$styleName])) {
+                $adopted[$styleName] = $options;
+            }
+        }
+
+        return $adopted;
+    }
+
+    /** @return array<string, true> */
+    private function legacyFrameStylesReferencedByCurrentDocument(): array
+    {
+        return $this->graphicStyleNamesReferencedByCurrentDocument();
+    }
+
+    /** @return array<string, true> */
+    private function graphicStyleNamesReferencedByCurrentDocument(): array
+    {
+        $referencedNames = [];
         foreach ([$this->documentContext()->contentDom(), $this->documentContext()->stylesDom()] as $dom) {
             foreach ($dom->getElementsByTagName('*') as $element) {
                 if (!$element instanceof DOMElement) {
@@ -1699,14 +1739,7 @@ class OdtTemplate
             }
         }
 
-        $adopted = [];
-        foreach (StyleMapper::getRegisteredImageStyles() as $styleName => $options) {
-            if (isset($referencedNames[$styleName])) {
-                $adopted[$styleName] = $options;
-            }
-        }
-
-        return $adopted;
+        return $referencedNames;
     }
 
     /**

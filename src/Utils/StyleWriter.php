@@ -26,7 +26,8 @@ class StyleWriter
         DOMDocument $domStyles,
         bool $includeLegacyParagraphStyles = true,
         bool $includeLegacyTextStyles = true,
-        bool $includeLegacyFrameStyles = true
+        bool $includeLegacyFrameStyles = true,
+        ?array $legacyFrameStyleNames = null
     ): void
     {
         $xpath = new DOMXPath($domStyles);
@@ -103,8 +104,12 @@ class StyleWriter
         }
 
         // === 3) GRAPHIC Styles ===
-        foreach ($includeLegacyFrameStyles ? StyleMapper::getFrameStyles() : [] as $name => $props) {
-            if (self::styleAlreadyExists($domStyles, $name, 'graphic')) {
+        $frameStyles = StyleMapper::getFrameStyles();
+        if ($legacyFrameStyleNames !== null) {
+            $frameStyles = array_intersect_key($frameStyles, $legacyFrameStyleNames);
+        }
+        foreach ($includeLegacyFrameStyles ? $frameStyles : [] as $name => $props) {
+            if (self::graphicStyleAlreadyExists($domStyles, $name)) {
                 continue;
             }
 
@@ -325,6 +330,29 @@ class StyleWriter
         $query = sprintf('//style:style[@style:name="%s" and @style:family="%s"]', $styleName, $family);
 
         return $xpath->query($query)->length > 0;
+    }
+
+    private static function graphicStyleAlreadyExists(DOMDocument $domStyles, string $styleName): bool
+    {
+        foreach ($domStyles->getElementsByTagName('*') as $element) {
+            if (!$element instanceof DOMElement
+                || !in_array($element->localName, ['style', 'style:style'], true)) {
+                continue;
+            }
+            $name = $element->getAttribute('style:name');
+            $family = $element->getAttribute('style:family');
+            if ($name === '' && $element->hasAttribute('name')) {
+                $name = $element->getAttribute('name');
+            }
+            if ($family === '' && $element->hasAttribute('family')) {
+                $family = $element->getAttribute('family');
+            }
+            if ($name === $styleName && $family === 'graphic') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static function writeColumnStyles(DOMDocument $doc, array $columnWidths): array
