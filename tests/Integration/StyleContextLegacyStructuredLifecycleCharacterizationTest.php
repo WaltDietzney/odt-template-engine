@@ -40,7 +40,7 @@ final class StyleContextLegacyStructuredLifecycleCharacterizationTest extends Te
     }
 
     #[RunInSeparateProcess]
-    public function testLegacyStaticGraphicRegistrationsSurviveLoadAndLeakIntoLaterLegacySave(): void
+    public function testLegacyStaticImageRegistrationsDoNotLeakIntoLaterLegacySave(): void
     {
         $first = $this->template();
         $firstImage = new ImageElement($this->imagePath(), ['width' => '4cm']);
@@ -65,7 +65,7 @@ final class StyleContextLegacyStructuredLifecycleCharacterizationTest extends Te
         $second->save($output);
 
         $styles = $this->entry($output, 'styles.xml');
-        self::assertStringContainsString('style:name="' . $firstName . '"', $styles);
+        self::assertStringNotContainsString('style:name="' . $firstName . '"', $styles);
         self::assertStringContainsString('style:name="' . $secondName . '"', $styles);
     }
 

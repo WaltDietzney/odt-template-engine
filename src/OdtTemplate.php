@@ -1632,11 +1632,22 @@ class OdtTemplate
         }
 
         $automaticStyles = $xpath->query('//office:automatic-styles')->item(0);
-        foreach (StyleMapper::getRegisteredImageStyles() as $styleName => $options) {
+        foreach ($this->legacyImageStylesReferencedByCurrentDocument() as $styleName => $options) {
             if (!$automaticStyles) {
                 continue;
             }
-            $existing = $xpath->query("//style:style[@style:name='$styleName']")->item(0);
+            $existing = null;
+            foreach ($stylesDom->getElementsByTagName('*') as $candidate) {
+                if (!$candidate instanceof DOMElement
+                    || !in_array($candidate->localName, ['style', 'style:style'], true)) {
+                    continue;
+                }
+                if ($this->graphicStyleAttribute($candidate, 'style:name', 'name') === $styleName
+                    && $this->graphicStyleAttribute($candidate, 'style:family', 'family') === 'graphic') {
+                    $existing = $candidate;
+                    break;
+                }
+            }
             if ($existing) {
                 $props = $existing->getElementsByTagName('style:graphic-properties')->item(0);
                 if ($props instanceof DOMElement && !$props->hasAttributes()) {
@@ -1653,6 +1664,41 @@ class OdtTemplate
             $style->appendChild($props);
             $automaticStyles->appendChild($style);
         }
+    }
+
+    /**
+     * Adopt only legacy image styles referenced by this document's structured
+     * content. The static StyleMapper registry remains a compatibility
+     * facade, but is not an implicit source of unrelated document state.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private function legacyImageStylesReferencedByCurrentDocument(): array
+    {
+        $referencedNames = [];
+        foreach ([$this->documentContext()->contentDom(), $this->documentContext()->stylesDom()] as $dom) {
+            foreach ($dom->getElementsByTagName('*') as $element) {
+                if (!$element instanceof DOMElement) {
+                    continue;
+                }
+                foreach ($element->attributes as $attribute) {
+                    if ($attribute->nodeName === 'draw:style-name'
+                        || ($attribute->localName === 'style-name'
+                            && $attribute->namespaceURI === 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0')) {
+                        $referencedNames[$attribute->nodeValue] = true;
+                    }
+                }
+            }
+        }
+
+        $adopted = [];
+        foreach (StyleMapper::getRegisteredImageStyles() as $styleName => $options) {
+            if (isset($referencedNames[$styleName])) {
+                $adopted[$styleName] = $options;
+            }
+        }
+
+        return $adopted;
     }
 
     /** Adopt only the element's own graphic/image requirements after materialization. */
