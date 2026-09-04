@@ -27,7 +27,7 @@ final class GraphicStyleRequirementContractTest extends TestCase
         self::assertSame(StyleRequirement::PART_STYLES, $requirement->documentPart());
         self::assertSame('Frame', $requirement->parentStyleName());
         self::assertSame([
-            'graphic-properties' => [
+            'style:graphic-properties' => [
                 'fo:background-color' => '#123456',
                 'draw:fill' => 'solid',
                 'draw:fill-color' => '#123456',
@@ -125,7 +125,7 @@ final class GraphicStyleRequirementContractTest extends TestCase
             StyleRequirement::PART_STYLES,
             $name,
             'Frame',
-            ['graphic-properties' => $graphicProperties]
+            ['style:graphic-properties' => $graphicProperties]
         );
     }
 }
