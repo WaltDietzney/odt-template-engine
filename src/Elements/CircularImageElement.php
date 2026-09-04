@@ -5,6 +5,7 @@ namespace OdtTemplateEngine\Elements;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
+use OdtTemplateEngine\Document\FillImageRequirement;
 use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Utils\StyleMapper;
 
@@ -27,9 +28,6 @@ class CircularImageElement extends ImageElement
     /**
      * Produce the semantic bitmap-fill graphic style owned by this circular image.
      *
-     * The referenced fill-image declaration remains a separate dependency and
-     * its lifecycle is intentionally left to SR-06E.
-     *
      * @return iterable<int, StyleRequirement>
      */
     public function getOwnStyleRequirements(): iterable
@@ -48,6 +46,23 @@ class CircularImageElement extends ImageElement
         )];
     }
 
+    /**
+     * Produce the named fill-image declaration dependency before DOM rendering.
+     *
+     * The physical source path remains owned by the resource path; this
+     * requirement carries only ODF declaration semantics.
+     *
+     * @return iterable<int, FillImageRequirement>
+     */
+    public function getOwnFillImageDependencies(): iterable
+    {
+        return [new FillImageRequirement(
+            FillImageRequirement::PART_STYLES,
+            $this->resolvedFillImageName(),
+            'Pictures/' . $this->filename
+        )];
+    }
+
     public function toDomNode(DOMDocument $dom): DOMNode
     {
         // Use a draw:custom-shape with draw:type="ellipse" and fill the shape
@@ -55,12 +70,12 @@ class CircularImageElement extends ImageElement
         // images natively.
         $fillImageName = $this->resolvedFillImageName();
 
-        // Register the fill-image (creates <draw:fill-image> in styles.xml)
+        // Preserve the legacy fill-image compatibility state until SR-06E/F
+        // removes normal setElement() dependence on it.
         $this->fillImageName = $fillImageName;
 
         // Register the legacy graphic style. The definition intentionally uses
-        // the same semantic properties while legacy materialization remains
-        // authoritative until SR-06D/F.
+        // the same semantic properties while compatibility materialization remains.
         $styleOptions = $this->semanticGraphicProperties();
         $styleName = StyleMapper::generateStyleName($styleOptions);
         $this->circularStyleName = $styleName;
@@ -127,7 +142,7 @@ class CircularImageElement extends ImageElement
 
     /**
      * No custom style node needed here – fill-image and graphic style are
-     * handled by injectImageStyles() via StyleMapper registrations.
+     * handled by the existing compatibility/finalization paths.
      *
      * @param DOMDocument $dom Unused.
      * @return null
