@@ -297,6 +297,32 @@ CustomShape
 
 No PHP API or class decomposition is approved by this hypothesis.
 
+## B.3 characterization confirmations
+
+The SR-06B.3 characterization tests record the following current behavior;
+these observations do not approve the behavior as the future semantic model:
+
+- Image width, height, anchor, wrapping, and reachable horizontal / vertical
+  position values participate in the generated legacy image style identity;
+  `align` is a separate placement convenience option and does not change that
+  identity. `toDomNode()` writes alignment-derived wrap and position values
+  back into `imageOptions`; repeated materialization stabilizes that state.
+- `DrawTextBox` serializes object structure and placement on `draw:frame`,
+  while appearance-like values are also serialized in the referenced
+  `style:family="graphic"` definition. Current option mapping therefore mixes
+  drawing structure, placement, geometry, and graphic properties.
+- `CircularImageElement` emits a `draw:custom-shape` with
+  `draw:enhanced-geometry`, a referenced bitmap-filled graphic style, a
+  `draw:fill-image` declaration, and a package image/manifest dependency. Its
+  known visual rendering issue is not addressed here.
+- `StyleMapper::mapImageStyleOptions()` and `mapFrameStyleOptions()` preserve
+  the current mixed convenience/native/placement mapping, including reachable
+  `rx` / `ry` frame values. These tests characterize the boundary; they do not
+  decide the eventual SR-06C ownership classification.
+
+The exact executable assertions are in
+`StyleContextGraphicDrawingBoundaryCharacterizationTest.php`.
+
 ## 9. Native model versus convenience API
 
 SR-06A distinguishes native document semantics from developer-facing convenience.
