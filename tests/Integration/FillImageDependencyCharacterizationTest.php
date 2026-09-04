@@ -111,12 +111,14 @@ final class FillImageDependencyCharacterizationTest extends TestCase
                     self::fail('Expected office:styles in test template.');
                 }
 
-                $fillImage = $dom->createElement('draw:fill-image');
-                $fillImage->setAttribute('draw:name', $name);
-                $fillImage->setAttribute('xlink:href', $href);
-                $fillImage->setAttribute('xlink:type', 'simple');
-                $fillImage->setAttribute('xlink:show', 'embed');
-                $fillImage->setAttribute('xlink:actuate', 'onLoad');
+                $drawNamespace = 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0';
+                $xlinkNamespace = 'http://www.w3.org/1999/xlink';
+                $fillImage = $dom->createElementNS($drawNamespace, 'draw:fill-image');
+                $fillImage->setAttributeNS($drawNamespace, 'draw:name', $name);
+                $fillImage->setAttributeNS($xlinkNamespace, 'xlink:href', $href);
+                $fillImage->setAttributeNS($xlinkNamespace, 'xlink:type', 'simple');
+                $fillImage->setAttributeNS($xlinkNamespace, 'xlink:show', 'embed');
+                $fillImage->setAttributeNS($xlinkNamespace, 'xlink:actuate', 'onLoad');
                 $officeStyles->insertBefore($fillImage, $officeStyles->firstChild);
             }
         };
