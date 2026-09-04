@@ -228,4 +228,3 @@ SR-06F must not, based on this audit alone:
 - change save/render/refresh output or lifecycle semantics before a dedicated
   compatibility slice proves the change safe;
 - touch `samples/output/*`, `tmp/`, or LibreOffice lock files.
-
