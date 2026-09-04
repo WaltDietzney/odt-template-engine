@@ -170,7 +170,7 @@ final class FillImageSemanticIndependencePreflightTest extends TestCase
 
     private function fillImageName(): string
     {
-        return 'sr06e5_semantic_' . pathinfo($this->imagePath(), PATHINFO_FILENAME);
+        return 'cv_photo_' . pathinfo($this->imagePath(), PATHINFO_FILENAME);
     }
 
     private function outputPath(string $label): string
