@@ -33,6 +33,13 @@ final class StyleRequirementMaterializer
 
     public function materialize(OdtDocumentContext $context, StyleRequirement $requirement): void
     {
+        // SR-06C transition: graphic producers may already register semantic
+        // requirements while legacy graphic materialization remains authoritative
+        // until SR-06D. Keep graphic requirements intentionally inert here.
+        if ($requirement->family() === 'graphic') {
+            return;
+        }
+
         if (!in_array($requirement->family(), ['paragraph', 'text'], true)) {
             throw new InvalidArgumentException(sprintf(
                 'Unsupported semantic style family "%s".',
