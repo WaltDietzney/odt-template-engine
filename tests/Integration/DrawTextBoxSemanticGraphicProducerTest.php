@@ -139,10 +139,8 @@ final class DrawTextBoxSemanticGraphicProducerTest extends TestCase
         self::assertStringContainsString('style:name="' . $semantic->name() . '"', $template->stylesXmlForTest());
 
         $dom = new DOMDocument('1.0', 'UTF-8');
-        $frame = $box->toDomNode($dom);
-        if ($frame->nodeName === 'text:p') {
-            $frame = $frame->firstChild;
-        }
+        $rendered = $box->toDomNode($dom);
+        $frame = $rendered->nodeName === 'text:p' ? $rendered->firstChild : $rendered;
         self::assertSame($semantic->name(), $frame?->attributes?->getNamedItem('draw:style-name')?->nodeValue);
     }
 
@@ -159,10 +157,8 @@ final class DrawTextBoxSemanticGraphicProducerTest extends TestCase
         self::assertNotSame($semantic->name(), $legacyName);
 
         $dom = new DOMDocument('1.0', 'UTF-8');
-        $frame = $box->toDomNode($dom);
-        if ($frame->nodeName === 'text:p') {
-            $frame = $frame->firstChild;
-        }
+        $rendered = $box->toDomNode($dom);
+        $frame = $rendered->nodeName === 'text:p' ? $rendered->firstChild : $rendered;
 
         self::assertSame($legacyName, $frame?->attributes?->getNamedItem('draw:style-name')?->nodeValue);
     }
@@ -178,10 +174,8 @@ final class DrawTextBoxSemanticGraphicProducerTest extends TestCase
         $legacyName = (string) array_key_first($box->getOwnFrameStyleRequirements());
 
         $dom = new DOMDocument('1.0', 'UTF-8');
-        $frame = $box->toDomNode($dom);
-        if ($frame->nodeName === 'text:p') {
-            $frame = $frame->firstChild;
-        }
+        $rendered = $box->toDomNode($dom);
+        $frame = $rendered->nodeName === 'text:p' ? $rendered->firstChild : $rendered;
 
         self::assertSame($legacyName, $frame?->attributes?->getNamedItem('draw:style-name')?->nodeValue);
     }
