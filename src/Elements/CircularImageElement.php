@@ -5,6 +5,9 @@ namespace OdtTemplateEngine\Elements;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
+use OdtTemplateEngine\Document\FillImageRequirement;
+use OdtTemplateEngine\Document\StyleRequirement;
+use OdtTemplateEngine\Utils\StyleMapper;
 
 class CircularImageElement extends ImageElement
 {
@@ -22,26 +25,59 @@ class CircularImageElement extends ImageElement
         $this->height = $options['height'] ?? '3.4cm';
     }
 
+    /**
+     * Produce the semantic bitmap-fill graphic style owned by this circular image.
+     *
+     * @return iterable<int, StyleRequirement>
+     */
+    public function getOwnStyleRequirements(): iterable
+    {
+        $properties = $this->semanticGraphicProperties();
+        $styleName = StyleMapper::generateStyleName($properties);
+
+        return [new StyleRequirement(
+            StyleRequirement::KIND_DEFINITION,
+            StyleRequirement::SCOPE_COMMON,
+            'graphic',
+            StyleRequirement::PART_STYLES,
+            $styleName,
+            'Frame',
+            ['style:graphic-properties' => $properties]
+        )];
+    }
+
+    /**
+     * Produce the named fill-image declaration dependency before DOM rendering.
+     *
+     * The physical source path remains owned by the resource path; this
+     * requirement carries only ODF declaration semantics.
+     *
+     * @return iterable<int, FillImageRequirement>
+     */
+    public function getOwnFillImageDependencies(): iterable
+    {
+        return [new FillImageRequirement(
+            FillImageRequirement::PART_STYLES,
+            $this->resolvedFillImageName(),
+            'Pictures/' . $this->filename
+        )];
+    }
+
     public function toDomNode(DOMDocument $dom): DOMNode
     {
         // Use a draw:custom-shape with draw:type="ellipse" and fill the shape
         // with the image as a bitmap. This is how LibreOffice creates circular
         // images natively.
-        $fillImageName = 'cv_photo_' . pathinfo($this->filename, PATHINFO_FILENAME);
+        $fillImageName = $this->resolvedFillImageName();
 
-        // Register the fill-image (creates <draw:fill-image> in styles.xml)
+        // Preserve the legacy fill-image compatibility state until SR-06E/F
+        // removes normal setElement() dependence on it.
         $this->fillImageName = $fillImageName;
 
-        // Register a graphic style with bitmap fill referencing the fill-image by name
-        $styleOptions = [
-            'draw:fill' => 'bitmap',
-            'draw:fill-image-name' => $fillImageName,
-            'draw:fill-image-width' => '100%',
-            'draw:fill-image-height' => '100%',
-            'style:repeat' => 'stretch',
-            'draw:stroke' => 'none',
-        ];
-        $styleName = \OdtTemplateEngine\Utils\StyleMapper::generateStyleName($styleOptions);
+        // Register the legacy graphic style. The definition intentionally uses
+        // the same semantic properties while compatibility materialization remains.
+        $styleOptions = $this->semanticGraphicProperties();
+        $styleName = StyleMapper::generateStyleName($styleOptions);
         $this->circularStyleName = $styleName;
         $this->circularStyleOptions = $styleOptions;
 
@@ -106,7 +142,7 @@ class CircularImageElement extends ImageElement
 
     /**
      * No custom style node needed here – fill-image and graphic style are
-     * handled by injectImageStyles() via StyleMapper registrations.
+     * handled by the existing compatibility/finalization paths.
      *
      * @param DOMDocument $dom Unused.
      * @return null
@@ -114,5 +150,23 @@ class CircularImageElement extends ImageElement
     public function toStyleDomNode(DOMDocument $dom): ?DOMElement
     {
         return null;
+    }
+
+    private function resolvedFillImageName(): string
+    {
+        return 'cv_photo_' . pathinfo($this->filename, PATHINFO_FILENAME);
+    }
+
+    /** @return array<string, mixed> */
+    private function semanticGraphicProperties(): array
+    {
+        return [
+            'draw:fill' => 'bitmap',
+            'draw:fill-image-name' => $this->resolvedFillImageName(),
+            'draw:fill-image-width' => '100%',
+            'draw:fill-image-height' => '100%',
+            'style:repeat' => 'stretch',
+            'draw:stroke' => 'none',
+        ];
     }
 }

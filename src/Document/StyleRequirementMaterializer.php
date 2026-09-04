@@ -10,7 +10,7 @@ use InvalidArgumentException;
 use OdtTemplateEngine\OdtDocumentContext;
 
 /**
- * Materializes resolved paragraph and text style definitions.
+ * Materializes resolved semantic style definitions.
  *
  * Semantic property groups are already native ODF data and are written
  * verbatim. Mapping and compatibility registries are deliberately outside
@@ -33,7 +33,7 @@ final class StyleRequirementMaterializer
 
     public function materialize(OdtDocumentContext $context, StyleRequirement $requirement): void
     {
-        if (!in_array($requirement->family(), ['paragraph', 'text'], true)) {
+        if (!in_array($requirement->family(), ['paragraph', 'text', 'graphic'], true)) {
             throw new InvalidArgumentException(sprintf(
                 'Unsupported semantic style family "%s".',
                 $requirement->family()
@@ -47,7 +47,10 @@ final class StyleRequirementMaterializer
         }
         if ($requirement->scope() === StyleRequirement::SCOPE_COMMON
             && $requirement->documentPart() !== StyleRequirement::PART_STYLES) {
-            throw new InvalidArgumentException('Common paragraph/text styles require styles.xml.');
+            throw new InvalidArgumentException(sprintf(
+                'Common %s styles require styles.xml.',
+                $requirement->family()
+            ));
         }
 
         $dom = $requirement->documentPart() === StyleRequirement::PART_CONTENT

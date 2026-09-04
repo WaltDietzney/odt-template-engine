@@ -6,6 +6,7 @@ use DOMDocument;
 use DOMElement;
 use DOMNode;
 use OdtTemplateEngine\Contracts\HasStyles;
+use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Utils\StyleMapper;
 
 /**
@@ -22,13 +23,9 @@ class DrawTextBox extends OdtElement implements HasStyles
     {
         $this->name = $name;
         $this->frameOptions = $options;
-        // Register the graphic/frame style immediately.
         $this->registerFrameStyle();
     }
 
-    /**
-     * Add a Paragraph or RichText element into this text box.
-     */
     public function addElement(OdtElement $element): self
     {
         $this->paragraphs[] = $element;
@@ -41,9 +38,25 @@ class DrawTextBox extends OdtElement implements HasStyles
         return $this->paragraphs;
     }
 
-    /**
-     * Map frame options into a style and register it.
-     */
+    /** @return iterable<int, StyleRequirement> */
+    public function getOwnStyleRequirements(): iterable
+    {
+        $properties = $this->semanticGraphicProperties();
+        if ($properties === []) {
+            return [];
+        }
+
+        return [new StyleRequirement(
+            StyleRequirement::KIND_DEFINITION,
+            StyleRequirement::SCOPE_COMMON,
+            'graphic',
+            StyleRequirement::PART_STYLES,
+            StyleMapper::generateStyleName($properties),
+            'Frame',
+            ['style:graphic-properties' => $properties]
+        )];
+    }
+
     protected function registerFrameStyle(): void
     {
         $styleDef = StyleMapper::mapFrameStyleOptions($this->frameOptions);
@@ -54,7 +67,6 @@ class DrawTextBox extends OdtElement implements HasStyles
     public function getFrameStyleRequirements(): array
     {
         $this->registerFrameStyle();
-
         return [$this->frameStyleName => StyleMapper::mapFrameStyleOptions($this->frameOptions)];
     }
 
@@ -64,37 +76,30 @@ class DrawTextBox extends OdtElement implements HasStyles
         return $this->getFrameStyleRequirements();
     }
 
-    /**
-     * HasStyles interface: define style definitions for this DrawTextBox.
-     */
     public function getStyleDefinitions(): array
     {
         return [$this->frameStyleName => StyleMapper::mapFrameStyleOptions($this->frameOptions)];
     }
 
-    /**
-     * Converts this element into a DOMElement (draw:frame).
-     */
     public function toDomNode(DOMDocument $dom): DOMNode
     {
         $this->registerFrameStyle();
 
         $anchor = $this->frameOptions['anchor'] ?? 'paragraph';
+        $styleName = $this->resolvedRenderedStyleName();
 
         $frame = $dom->createElement('draw:frame');
         $frame->setAttribute('draw:name', $this->name);
         $frame->setAttribute('text:anchor-type', $anchor);
         $frame->setAttribute('draw:z-index', '0');
-        $frame->setAttribute('draw:style-name', $this->frameStyleName);
+        $frame->setAttribute('draw:style-name', $styleName);
 
-        // Größe setzen
         if (!empty($this->frameOptions['width'])) {
             $frame->setAttribute('svg:width', $this->frameOptions['width']);
         }
         if (!empty($this->frameOptions['height'])) {
             $frame->setAttribute('svg:height', $this->frameOptions['height']);
         }
-
         if (!empty($this->frameOptions['horizontal-pos'])) {
             $frame->setAttribute('style:horizontal-pos', $this->frameOptions['horizontal-pos']);
         }
@@ -108,8 +113,6 @@ class DrawTextBox extends OdtElement implements HasStyles
             $frame->setAttribute('style:vertical-rel', $this->frameOptions['vertical-rel']);
         }
 
-
-        // Textbox-Inhalt
         $textBox = $dom->createElement('draw:text-box');
         foreach ($this->paragraphs as $element) {
             $child = $element->toDomNode($dom);
@@ -123,23 +126,15 @@ class DrawTextBox extends OdtElement implements HasStyles
         }
         $frame->appendChild($textBox);
 
-        // 💡 Einbettung: inline = direkt, alle anderen brauchen eigenen Absatz
         if ($anchor === 'as-char') {
             return $frame;
         }
 
-        // Sonst in <text:p> einbetten
         $p = $dom->createElement('text:p');
         $p->appendChild($frame);
         return $p;
     }
 
-
-
-
-    /**
-     * Inserts the style definition into styles.xml
-     */
     public function toStyleDomNode(DOMDocument $dom): ?DOMElement
     {
         $styleNode = $dom->createElement('style:style');
@@ -155,7 +150,6 @@ class DrawTextBox extends OdtElement implements HasStyles
         return $styleNode;
     }
 
-    // Fluent API for styling:
     public function setBackground(string $color): self
     {
         $this->frameOptions['background-color'] = $color;
@@ -200,26 +194,16 @@ class DrawTextBox extends OdtElement implements HasStyles
         return $this;
     }
 
-    /**
-     * Set horizontal position properties (e.g. style:horizontal-pos and style:horizontal-rel).
-     */
     public function setHorizontalPosition(string $pos, string $rel = 'page'): self
     {
         return $this->setHorizontalPos($pos, $rel);
     }
 
-
-    /**
-     * Set vertical position properties (e.g. style:vertical-pos and style:vertical-rel).
-     */
     public function setVerticalPosition(string $pos, string $rel = 'page'): self
     {
         return $this->setVerticalPos($pos, $rel);
     }
 
-    /**
-     * Set text flow mode inside the frame (true = flow-with-text).
-     */
     public function flowWithText(bool $enable = true): self
     {
         $this->frameOptions['style:flow-with-text'] = $enable ? 'true' : 'false';
@@ -227,10 +211,81 @@ class DrawTextBox extends OdtElement implements HasStyles
         return $this;
     }
 
-
     public function registerStyles(): void
     {
         $this->registerFrameStyle();
         StyleMapper::$frameStyles[$this->frameStyleName] = StyleMapper::mapFrameStyleOptions($this->frameOptions);
+    }
+
+    /** @return array<string, mixed> */
+    private function semanticGraphicProperties(): array
+    {
+        $semantic = [];
+        foreach (StyleMapper::mapFrameStyleOptions($this->frameOptions) as $key => $value) {
+            if ($this->isSemanticGraphicProperty((string) $key)) {
+                $semantic[(string) $key] = $value;
+            }
+        }
+        ksort($semantic);
+
+        return $semantic;
+    }
+
+    private function resolvedRenderedStyleName(): string
+    {
+        $semantic = $this->semanticGraphicProperties();
+        if ($semantic === [] || $this->requiresLegacyGraphicCarrier()) {
+            return $this->frameStyleName;
+        }
+
+        return StyleMapper::generateStyleName($semantic);
+    }
+
+    private function requiresLegacyGraphicCarrier(): bool
+    {
+        $semantic = $this->semanticGraphicProperties();
+        foreach (StyleMapper::mapFrameStyleOptions($this->frameOptions) as $key => $_value) {
+            $key = (string) $key;
+            if (array_key_exists($key, $semantic)) {
+                continue;
+            }
+
+            if (in_array($key, [
+                'width',
+                'height',
+                'anchor',
+                'style:horizontal-pos',
+                'style:horizontal-rel',
+                'style:vertical-pos',
+                'style:vertical-rel',
+            ], true)) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private function isSemanticGraphicProperty(string $key): bool
+    {
+        if (in_array($key, [
+            'fo:background-color',
+            'draw:fill',
+            'draw:fill-color',
+            'draw:stroke',
+            'draw:fill-image-name',
+            'draw:fill-image-width',
+            'draw:fill-image-height',
+            'style:repeat',
+        ], true)) {
+            return true;
+        }
+
+        return str_starts_with($key, 'fo:border')
+            || str_starts_with($key, 'fo:padding')
+            || str_starts_with($key, 'draw:stroke-')
+            || str_starts_with($key, 'svg:stroke-');
     }
 }
