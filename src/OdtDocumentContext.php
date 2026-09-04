@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace OdtTemplateEngine;
 
 use DOMDocument;
+use OdtTemplateEngine\Document\FillImageRequirement;
+use OdtTemplateEngine\Document\FillImageRequirementRegistry;
 use OdtTemplateEngine\Document\FontFaceRequirement;
 use OdtTemplateEngine\Document\FontFaceRequirementRegistry;
 use OdtTemplateEngine\Style\StyleContext;
@@ -22,6 +24,8 @@ final class OdtDocumentContext
 
     private FontFaceRequirementRegistry $fontFaceRequirements;
 
+    private FillImageRequirementRegistry $fillImageRequirements;
+
     public function __construct(
         private DOMDocument $contentDom,
         private DOMDocument $stylesDom,
@@ -29,6 +33,7 @@ final class OdtDocumentContext
     ) {
         $this->styleContext = new StyleContext($contentDom, $stylesDom);
         $this->fontFaceRequirements = new FontFaceRequirementRegistry();
+        $this->fillImageRequirements = new FillImageRequirementRegistry();
     }
 
     public function contentDom(): DOMDocument
@@ -61,11 +66,21 @@ final class OdtDocumentContext
         return $this->fontFaceRequirements;
     }
 
+    public function registerFillImageRequirement(FillImageRequirement $requirement): void
+    {
+        $this->fillImageRequirements->register($requirement);
+    }
+
+    public function fillImageRequirements(): FillImageRequirementRegistry
+    {
+        return $this->fillImageRequirements;
+    }
+
     /**
      * Replace the core XML documents after a package reload.
      *
      * Replacing the document contents is also a reset boundary for pending
-     * document-scoped style requirements.
+     * document-scoped requirements.
      */
     public function replaceCoreDocuments(
         DOMDocument $contentDom,
@@ -76,6 +91,7 @@ final class OdtDocumentContext
         $this->stylesDom = $stylesDom;
         $this->metaDom = $metaDom;
         $this->fontFaceRequirements->reset();
+        $this->fillImageRequirements->reset();
         $this->styleContext->reset();
         $this->styleContext->replaceDocumentParts($contentDom, $stylesDom);
     }
