@@ -4,7 +4,7 @@ This document is the issue-oriented backlog for known limitations, architectural
 
 It complements [`ROADMAP.md`](ROADMAP.md). The roadmap defines strategic sequencing; this file records individual topics without implying that every item is approved for immediate implementation.
 
-The current planning baseline incorporates [`architecture/ROADMAP_REFRESH_02_POST_SR05_ARCHITECTURE_REASSESSMENT.md`](architecture/ROADMAP_REFRESH_02_POST_SR05_ARCHITECTURE_REASSESSMENT.md). Backlog descriptions must be interpreted against the current `develop` architecture rather than the earlier placeholder-centric or pre-SR-05 architecture.
+The current planning baseline incorporates [`architecture/ROADMAP_REFRESH_02_POST_SR05_ARCHITECTURE_REASSESSMENT.md`](architecture/ROADMAP_REFRESH_02_POST_SR05_ARCHITECTURE_REASSESSMENT.md) and the completed SR-06 milestone recorded in [`architecture/SR-06_SEMANTIC_GRAPHIC_STYLE_REQUIREMENTS_CLOSEOUT.md`](architecture/SR-06_SEMANTIC_GRAPHIC_STYLE_REQUIREMENTS_CLOSEOUT.md). Backlog descriptions must be interpreted against the current `develop` architecture rather than the earlier placeholder-centric or pre-SR-06 architecture.
 
 ## Style and dependency architecture
 
@@ -12,15 +12,13 @@ The current planning baseline incorporates [`architecture/ROADMAP_REFRESH_02_POS
 
 **Priority:** High architecture closeout
 
-The core ownership problem is no longer future work. The current baseline includes document-local `StyleContext` ownership, semantic structured-element traversal, conflict-preserving transitive requirement discovery, semantic `StyleRequirement` values, paragraph/text semantic materialization, and document-local font-face dependencies.
+The core ownership problem is no longer future work. The current baseline includes document-local `StyleContext` ownership, semantic structured-element traversal, conflict-preserving transitive requirement discovery, semantic `StyleRequirement` values, paragraph/text and graphic semantic materialization, document-local font-face dependencies, document-local fill-image dependencies, and document-reference-based legacy graphic compatibility adoption.
 
-D5C–D5E and SR-01–SR-05 are accepted architecture baseline.
+D5C–D5E and SR-01–SR-06 are accepted architecture baseline. SR-06 is COMPLETE / FINAL GO.
 
 Remaining work is deliberately sequenced as:
 
 ```text
-SR-06 Graphic Requirements
-        ↓
 SR-07 Table / Table-Cell Requirements
         ↓
 D5F Lifecycle / Materialization Integration
@@ -32,28 +30,28 @@ STYLE-CONTEXT-01 final closeout
 
 Do not solve remaining transition complexity through constructor resets, process-global current-document state, or premature lifecycle abstraction.
 
-### SR-06 — Semantic Graphic Style Requirements
+### SR-06 — Semantic Graphic Style Requirements — COMPLETE / FINAL GO
+
+SR-06 migrated structured graphic-style definitions and references from historical `frame` / `image` / related engine-role buckets into the semantic `StyleRequirement` model while preserving compatibility boundaries.
+
+Completed distinctions and outcomes include:
+
+- structural drawing/frame semantics separated from ODF `graphic` style properties;
+- semantic graphic definitions/references with document-local resolution and materialization;
+- style definitions kept separate from physical image resources;
+- a dedicated document-local `FillImageRequirement` model for `draw:fill-image` declarations;
+- package-owned physical resource preparation;
+- current-document reference-based adoption of legacy image, fill-image, and frame registrations;
+- preservation of public/static compatibility APIs and protected lifecycle hooks;
+- manual LibreOffice visual-regression FINAL GO.
+
+SR-06 deliberately did not redesign frame positioning, image anchor/wrap APIs, table layout, or the public layout model. Those remain separate future work.
+
+### SR-07 — Semantic Table / Table-Cell Requirements — PREFERRED NEXT ARCHITECTURE SLICE
 
 **Priority:** Highest / preferred next architecture slice
 
-Migrate graphic-style definitions and references used by structured elements from historical `frame` / `image` / related engine-role buckets into the semantic `StyleRequirement` model.
-
-Required distinctions include:
-
-- structural `draw:frame` attributes versus graphic-style properties;
-- ODF `graphic` family versus engine producer/use roles;
-- style definition/reference versus physical image resources;
-- document-local style materialization versus package-owned resource preparation.
-
-SR-06 must not redesign frame positioning, image anchor/wrap APIs, or package resource handling. It must not absorb `FRAME-LAYOUT-01` or unrelated rendering fixes.
-
-Immediate first slice: **SR-06A — Graphic Requirement Audit and Characterization**, followed by a Change Contract before implementation.
-
-### SR-07 — Semantic Table / Table-Cell Requirements
-
-**Priority:** High after SR-06
-
-Characterize and migrate the table-related style families required by structured insertion to the semantic requirement model.
+SR-07 is the next semantic family migration. Characterize and migrate the table-related style families required by structured insertion to the semantic requirement model.
 
 Potential ODF families include:
 
@@ -62,15 +60,15 @@ Potential ODF families include:
 - `table-row`;
 - `table-cell`.
 
-Style family and property group remain independent concepts. Do not combine this migration automatically with table geometry or cell-layout behavior changes.
+Style family and property group remain independent concepts. Characterization and semantics precede implementation. Do not combine this migration automatically with table geometry or cell-layout behavior changes.
 
 ### D5F — Lifecycle / materialization integration
 
-**Priority:** High after SR-06/SR-07
+**Priority:** High after SR-07
 
-D5F remains deliberately paused while structured insertion still combines semantic and legacy requirement worlds.
+D5F remains deliberately paused while structured insertion still combines semantic and legacy requirement worlds for the remaining table-related style families.
 
-When the required style families have been migrated or explicitly bounded as compatibility behavior, D5F should simplify lifecycle/orchestration around the coherent semantic model. It must not centralize native element rendering in `OdtTemplate` or create a God renderer.
+When those families have been migrated or explicitly bounded as compatibility behavior, D5F should simplify lifecycle/orchestration around the coherent semantic model. It must not centralize native element rendering in `OdtTemplate` or create a God renderer.
 
 ### D5G — Compatibility closeout
 
@@ -88,7 +86,7 @@ Before final STYLE-CONTEXT closeout, explicitly review:
 
 **Priority:** Medium architectural/API debt
 
-Reassess public style semantics only after the internal semantic ownership and family migration is complete. Do not combine public API redesign with SR-06/SR-07 unless a compatibility requirement makes it unavoidable.
+Reassess public style semantics only after the internal semantic ownership and family migration is complete. Do not combine public API redesign with SR-07 unless a compatibility requirement makes it unavoidable.
 
 ## Document defaults and state
 
@@ -144,7 +142,7 @@ Define a shared frame-positioning model for drawing content instead of allowing 
 
 Research areas include anchor type, horizontal/vertical position, relation/reference area, wrap behavior, size, existing-template mutation, constructed frames, LibreOffice behavior, and Word round-trip behavior where relevant.
 
-Use real LibreOffice-authored ODF as primary implementation evidence. SR-06 must remain a semantic style migration and must not be expanded into this layout API.
+Use real LibreOffice-authored ODF as primary implementation evidence. SR-06 has established the semantic graphic-style foundation; FRAME-LAYOUT-01 remains separate public/layout work.
 
 ### FRAME-LAYOUT-02 — DrawTextBox positioning
 
@@ -315,15 +313,14 @@ Generated files under `samples/output/` remain local regression artifacts unless
 
 Current preferred strategic order:
 
-1. `SR-06` semantic graphic style requirements;
-2. `SR-07` semantic table/table-cell requirements;
-3. `D5F` lifecycle/materialization integration;
-4. `D5G` compatibility closeout and final `STYLE-CONTEXT-01` closeout;
-5. reassess `DOCUMENT-DEFAULTS-01`, `FRAME-LAYOUT-01`, and table-layout priorities from the completed semantic baseline;
-6. template-authoring / format-preservation re-audit;
-7. page/master-style and page-flow work;
-8. named-object operations and dynamic-content research;
-9. `DOCUMENT-IMPORT-01` and broader round-trip workflows later.
+1. `SR-07` semantic table/table-cell requirements;
+2. `D5F` lifecycle/materialization integration;
+3. `D5G` compatibility closeout and final `STYLE-CONTEXT-01` closeout;
+4. reassess `DOCUMENT-DEFAULTS-01`, `FRAME-LAYOUT-01`, and table-layout priorities from the completed semantic baseline;
+5. template-authoring / format-preservation re-audit;
+6. page/master-style and page-flow work;
+7. named-object operations and dynamic-content research;
+8. `DOCUMENT-IMPORT-01` and broader round-trip workflows later.
 
 The sequence after STYLE-CONTEXT closeout remains revisitable. Smaller independent list, lifecycle, sample-infrastructure, asset, or reference-fixture slices may be inserted where useful.
 

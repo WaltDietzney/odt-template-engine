@@ -11,8 +11,10 @@
 
 use OdtTemplateEngine\OdtTemplate;
 
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
 // [1] Initialize the template
-$template = new OdtTemplate('samples/templates/template_05b_replaceImage.odt');
+$template = new OdtTemplate(__DIR__ . '/templates/template_05b_replaceImage.odt');
 
 // [2] Load the ODT document
 $template->load();
@@ -20,16 +22,16 @@ $template->load();
 // [3] Define images to replace (by draw:name attribute)
 $imagesToReplace = [
     'Logo' => [
-        'path' => 'assets/WaltDietzney.png',
+        'path' => __DIR__ . '/../assets/WaltDietzney.png',
         'width' => '6cm'
-     ],
+    ],
     'Banner' => [
-        'path' => 'assets/banner.png',
+        'path' => __DIR__ . '/../assets/banner.png',
         'width' => '12cm',
         'height' => '3cm'
     ],
     'FooterImage' => [
-        'path' => 'assets/footer.png',
+        'path' => __DIR__ . '/../assets/footer.png',
         // No width/height specified; keep original size
     ]
 ];
@@ -60,11 +62,8 @@ $template->setMeta([
 $template->render();
 
 // [7] Save the final document
-$outputPath = 'samples/output/output_05b_replaceImage.odt';
+$outputPath = __DIR__ . '/output/output_05b_replaceImage.odt';
 $template->save($outputPath);
 
 // [8] Output success message
-echo "The file 'output_5b_replaceMultipleImages.odt' was successfully created.\n";
-
-
-
+echo "The file 'samples/output/output_05b_replaceImage.odt' was successfully created.\n";
