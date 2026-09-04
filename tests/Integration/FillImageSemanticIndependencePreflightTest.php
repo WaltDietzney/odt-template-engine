@@ -217,6 +217,11 @@ final class SemanticOnlyFillImageElement extends OdtElement
     ) {
     }
 
+    public function registerStyles(): void
+    {
+        // Intentionally empty: this test fixture exposes only semantic requirements.
+    }
+
     /** @return iterable<int, StyleRequirement> */
     public function getOwnStyleRequirements(): iterable
     {
