@@ -104,13 +104,18 @@ final class DrawTextBoxSemanticGraphicProducerTest extends TestCase
         self::assertNotSame([], $box->getOwnFrameStyleRequirements());
     }
 
-    public function testSetElementRegistersSemanticGraphicRequirementWhileLegacyStyleRemainsRendered(): void
+    public function testSetElementUsesSemanticGraphicStyleWhenLegacyCarrierIsNotNeeded(): void
     {
         $template = new class($this->templatePath('sample_textfeld.odt')) extends OdtTemplate {
             /** @return array<string, StyleRequirement> */
             public function semanticDefinitionsForTest(): array
             {
                 return $this->documentContext()->styleContext()->semanticDefinitions();
+            }
+
+            public function stylesXmlForTest(): string
+            {
+                return (string) $this->documentContext()->stylesDom()->saveXML();
             }
         };
         $this->templates[] = $template;
@@ -122,6 +127,7 @@ final class DrawTextBoxSemanticGraphicProducerTest extends TestCase
         ]);
         $semantic = iterator_to_array($box->getOwnStyleRequirements(), false)[0];
         $legacyName = (string) array_key_first($box->getOwnFrameStyleRequirements());
+        self::assertNotSame($semantic->name(), $legacyName);
 
         $template->setElement('test1', $box);
 
@@ -130,12 +136,53 @@ final class DrawTextBoxSemanticGraphicProducerTest extends TestCase
             implode("\0", ['graphic', $semantic->name(), StyleRequirement::SCOPE_COMMON, StyleRequirement::PART_STYLES]),
             $definitions
         );
+        self::assertStringContainsString('style:name="' . $semantic->name() . '"', $template->stylesXmlForTest());
 
         $dom = new DOMDocument('1.0', 'UTF-8');
         $frame = $box->toDomNode($dom);
         if ($frame->nodeName === 'text:p') {
             $frame = $frame->firstChild;
         }
+        self::assertSame($semantic->name(), $frame?->attributes?->getNamedItem('draw:style-name')?->nodeValue);
+    }
+
+    public function testLegacyGraphicCarrierRemainsRenderedForUnmigratedLayoutProperties(): void
+    {
+        $box = new DrawTextBox('CompatibilityBox', [
+            'width' => '6cm',
+            'height' => '2cm',
+            'background-color' => '#123456',
+            'allow-overlap' => 'true',
+        ]);
+        $semantic = iterator_to_array($box->getOwnStyleRequirements(), false)[0];
+        $legacyName = (string) array_key_first($box->getOwnFrameStyleRequirements());
+        self::assertNotSame($semantic->name(), $legacyName);
+
+        $dom = new DOMDocument('1.0', 'UTF-8');
+        $frame = $box->toDomNode($dom);
+        if ($frame->nodeName === 'text:p') {
+            $frame = $frame->firstChild;
+        }
+
+        self::assertSame($legacyName, $frame?->attributes?->getNamedItem('draw:style-name')?->nodeValue);
+    }
+
+    public function testStructureOnlyTextBoxContinuesToReferenceLegacyGraphicCarrier(): void
+    {
+        $box = new DrawTextBox('StructureOnlyRendered', [
+            'width' => '6cm',
+            'height' => '2cm',
+            'horizontal-pos' => 'right',
+            'horizontal-rel' => 'paragraph',
+        ]);
+        $legacyName = (string) array_key_first($box->getOwnFrameStyleRequirements());
+
+        $dom = new DOMDocument('1.0', 'UTF-8');
+        $frame = $box->toDomNode($dom);
+        if ($frame->nodeName === 'text:p') {
+            $frame = $frame->firstChild;
+        }
+
         self::assertSame($legacyName, $frame?->attributes?->getNamedItem('draw:style-name')?->nodeValue);
     }
 
