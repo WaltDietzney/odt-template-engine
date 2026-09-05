@@ -95,7 +95,15 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
         $styles = $this->entry($output, 'styles.xml');
 
         self::assertSame(1, $this->styleCount($content, $styleName, 'table-cell'));
-        self::assertSame(1, $this->styleCount($styles, $styleName, 'table-cell'));
+        self::assertSame(2, $this->styleCount($styles, $styleName, 'table-cell'));
+        self::assertSame(
+            1,
+            $this->styleCountInContainer($styles, $styleName, 'table-cell', 'automatic-styles')
+        );
+        self::assertSame(
+            1,
+            $this->styleCountInContainer($styles, $styleName, 'table-cell', 'styles')
+        );
     }
 
     #[RunInSeparateProcess]
@@ -287,7 +295,10 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
         self::assertSame('table-cell', $styleNode->getAttribute('style:family'));
         self::assertSame('Default', $styleNode->getAttribute('style:parent-style-name'));
         self::assertSame($styleName, $styleNode->getAttribute('style:name'));
-        self::assertSame('table-cell-properties', $styleNode->firstChild?->localName);
+        $propertiesNode = $styleNode->firstChild;
+        self::assertInstanceOf(DOMElement::class, $propertiesNode);
+        self::assertSame('style:table-cell-properties', $propertiesNode->nodeName);
+        self::assertNull($propertiesNode->namespaceURI);
     }
 
     #[RunInSeparateProcess]
