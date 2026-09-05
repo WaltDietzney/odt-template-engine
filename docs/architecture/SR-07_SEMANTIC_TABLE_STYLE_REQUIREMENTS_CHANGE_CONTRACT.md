@@ -1,12 +1,12 @@
 # SR-07 — Semantic Table Style Requirements Change Contract
 
-Status: PROPOSED — REVIEW REQUIRED
+Status: FINAL GO
 
 Base: `develop` after SR-07A merge `b5f46af9ca1d9e3c4d14b47dcb08c227de0e1f1d`
 
 Evidence base: `docs/architecture/SR-07A_TABLE_SEMANTICS_AUDIT.md`
 
-This contract defines the semantic migration boundary for table-related ODF styles. It authorizes no implementation until reviewed and accepted.
+This contract defines the approved semantic migration boundary for table-related ODF styles. Implementation is authorized only within the boundaries and staged gates defined here.
 
 ## 1. Objective
 
@@ -19,7 +19,7 @@ The semantic table families in this slice are:
 - `table-row`
 - `table-cell`
 
-SR-07A found no active row-style producer even though `RichTable::addRow(..., $style)` already exposes a dormant row-style input. SR-07 therefore deliberately goes one step beyond pure ownership migration for this family: it integrates `table-row` as a first-class semantic family and activates the existing dormant row-style surface in a controlled, explicitly reviewed slice.
+SR-07A found no active row-style producer even though `RichTable::addRow(..., $style)` already exposes a dormant row-style input. SR-07 deliberately goes one step beyond pure ownership migration for this family: it integrates `table-row` as a first-class semantic family and activates the existing dormant row-style surface in a controlled, explicitly reviewed slice.
 
 The goal remains semantic ownership and model completeness, not a general table-layout redesign.
 
@@ -55,6 +55,21 @@ COMPATIBILITY PATHS
 
 A value does not become a style requirement merely because it currently passes through a style-shaped convenience API. Conversely, a native ODF style family is not excluded from the semantic model merely because the current legacy implementation failed to materialize it.
 
+The approved ownership rule is:
+
+```text
+element-owned / generated style
+    -> automatic style in the owning document part
+
+authored / explicitly reusable style
+    -> common style where that API or authored definition carries common-style semantics
+
+reference only
+    -> no fabricated definition
+```
+
+This rule is applied concretely by the family contracts below; it is not authorization to migrate unrelated style families during SR-07.
+
 ## 3. Family contracts
 
 ### 3.1 `table`
@@ -69,6 +84,8 @@ property group: style:table-properties
 A `table:style-name` on the structural `table:table` node is a semantic style reference.
 
 Existing authored common table definitions remain authoritative when the same semantic identity already exists in the target document.
+
+`setTableStyleName()` is reference-only. It must not fabricate a style definition when the table does not own one. A definition may be materialized only when there is an actual authored, registered, or element-owned definition source.
 
 SR-07 does not redesign the public `setTableStyleName()` API or invent a new table-layout API.
 
@@ -114,6 +131,8 @@ A styled `RichTableCell` owns a semantic style definition with:
 
 ```text
 family: table-cell
+scope: automatic
+document part: content.xml
 property group: style:table-cell-properties
 ```
 
@@ -125,11 +144,11 @@ Paragraph properties remain paragraph requirements. Text properties remain text 
 
 ## 4. Scope and document-part semantics
 
-SR-07 must preserve the currently meaningful ODF scope split while removing accidental duplicate ownership and introducing row-style semantics deliberately.
+SR-07 preserves the meaningful ODF scope split while removing accidental duplicate ownership and introducing row-style semantics deliberately.
 
 ### 4.1 Common definitions
 
-Existing externally registered table and table-cell definitions that represent common styles remain compatible with `styles.xml` `office:styles` semantics.
+Existing externally registered table and table-cell definitions that represent common reusable styles remain compatible with `styles.xml` `office:styles` semantics.
 
 Authored common definitions are authoritative on semantic identity collision.
 
@@ -139,9 +158,18 @@ If a future/compatibility row style is externally authored or registered as comm
 
 A `RichTableCell` definition produced from the cell's own style is document-local semantic ownership discovered before element materialization.
 
-The implementation must choose one authoritative semantic definition channel for that owned definition and must not rely on `RichTable::toDomNode()` to discover/materialize it.
+Its authoritative normal structured-insertion channel is:
 
-The target scope/part must preserve the effective normal structured-insertion behavior without retaining duplicate compatibility ownership. Existing characterization tests define the legacy observable baseline; any intentional duplicate reduction must be explicit in the implementation slice and tests.
+```text
+scope: automatic
+document part: content.xml
+```
+
+The semantic path must not rely on `RichTable::toDomNode()` to discover or materialize that definition.
+
+The current common `styles.xml` output caused by static registration is not a second semantic truth for an element-owned cell style. Static/common output remains a compatibility concern for explicitly registered reusable styles and legacy paths.
+
+Removing duplicate common/automatic ownership from the migrated element-owned path is an approved ownership correction and must be covered by focused tests.
 
 ### 4.3 Automatic column definitions
 
@@ -149,21 +177,23 @@ Explicit column-width definitions remain automatic definitions in `content.xml`.
 
 Generated positional names such as `co0` are legacy behavior, not semantic identity design. The migration must prevent a semantic requirement from silently creating duplicate same-identity definitions inside one target automatic-style container.
 
+SR-07 does not introduce a new name-allocation or collision-renaming strategy. If an existing target definition already owns the same semantic identity, that target definition remains authoritative under the established semantic materializer rules.
+
 This does not authorize redesigning the public width API or promising new collision behavior to callers outside the migrated semantic path.
 
 ### 4.4 Row definitions
 
 The exact scope/document-part semantics for generated element-owned `table-row` definitions must be established before the row producer is implemented.
 
-The default architectural expectation is that row styles generated for concrete structured table rows behave like document-local automatic styles associated with the content part, but SR-07 must confirm that against ODF/LibreOffice-authored evidence rather than assume symmetry with columns or cells.
+The architectural expectation is that row styles generated for concrete structured table rows behave like document-local automatic styles associated with the content part, but SR-07E must confirm that against ODF/LibreOffice-authored evidence rather than assume symmetry with columns or cells.
 
-The row semantics slice must document the chosen scope/part explicitly before implementation proceeds.
+The row semantics decision must be documented and reviewed before producer implementation begins.
 
 ## 5. Document-local ownership
 
 The authoritative semantics for migrated table requirements are document-local.
 
-`StyleContext` remains the document-local authority. SR-07 must extend the existing generic semantic pipeline rather than introduce a table-specific context or process-global current-document pointer.
+`StyleContext` remains the document-local authority. SR-07 extends the existing generic semantic pipeline rather than introducing a table-specific context or process-global current-document pointer.
 
 Semantic requirement collection occurs before structured DOM materialization.
 
@@ -193,7 +223,11 @@ The generic semantic identity remains based on the established requirement dimen
 
 Materialization must use namespace-aware DOM creation consistent with the semantic materializer architecture.
 
-Existing target definitions are authoritative according to the semantic identity and target-container rules already established by the style pipeline. Automatic `table-column` handling must not reproduce the legacy direct writer's duplicate `co0` behavior within the semantic path.
+Within a target context, the same semantic identity is materialized at most once. Existing target definitions are authoritative according to the semantic identity and target-container rules already established by the style pipeline.
+
+Automatic `table-column` handling must not reproduce the legacy direct writer's duplicate `co0` behavior within the semantic path. Likewise, migrated element-owned `table-cell` styles must not intentionally reproduce duplicate automatic/common ownership merely for compatibility with an accidental legacy side effect.
+
+SR-07 does not add automatic collision renaming such as inventing `co1`, hashes, or another naming scheme when a conflicting identity/name is encountered. Naming/collision policy beyond semantic de-duplication remains separate future work.
 
 ## 7. Producer responsibilities
 
@@ -226,7 +260,7 @@ If the current row representation cannot support this cleanly without introducin
 
 ### 7.3 RichTableCell
 
-`RichTableCell` produces its own semantic `table-cell` definition when it has mapped cell-style properties.
+`RichTableCell` produces its own semantic automatic/content-local `table-cell` definition when it has mapped cell-style properties.
 
 It must not absorb paragraph/text properties into that requirement.
 
@@ -259,7 +293,9 @@ The following surfaces remain available unless a later contract explicitly chang
 - `StyleWriter::writeColumnStyles()` as a compatibility callable unless a later explicit decision removes it
 - legacy `assign()` / `render()` entry points
 
-Protected/public facade wrappers should be retained where polymorphic or external compatibility may depend on them.
+The new semantic pipeline must be decoupled from compatibility facades rather than removing those facades merely because the normal path no longer depends on them.
+
+Public and protected compatibility-sensitive wrappers remain available where external callers, polymorphism, or subclasses may depend on them. In particular, compatibility APIs such as `getStyleDefinitions()`, `toStyleDomNode()`, and `writeColumnStyles()` are not removed as incidental cleanup during SR-07.
 
 Static registries may remain observable as compatibility state, but migrated normal structured insertion must not treat unrelated process-global registry contents as authoritative document ownership.
 
@@ -273,7 +309,7 @@ SR-07A characterized several surprising lifecycle behaviors:
 - repeated `setElement()` on an already replaced placeholder is accepted and can retain both tables while duplicating `co0`;
 - static table/table-cell registrations can leak across documents.
 
-SR-07 must distinguish ownership fixes from behavior fixes.
+SR-07 distinguishes ownership fixes from behavior fixes.
 
 ### 9.1 Required migration effect
 
@@ -287,7 +323,7 @@ The same rule applies to newly activated `table-row` semantic requirements.
 
 SR-07 does not redefine the public meaning of repeated `setElement()` or repeated `save()`.
 
-Where duplicate output is solely an artifact of the legacy style-ownership path being replaced, narrowing that duplication may be an explicit consequence of semantic ownership migration. Such changes must be covered by focused tests and called out in the implementation slice; they must not be generalized into unrelated lifecycle redesign.
+Where duplicate output is solely an artifact of the legacy style-ownership path being replaced, narrowing that duplication is an approved consequence of semantic ownership migration. Such changes must be covered by focused tests and called out in the implementation slice; they must not be generalized into unrelated lifecycle redesign.
 
 ## 10. `table-row` activation contract
 
@@ -295,7 +331,7 @@ Where duplicate output is solely an artifact of the legacy style-ownership path 
 
 The existing row-style argument is no longer treated as permanently dormant. SR-07 explicitly authorizes its controlled activation.
 
-Before implementation, the row semantics slice must answer and document:
+Before producer implementation, the SR-07E row semantics gate must answer and document:
 
 1. which currently accepted row-style keys are intended to map to native `style:table-row-properties`;
 2. which keys are unsupported, ambiguous, or belong to another responsibility;
@@ -305,6 +341,8 @@ Before implementation, the row semantics slice must answer and document:
 6. which focused tests and at least one visual sample prove the new behavior.
 
 Activation must be narrow and evidence-driven. SR-07 must not broaden the dormant `$style` array into an unrestricted row-layout DSL.
+
+**Semantics gate:** SR-07E producer code must not begin until these row-property and scope/document-part decisions are documented and explicitly reviewed. If the evidence contradicts this contract's architectural expectation, implementation stops and the contract is revisited first.
 
 ## 11. Explicit non-goals
 
@@ -329,7 +367,7 @@ Known layout work remains separate from this style-ownership migration.
 
 ## 12. Implementation slices
 
-Implementation should proceed in small independently reviewable slices.
+Implementation proceeds in small independently reviewable slices.
 
 ### SR-07B — Semantic family support
 
@@ -339,11 +377,11 @@ Implementation should proceed in small independently reviewable slices.
 
 ### SR-07C — RichTableCell semantic ownership
 
-- make `RichTableCell` produce semantic `table-cell` requirements;
+- make `RichTableCell` produce semantic automatic/content-local `table-cell` requirements;
 - collect through existing ownership traversal;
 - preserve paragraph/text separation;
 - narrow direct cell-style materialization from `RichTable::toDomNode()` for the migrated normal path while retaining compatibility facade behavior;
-- characterize any intentional duplicate reduction.
+- characterize and test the approved duplicate-ownership reduction.
 
 ### SR-07D — RichTable / table-column semantic ownership
 
@@ -351,12 +389,21 @@ Implementation should proceed in small independently reviewable slices.
 - preserve structural column references and width values;
 - keep ratio columns structural;
 - preserve `writeColumnStyles()` compatibility callable while removing it as authoritative normal structured-insertion ownership where possible;
-- handle semantic identity collisions without reproducing duplicate `co0` definitions in the semantic path.
+- enforce semantic de-duplication without introducing a new collision-renaming strategy.
 
 ### SR-07E — Table-row semantics and producer integration
 
+SR-07E is internally gated:
+
+**SR-07E1 — Row semantics decision**
+
 - perform the focused row-property semantics review required by section 10;
-- document the accepted mapping and scope/document-part decision before producer code;
+- document the accepted mapping and scope/document-part decision;
+- review that decision before producer code begins.
+
+**SR-07E2 — Row producer implementation**
+
+- begin only after SR-07E1 receives explicit GO;
 - activate the existing `RichTable::addRow(..., $style)` surface only for approved native row properties;
 - produce semantic `table-row` requirements and structural row references;
 - preserve rows without style input;
@@ -365,6 +412,7 @@ Implementation should proceed in small independently reviewable slices.
 ### SR-07F — Table definition/reference integration
 
 - integrate semantic family `table` definitions/references with document-local ownership;
+- keep `setTableStyleName()` reference-only unless an actual definition source exists;
 - preserve external/static registration compatibility;
 - preserve authored common definition precedence;
 - do not fabricate definitions for reference-only table style names.
@@ -373,8 +421,8 @@ Implementation should proceed in small independently reviewable slices.
 
 - audit remaining static table/table-cell consumption;
 - narrow cross-document leakage in migrated normal paths;
-- preserve legacy/public facades;
-- verify repeated save/render behavior against characterization and explicitly document any ownership-driven differences;
+- preserve legacy/public/protected facades where compatibility may depend on them;
+- verify repeated save/render behavior against characterization and explicitly document ownership-driven differences;
 - include row-style activation in compatibility/release notes for the architecture closeout;
 - run focused and full automated regression.
 
@@ -414,29 +462,31 @@ SR-07 is complete only when:
 
 1. `table`, `table-column`, `table-row`, and `table-cell` are supported by the document-local semantic style pipeline.
 2. `RichTable` no longer needs direct semantic style-definition side effects for migrated normal insertion.
-3. `RichTableCell` semantic ownership is collected transitively through existing structured ownership.
-4. explicit column widths preserve current structural/layout values while their style definitions use semantic document-local ownership.
+3. element-owned `RichTableCell` styles are authoritative automatic definitions in `content.xml` and are collected transitively through existing structured ownership.
+4. explicit column widths preserve current structural/layout values while their style definitions use automatic/content-local semantic ownership.
 5. ratio-based columns remain structural.
 6. the existing row-style input is mapped narrowly to native `table-row` semantics and produces explicit row style references without absorbing unrelated responsibilities.
 7. rows without row-style input preserve existing behavior.
-8. authored common table/table-cell definitions remain authoritative where characterized.
-9. semantic automatic definitions do not create duplicate same-identity `co0` definitions in the migrated path.
-10. static compatibility APIs remain available without becoming authoritative ownership for unrelated documents.
-11. the intentional activation of row-style behavior is documented, tested, and visually reviewed.
-12. focused, full, sample-smoke, and visual regression gates pass or any intentional ownership-driven difference is explicitly documented and approved.
+8. a table style reference does not fabricate a definition; authored or otherwise genuinely owned definitions remain authoritative according to established semantic identity rules.
+9. the same semantic identity is materialized at most once in a target context; accidental legacy duplicates are not deliberately reproduced.
+10. SR-07 introduces no new general collision-renaming/name-allocation strategy.
+11. static compatibility APIs and compatibility-sensitive public/protected facades remain available without becoming authoritative ownership for unrelated documents.
+12. the intentional activation of row-style behavior is documented, tested, and visually reviewed.
+13. SR-07E1 receives explicit semantic GO before SR-07E2 producer implementation begins.
+14. focused, full, sample-smoke, and visual regression gates pass or any intentional ownership-driven difference is explicitly documented and approved.
 
-## 15. Review questions before approval
+## 15. Approved architecture decisions
 
-Before this contract becomes FINAL GO, explicitly review these decisions:
+The pre-implementation review is complete. The following decisions are accepted:
 
-1. Is the semantic family scope correctly defined as `table`, `table-column`, `table-row`, and `table-cell`?
-2. Is controlled activation of the existing dormant row-style API accepted as an intentional SR-07 behavior change?
-3. Is the proposed narrow row-semantics review sufficient protection against accidentally turning `$style` into a broad row-layout API?
-4. Is `table-column` correctly fixed as automatic/content.xml for the explicit-width path?
-5. Should element-owned `table-cell` definitions retain automatic/content.xml semantics as the authoritative normal path, with common/static output treated as compatibility only?
-6. Is the distinction between a table style reference and an owned table definition strong enough to avoid fabricating definitions?
-7. Is duplicate suppression in the semantic path accepted as ownership correction rather than an unrelated behavior redesign?
-8. Are the compatibility facades sufficiently protected for external subclasses/callers?
-9. Are SR-07B through SR-07H small enough to review and test independently?
+1. The semantic table-family model comprises `table`, `table-column`, `table-row`, and `table-cell`.
+2. The existing dormant row-style API is intentionally activated within SR-07 under the narrow SR-07E semantics gate.
+3. Row-style mapping is evidence-driven and limited to genuine ODF `table-row` properties; SR-07 does not create a broad row-layout DSL.
+4. Explicit-width `table-column` definitions are automatic styles in `content.xml`; ratio/repeated columns remain structural.
+5. Element-owned `table-cell` definitions are authoritative automatic styles in `content.xml`; common/static table-cell output remains authored/reusable or compatibility territory.
+6. Style reference and style definition are distinct. `setTableStyleName()` does not fabricate a definition.
+7. Semantic identity materializes at most once in a target context. Removing accidental legacy duplicates is an accepted ownership correction, not a general lifecycle redesign. Existing authored target definitions remain authoritative; SR-07 does not invent a new collision-renaming strategy.
+8. Existing public/protected compatibility-sensitive facades are retained where callers or subclasses may depend on them, while the new semantic path is decoupled from those facades as authoritative ownership.
+9. SR-07B through SR-07H remain independently reviewable slices. SR-07E is explicitly split by a semantics gate: SR-07E1 decision first, SR-07E2 producer implementation only after explicit GO.
 
-Until these questions are accepted, this contract remains PROPOSED and production implementation must not begin.
+With these decisions accepted, this Change Contract is **FINAL GO** for SR-07B and the subsequent slices subject to their stated gates.
