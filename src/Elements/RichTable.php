@@ -283,6 +283,9 @@ class RichTable extends OdtElement implements HasStyles
             }
 
             $tr = $dom->createElement('table:table-row');
+            if ($this->hasSupportedRowStyle($row['style'])) {
+                $tr->setAttribute('table:style-name', $this->rowStyleName($currentRow));
+            }
 
             foreach ($row['cells'] as $cell) {
                 $tc = $dom->createElement('table:table-cell');
@@ -418,6 +421,36 @@ class RichTable extends OdtElement implements HasStyles
                 ['style:table-column-properties' => ['style:column-width' => $width]]
             );
         }
+
+        foreach ($this->rows as $index => $row) {
+            if (!$this->hasSupportedRowStyle($row['style'])) {
+                continue;
+            }
+
+            yield new StyleRequirement(
+                StyleRequirement::KIND_DEFINITION,
+                StyleRequirement::SCOPE_AUTOMATIC,
+                'table-row',
+                StyleRequirement::PART_CONTENT,
+                $this->rowStyleName($index),
+                null,
+                [
+                    'style:table-row-properties' => [
+                        'style:min-row-height' => $row['style']['min-row-height'],
+                    ],
+                ]
+            );
+        }
+    }
+
+    private function hasSupportedRowStyle(array $style): bool
+    {
+        return array_key_exists('min-row-height', $style);
+    }
+
+    private function rowStyleName(int $rowIndex): string
+    {
+        return $this->tableName . '_ro' . $rowIndex;
     }
 
     public function getRequiredStyles(): array
