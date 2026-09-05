@@ -107,7 +107,7 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
     }
 
     #[RunInSeparateProcess]
-    public function testStaticTableStylesLeakIntoLaterDocumentFinalization(): void
+    public function testNormalFinalizationFiltersUnrelatedStaticTableStyles(): void
     {
         $firstStyle = 'SR07_Table_A_' . bin2hex(random_bytes(4));
         $secondStyle = 'SR07_Table_B_' . bin2hex(random_bytes(4));
@@ -127,12 +127,13 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
 
         $styles = $this->entry($output, 'styles.xml');
 
-        self::assertSame(1, $this->styleCount($styles, $firstStyle, 'table'));
+        self::assertSame(0, $this->styleCount($styles, $firstStyle, 'table'));
         self::assertSame(1, $this->styleCount($styles, $secondStyle, 'table'));
+        self::assertArrayHasKey($firstStyle, StyleMapper::getRegisteredTableStyles());
     }
 
     #[RunInSeparateProcess]
-    public function testCurrentSemanticCellStyleIsNotCommonWhileLegacyLeakageRemains(): void
+    public function testNormalFinalizationKeepsSemanticCellsLocalAndFiltersLegacyResidue(): void
     {
         $firstCell = new RichTableCell('A', ['background' => '#ffe0e0']);
         $firstName = $firstCell->getStyleName();
@@ -152,10 +153,45 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
         $styles = $this->entry($output, 'styles.xml');
         $content = $this->entry($output, 'content.xml');
 
-        self::assertSame(1, $this->styleCount($styles, $firstName, 'table-cell'));
+        self::assertSame(0, $this->styleCount($styles, $firstName, 'table-cell'));
         self::assertSame(0, $this->styleCount($styles, $secondName, 'table-cell'));
         self::assertSame(0, $this->styleCount($content, $firstName, 'table-cell'));
         self::assertSame(1, $this->styleCount($content, $secondName, 'table-cell'));
+        self::assertArrayHasKey($firstName, StyleMapper::getRegisteredTableCellStyles());
+    }
+
+    #[RunInSeparateProcess]
+    public function testCurrentCellReferenceDoesNotAdoptSameNamedTableRegistration(): void
+    {
+        $cell = new RichTableCell('A', ['background' => '#e0ffe0']);
+        $sharedName = $cell->getStyleName();
+        StyleMapper::registerTableStyle($sharedName, ['table:align' => 'center']);
+
+        $template = $this->template();
+        $template->setElement('tableblock', (new RichTable())->addRow([$cell]));
+        $output = $this->outputPath('cross-family-filter');
+        $template->save($output);
+
+        $styles = $this->entry($output, 'styles.xml');
+        $content = $this->entry($output, 'content.xml');
+        self::assertSame(0, $this->styleCount($styles, $sharedName, 'table'));
+        self::assertSame(0, $this->styleCount($styles, $sharedName, 'table-cell'));
+        self::assertSame(1, $this->styleCount($content, $sharedName, 'table-cell'));
+    }
+
+    #[RunInSeparateProcess]
+    public function testNormalSemanticFilteringAlsoAppliesAfterRefresh(): void
+    {
+        $unrelated = 'SR07_Refresh_Unrelated_' . bin2hex(random_bytes(4));
+        StyleMapper::registerTableStyle($unrelated, ['table:align' => 'left']);
+        $template = $this->template();
+        $template->setElement('tableblock', (new RichTable())->addRow(['A']));
+        $template->refresh();
+
+        $output = $this->outputPath('refresh-filter');
+        $template->save($output);
+        self::assertSame(0, $this->styleCount($this->entry($output, 'styles.xml'), $unrelated, 'table'));
+        self::assertArrayHasKey($unrelated, StyleMapper::getRegisteredTableStyles());
     }
 
     #[RunInSeparateProcess]

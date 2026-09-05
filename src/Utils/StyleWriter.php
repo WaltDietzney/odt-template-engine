@@ -28,7 +28,9 @@ class StyleWriter
         bool $includeLegacyTextStyles = true,
         bool $includeLegacyFrameStyles = true,
         ?array $legacyFrameStyleNames = null,
-        ?array $excludedTableCellStyleNames = null
+        ?array $excludedTableCellStyleNames = null,
+        ?array $allowedTableStyleNames = null,
+        ?array $allowedTableCellStyleNames = null
     ): void
     {
         $xpath = new DOMXPath($domStyles);
@@ -149,6 +151,9 @@ class StyleWriter
         unset($props);
 
         foreach ($cellStyles as $name => $props) {
+            if ($allowedTableCellStyleNames !== null && !isset($allowedTableCellStyleNames[$name])) {
+                continue;
+            }
             if ($excludedTableCellStyleNames !== null && isset($excludedTableCellStyleNames[$name])) {
                 continue;
             }
@@ -174,6 +179,9 @@ class StyleWriter
         $tableStyles = StyleMapper::getRegisteredTableStyles();
 
         foreach ($tableStyles as $name => $props) {
+            if ($allowedTableStyleNames !== null && !isset($allowedTableStyleNames[$name])) {
+                continue;
+            }
             if (self::styleAlreadyExists($domStyles, $name, 'table')) {
                 continue;
             }
