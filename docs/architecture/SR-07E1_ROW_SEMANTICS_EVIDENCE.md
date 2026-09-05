@@ -211,3 +211,82 @@ explicit semantics gate is active.
 This is not authorization for SR-07E2 implementation. E2 remains blocked until
 the exact row-property and naming decisions above receive explicit
 architecture review.
+
+## 15. SR-07E1 contract review closeout
+
+**Review status:** FINAL GO — SR-07E2 IMPLEMENTATION AUTHORIZED
+
+The architecture review accepts the following deliberately narrow contract for
+SR-07E2. This section records decisions made after the evidence above; it does
+not change the historical E1 findings or imply that the producer is already
+implemented.
+
+### Supported property and mapping
+
+The first and only activated row-style key is `min-row-height`. Its semantic
+projection is:
+
+```text
+API key:        min-row-height
+ODF property:   style:min-row-height
+family:         table-row
+property group: style:table-row-properties
+scope:          automatic
+document part:  content.xml
+```
+
+The value is preserved exactly as supplied. SR-07E2 must not activate
+`row-height`, `height`, `keep-together`, `break-before`, `break-after`, or any
+other row, cell, paragraph, or text property.
+
+### Unsupported keys and no-style rows
+
+Unsupported row-style keys remain silently ignored for compatibility with the
+existing arbitrary-array API. They must not be forwarded to ODF or to another
+style-family mapper. A row produces a semantic requirement only when
+`min-row-height` is present. Empty rows and rows containing only unsupported
+keys remain without `table:style-name`, without a row requirement, and without
+a generated row definition.
+
+### Naming and structural reference
+
+Generated row style names use the effective existing `RichTable` name and the
+zero-based row index:
+
+```text
+<tableName>_ro<rowIndex>
+```
+
+For example, rows of `Table_1` use `Table_1_ro0` and `Table_1_ro1`. The same
+deterministic name is used by the semantic requirement and the structural
+`table:table-row table:style-name` reference. SR-07E2 must not introduce a
+global counter, static registry, document-global pointer, hash allocator, or
+collision-renaming strategy. Deliberately duplicated table names remain
+outside this slice.
+
+### Compatibility boundary
+
+`RichTable::addRow(array $cells, array $style = [])` remains the public API.
+No row-specific `StyleMapper` registry, `StyleWriter` finalizer, `Row` object,
+or new context is authorized. `RichTable::toDomNode()` remains responsible for
+row structure and references; semantic collection/materialization remains the
+definition authority. Any direct-DOM compatibility path must not create a
+second semantic ownership path.
+
+### Explicit E2 stop conditions
+
+SR-07E2 must stop and return to review if it requires any of the following:
+
+1. a broader row-style DSL or speculative property mapping;
+2. changing the automatic/content.xml scope or property-group decision;
+3. global or static row ownership state;
+4. a new row model object or duplicated mutable semantic state;
+5. migration of table, table-column, table-cell, or table-row compatibility
+   families beyond this one-property producer;
+6. changes to ratio columns, spans, naming allocation, or legacy writer
+   behavior; or
+7. behavior changes for rows without supported style input.
+
+This closeout authorizes only the narrow `min-row-height` producer and its
+focused semantic, structural, compatibility, repeated-materialization, and
+visual-regression tests. It does not authorize any other SR-07 slice.
