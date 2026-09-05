@@ -220,7 +220,9 @@ class RichTable extends OdtElement implements HasStyles
 
         if ($autoStyles && $styles) {
             foreach ($styles as $styleNode) {
-                $autoStyles->appendChild($styleNode);
+                if (!$this->styleExistsInContainer($autoStyles, $styleNode)) {
+                    $autoStyles->appendChild($styleNode);
+                }
             }
         }
 
@@ -323,6 +325,32 @@ class RichTable extends OdtElement implements HasStyles
         }
 
         return $table;
+    }
+
+    private function styleExistsInContainer(DOMElement $container, DOMElement $candidate): bool
+    {
+        $styleNamespace = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
+        $candidateName = $candidate->getAttributeNS($styleNamespace, 'name')
+            ?: $candidate->getAttribute('style:name');
+        $candidateFamily = $candidate->getAttributeNS($styleNamespace, 'family')
+            ?: $candidate->getAttribute('style:family');
+
+        foreach ($container->getElementsByTagName('*') as $style) {
+            if (!$style instanceof DOMElement || $style->localName !== 'style') {
+                continue;
+            }
+
+            $name = $style->getAttributeNS($styleNamespace, 'name')
+                ?: $style->getAttribute('style:name');
+            $family = $style->getAttributeNS($styleNamespace, 'family')
+                ?: $style->getAttribute('style:family');
+
+            if ($name === $candidateName && $family === $candidateFamily) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function getRequiredStyles(): array
