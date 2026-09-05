@@ -414,6 +414,21 @@ class OdtTemplate
         return $owned;
     }
 
+    /** @return array<string, true> */
+    private function semanticOwnedTableCellStyles(): array
+    {
+        $owned = [];
+        foreach ($this->documentContext()->styleContext()->semanticDefinitions() as $requirement) {
+            if ($requirement->family() === 'table-cell'
+                && $requirement->scope() === StyleRequirement::SCOPE_AUTOMATIC
+                && $requirement->documentPart() === StyleRequirement::PART_CONTENT) {
+                $owned[$requirement->name()] = true;
+            }
+        }
+
+        return $owned;
+    }
+
     /**
      * @param array{family: string, name: string, definition: array<string, mixed>} $requirement
      * @param array<string, true> $semanticOwnedLegacyStyles
@@ -1245,7 +1260,8 @@ class OdtTemplate
             $this->legacyStructuredValuesMaterialized,
             $this->legacyStructuredValuesMaterialized
                 ? $pendingLegacyFrameStyleNames
-                : null
+                : null,
+            $this->semanticOwnedTableCellStyles()
         );
         $this->legacyFrameStylesMaterialized += $legacyFrameStyleNames;
         $this->adjustBulletIndentation();

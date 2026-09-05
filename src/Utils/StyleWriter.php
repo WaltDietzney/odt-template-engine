@@ -27,7 +27,8 @@ class StyleWriter
         bool $includeLegacyParagraphStyles = true,
         bool $includeLegacyTextStyles = true,
         bool $includeLegacyFrameStyles = true,
-        ?array $legacyFrameStyleNames = null
+        ?array $legacyFrameStyleNames = null,
+        ?array $excludedTableCellStyleNames = null
     ): void
     {
         $xpath = new DOMXPath($domStyles);
@@ -148,6 +149,9 @@ class StyleWriter
         unset($props);
 
         foreach ($cellStyles as $name => $props) {
+            if ($excludedTableCellStyleNames !== null && isset($excludedTableCellStyleNames[$name])) {
+                continue;
+            }
             if (self::styleAlreadyExists($domStyles, $name, 'table-cell')) {
                 continue;
             }

@@ -46,7 +46,7 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
     }
 
     #[RunInSeparateProcess]
-    public function testNormalSetElementMaterializesCellDefinitionInContentAndStyles(): void
+    public function testNormalSetElementMaterializesCellDefinitionOnlyInContent(): void
     {
         $cell = new RichTableCell('Cell', [
             'background' => '#ddeeff',
@@ -64,13 +64,13 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
         $styles = $this->entry($output, 'styles.xml');
 
         self::assertSame(1, $this->styleCount($content, $styleName, 'table-cell'));
-        self::assertSame(1, $this->styleCount($styles, $styleName, 'table-cell'));
+        self::assertSame(0, $this->styleCount($styles, $styleName, 'table-cell'));
         self::assertSame(
             1,
             $this->styleCountInContainer($content, $styleName, 'table-cell', 'automatic-styles')
         );
         self::assertSame(
-            1,
+            0,
             $this->styleCountInContainer($styles, $styleName, 'table-cell', 'styles')
         );
     }
@@ -132,7 +132,7 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
     }
 
     #[RunInSeparateProcess]
-    public function testStaticTableCellStylesLeakIntoLaterDocumentFinalization(): void
+    public function testCurrentSemanticCellStyleIsNotCommonWhileLegacyLeakageRemains(): void
     {
         $firstCell = new RichTableCell('A', ['background' => '#ffe0e0']);
         $firstName = $firstCell->getStyleName();
@@ -153,7 +153,7 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
         $content = $this->entry($output, 'content.xml');
 
         self::assertSame(1, $this->styleCount($styles, $firstName, 'table-cell'));
-        self::assertSame(1, $this->styleCount($styles, $secondName, 'table-cell'));
+        self::assertSame(0, $this->styleCount($styles, $secondName, 'table-cell'));
         self::assertSame(0, $this->styleCount($content, $firstName, 'table-cell'));
         self::assertSame(1, $this->styleCount($content, $secondName, 'table-cell'));
     }
@@ -235,7 +235,7 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
     }
 
     #[RunInSeparateProcess]
-    public function testRepeatedSaveDuplicatesCommonCellDefinitionButNotAutomaticColumns(): void
+    public function testRepeatedSaveKeepsSemanticCellDefinitionAutomaticAndColumnsStable(): void
     {
         $cell = new RichTableCell('Repeated save', [
             'background' => '#ddeeff',
@@ -252,8 +252,8 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
         $template->save($first);
         $template->save($second);
 
-        self::assertSame(1, $this->styleCount($this->entry($first, 'styles.xml'), $cellName, 'table-cell'));
-        self::assertSame(2, $this->styleCount($this->entry($second, 'styles.xml'), $cellName, 'table-cell'));
+        self::assertSame(0, $this->styleCount($this->entry($first, 'styles.xml'), $cellName, 'table-cell'));
+        self::assertSame(0, $this->styleCount($this->entry($second, 'styles.xml'), $cellName, 'table-cell'));
         self::assertSame(1, $this->styleCount($this->entry($first, 'content.xml'), 'co0', 'table-column'));
         self::assertSame(1, $this->styleCount($this->entry($second, 'content.xml'), 'co0', 'table-column'));
     }
@@ -276,8 +276,8 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
 
         $content = $this->entry($output, 'content.xml');
         $styles = $this->entry($output, 'styles.xml');
-        self::assertSame(1, $this->styleCount($styles, $firstCell->getStyleName(), 'table-cell'));
-        self::assertSame(1, $this->styleCount($styles, $secondCell->getStyleName(), 'table-cell'));
+        self::assertSame(0, $this->styleCount($styles, $firstCell->getStyleName(), 'table-cell'));
+        self::assertSame(0, $this->styleCount($styles, $secondCell->getStyleName(), 'table-cell'));
         self::assertSame(1, $this->styleCount($content, $firstCell->getStyleName(), 'table-cell'));
         self::assertSame(1, $this->styleCount($content, $secondCell->getStyleName(), 'table-cell'));
         self::assertSame(2, $this->styleCount($content, 'co0', 'table-column'));

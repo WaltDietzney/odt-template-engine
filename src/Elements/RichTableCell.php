@@ -6,6 +6,7 @@ use DOMDocument;
 use DOMNode;
 use DOMElement;
 use OdtTemplateEngine\Contracts\HasStyles;
+use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Utils\StyleMapper;
 use OdtTemplateEngine\Utils\StyleOptionSplitter;
 
@@ -125,6 +126,30 @@ class RichTableCell extends OdtElement implements HasStyles
         if ($this->content instanceof OdtElement) {
             yield $this->content;
         }
+    }
+
+    /**
+     * Describe the cell-owned style definition for semantic materialization.
+     *
+     * Paragraph and text concerns are delegated to the owned content element.
+     *
+     * @return iterable<int, StyleRequirement>
+     */
+    public function getOwnStyleRequirements(): iterable
+    {
+        if ($this->style === []) {
+            return;
+        }
+
+        yield new StyleRequirement(
+            StyleRequirement::KIND_DEFINITION,
+            StyleRequirement::SCOPE_AUTOMATIC,
+            'table-cell',
+            StyleRequirement::PART_CONTENT,
+            $this->styleName,
+            'Default',
+            ['style:table-cell-properties' => $this->style]
+        );
     }
 
     /**
