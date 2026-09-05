@@ -23,6 +23,7 @@ final class StyleRequirementMaterializer
     private const NAMESPACES = [
         'office' => self::OFFICE_NAMESPACE,
         'style' => self::STYLE_NAMESPACE,
+        'table' => 'urn:oasis:names:tc:opendocument:xmlns:table:1.0',
         'fo' => 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0',
         'text' => 'urn:oasis:names:tc:opendocument:xmlns:text:1.0',
         'draw' => 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0',
@@ -33,7 +34,15 @@ final class StyleRequirementMaterializer
 
     public function materialize(OdtDocumentContext $context, StyleRequirement $requirement): void
     {
-        if (!in_array($requirement->family(), ['paragraph', 'text', 'graphic'], true)) {
+        if (!in_array($requirement->family(), [
+            'paragraph',
+            'text',
+            'graphic',
+            'table',
+            'table-column',
+            'table-row',
+            'table-cell',
+        ], true)) {
             throw new InvalidArgumentException(sprintf(
                 'Unsupported semantic style family "%s".',
                 $requirement->family()
