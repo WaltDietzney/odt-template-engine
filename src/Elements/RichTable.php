@@ -441,6 +441,33 @@ class RichTable extends OdtElement implements HasStyles
                 ]
             );
         }
+
+        if ($this->tableStyleName === null) {
+            return;
+        }
+
+        $registeredTableStyles = StyleMapper::getRegisteredTableStyles();
+        if (array_key_exists($this->tableStyleName, $registeredTableStyles)) {
+            yield new StyleRequirement(
+                StyleRequirement::KIND_DEFINITION,
+                StyleRequirement::SCOPE_COMMON,
+                'table',
+                StyleRequirement::PART_STYLES,
+                $this->tableStyleName,
+                null,
+                ['style:table-properties' => $registeredTableStyles[$this->tableStyleName]]
+            );
+
+            return;
+        }
+
+        yield new StyleRequirement(
+            StyleRequirement::KIND_REFERENCE,
+            null,
+            'table',
+            null,
+            $this->tableStyleName
+        );
     }
 
     private function hasSupportedRowStyle(array $style): bool
