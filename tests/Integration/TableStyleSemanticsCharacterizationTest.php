@@ -212,6 +212,78 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
         self::assertStringContainsString('style:column-width="7cm"', $xml);
     }
 
+    public function testColumnWriterAppendsOverAuthoredAutomaticColumnIdentity(): void
+    {
+        $dom = $this->contentDom();
+        $automaticStyles = $this->xpath($dom)->query('//office:automatic-styles')->item(0);
+        self::assertInstanceOf(DOMElement::class, $automaticStyles);
+
+        $authored = $dom->createElement('style:style');
+        $authored->setAttribute('style:name', 'co0');
+        $authored->setAttribute('style:family', 'table-column');
+        $properties = $dom->createElement('style:table-column-properties');
+        $properties->setAttribute('style:column-width', '9cm');
+        $authored->appendChild($properties);
+        $automaticStyles->appendChild($authored);
+
+        self::assertSame(['co0'], StyleWriter::writeColumnStyles($dom, ['2cm']));
+
+        $xml = $dom->saveXML() ?: '';
+        self::assertSame(2, $this->styleCount($xml, 'co0', 'table-column'));
+        self::assertStringContainsString('style:column-width="9cm"', $xml);
+        self::assertStringContainsString('style:column-width="2cm"', $xml);
+    }
+
+    #[RunInSeparateProcess]
+    public function testRepeatedSaveDuplicatesCommonCellDefinitionButNotAutomaticColumns(): void
+    {
+        $cell = new RichTableCell('Repeated save', [
+            'background' => '#ddeeff',
+            'padding' => '0.2cm',
+        ]);
+        $cellName = $cell->getStyleName();
+        $table = (new RichTable())->addRow([$cell]);
+        $table->setColumnWidths(['2cm', '4cm']);
+        $template = $this->template();
+        $template->setElement('tableblock', $table);
+
+        $first = $this->outputPath('repeated-save-first');
+        $second = $this->outputPath('repeated-save-second');
+        $template->save($first);
+        $template->save($second);
+
+        self::assertSame(1, $this->styleCount($this->entry($first, 'styles.xml'), $cellName, 'table-cell'));
+        self::assertSame(2, $this->styleCount($this->entry($second, 'styles.xml'), $cellName, 'table-cell'));
+        self::assertSame(1, $this->styleCount($this->entry($first, 'content.xml'), 'co0', 'table-column'));
+        self::assertSame(1, $this->styleCount($this->entry($second, 'content.xml'), 'co0', 'table-column'));
+    }
+
+    #[RunInSeparateProcess]
+    public function testRepeatedSetElementKeepsBothTablesAndDuplicatesAutomaticColumns(): void
+    {
+        $firstCell = new RichTableCell('First', ['background' => '#ddeeff']);
+        $secondCell = new RichTableCell('Second', ['background' => '#ffeedd']);
+        $first = (new RichTable())->addRow([$firstCell]);
+        $first->setColumnWidths(['2cm', '4cm']);
+        $second = (new RichTable())->addRow([$secondCell]);
+        $second->setColumnWidths(['2cm', '4cm']);
+        $template = $this->template();
+
+        $template->setElement('tableblock', $first);
+        $template->setElement('tableblock', $second);
+        $output = $this->outputPath('repeated-set-element');
+        $template->save($output);
+
+        $content = $this->entry($output, 'content.xml');
+        $styles = $this->entry($output, 'styles.xml');
+        self::assertSame(1, $this->styleCount($styles, $firstCell->getStyleName(), 'table-cell'));
+        self::assertSame(1, $this->styleCount($styles, $secondCell->getStyleName(), 'table-cell'));
+        self::assertSame(1, $this->styleCount($content, $firstCell->getStyleName(), 'table-cell'));
+        self::assertSame(1, $this->styleCount($content, $secondCell->getStyleName(), 'table-cell'));
+        self::assertSame(2, $this->styleCount($content, 'co0', 'table-column'));
+        self::assertSame(0, $this->styleCount($styles, 'co0', 'table-column'));
+    }
+
     public function testStoredRowStyleIsCurrentlyDormant(): void
     {
         $table = new RichTable();
