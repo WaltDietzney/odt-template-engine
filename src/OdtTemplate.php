@@ -429,6 +429,55 @@ class OdtTemplate
         return $owned;
     }
 
+    /** @return array<string, true> */
+    private function tableStyleNamesReferencedByCurrentDocument(): array
+    {
+        return $this->styleNamesReferencedByStructuralElements('table');
+    }
+
+    /** @return array<string, true> */
+    private function tableCellStyleNamesReferencedByCurrentDocument(): array
+    {
+        return $this->styleNamesReferencedByStructuralElements('table-cell');
+    }
+
+    /** @return array<string, true> */
+    private function styleNamesReferencedByStructuralElements(string $elementLocalName): array
+    {
+        $names = [];
+        $tableNamespace = 'urn:oasis:names:tc:opendocument:xmlns:table:1.0';
+
+        foreach ([$this->documentContext()->contentDom(), $this->documentContext()->stylesDom()] as $dom) {
+            foreach ($dom->getElementsByTagNameNS($tableNamespace, $elementLocalName) as $element) {
+                if (!$element instanceof DOMElement) {
+                    continue;
+                }
+                $name = $element->getAttributeNS($tableNamespace, 'style-name');
+                if ($name === '') {
+                    $name = $element->getAttribute('table:style-name');
+                }
+                if ($name !== '') {
+                    $names[$name] = true;
+                }
+            }
+
+            foreach ($dom->getElementsByTagName('*') as $element) {
+                if (!$element instanceof DOMElement
+                    || ($element->localName !== $elementLocalName
+                        && $element->nodeName !== 'table:' . $elementLocalName)
+                    || $element->namespaceURI !== null) {
+                    continue;
+                }
+                $name = $element->getAttribute('table:style-name');
+                if ($name !== '') {
+                    $names[$name] = true;
+                }
+            }
+        }
+
+        return $names;
+    }
+
     /**
      * @param array{family: string, name: string, definition: array<string, mixed>} $requirement
      * @param array<string, true> $semanticOwnedLegacyStyles
@@ -1261,7 +1310,15 @@ class OdtTemplate
             $this->legacyStructuredValuesMaterialized
                 ? $pendingLegacyFrameStyleNames
                 : null,
-            $this->semanticOwnedTableCellStyles()
+            $this->legacyStructuredValuesMaterialized
+                ? null
+                : $this->semanticOwnedTableCellStyles(),
+            $this->legacyStructuredValuesMaterialized
+                ? null
+                : $this->tableStyleNamesReferencedByCurrentDocument(),
+            $this->legacyStructuredValuesMaterialized
+                ? null
+                : $this->tableCellStyleNamesReferencedByCurrentDocument()
         );
         $this->legacyFrameStylesMaterialized += $legacyFrameStyleNames;
         $this->adjustBulletIndentation();
@@ -1275,7 +1332,16 @@ class OdtTemplate
             $this->documentContext(),
             $this->documentContext()->fontFaceRequirements()->requirements()
         );
-        StyleWriter::writeAllStyles($this->documentContext()->stylesDom(), false, false, false);
+        StyleWriter::writeAllStyles(
+            $this->documentContext()->stylesDom(),
+            false,
+            false,
+            false,
+            null,
+            $this->legacyStructuredValuesMaterialized ? null : $this->semanticOwnedTableCellStyles(),
+            $this->legacyStructuredValuesMaterialized ? null : $this->tableStyleNamesReferencedByCurrentDocument(),
+            $this->legacyStructuredValuesMaterialized ? null : $this->tableCellStyleNamesReferencedByCurrentDocument()
+        );
         $this->package->persistCoreDocuments();
         $this->load();
     }
