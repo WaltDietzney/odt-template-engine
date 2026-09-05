@@ -257,6 +257,57 @@ SR-07A is not complete until tests answer at least the following questions.
 12. Are there active producers or tests for family `table-row`, or is the row-style argument only dormant compatibility surface?
 13. Which public samples 11–15, 19, and 20 exercise each table family and which of them should form the visual regression subset for SR-07?
 
+### 8.1 Confirmed characterization findings
+
+The initial audit is now backed by `TableStyleSemanticsCharacterizationTest`. The focused suite is green with 11 tests and 109 assertions.
+
+The following findings are **CONFIRMED BY CHARACTERIZATION**:
+
+- Normal `setElement()` insertion exposes styled table-cell definitions through the current compatibility channels while `RichTable::toDomNode()` still performs direct automatic-style materialization. Table-cell ownership therefore has more than one active path.
+- Legacy `assign()` / `render()` processing causes the same table-cell style name to appear twice in `styles.xml`: once in `office:automatic-styles` through the direct `RichTable::toDomNode()` side effect and once in `office:styles` through later static-registry finalization in `StyleWriter::writeAllStyles()`.
+- The process-global `StyleMapper` registries for both table and table-cell styles can leak styles from document A into later finalization of document B.
+- `load()` does not clear those static table registries; document-local lifecycle reset and static compatibility state therefore remain distinct.
+- Explicit column widths materialize family `table-column` definitions in `content.xml` `office:automatic-styles`.
+- Generated column style names are positional (`co0`, `co1`, ...), and the writer can reuse such names without semantic conflict resolution.
+- The row-style argument accepted by `RichTable::addRow(..., $style)` is currently dormant in the characterized rendering path: it produces neither a `table-row` style definition nor a row `table:style-name` reference.
+- Existing authored common table and table-cell definitions remain authoritative when `StyleWriter` encounters a static registration with the same identity.
+- `RichTableCell::toStyleDomNode()` creates `style:table-cell-properties` without namespace-aware DOM identity. The in-memory node has `nodeName === 'style:table-cell-properties'` and `namespaceURI === null`, even though serialized XML may still look prefix-correct.
+- `RichTableCell::getStyleDefinitions()` exposes its compatibility cell definition, while `RichTable::getStyleDefinitions()` does not recursively aggregate definitions from owned cells. Semantic `ownedElements()` traversal and the legacy compatibility definition API therefore have different traversal semantics.
+
+These observations describe current behavior only. SR-07A does not authorize correcting the legacy dual-materialization, static leakage, positional naming, dormant row-style input, or namespace construction behavior.
+
+### 8.2 Characterization coverage review
+
+The first characterization suite answers the main ownership questions but does not yet close every audit question.
+
+| # | Status | Evidence / remaining gap |
+| --- | --- | --- |
+| 1 | PARTIAL | Normal `setElement()` cell materialization is characterized, but exact phase-by-phase state before and after `RichTable::toDomNode()` is not independently asserted. |
+| 2 | CONFIRMED | Current normal insertion records the locations of the table-cell definition channels. |
+| 3 | PARTIAL | Column-name reuse is characterized, but there is no complete repeated `setElement()` / `save()` idempotence matrix for table, table-cell, and table-column. |
+| 4 | CONFIRMED | Separate-process characterization confirms cross-document leakage for both table and table-cell static registries. |
+| 5 | CONFIRMED | Static table registry state remains observable after `load()`. |
+| 6 | PARTIAL | Authored common table and table-cell definitions are authoritative in `StyleWriter`; the automatic `table-column` collision case remains distinct. |
+| 7 | CONFIRMED | Positional `co0` reuse without conflict resolution is characterized. |
+| 8 | PARTIAL | The active explicit-width path is confirmed to write automatic `table-column` styles into `content.xml`; repository-wide call-surface review is still required. |
+| 9 | PARTIAL | The method and its direct DOM behavior are characterized, but external subclass or consumer reliance cannot be proven from repository tests alone. |
+| 10 | PARTIAL | The compatibility definition APIs are characterized, but their exact lifecycle reliance should remain protected until migration proves the facade can be narrowed safely. |
+| 11 | CONFIRMED | Legacy `assign()` / `render()` confirms direct automatic-style materialization plus static common-style finalization, including the dual `styles.xml` table-cell definition. |
+| 12 | CONFIRMED FOR INSPECTED PATH | The `RichTable::addRow()` style argument is dormant in the characterized path. Sample/repository mapping remains useful corroboration before final scope is fixed. |
+| 13 | OPEN | Public sample-to-family mapping and visual-regression subset selection are still required. |
+
+### 8.3 Remaining evidence gaps
+
+Before SR-07A can reach FINAL GO, the remaining high-value evidence work is deliberately narrow:
+
+1. map public samples 11–15, 19, and 20 to the table families and compatibility paths they exercise;
+2. decide whether a focused repeated lifecycle test is required to close the remaining table/table-cell/table-column idempotence question;
+3. verify the repository call surface of `StyleWriter::writeColumnStyles()`;
+4. distinguish authored automatic `table-column` collision behavior from the already characterized positional-name reuse behavior;
+5. use the completed evidence to decide whether family `table-row` is explicitly outside the SR-07 implementation slice while preserving the dormant compatibility API.
+
+No production behavior should change while these evidence gaps are being closed.
+
 ## 9. Compatibility surfaces to preserve during SR-07
 
 Until characterization proves otherwise, treat these as compatibility-sensitive:
