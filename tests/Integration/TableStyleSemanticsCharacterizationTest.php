@@ -259,7 +259,7 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
     }
 
     #[RunInSeparateProcess]
-    public function testRepeatedSetElementKeepsBothTablesAndDuplicatesAutomaticColumns(): void
+    public function testRepeatedSetElementKeepsBothTablesAndDeduplicatesSemanticColumns(): void
     {
         $firstCell = new RichTableCell('First', ['background' => '#ddeeff']);
         $secondCell = new RichTableCell('Second', ['background' => '#ffeedd']);
@@ -280,7 +280,8 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
         self::assertSame(0, $this->styleCount($styles, $secondCell->getStyleName(), 'table-cell'));
         self::assertSame(1, $this->styleCount($content, $firstCell->getStyleName(), 'table-cell'));
         self::assertSame(1, $this->styleCount($content, $secondCell->getStyleName(), 'table-cell'));
-        self::assertSame(2, $this->styleCount($content, 'co0', 'table-column'));
+        self::assertSame(1, $this->styleCount($content, 'co0', 'table-column'));
+        self::assertSame(1, $this->styleCount($content, 'co1', 'table-column'));
         self::assertSame(0, $this->styleCount($styles, 'co0', 'table-column'));
     }
 

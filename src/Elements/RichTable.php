@@ -6,6 +6,7 @@ use OdtTemplateEngine\Utils\StyleMapper;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Elements\RichTableCell;
 use OdtTemplateEngine\Contracts\HasStyles;
+use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Utils\StyleWriter;
 use DOMDocument;
 use DOMNode;
@@ -196,10 +197,13 @@ class RichTable extends OdtElement implements HasStyles
     {
         $styles = [];
 
-        $columnWidths = $this->getColumnWidths(); // falls vorhanden
+        $columnWidths = $this->getColumnWidths();
         $columnStyleNames = [];
         if (!empty($columnWidths)) {
-            $columnStyleNames = StyleWriter::writeColumnStyles($dom, $columnWidths);
+            $columnStyleNames = $this->columnStyleNames($columnWidths);
+            if (!$this->hasAllColumnStyles($dom, $columnStyleNames)) {
+                StyleWriter::writeColumnStyles($dom, $columnWidths);
+            }
         }
 
 
@@ -351,6 +355,69 @@ class RichTable extends OdtElement implements HasStyles
         }
 
         return false;
+    }
+
+    /** @param array<int, string> $widths */
+    private function columnStyleNames(array $widths): array
+    {
+        $names = [];
+        foreach (array_values($widths) as $index => $_width) {
+            $names[] = 'co' . $index;
+        }
+        return $names;
+    }
+
+    /** @param list<string> $styleNames */
+    private function hasAllColumnStyles(DOMDocument $dom, array $styleNames): bool
+    {
+        $xpath = new \DOMXPath($dom);
+        $xpath->registerNamespace('office', 'urn:oasis:names:tc:opendocument:xmlns:office:1.0');
+        $automaticStyles = $xpath->query('//office:automatic-styles')->item(0);
+        if (!$automaticStyles instanceof DOMElement) {
+            return false;
+        }
+
+        foreach ($styleNames as $styleName) {
+            $found = false;
+            foreach ($automaticStyles->getElementsByTagName('*') as $style) {
+                if (!$style instanceof DOMElement || !in_array($style->localName, ['style', 'style:style'], true)) {
+                    continue;
+                }
+                $name = $style->getAttributeNS(
+                    'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+                    'name'
+                ) ?: $style->getAttribute('style:name');
+                $family = $style->getAttributeNS(
+                    'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+                    'family'
+                ) ?: $style->getAttribute('style:family');
+                if ($name === $styleName && $family === 'table-column') {
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /** @return iterable<int, StyleRequirement> */
+    public function getOwnStyleRequirements(): iterable
+    {
+        foreach (array_values($this->columnWidths) as $index => $width) {
+            yield new StyleRequirement(
+                StyleRequirement::KIND_DEFINITION,
+                StyleRequirement::SCOPE_AUTOMATIC,
+                'table-column',
+                StyleRequirement::PART_CONTENT,
+                'co' . $index,
+                null,
+                ['style:table-column-properties' => ['style:column-width' => $width]]
+            );
+        }
     }
 
     public function getRequiredStyles(): array
