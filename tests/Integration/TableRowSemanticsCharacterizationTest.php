@@ -13,18 +13,17 @@ use PHPUnit\Framework\TestCase;
  */
 final class TableRowSemanticsCharacterizationTest extends TestCase
 {
-    public function testNonEmptyRowStyleIsAcceptedButNoRowReferenceIsRendered(): void
+    public function testNonEmptyRowStyleRendersStructuralReferenceWithoutDirectDefinition(): void
     {
         $dom = $this->contentDom();
-        $table = (new RichTable())->addRow(['A'], ['min-row-height' => '1cm']);
+        $table = (new RichTable())
+            ->setTableName('TestTable')
+            ->addRow(['A'], ['min-row-height' => '1cm']);
         $dom->documentElement->appendChild($table->toDomNode($dom));
 
         $xml = $dom->saveXML() ?: '';
         self::assertSame(1, substr_count($xml, '<table:table-row'));
-        $xpath = new \DOMXPath($dom);
-        $row = $xpath->query('//*[contains(name(), "table:table-row")]')->item(0);
-        self::assertNotNull($row);
-        self::assertFalse($row->hasAttribute('table:style-name'));
+        self::assertStringContainsString('table:table-row table:style-name="TestTable_ro0"', $xml);
         self::assertStringNotContainsString('table-row-properties', $xml);
     }
 
