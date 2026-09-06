@@ -8,7 +8,7 @@ The current planning baseline incorporates [`architecture/ROADMAP_REFRESH_02_POS
 
 ## Style and dependency architecture
 
-### STYLE-CONTEXT-01 — Document-scoped style context — ADVANCED / CLOSEOUT PENDING
+### STYLE-CONTEXT-01 — Document-scoped style context — COMPLETE / FINAL GO
 
 **Priority:** High architecture closeout
 
@@ -16,7 +16,12 @@ The core ownership problem is no longer future work. The current baseline includ
 
 D5C–D5E and SR-01–SR-06 are accepted architecture baseline. SR-06 is COMPLETE / FINAL GO.
 
-Remaining work is deliberately sequenced as:
+The final audit and paragraph/text fallback characterization are complete.
+Remaining static registries, broad direct StyleWriter defaults, legacy getters,
+and protected compatibility facades are retained by explicit compatibility
+decision, not because modern semantic ownership is incomplete.
+
+The completed sequence was:
 
 ```text
 SR-07 Table / Table-Cell Requirements — COMPLETE
@@ -25,7 +30,7 @@ D5F Lifecycle / Materialization Integration — COMPLETE
         ↓
 D5G Compatibility Closeout — COMPLETE
         ↓
-STYLE-CONTEXT-01 final closeout
+STYLE-CONTEXT-01 — COMPLETE / FINAL GO
 ```
 
 Do not solve remaining transition complexity through constructor resets, process-global current-document state, or premature lifecycle abstraction.
@@ -86,8 +91,9 @@ D5G completed the evidence-based review of:
 
 Public static registries, direct broad `StyleWriter` defaults, legacy getters,
 and documented ImageElement/CircularImageElement lifecycle quirks remain
-compatibility residue. The next step is the final `STYLE-CONTEXT-01` closeout;
-do not remove these surfaces implicitly as part of unrelated work.
+compatibility residue. They are now handed off to `STYLE-API-02` or the
+relevant future layout/lifecycle topic; do not remove these surfaces
+implicitly as part of unrelated work.
 
 ### STYLE-API-02 — Style API consistency
 

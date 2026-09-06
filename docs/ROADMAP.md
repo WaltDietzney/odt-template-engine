@@ -97,7 +97,7 @@ The completed milestone includes native section discovery, typed targets, exact 
 
 Sections are therefore an implemented structured-template primitive, not merely a future design direction.
 
-### STYLE-CONTEXT / semantic requirement foundation — ADVANCED, NOT YET CLOSED
+### STYLE-CONTEXT / semantic requirement foundation — COMPLETE / FINAL GO
 
 The original roadmap described `STYLE-CONTEXT-01` as the preferred next architecture block. That description is obsolete.
 
@@ -118,7 +118,10 @@ Completed work now includes:
 
 D5C through D5E and SR-01 through SR-06 are accepted architecture baseline. SR-06 is COMPLETE / FINAL GO.
 
-The remaining work is not to invent document-local style ownership again. It is to migrate the table-related structured style families needed by insertion, then simplify lifecycle/finalization around the coherent semantic model.
+STYLE-CONTEXT-01-A through 01-D complete the final audit, paragraph/text
+fallback characterization, and regression closeout. The remaining static
+registries, legacy getters, and broad direct-writer defaults are explicitly
+retained compatibility surfaces rather than modern semantic authority.
 
 ## Immediate architecture sequence
 
@@ -131,15 +134,17 @@ D5F Lifecycle / Materialization Integration — COMPLETE
         ↓
 D5G Compatibility Closeout — COMPLETE
         ↓
-STYLE-CONTEXT-01 final closeout
+STYLE-CONTEXT-01 — COMPLETE / FINAL GO
+        ↓
+STYLE-API-02 / evidence-driven next architecture work
 ```
 
-D5F has established the authoritative pre-materialization semantic/resource
-path and bounded post-materialization compatibility adoption. D5G has now
-completed the evidence-based compatibility closeout while retaining public
-static registries and legacy lifecycle facades. `STYLE-CONTEXT-01` is the next
-architecture closeout; `OdtTemplate` must not be normalized beyond the accepted
-lifecycle boundary without new evidence.
+D5F established the authoritative pre-materialization semantic/resource path
+and bounded post-materialization compatibility adoption. D5G completed the
+evidence-based compatibility closeout while retaining public static registries
+and legacy lifecycle facades. STYLE-CONTEXT-01 now confirms the final
+document-local semantic boundary; no static API removal or lifecycle redesign
+is implied.
 
 ### SR-06 — Semantic Graphic Style Requirements — COMPLETE / FINAL GO
 
@@ -265,8 +270,9 @@ A renderer-independent semantic document model also remains a later design direc
 After the immediate SR-07 → D5F → D5G sequence, ordering remains evidence-driven rather than fixed:
 
 ```text
-STYLE-CONTEXT-01 closeout
+STYLE-CONTEXT-01 — COMPLETE
         ├── DOCUMENT-DEFAULTS-01 research/design
+        ├── STYLE-API-02 public style API consistency
         ├── FRAME-LAYOUT-01
         ├── TABLE-LAYOUT-* / TABLE-CELL-01
         ├── template authoring / format-preservation re-audit
