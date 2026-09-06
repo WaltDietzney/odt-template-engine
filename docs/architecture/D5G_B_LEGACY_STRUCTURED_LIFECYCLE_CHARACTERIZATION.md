@@ -47,7 +47,7 @@ normal `StructuredResourceCollector` preparation phase.
 | Paragraph | legacy/semantic getters available | paragraph DOM inserted | text/paragraph compatibility finalized | observable content and styles |
 | RichText | owned paragraphs available | child subtree inserted | child compatibility finalized | observable content and styles |
 | ListElement | owned list items available | list DOM inserted | legacy child styles finalized | observable list content |
-| ImageElement | image options and legacy identity available | frame rendered; derived wrap/position state synchronized | legacy image style finalized; resource is not copied by this path | content stable on repeat, styles change on repeat |
+| ImageElement | image options and legacy identity available | frame rendered; derived wrap/position state synchronized | legacy image style finalized; resource is not copied by this path | content and styles stable on tested repeat |
 | CircularImageElement | semantic graphic/fill/resource projections available, legacy circular arrays empty | custom shape rendered; legacy fill/style state populated | graphic/fill declarations and resource are emitted | semantic state is not adopted into document context automatically |
 | DrawTextBox | frame/graphic getters available | frame/text-box DOM inserted | legacy frame style finalized | frame compatibility remains observable |
 | RichTable | table/column/row/cell semantic projections exist on element | table structure and legacy cell/column fallbacks rendered | legacy finalization applies | legacy output differs from `setElement()` in ownership/materialization |
@@ -88,18 +88,21 @@ save(B)
 ```
 
 produced identical `content.xml` in the focused probe. `META-INF/manifest.xml`
-was also stable. `styles.xml` changed for every representative producer,
-which characterizes repeated legacy style finalization/re-registration rather
-than repeated native subtree insertion.
+was also stable. `styles.xml` changed for each of these representative
+producers, which characterizes repeated legacy style finalization/re-registration
+rather than repeated native subtree insertion.
 
-For ImageElement, repeated render/save additionally preserves the synchronized
-legacy image options and style identity, while the legacy path does not copy
-the image asset into the package. The current tests explicitly preserve that
+ImageElement is the characterized exception. After its deterministic
+render-time option synchronization, the tested repeated render/save sequence
+preserved the synchronized legacy image options and style identity and produced
+stable `content.xml` and `styles.xml`. The legacy path still does not copy the
+image asset into the package. The current tests explicitly preserve that
 observed distinction from `setElement()`.
 
 Repeated legacy registration remains registry-idempotent by style-name in the
 existing compatibility tests, but the serialized styles document can still
-change across repeated lifecycle calls.
+change across repeated lifecycle calls for the non-ImageElement producers
+listed above.
 
 ## 6. ImageElement findings
 
@@ -276,8 +279,8 @@ The evidence establishes these boundaries:
 6. The legacy Boolean is a coarse save/finalization switch.
 7. Static registries remain globally observable, while current-document
    filtering limits tested output leakage.
-8. Repeated legacy render changes styles XML even when native content and
-   manifest remain stable.
+8. Repeated legacy render can change `styles.xml` even when native content and
+   manifest remain stable; ImageElement was the characterized stable exception.
 
 These findings are sufficient evidence for a later D5G Change Contract. They
 do not select a remediation, deprecation, registry reset, or lifecycle
