@@ -77,7 +77,7 @@ class RichTable extends OdtElement implements HasStyles
     private array $columnWidths = [];
 
     /**
-     * Relative width ratios for columns. Used to compute colspan.
+     * Relative width ratios for columns.
      *
      * @var array<int, int>
      */
@@ -97,7 +97,8 @@ class RichTable extends OdtElement implements HasStyles
      * Accepts RichTableCell instances or plain strings, Paragraphs, or RichText.
      * Automatically wraps non-cell content into a RichTableCell.
      *
-     * If column ratios are defined, colspans will be applied accordingly.
+     * Column ratios define relative column widths for semantic table-column
+     * requirements; they do not alter caller-defined cell spans.
      *
      * @param array $cells Array of cell content or RichTableCell instances.
      * @param array $style Optional row-level style (currently unused).
@@ -111,22 +112,6 @@ class RichTable extends OdtElement implements HasStyles
             }
         }
         unset($cell);
-
-        if (!empty($this->columnWidthRatios)) {
-            $sum = array_sum($this->columnWidthRatios);
-            $virtualColCount = 12;
-            $colspans = [];
-
-            foreach ($this->columnWidthRatios as $ratio) {
-                $colspans[] = max(1, round($virtualColCount * ($ratio / $sum)));
-            }
-
-            foreach ($cells as $i => $cell) {
-                if ($cell instanceof RichTableCell && isset($colspans[$i])) {
-                    $cell->setColspan($colspans[$i]);
-                }
-            }
-        }
 
         $this->rows[] = ['cells' => $cells, 'style' => $style];
         return $this;
@@ -143,19 +128,6 @@ class RichTable extends OdtElement implements HasStyles
             }
         }
     }
-
-    private function calculateColspansFromRatios(int $virtualColCount): array
-    {
-        $sum = array_sum($this->columnWidthRatios);
-        $colspans = [];
-
-        foreach ($this->columnWidthRatios as $ratio) {
-            $colspans[] = max(1, round($virtualColCount * ($ratio / $sum)));
-        }
-
-        return $colspans;
-    }
-
 
     /**
      * Defines how many rows should be treated as table headers.
@@ -199,7 +171,9 @@ class RichTable extends OdtElement implements HasStyles
 
         $columnWidths = $this->getColumnWidths();
         $columnStyleNames = [];
-        if (!empty($columnWidths)) {
+        if (!empty($this->columnWidthRatios)) {
+            $columnStyleNames = $this->columnStyleNames($this->columnWidthRatios);
+        } elseif (!empty($columnWidths)) {
             $columnStyleNames = $this->columnStyleNames($columnWidths);
             if (!$this->hasAllColumnStyles($dom, $columnStyleNames)) {
                 StyleWriter::writeColumnStyles($dom, $columnWidths);
@@ -237,17 +211,7 @@ class RichTable extends OdtElement implements HasStyles
             $table->setAttribute('table:style-name', $this->tableStyleName);
         }
 
-        if (!empty($this->columnWidthRatios)) {
-            // Option C: Verhältnisse in virtuelle Spalten umrechnen
-            $virtualColCount = 12;
-            $sum = array_sum($this->columnWidthRatios);
-            foreach ($this->columnWidthRatios as $ratio) {
-                $repeat = max(1, round($virtualColCount * ($ratio / $sum)));
-                $col = $dom->createElement('table:table-column');
-                $col->setAttribute('table:number-columns-repeated', $repeat);
-                $table->appendChild($col);
-            }
-        } elseif (!empty($columnStyleNames)) {
+        if (!empty($columnStyleNames)) {
             foreach ($columnStyleNames as $styleName) {
                 $col = $dom->createElement('table:table-column');
                 $col->setAttribute('table:style-name', $styleName);
@@ -360,7 +324,7 @@ class RichTable extends OdtElement implements HasStyles
         return false;
     }
 
-    /** @param array<int, string> $widths */
+    /** @param array<int, int|string> $widths */
     private function columnStyleNames(array $widths): array
     {
         $names = [];
@@ -410,16 +374,30 @@ class RichTable extends OdtElement implements HasStyles
     /** @return iterable<int, StyleRequirement> */
     public function getOwnStyleRequirements(): iterable
     {
-        foreach (array_values($this->columnWidths) as $index => $width) {
-            yield new StyleRequirement(
-                StyleRequirement::KIND_DEFINITION,
-                StyleRequirement::SCOPE_AUTOMATIC,
-                'table-column',
-                StyleRequirement::PART_CONTENT,
-                'co' . $index,
-                null,
-                ['style:table-column-properties' => ['style:column-width' => $width]]
-            );
+        if (!empty($this->columnWidthRatios)) {
+            foreach ($this->normalizedRelativeColumnWidths() as $index => $width) {
+                yield new StyleRequirement(
+                    StyleRequirement::KIND_DEFINITION,
+                    StyleRequirement::SCOPE_AUTOMATIC,
+                    'table-column',
+                    StyleRequirement::PART_CONTENT,
+                    'co' . $index,
+                    null,
+                    ['style:table-column-properties' => ['style:rel-column-width' => $width]]
+                );
+            }
+        } else {
+            foreach (array_values($this->columnWidths) as $index => $width) {
+                yield new StyleRequirement(
+                    StyleRequirement::KIND_DEFINITION,
+                    StyleRequirement::SCOPE_AUTOMATIC,
+                    'table-column',
+                    StyleRequirement::PART_CONTENT,
+                    'co' . $index,
+                    null,
+                    ['style:table-column-properties' => ['style:column-width' => $width]]
+                );
+            }
         }
 
         foreach ($this->rows as $index => $row) {
@@ -478,6 +456,39 @@ class RichTable extends OdtElement implements HasStyles
     private function rowStyleName(int $rowIndex): string
     {
         return $this->tableName . '_ro' . $rowIndex;
+    }
+
+    /** @return list<string> */
+    private function normalizedRelativeColumnWidths(): array
+    {
+        $ratios = array_values($this->columnWidthRatios);
+        $positiveIntegers = $ratios !== [] && array_reduce(
+            $ratios,
+            static fn (bool $valid, mixed $ratio): bool => $valid && is_int($ratio) && $ratio > 0,
+            true
+        );
+
+        if (!$positiveIntegers) {
+            return array_map(static fn (mixed $ratio): string => (string) $ratio . '*', $ratios);
+        }
+
+        $sum = array_sum($ratios);
+        $unit = intdiv(65535, $sum);
+        $widths = [];
+        $materialized = 0;
+
+        foreach ($ratios as $index => $ratio) {
+            if ($index === array_key_last($ratios)) {
+                $width = 65535 - $materialized;
+            } else {
+                $width = $unit * $ratio;
+                $materialized += $width;
+            }
+
+            $widths[] = $width . '*';
+        }
+
+        return $widths;
     }
 
     public function getRequiredStyles(): array

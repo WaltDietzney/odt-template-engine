@@ -152,15 +152,26 @@ Completed outcomes include:
 
 SR-06 deliberately did not redesign frame positioning, image anchor/wrap APIs, table layout, or the public layout model. The closeout is recorded in [`architecture/SR-06_SEMANTIC_GRAPHIC_STYLE_REQUIREMENTS_CLOSEOUT.md`](architecture/SR-06_SEMANTIC_GRAPHIC_STYLE_REQUIREMENTS_CLOSEOUT.md).
 
-### SR-07 — Semantic Table / Table-Cell Requirements — PREFERRED NEXT ARCHITECTURE SLICE
+### SR-07 — Semantic Table / Table-Cell Requirements — COMPLETE / FINAL GO
 
-SR-07 is the next architecture slice. Characterize and migrate the table-related semantic requirement families needed by structured insertion. Relevant ODF families may include `table`, `table-column`, `table-row`, and `table-cell`.
+SR-07 completed the semantic table-family migration and compatibility closeout
+for structured insertion. The completed families are `table`, `table-column`,
+`table-row`, and `table-cell`, with document-local semantic ownership and
+preserved legacy compatibility facades.
 
-As with SR-06, characterization and semantics precede implementation. SR-07 must preserve the established rule that style family and property group are independent concepts. It must not silently absorb table geometry or vertical-alignment behavior changes from `TABLE-LAYOUT-*` or `TABLE-CELL-01`.
+SR-07H completed the visual closeout for Samples 11, 13, 19, and 20 and the
+focused `min-row-height` proof. Sample 11's corrected explicit widths and
+Sample 20's corrected relative-width semantics are intentional behavior
+corrections, not baseline regressions. The distinction between table width,
+absolute/relative column width, and structural repetition/spans remains
+important evidence for later table-layout work.
 
 ### D5F / D5G — lifecycle integration and compatibility closeout
 
-Once the required table style families use the semantic requirement model, D5F may simplify lifecycle/orchestration around that coherent model instead of building abstractions around today's mixed semantic/legacy transition state.
+With the required table style families now using the semantic requirement
+model, D5F may simplify lifecycle/orchestration around that coherent model
+instead of building abstractions around today's mixed semantic/legacy
+transition state.
 
 D5G then reviews compatibility paths, protected extension surfaces, repeated render/save behavior, and remaining legacy registration/finalization behavior before `STYLE-CONTEXT-01` is declared fully closed.
 
@@ -202,7 +213,8 @@ Priority topics remain:
 - `TABLE-LAYOUT-03` — row/minimum height;
 - `TABLE-CELL-01` — vertical cell alignment.
 
-SR-07 should establish the relevant semantic style foundation before these layout APIs are expanded.
+SR-07 has established the relevant semantic style foundation. These remain
+separate behavior/API topics and are not implicitly solved by SR-07.
 
 ### Smaller layout topics
 

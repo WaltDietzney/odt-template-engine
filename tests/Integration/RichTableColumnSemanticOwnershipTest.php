@@ -48,29 +48,30 @@ final class RichTableColumnSemanticOwnershipTest extends TestCase
         self::assertSame('4cm', $requirements[1]->propertyGroups()['style:table-column-properties']['style:column-width']);
     }
 
-    public function testTablesWithoutExplicitWidthsProduceNoColumnRequirements(): void
+    public function testTablesWithoutColumnWidthsProduceNoColumnRequirements(): void
     {
         self::assertSame([], iterator_to_array((new RichTable())->addRow(['A'])->getOwnStyleRequirements(), false));
 
         $ratioTable = (new RichTable())->addRow(['A', 'B']);
         $ratioTable->setColumnWidthRatios([1, 2]);
-        self::assertSame([], iterator_to_array($ratioTable->getOwnStyleRequirements(), false));
+        $requirements = iterator_to_array($ratioTable->getOwnStyleRequirements(), false);
+        self::assertCount(2, $requirements);
+        self::assertSame('21845*', $requirements[0]->propertyGroups()['style:table-column-properties']['style:rel-column-width']);
+        self::assertSame('43690*', $requirements[1]->propertyGroups()['style:table-column-properties']['style:rel-column-width']);
     }
 
-    public function testRatioColumnsRemainStructural(): void
+    public function testRatioColumnsUseSemanticReferencesWithoutVirtualRepeats(): void
     {
         $dom = $this->dom($this->contentXml());
         $table = (new RichTable())->addRow(['A', 'B']);
         $table->setColumnWidthRatios([1, 2]);
         $dom->documentElement->appendChild($table->toDomNode($dom));
 
-        $xpath = new \DOMXPath($dom);
-        $xpath->registerNamespace('table', 'urn:oasis:names:tc:opendocument:xmlns:table:1.0');
-        $xpath->registerNamespace('style', self::STYLE_NS);
-        self::assertSame(2, $xpath->query(
-            '//*[contains(name(), "table:table-column") and @*[contains(name(), "number-columns-repeated")]]'
-        )->length);
-        self::assertSame(0, $xpath->query('//style:style[@style:family="table-column"]')->length);
+        $xml = $dom->saveXML() ?: '';
+        self::assertSame(2, substr_count($xml, '<table:table-column '));
+        self::assertSame(1, substr_count($xml, 'table:style-name="co0"'));
+        self::assertSame(1, substr_count($xml, 'table:style-name="co1"'));
+        self::assertStringNotContainsString('table:number-columns-repeated', $xml);
     }
 
     #[RunInSeparateProcess]
