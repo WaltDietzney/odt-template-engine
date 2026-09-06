@@ -129,15 +129,17 @@ SR-07 Semantic Table / Table-Cell Requirements — COMPLETE
         ↓
 D5F Lifecycle / Materialization Integration — COMPLETE
         ↓
-D5G Compatibility Closeout — NEXT
+D5G Compatibility Closeout — COMPLETE
         ↓
 STYLE-CONTEXT-01 final closeout
 ```
 
 D5F has established the authoritative pre-materialization semantic/resource
-path and bounded post-materialization compatibility adoption. D5G remains the
-next step for the remaining legacy compatibility policy; `OdtTemplate` must
-not be normalized beyond the accepted lifecycle boundary without new evidence.
+path and bounded post-materialization compatibility adoption. D5G has now
+completed the evidence-based compatibility closeout while retaining public
+static registries and legacy lifecycle facades. `STYLE-CONTEXT-01` is the next
+architecture closeout; `OdtTemplate` must not be normalized beyond the accepted
+lifecycle boundary without new evidence.
 
 ### SR-06 — Semantic Graphic Style Requirements — COMPLETE / FINAL GO
 
@@ -169,13 +171,13 @@ corrections, not baseline regressions. The distinction between table width,
 absolute/relative column width, and structural repetition/spans remains
 important evidence for later table-layout work.
 
-### D5F / D5G — lifecycle integration and compatibility closeout
+### D5F / D5G — lifecycle integration and compatibility closeout — COMPLETE
 
 D5F completed the lifecycle/orchestration integration around the coherent
-semantic model without removing compatibility paths. D5G now reviews
-protected extension surfaces, repeated render/save behavior, and remaining
-legacy registration/finalization behavior before `STYLE-CONTEXT-01` is
-declared fully closed.
+semantic model without removing compatibility paths. D5G completed the review
+of protected extension surfaces, repeated render/save behavior, and remaining
+legacy registration/finalization behavior. Static registries and direct
+compatibility defaults remain documented residue for `STYLE-CONTEXT-01`.
 
 ## Document defaults — RESEARCH/DESIGN AFTER STYLE-CONTEXT CLOSEOUT
 
