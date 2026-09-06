@@ -425,12 +425,7 @@ class OdtTemplate
     {
         $collector = new StyleRequirementCollector();
         foreach ($collector->collect($element) as $requirement) {
-            $styleContext = $this->documentContext()->styleContext();
-            if ($requirement['family'] === 'paragraph') {
-                $styleContext->registerParagraphStyle($requirement['name'], $requirement['definition']);
-            } elseif ($requirement['family'] === 'text') {
-                $styleContext->registerTextStyle($requirement['name'], $requirement['definition']);
-            } else {
+            if (in_array($requirement['family'], ['frame', 'image', 'fill-image'], true)) {
                 $this->registerLegacyGraphicCompatibilityState($requirement);
             }
         }
@@ -439,9 +434,10 @@ class OdtTemplate
     /**
      * Preserve the legacy graphic carriers collected on the normal path.
      *
-     * This boundary is intentionally limited to the still-unmigrated graphic
-     * requirement families. Semantic requirements and paragraph/text legacy
-     * handling remain owned by their existing orchestration paths.
+     * This boundary carries legacy graphic, image, and fill-image compatibility
+     * state. Semantic requirements and paragraph/text compatibility handling
+     * are complete before native materialization and are not re-registered in
+     * the post-materialization phase.
      *
      * @param array{family: string, name: string, definition: array<string, mixed>} $requirement
      */
