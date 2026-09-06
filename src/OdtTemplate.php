@@ -1369,6 +1369,7 @@ class OdtTemplate
             $legacyFrameStyleNames,
             $this->legacyFrameStylesMaterialized
         );
+        $legacyFrameStylesEnabled = $legacyFrameStyleNames !== [];
         (new FontFaceRequirementMaterializer())->materializeAll(
             $this->documentContext(),
             $this->documentContext()->fontFaceRequirements()->requirements()
@@ -1377,19 +1378,13 @@ class OdtTemplate
             $this->documentContext()->stylesDom(),
             false,
             false,
-            $this->legacyStructuredValuesMaterialized,
-            $this->legacyStructuredValuesMaterialized
+            $legacyFrameStylesEnabled,
+            $legacyFrameStylesEnabled
                 ? $pendingLegacyFrameStyleNames
                 : null,
-            $this->legacyStructuredValuesMaterialized
-                ? null
-                : $this->semanticOwnedTableCellStyles(),
-            $this->legacyStructuredValuesMaterialized
-                ? null
-                : $this->tableStyleNamesReferencedByCurrentDocument(),
-            $this->legacyStructuredValuesMaterialized
-                ? null
-                : $this->tableCellStyleNamesReferencedByCurrentDocument()
+            $this->semanticOwnedTableCellStyles(),
+            $this->tableStyleNamesReferencedByCurrentDocument(),
+            $this->tableCellStyleNamesReferencedByCurrentDocument()
         );
         $this->legacyFrameStylesMaterialized += $legacyFrameStyleNames;
         $this->adjustBulletIndentation();
@@ -1409,9 +1404,9 @@ class OdtTemplate
             false,
             false,
             null,
-            $this->legacyStructuredValuesMaterialized ? null : $this->semanticOwnedTableCellStyles(),
-            $this->legacyStructuredValuesMaterialized ? null : $this->tableStyleNamesReferencedByCurrentDocument(),
-            $this->legacyStructuredValuesMaterialized ? null : $this->tableCellStyleNamesReferencedByCurrentDocument()
+            $this->semanticOwnedTableCellStyles(),
+            $this->tableStyleNamesReferencedByCurrentDocument(),
+            $this->tableCellStyleNamesReferencedByCurrentDocument()
         );
         $this->package->persistCoreDocuments();
         $this->load();

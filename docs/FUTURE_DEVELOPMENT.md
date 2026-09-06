@@ -23,7 +23,7 @@ SR-07 Table / Table-Cell Requirements — COMPLETE
         ↓
 D5F Lifecycle / Materialization Integration — COMPLETE
         ↓
-D5G Compatibility Closeout — NEXT
+D5G Compatibility Closeout — COMPLETE
         ↓
 STYLE-CONTEXT-01 final closeout
 ```
@@ -72,17 +72,22 @@ and bounded post-materialization compatibility adoption after the SR-07
 families were migrated or explicitly bounded. It did not centralize native
 element rendering in `OdtTemplate` or create a God renderer.
 
-### D5G — Compatibility closeout — NEXT
+### D5G — Compatibility closeout — COMPLETE
 
-**Priority:** High next after D5F
+**Priority:** Completed after D5F
 
-Before final STYLE-CONTEXT closeout, explicitly review:
+D5G completed the evidence-based review of:
 
 - protected extension surfaces and external subclass compatibility;
 - legacy style registration/finalization paths;
 - repeated `render()` / `save()` behavior;
 - content.xml / styles.xml compatibility behavior;
 - remaining structured-value legacy paths.
+
+Public static registries, direct broad `StyleWriter` defaults, legacy getters,
+and documented ImageElement/CircularImageElement lifecycle quirks remain
+compatibility residue. The next step is the final `STYLE-CONTEXT-01` closeout;
+do not remove these surfaces implicitly as part of unrelated work.
 
 ### STYLE-API-02 — Style API consistency
 
@@ -322,13 +327,12 @@ Generated files under `samples/output/` remain local regression artifacts unless
 
 Current preferred strategic order:
 
-1. `D5G` compatibility closeout after completed `D5F`;
-2. final `STYLE-CONTEXT-01` closeout;
-3. reassess `DOCUMENT-DEFAULTS-01`, `FRAME-LAYOUT-01`, and table-layout priorities from the completed semantic baseline;
-4. template-authoring / format-preservation re-audit;
-5. page/master-style and page-flow work;
-6. named-object operations and dynamic-content research;
-7. `DOCUMENT-IMPORT-01` and broader round-trip workflows later.
+1. final `STYLE-CONTEXT-01` closeout after completed D5F/D5G;
+2. reassess `DOCUMENT-DEFAULTS-01`, `FRAME-LAYOUT-01`, and table-layout priorities from the completed semantic baseline;
+3. template-authoring / format-preservation re-audit;
+4. page/master-style and page-flow work;
+5. named-object operations and dynamic-content research;
+6. `DOCUMENT-IMPORT-01` and broader round-trip workflows later.
 
 The sequence after STYLE-CONTEXT closeout remains revisitable. Smaller independent list, lifecycle, sample-infrastructure, asset, or reference-fixture slices may be inserted where useful.
 
