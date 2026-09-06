@@ -1369,6 +1369,7 @@ class OdtTemplate
             $legacyFrameStyleNames,
             $this->legacyFrameStylesMaterialized
         );
+        $legacyFrameStylesEnabled = $legacyFrameStyleNames !== [];
         (new FontFaceRequirementMaterializer())->materializeAll(
             $this->documentContext(),
             $this->documentContext()->fontFaceRequirements()->requirements()
@@ -1377,8 +1378,8 @@ class OdtTemplate
             $this->documentContext()->stylesDom(),
             false,
             false,
-            $this->legacyStructuredValuesMaterialized,
-            $this->legacyStructuredValuesMaterialized
+            $legacyFrameStylesEnabled,
+            $legacyFrameStylesEnabled
                 ? $pendingLegacyFrameStyleNames
                 : null,
             $this->semanticOwnedTableCellStyles(),
