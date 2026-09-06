@@ -76,7 +76,7 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
     }
 
     #[RunInSeparateProcess]
-    public function testLegacyAssignRenderUsesTheSameCellDefinitionChannels(): void
+    public function testLegacyAssignRenderUsesCurrentDocumentCellDefinitionOnly(): void
     {
         $cell = new RichTableCell('Legacy Cell', [
             'background' => '#fff3cd',
@@ -95,13 +95,13 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
         $styles = $this->entry($output, 'styles.xml');
 
         self::assertSame(1, $this->styleCount($content, $styleName, 'table-cell'));
-        self::assertSame(2, $this->styleCount($styles, $styleName, 'table-cell'));
+        self::assertSame(1, $this->styleCount($styles, $styleName, 'table-cell'));
         self::assertSame(
             1,
             $this->styleCountInContainer($styles, $styleName, 'table-cell', 'automatic-styles')
         );
         self::assertSame(
-            1,
+            0,
             $this->styleCountInContainer($styles, $styleName, 'table-cell', 'styles')
         );
     }

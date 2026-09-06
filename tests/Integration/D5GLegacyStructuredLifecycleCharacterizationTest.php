@@ -163,10 +163,10 @@ final class D5GLegacyStructuredLifecycleCharacterizationTest extends TestCase
                 $this->entry($second, 'content.xml'),
                 $label . ': repeated render changed content.xml'
             );
-            self::assertNotSame(
+            self::assertSame(
                 $this->entry($first, 'styles.xml'),
                 $this->entry($second, 'styles.xml'),
-                $label . ': repeated legacy render changes styles.xml'
+                $label . ': D5G-C narrowing keeps repeated compatibility finalization stable'
             );
         }
     }
