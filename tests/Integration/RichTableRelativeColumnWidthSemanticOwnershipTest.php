@@ -43,10 +43,28 @@ final class RichTableRelativeColumnWidthSemanticOwnershipTest extends TestCase
             self::assertSame(StyleRequirement::SCOPE_AUTOMATIC, $requirement->scope());
             self::assertSame(StyleRequirement::PART_CONTENT, $requirement->documentPart());
             self::assertSame(
-                ['style:rel-column-width' => $index === 0 ? '2*' : '1*'],
+                ['style:rel-column-width' => ['32766*', '16383*', '16386*'][$index]],
                 $requirement->propertyGroups()['style:table-column-properties']
             );
         }
+
+        $widths = array_map(
+            static fn (StyleRequirement $requirement): int => (int) rtrim(
+                $requirement->propertyGroups()['style:table-column-properties']['style:rel-column-width'], '*'
+            ),
+            $requirements
+        );
+        self::assertSame(65535, array_sum($widths));
+    }
+
+    public function testRelativeWidthRemainderGoesToFinalColumn(): void
+    {
+        $table = new RichTable();
+        $table->setColumnWidthRatios([1, 1]);
+        $requirements = iterator_to_array($table->getOwnStyleRequirements(), false);
+
+        self::assertSame('32767*', $requirements[0]->propertyGroups()['style:table-column-properties']['style:rel-column-width']);
+        self::assertSame('32768*', $requirements[1]->propertyGroups()['style:table-column-properties']['style:rel-column-width']);
     }
 
     public function testRatioWidthsProduceThreeLogicalColumnsWithoutArtificialSpans(): void
@@ -93,8 +111,9 @@ final class RichTableRelativeColumnWidthSemanticOwnershipTest extends TestCase
         self::assertSame(0, $this->styleCount($styles, 'co0', 'table-column'));
         self::assertSame(0, $this->styleCount($styles, 'co1', 'table-column'));
         self::assertSame(0, $this->styleCount($styles, 'co2', 'table-column'));
-        self::assertStringContainsString('style:rel-column-width="2*"', $content);
-        self::assertSame(2, substr_count($content, 'style:rel-column-width="1*"'));
+        self::assertStringContainsString('style:rel-column-width="32766*"', $content);
+        self::assertSame(1, substr_count($content, 'style:rel-column-width="16383*"'));
+        self::assertSame(1, substr_count($content, 'style:rel-column-width="16386*"'));
         self::assertSame(1, substr_count($content, 'table:style-name="co0"'));
         self::assertSame(1, substr_count($content, 'table:style-name="co1"'));
         self::assertSame(1, substr_count($content, 'table:style-name="co2"'));
@@ -160,7 +179,7 @@ final class RichTableRelativeColumnWidthSemanticOwnershipTest extends TestCase
         $requirements = iterator_to_array($table->getOwnStyleRequirements(), false);
 
         self::assertCount(3, $requirements);
-        self::assertSame('2*', $requirements[0]->propertyGroups()['style:table-column-properties']['style:rel-column-width']);
+        self::assertSame('32766*', $requirements[0]->propertyGroups()['style:table-column-properties']['style:rel-column-width']);
     }
 
     private function templatePath(): string

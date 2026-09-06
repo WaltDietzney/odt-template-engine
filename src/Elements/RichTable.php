@@ -77,7 +77,7 @@ class RichTable extends OdtElement implements HasStyles
     private array $columnWidths = [];
 
     /**
-     * Relative width ratios for columns. Used to compute colspan.
+     * Relative width ratios for columns.
      *
      * @var array<int, int>
      */
@@ -375,7 +375,7 @@ class RichTable extends OdtElement implements HasStyles
     public function getOwnStyleRequirements(): iterable
     {
         if (!empty($this->columnWidthRatios)) {
-            foreach (array_values($this->columnWidthRatios) as $index => $ratio) {
+            foreach ($this->normalizedRelativeColumnWidths() as $index => $width) {
                 yield new StyleRequirement(
                     StyleRequirement::KIND_DEFINITION,
                     StyleRequirement::SCOPE_AUTOMATIC,
@@ -383,7 +383,7 @@ class RichTable extends OdtElement implements HasStyles
                     StyleRequirement::PART_CONTENT,
                     'co' . $index,
                     null,
-                    ['style:table-column-properties' => ['style:rel-column-width' => $ratio . '*']]
+                    ['style:table-column-properties' => ['style:rel-column-width' => $width]]
                 );
             }
         } else {
@@ -456,6 +456,39 @@ class RichTable extends OdtElement implements HasStyles
     private function rowStyleName(int $rowIndex): string
     {
         return $this->tableName . '_ro' . $rowIndex;
+    }
+
+    /** @return list<string> */
+    private function normalizedRelativeColumnWidths(): array
+    {
+        $ratios = array_values($this->columnWidthRatios);
+        $positiveIntegers = $ratios !== [] && array_reduce(
+            $ratios,
+            static fn (bool $valid, mixed $ratio): bool => $valid && is_int($ratio) && $ratio > 0,
+            true
+        );
+
+        if (!$positiveIntegers) {
+            return array_map(static fn (mixed $ratio): string => (string) $ratio . '*', $ratios);
+        }
+
+        $sum = array_sum($ratios);
+        $unit = intdiv(65535, $sum);
+        $widths = [];
+        $materialized = 0;
+
+        foreach ($ratios as $index => $ratio) {
+            if ($index === array_key_last($ratios)) {
+                $width = 65535 - $materialized;
+            } else {
+                $width = $unit * $ratio;
+                $materialized += $width;
+            }
+
+            $widths[] = $width . '*';
+        }
+
+        return $widths;
     }
 
     public function getRequiredStyles(): array

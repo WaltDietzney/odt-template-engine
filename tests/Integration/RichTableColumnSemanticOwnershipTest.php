@@ -56,8 +56,8 @@ final class RichTableColumnSemanticOwnershipTest extends TestCase
         $ratioTable->setColumnWidthRatios([1, 2]);
         $requirements = iterator_to_array($ratioTable->getOwnStyleRequirements(), false);
         self::assertCount(2, $requirements);
-        self::assertSame('1*', $requirements[0]->propertyGroups()['style:table-column-properties']['style:rel-column-width']);
-        self::assertSame('2*', $requirements[1]->propertyGroups()['style:table-column-properties']['style:rel-column-width']);
+        self::assertSame('21845*', $requirements[0]->propertyGroups()['style:table-column-properties']['style:rel-column-width']);
+        self::assertSame('43690*', $requirements[1]->propertyGroups()['style:table-column-properties']['style:rel-column-width']);
     }
 
     public function testRatioColumnsUseSemanticReferencesWithoutVirtualRepeats(): void
