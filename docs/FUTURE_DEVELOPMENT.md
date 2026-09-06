@@ -47,28 +47,31 @@ Completed distinctions and outcomes include:
 
 SR-06 deliberately did not redesign frame positioning, image anchor/wrap APIs, table layout, or the public layout model. Those remain separate future work.
 
-### SR-07 — Semantic Table / Table-Cell Requirements — PREFERRED NEXT ARCHITECTURE SLICE
+### SR-07 — Semantic Table / Table-Cell Requirements — COMPLETE / FINAL GO
 
-**Priority:** Highest / preferred next architecture slice
+**Priority:** Completed architecture milestone
 
-SR-07 is the next semantic family migration. Characterize and migrate the table-related style families required by structured insertion to the semantic requirement model.
+SR-07 completed the semantic migration and compatibility closeout for the
+table-related style families required by structured insertion: `table`,
+`table-column`, `table-row`, and `table-cell`.
 
-Potential ODF families include:
+SR-07H completed visual review for Samples 11, 13, 19, and 20 and the focused
+row minimum-height proof. The corrected Sample 20 relative-width behavior is
+an intentional correction of the historical virtual-column representation.
 
-- `table`;
-- `table-column`;
-- `table-row`;
-- `table-cell`.
-
-Style family and property group remain independent concepts. Characterization and semantics precede implementation. Do not combine this migration automatically with table geometry or cell-layout behavior changes.
+Style family and property group remain independent concepts. Future table
+geometry and cell-layout work must remain separate from this completed
+ownership migration.
 
 ### D5F — Lifecycle / materialization integration
 
 **Priority:** High after SR-07
 
-D5F remains deliberately paused while structured insertion still combines semantic and legacy requirement worlds for the remaining table-related style families.
-
-When those families have been migrated or explicitly bounded as compatibility behavior, D5F should simplify lifecycle/orchestration around the coherent semantic model. It must not centralize native element rendering in `OdtTemplate` or create a God renderer.
+D5F is the next lifecycle architecture step now that the SR-07 table-related
+families have been migrated or explicitly bounded as compatibility behavior.
+It should simplify lifecycle/orchestration around the coherent semantic model.
+It must not centralize native element rendering in `OdtTemplate` or create a
+God renderer.
 
 ### D5G — Compatibility closeout
 
@@ -173,6 +176,13 @@ Provide reliable explicit table-width semantics based on actual ODF behavior and
 **Priority:** High
 
 Investigate and support relative table sizing without relying on accidental LibreOffice behavior.
+
+SR-07H provides evidence for a narrower, already-corrected concern: relative
+*column* widths are distinct from table width and structural repeated columns.
+For positive integer column ratios, LibreOffice Writer interoperability uses
+its 65535-unit relative width space with the integer-division remainder on the
+final logical column. This is evidence for future table-width work, not a new
+table-width API or a claim that ODF mandates 65535.
 
 ### TABLE-LAYOUT-03 — Row and minimum height
 
@@ -313,14 +323,13 @@ Generated files under `samples/output/` remain local regression artifacts unless
 
 Current preferred strategic order:
 
-1. `SR-07` semantic table/table-cell requirements;
-2. `D5F` lifecycle/materialization integration;
-3. `D5G` compatibility closeout and final `STYLE-CONTEXT-01` closeout;
-4. reassess `DOCUMENT-DEFAULTS-01`, `FRAME-LAYOUT-01`, and table-layout priorities from the completed semantic baseline;
-5. template-authoring / format-preservation re-audit;
-6. page/master-style and page-flow work;
-7. named-object operations and dynamic-content research;
-8. `DOCUMENT-IMPORT-01` and broader round-trip workflows later.
+1. `D5F` lifecycle/materialization integration after completed `SR-07`;
+2. `D5G` compatibility closeout and final `STYLE-CONTEXT-01` closeout;
+3. reassess `DOCUMENT-DEFAULTS-01`, `FRAME-LAYOUT-01`, and table-layout priorities from the completed semantic baseline;
+4. template-authoring / format-preservation re-audit;
+5. page/master-style and page-flow work;
+6. named-object operations and dynamic-content research;
+7. `DOCUMENT-IMPORT-01` and broader round-trip workflows later.
 
 The sequence after STYLE-CONTEXT closeout remains revisitable. Smaller independent list, lifecycle, sample-infrastructure, asset, or reference-fixture slices may be inserted where useful.
 
