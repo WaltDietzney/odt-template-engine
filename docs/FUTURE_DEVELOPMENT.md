@@ -19,11 +19,11 @@ D5C–D5E and SR-01–SR-06 are accepted architecture baseline. SR-06 is COMPLET
 Remaining work is deliberately sequenced as:
 
 ```text
-SR-07 Table / Table-Cell Requirements
+SR-07 Table / Table-Cell Requirements — COMPLETE
         ↓
-D5F Lifecycle / Materialization Integration
+D5F Lifecycle / Materialization Integration — COMPLETE
         ↓
-D5G Compatibility Closeout
+D5G Compatibility Closeout — NEXT
         ↓
 STYLE-CONTEXT-01 final closeout
 ```
@@ -63,19 +63,18 @@ Style family and property group remain independent concepts. Future table
 geometry and cell-layout work must remain separate from this completed
 ownership migration.
 
-### D5F — Lifecycle / materialization integration
+### D5F — Lifecycle / materialization integration — COMPLETE
 
 **Priority:** High after SR-07
 
-D5F is the next lifecycle architecture step now that the SR-07 table-related
-families have been migrated or explicitly bounded as compatibility behavior.
-It should simplify lifecycle/orchestration around the coherent semantic model.
-It must not centralize native element rendering in `OdtTemplate` or create a
-God renderer.
+D5F established the authoritative pre-materialization semantic/resource path
+and bounded post-materialization compatibility adoption after the SR-07
+families were migrated or explicitly bounded. It did not centralize native
+element rendering in `OdtTemplate` or create a God renderer.
 
-### D5G — Compatibility closeout
+### D5G — Compatibility closeout — NEXT
 
-**Priority:** High after D5F
+**Priority:** High next after D5F
 
 Before final STYLE-CONTEXT closeout, explicitly review:
 
@@ -323,8 +322,8 @@ Generated files under `samples/output/` remain local regression artifacts unless
 
 Current preferred strategic order:
 
-1. `D5F` lifecycle/materialization integration after completed `SR-07`;
-2. `D5G` compatibility closeout and final `STYLE-CONTEXT-01` closeout;
+1. `D5G` compatibility closeout after completed `D5F`;
+2. final `STYLE-CONTEXT-01` closeout;
 3. reassess `DOCUMENT-DEFAULTS-01`, `FRAME-LAYOUT-01`, and table-layout priorities from the completed semantic baseline;
 4. template-authoring / format-preservation re-audit;
 5. page/master-style and page-flow work;
