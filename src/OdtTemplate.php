@@ -275,6 +275,25 @@ class OdtTemplate
      */
     public function setElement(string $placeholder, OdtElement $element): void
     {
+        $semanticOwnedLegacyStyles = $this->prepareStructuredSemanticState($element);
+
+        $this->registerStructuredLegacyParagraphTextCompatibility(
+            $element,
+            $semanticOwnedLegacyStyles
+        );
+        $this->registerStructuredHasStylesCompatibility($element);
+        $this->prepareStructuredResources($element);
+        $this->materializeStructuredElement($placeholder, $element);
+        $this->finalizeStructuredCompatibility($element);
+    }
+
+    /**
+     * Prepare all document-local semantic state before native DOM rendering.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private function prepareStructuredSemanticState(OdtElement $element): array
+    {
         $collector = new StyleRequirementCollector();
         $semanticRequirements = iterator_to_array($collector->collectSemantic($element), false);
         $semanticOwnedLegacyStyles = $this->semanticOwnedLegacyStyles($semanticRequirements);
@@ -287,6 +306,17 @@ class OdtTemplate
             }
         }
 
+        $this->prepareStructuredFillImageDependencies($element);
+        $this->materializeStructuredSemanticStyles();
+
+        return $semanticOwnedLegacyStyles;
+    }
+
+    /**
+     * Register and materialize typed fill-image dependencies before insertion.
+     */
+    private function prepareStructuredFillImageDependencies(OdtElement $element): void
+    {
         $fillImageCollector = new FillImageRequirementCollector();
         foreach ($fillImageCollector->collect($element) as $requirement) {
             $this->documentContext()->registerFillImageRequirement($requirement);
@@ -296,12 +326,29 @@ class OdtTemplate
         foreach ($this->documentContext()->fillImageRequirements()->requirements() as $requirement) {
             $fillImageMaterializer->materialize($this->documentContext(), $requirement);
         }
+    }
 
+    /**
+     * Materialize all semantic styles already registered for this document.
+     */
+    private function materializeStructuredSemanticStyles(): void
+    {
         $materializer = new StyleRequirementMaterializer();
         foreach ($this->documentContext()->styleContext()->materializationRequirements() as $requirement) {
             $materializer->materialize($this->documentContext(), $requirement);
         }
+    }
 
+    /**
+     * Preserve legacy paragraph/text registration around semantic ownership.
+     *
+     * @param array<string, array<string, mixed>> $semanticOwnedLegacyStyles
+     */
+    private function registerStructuredLegacyParagraphTextCompatibility(
+        OdtElement $element,
+        array $semanticOwnedLegacyStyles
+    ): void {
+        $collector = new StyleRequirementCollector();
         foreach ($collector->collect($element) as $requirement) {
             if ($requirement['family'] === 'paragraph') {
                 $this->documentContext()->styleContext()->registerParagraphStyle(
@@ -325,15 +372,34 @@ class OdtTemplate
                 }
             }
         }
+    }
+
+    /**
+     * Preserve the existing HasStyles compatibility registration phase.
+     */
+    private function registerStructuredHasStylesCompatibility(OdtElement $element): void
+    {
         if ($element instanceof HasStyles) {
             $this->registerStyles($element->getStyleDefinitions());
         }
+    }
 
+    /**
+     * Prepare physical package resources independently of document styles.
+     */
+    private function prepareStructuredResources(OdtElement $element): void
+    {
         $resources = iterator_to_array((new StructuredResourceCollector())->collect($element), false);
         if ($resources !== []) {
             $this->package->copyImageResourcesAtomically($resources);
         }
+    }
 
+    /**
+     * Insert the native subtree through the existing materializer callbacks.
+     */
+    private function materializeStructuredElement(string $placeholder, OdtElement $element): void
+    {
         $materializer = new StructuredElementMaterializer();
         $materializer->insert(
             $this->documentContext()->contentDom(),
@@ -348,7 +414,16 @@ class OdtTemplate
             },
             fn (DOMDocument $dom, string $key): bool => $this->hasPlaceholder($dom, $key)
         );
+    }
 
+    /**
+     * Preserve the second legacy collector pass after native materialization.
+     *
+     * This remains compatibility state, not semantic discovery.
+     */
+    private function finalizeStructuredCompatibility(OdtElement $element): void
+    {
+        $collector = new StyleRequirementCollector();
         foreach ($collector->collect($element) as $requirement) {
             $styleContext = $this->documentContext()->styleContext();
             if ($requirement['family'] === 'paragraph') {
