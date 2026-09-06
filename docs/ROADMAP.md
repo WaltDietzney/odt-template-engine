@@ -125,16 +125,19 @@ The remaining work is not to invent document-local style ownership again. It is 
 The preferred sequence is now:
 
 ```text
-SR-07 Semantic Table / Table-Cell Requirements
+SR-07 Semantic Table / Table-Cell Requirements — COMPLETE
         ↓
-D5F Lifecycle / Materialization Integration
+D5F Lifecycle / Materialization Integration — COMPLETE
         ↓
-D5G Compatibility Closeout
+D5G Compatibility Closeout — NEXT
         ↓
 STYLE-CONTEXT-01 final closeout
 ```
 
-D5F remains deliberately paused until the remaining required style families are characterized and migrated or explicitly bounded as compatibility behavior. `OdtTemplate::setElement()` is accepted as transitional orchestration during this migration and should not be prematurely normalized into a permanent abstraction.
+D5F has established the authoritative pre-materialization semantic/resource
+path and bounded post-materialization compatibility adoption. D5G remains the
+next step for the remaining legacy compatibility policy; `OdtTemplate` must
+not be normalized beyond the accepted lifecycle boundary without new evidence.
 
 ### SR-06 — Semantic Graphic Style Requirements — COMPLETE / FINAL GO
 
@@ -168,12 +171,11 @@ important evidence for later table-layout work.
 
 ### D5F / D5G — lifecycle integration and compatibility closeout
 
-With the required table style families now using the semantic requirement
-model, D5F may simplify lifecycle/orchestration around that coherent model
-instead of building abstractions around today's mixed semantic/legacy
-transition state.
-
-D5G then reviews compatibility paths, protected extension surfaces, repeated render/save behavior, and remaining legacy registration/finalization behavior before `STYLE-CONTEXT-01` is declared fully closed.
+D5F completed the lifecycle/orchestration integration around the coherent
+semantic model without removing compatibility paths. D5G now reviews
+protected extension surfaces, repeated render/save behavior, and remaining
+legacy registration/finalization behavior before `STYLE-CONTEXT-01` is
+declared fully closed.
 
 ## Document defaults — RESEARCH/DESIGN AFTER STYLE-CONTEXT CLOSEOUT
 
