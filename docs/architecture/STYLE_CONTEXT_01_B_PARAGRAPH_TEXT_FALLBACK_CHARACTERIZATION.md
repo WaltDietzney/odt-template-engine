@@ -12,7 +12,7 @@ code, API, registry, writer, or lifecycle behavior was changed.
 
 The characterization suite is
 tests/Integration/StyleContextParagraphTextFallbackCharacterizationTest.php.
-It contains 10 tests and 67 assertions.
+It contains 11 tests and 74 assertions.
 
 ## 2. Exact paragraph fallback path
 

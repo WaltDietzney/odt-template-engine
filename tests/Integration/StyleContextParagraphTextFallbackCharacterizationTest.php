@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace OdtTemplateEngine\Tests\Integration;
 
 use DOMDocument;
+use DOMNode;
+use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\RichText;
@@ -128,6 +130,26 @@ final class StyleContextParagraphTextFallbackCharacterizationTest extends TestCa
         self::assertStringContainsString('style:name="' . $name . '"', $this->zipEntry($outputA, 'styles.xml'));
         self::assertStringNotContainsString('style:name="' . $name . '"', $this->zipEntry($outputB, 'styles.xml'));
         self::assertArrayHasKey($name, StyleMapper::getParagraphStyles());
+    }
+
+    #[RunInSeparateProcess]
+    public function testUnrelatedLegacyTextIsNotSerializedBySecondDocument(): void
+    {
+        $name = 'SC01B_IsolatedText_' . bin2hex(random_bytes(4));
+        StyleMapper::setTextStyle($name, ['color' => '#123456']);
+
+        $documentA = $this->template();
+        $documentA->setElement('my_list', new StyleContextLegacyTextReferenceElement($name));
+        $outputA = $this->temporaryDirectory . '/text-a.odt';
+        $documentA->save($outputA);
+
+        $documentB = $this->template();
+        $outputB = $this->temporaryDirectory . '/text-b.odt';
+        $documentB->save($outputB);
+
+        self::assertStringContainsString('style:name="' . $name . '"', $this->zipEntry($outputA, 'styles.xml'));
+        self::assertStringNotContainsString('style:name="' . $name . '"', $this->zipEntry($outputB, 'styles.xml'));
+        self::assertArrayHasKey($name, StyleMapper::getTextStyles());
     }
 
     #[RunInSeparateProcess]
@@ -321,5 +343,37 @@ final class StyleContextProbeTemplate extends OdtTemplate
     public function auditStyleContext(): StyleContext
     {
         return $this->documentContext()->styleContext();
+    }
+}
+
+final class StyleContextLegacyTextReferenceElement extends OdtElement
+{
+    public function __construct(private string $styleName)
+    {
+    }
+
+    public function getOwnStyleRequirements(): iterable
+    {
+        yield new StyleRequirement(StyleRequirement::KIND_REFERENCE, null, 'text', null, $this->styleName);
+    }
+
+    public function registerStyles(): void
+    {
+    }
+
+    public function getStyleDefinitions(): array
+    {
+        return [];
+    }
+
+    public function toDomNode(DOMDocument $dom): DOMNode
+    {
+        $paragraph = $dom->createElement('text:p');
+        $span = $dom->createElement('text:span');
+        $span->setAttribute('text:style-name', $this->styleName);
+        $span->appendChild($dom->createTextNode('legacy text reference'));
+        $paragraph->appendChild($span);
+
+        return $paragraph;
     }
 }
