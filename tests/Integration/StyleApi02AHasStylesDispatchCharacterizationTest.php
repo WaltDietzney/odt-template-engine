@@ -60,8 +60,8 @@ final class StyleApi02AHasStylesDispatchCharacterizationTest extends TestCase
 
     public function testNoRootNamespaceHasStylesContractExists(): void
     {
-        self::assertFalse(interface_exists('OdtTemplateEngine\\HasStyles'));
-        self::assertFalse(interface_exists('OdtTemplateEngine\\Contracts\\HasStyles'));
+        self::assertFalse(interface_exists('OdtTemplateEngine\\HasStyles', false));
+        self::assertFalse(interface_exists('OdtTemplateEngine\\Contracts\\HasStyles', false));
     }
 
     private function templatePath(string $fileName): string
