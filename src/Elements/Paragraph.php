@@ -411,17 +411,13 @@ public function setParagraphStyleOptions(array $options): self
     // ------------- Style Registration -------------
 
     /**
-     * Registers all text and paragraph styles used in this paragraph.
+     * Retained legacy registration hook.
+     *
+     * Semantic paragraph and text requirements are collected from
+     * getOwnStyleRequirements() and owned by the current document context.
      */
     public function registerStyles(): void
     {
-        foreach ($this->textStyleMap as $style) {
-            StyleMapper::registerTextStyle($style);
-        }
-
-        if ($this->paragraphStyle && !empty($this->paragraphStyleOptions)) {
-            StyleMapper::registerParagraphStyle($this->paragraphStyle, $this->paragraphStyleOptions);
-        }
     }
 
     /**

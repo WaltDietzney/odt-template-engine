@@ -261,15 +261,15 @@ class RichTableCell extends OdtElement implements HasStyles
     }
 
     /**
-     * Registers the current style with the global style map.
+     * Retained legacy registration hook.
+     *
+     * The cell style is mapped and registered when the cell style is changed,
+     * while normal document insertion uses getOwnStyleRequirements().
      *
      * @return void
      */
     public function registerStyles(): void
     {
-        if (!empty($this->style)) {
-            $this->setStyle($this->style);
-        }
     }
 
     /**

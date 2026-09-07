@@ -278,9 +278,6 @@ class ImageElement extends OdtElement implements HasStyles
      */
     public function registerStyles(): void
     {
-        if (!empty($this->rawOptions)) {
-            $this->setStyle($this->rawOptions);
-        }
     }
 
 
