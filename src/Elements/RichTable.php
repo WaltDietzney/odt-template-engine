@@ -536,9 +536,7 @@ class RichTable extends OdtElement implements HasStyles
     {
         foreach ($this->rows as $row) {
             foreach ($row['cells'] as $cell) {
-                if ($cell instanceof HasStyles) {
-                    $cell->registerStyles();
-                }
+                $cell->registerStyles();
             }
         }
     }

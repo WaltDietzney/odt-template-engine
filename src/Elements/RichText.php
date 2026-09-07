@@ -217,9 +217,7 @@ class RichText extends OdtElement implements HasStyles
     {
         $styles = [];
         foreach ($this->elements as $element) {
-            if ($element instanceof HasStyles) {
-                $styles = array_merge($styles, $element->getRequiredStyles());
-            }
+            $styles = array_merge($styles, $element->getRequiredStyles());
         }
         return $styles;
     }
@@ -260,9 +258,7 @@ class RichText extends OdtElement implements HasStyles
     public function registerStyles(): void
     {
         foreach ($this->elements as $element) {
-            if ($element instanceof HasStyles) {
-                $element->registerStyles();
-            }
+            $element->registerStyles();
         }
     }
 
@@ -275,9 +271,7 @@ class RichText extends OdtElement implements HasStyles
     {
         $styles = [];
         foreach ($this->elements as $element) {
-            if ($element instanceof HasStyles) {
-                $styles = array_merge_recursive($styles, $element->getStyleDefinitions());
-            }
+            $styles = array_merge_recursive($styles, $element->getStyleDefinitions());
         }
         return $styles;
     }
