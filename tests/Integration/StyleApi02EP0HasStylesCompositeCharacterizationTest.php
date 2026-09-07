@@ -39,7 +39,7 @@ final class StyleApi02EP0HasStylesCompositeCharacterizationTest extends TestCase
         $table->registerStyles();
 
         self::assertSame(1, $cell->registerStylesCalls);
-        self::assertSame($cell->getStyle(), $cell->getStyleDefinitions()[$cell->getStyleName()]);
+        self::assertSame([], $cell->getStyleDefinitions());
     }
 }
 

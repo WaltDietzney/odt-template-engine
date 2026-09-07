@@ -273,17 +273,16 @@ class RichTableCell extends OdtElement implements HasStyles
     }
 
     /**
-     * Returns the style definitions required by this cell.
+     * Retained legacy style-definition projection.
+     *
+     * Semantic cell requirements are exposed through
+     * getOwnStyleRequirements() instead.
      *
      * @return array<string, array<string, string>>
      */
     public function getStyleDefinitions(): array
     {
-        if (empty($this->style)) {
-            return [];
-        }
-
-        return [$this->styleName => $this->style];
+        return [];
     }
 
     /**

@@ -39,7 +39,7 @@ final class StyleContextGraphicImageAdoptionTest extends TestCase
         $foreign = new OdtTemplate($this->templatePath('template_18_ListStyles.odt'));
         $foreignOutput = $this->save($foreign);
         $foreignStyles = $this->entry($foreignOutput, 'styles.xml');
-        $foreignName = array_key_first($unattached->getStyleDefinitions());
+        $foreignName = array_key_first($unattached->getFrameStyleRequirements());
 
         self::assertIsString($foreignName);
         self::assertStringNotContainsString('style:name="' . $foreignName . '"', $foreignStyles);

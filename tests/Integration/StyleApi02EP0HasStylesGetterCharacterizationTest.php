@@ -14,55 +14,36 @@ use PHPUnit\Framework\TestCase;
 
 final class StyleApi02EP0HasStylesGetterCharacterizationTest extends TestCase
 {
-    public function testParagraphReturnsInlineAndParagraphLegacyDefinitions(): void
+    public function testParagraphLegacyDefinitionProjectionIsRetired(): void
     {
         $paragraph = new Paragraph('P0Paragraph', [
             'margin-top' => '0.2cm',
         ]);
         $paragraph->addText('Styled', ['bold' => true]);
 
-        $definitions = $paragraph->getStyleDefinitions();
-
-        self::assertArrayHasKey('P0Paragraph', $definitions);
-        self::assertSame(
-            ['fo:margin-top' => '0.2cm'],
-            $definitions['P0Paragraph']
-        );
-        self::assertCount(2, $definitions);
-        self::assertSame($definitions, $paragraph->getStyleDefinitions());
+        self::assertSame([], $paragraph->getStyleDefinitions());
+        self::assertNotEmpty(iterator_to_array($paragraph->getOwnStyleRequirements()));
     }
 
-    public function testRichTableCellReturnsItsMappedCellDefinition(): void
+    public function testRichTableCellLegacyDefinitionProjectionIsRetired(): void
     {
         $cell = new RichTableCell('Cell', [
             'background' => '#abcdef',
             'padding' => '0.1cm',
         ]);
 
-        $definitions = $cell->getStyleDefinitions();
-
-        self::assertArrayHasKey($cell->getStyleName(), $definitions);
-        self::assertSame($cell->getStyle(), $definitions[$cell->getStyleName()]);
-        self::assertNotEmpty($definitions[$cell->getStyleName()]);
-        self::assertSame($definitions, $cell->getStyleDefinitions());
+        self::assertSame([], $cell->getStyleDefinitions());
+        self::assertNotEmpty(iterator_to_array($cell->getOwnStyleRequirements()));
     }
 
-    public function testDrawTextBoxReturnsItsFrameDefinition(): void
+    public function testDrawTextBoxLegacyDefinitionProjectionIsRetired(): void
     {
         $box = new DrawTextBox('P0Box', [
             'background-color' => '#abcdef',
         ]);
 
-        $definitions = $box->getStyleDefinitions();
-
-        self::assertCount(1, $definitions);
-        $name = array_key_first($definitions);
-        self::assertIsString($name);
-        self::assertSame(
-            $box->getFrameStyleRequirements()[$name],
-            $definitions[$name]
-        );
-        self::assertSame($definitions, $box->getStyleDefinitions());
+        self::assertSame([], $box->getStyleDefinitions());
+        self::assertNotEmpty($box->getFrameStyleRequirements());
     }
 
     public function testImageElementReturnsAnEmptyDefinitionEvenWhenStyled(): void

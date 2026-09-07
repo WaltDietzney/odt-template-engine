@@ -507,16 +507,16 @@ public function setParagraphStyleOptions(array $options): self
     }
 
     /**
-     * Returns all styles (inline and paragraph) used in this paragraph.
+     * Retained legacy style-definition projection.
+     *
+     * Semantic style requirements are exposed through
+     * getOwnStyleRequirements() instead.
      *
      * @return array<string, array>
      */
     public function getStyleDefinitions(): array
     {
-        return array_merge(
-            $this->getRequiredStyles(),
-            $this->getParagraphStyleDefinitions()
-        );
+        return [];
     }
 
     /**

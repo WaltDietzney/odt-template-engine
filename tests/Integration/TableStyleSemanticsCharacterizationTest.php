@@ -390,13 +390,8 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
             'text-align' => 'right',
         ]);
         $styleName = $cell->getStyleName();
-        $definitions = $cell->getStyleDefinitions();
-
-        self::assertArrayHasKey($styleName, $definitions);
-        self::assertSame('#abcdef', $definitions[$styleName]['fo:background-color'] ?? null);
-        self::assertSame('0.3cm', $definitions[$styleName]['fo:padding'] ?? null);
-        self::assertArrayNotHasKey('fo:font-weight', $definitions[$styleName]);
-        self::assertArrayNotHasKey('fo:text-align', $definitions[$styleName]);
+        self::assertSame([], $cell->getStyleDefinitions());
+        self::assertNotEmpty(iterator_to_array($cell->getOwnStyleRequirements()));
 
         $dom = $this->contentDom();
         $styleNode = $cell->toStyleDomNode($dom);
@@ -417,7 +412,7 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
         $styleName = $cell->getStyleName();
         $table = (new RichTable())->addRow([$cell]);
 
-        self::assertArrayHasKey($styleName, $cell->getStyleDefinitions());
+        self::assertSame([], $cell->getStyleDefinitions());
         self::assertSame([], $table->getStyleDefinitions());
         self::assertSame([$cell], iterator_to_array($table->ownedElements(), false));
     }
