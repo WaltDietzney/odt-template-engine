@@ -28,6 +28,7 @@ use OdtTemplateEngine\Document\TableTarget;
 use OdtTemplateEngine\Document\TemplateTargetResolver;
 use OdtTemplateEngine\Document\TypedTargetResolver;
 use OdtTemplateEngine\Elements\OdtElement;
+use OdtTemplateEngine\Style\DocumentStyles;
 use OdtTemplateEngine\Template\TemplateProcessor;
 use OdtTemplateEngine\Template\TemplateStructureInspection;
 use OdtTemplateEngine\Template\TemplateStructureInspector;
@@ -79,6 +80,8 @@ class OdtTemplate
 
     /** @var array<string, true> */
     private array $legacyFrameStylesMaterialized = [];
+
+    private ?DocumentStyles $documentStyles = null;
 
     /** @var list<string> */
     private array $log = [];
@@ -142,6 +145,19 @@ class OdtTemplate
     protected function documentContext(): OdtDocumentContext
     {
         return $this->package->context();
+    }
+
+    /**
+     * Access the document-local style authoring facade.
+     *
+     * The facade resolves the current document context for every operation so
+     * a retained instance remains valid across load() boundaries.
+     */
+    public function styles(): DocumentStyles
+    {
+        return $this->documentStyles ??= new DocumentStyles(
+            fn (): OdtDocumentContext => $this->documentContext()
+        );
     }
 
     /**
