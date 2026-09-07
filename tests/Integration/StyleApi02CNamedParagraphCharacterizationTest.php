@@ -117,11 +117,13 @@ final class StyleApi02CNamedParagraphCharacterizationTest extends TestCase
             $template->registerStyleRequirement(
                 $this->paragraphDefinition('StyleApi02CLifecycleProbe', '0.2cm')
             );
-            self::assertCount(1, $template->semanticDefinitions());
+
+            $definitions = array_values($template->semanticDefinitions());
+            self::assertCount(1, $definitions);
+            self::assertSame('StyleApi02CLifecycleProbe', $definitions[0]->name());
             self::assertSame(
                 '0.2cm',
-                $template->semanticDefinitions()['paragraph|common|styles.xml|StyleApi02CLifecycleProbe']
-                    ->propertyGroups()['style:paragraph-properties']['fo:margin-top']
+                $definitions[0]->propertyGroups()['style:paragraph-properties']['fo:margin-top']
             );
         } finally {
             $template->cleanup();
