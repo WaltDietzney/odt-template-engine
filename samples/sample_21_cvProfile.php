@@ -7,7 +7,6 @@ use OdtTemplateEngine\Elements\ListElement;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\RichText;
 use OdtTemplateEngine\PageLayoutOdtTemplate;
-use OdtTemplateEngine\Utils\StyleMapper;
 
 // Load the LibreOffice-designed CV template. The template defines the
 // two-column structure, while PHP supplies the dynamic document content.
@@ -62,7 +61,7 @@ $paragraphStyles = [
         'line-height' => '110%',
     ],
     'CVEntryDate' => [
-        'margin-top' => '0.14cm',
+        'margin-top' => '0.25cm',
         'margin-bottom' => '0.01cm',
         'line-height' => '100%',
     ],
@@ -85,8 +84,12 @@ $paragraphStyles = [
     ],
 ];
 
+// Define reusable paragraph styles for this document. Generated paragraphs
+// reference these semantic names instead of creating hash-based paragraph
+// style names.
+
 foreach ($paragraphStyles as $styleName => $styleOptions) {
-    StyleMapper::registerParagraphStyle($styleName, $styleOptions);
+    $template->styles()->defineParagraph($styleName, $styleOptions);
 }
 
 // In a real application, this data would typically come from a database,
