@@ -185,9 +185,9 @@ $cv = [
 /**
  * Create a styled paragraph using a reusable named paragraph style.
  *
- * Paragraph layout is defined once through StyleMapper, while text styling
- * remains local to the text run. This keeps the generated ODT style model
- * predictable and easier to inspect in LibreOffice.
+ * Paragraph layout is defined once through the document-local style facade,
+ * while text styling remains local to the text run. This keeps the generated
+ * ODT style model predictable and easier to inspect in LibreOffice.
  */
 function cvParagraph(string $text, array $textStyle = [], ?string $paragraphStyle = null): Paragraph
 {
