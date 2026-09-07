@@ -60,21 +60,21 @@ final class DocumentStylesTest extends TestCase
 
     public function testAuthoredParagraphStyleIsNotOverwritten(): void
     {
-        $context = $this->context('''
-            <office:document-styles
-                xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
-                xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
-                xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0">
-                <office:font-face-decls/>
-                <office:styles>
-                    <style:style style:name="AuthoredStyle" style:family="paragraph" style:parent-style-name="Standard">
-                        <style:paragraph-properties fo:margin-top="9cm"/>
-                    </style:style>
-                </office:styles>
-                <office:automatic-styles/>
-                <office:master-styles/>
-            </office:document-styles>
-        ''');
+        $context = $this->context(<<<'XML'
+<office:document-styles
+    xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+    xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
+    xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0">
+    <office:font-face-decls/>
+    <office:styles>
+        <style:style style:name="AuthoredStyle" style:family="paragraph" style:parent-style-name="Standard">
+            <style:paragraph-properties fo:margin-top="9cm"/>
+        </style:style>
+    </office:styles>
+    <office:automatic-styles/>
+    <office:master-styles/>
+</office:document-styles>
+XML);
         $styles = new DocumentStyles(static fn (): OdtDocumentContext => $context);
 
         $styles->defineParagraph('AuthoredStyle', ['margin-top' => '0.1cm']);
@@ -137,40 +137,40 @@ final class DocumentStylesTest extends TestCase
 
     private function contentDom(): DOMDocument
     {
-        return $this->dom('''
-            <office:document-content
-                xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
-                xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
-                xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">
-                <office:font-face-decls/>
-                <office:automatic-styles/>
-                <office:body><office:text/></office:body>
-            </office:document-content>
-        ''');
+        return $this->dom(<<<'XML'
+<office:document-content
+    xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+    xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
+    xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">
+    <office:font-face-decls/>
+    <office:automatic-styles/>
+    <office:body><office:text/></office:body>
+</office:document-content>
+XML);
     }
 
     private function stylesDom(?string $xml = null): DOMDocument
     {
-        return $this->dom($xml ?? '''
-            <office:document-styles
-                xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
-                xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
-                xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0">
-                <office:font-face-decls/>
-                <office:styles/>
-                <office:automatic-styles/>
-                <office:master-styles/>
-            </office:document-styles>
-        ''');
+        return $this->dom($xml ?? <<<'XML'
+<office:document-styles
+    xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+    xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
+    xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0">
+    <office:font-face-decls/>
+    <office:styles/>
+    <office:automatic-styles/>
+    <office:master-styles/>
+</office:document-styles>
+XML);
     }
 
     private function metaDom(): DOMDocument
     {
-        return $this->dom('''
-            <office:document-meta xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0">
-                <office:meta/>
-            </office:document-meta>
-        ''');
+        return $this->dom(<<<'XML'
+<office:document-meta xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0">
+    <office:meta/>
+</office:document-meta>
+XML);
     }
 
     private function dom(string $xml): DOMDocument
