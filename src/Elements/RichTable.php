@@ -5,7 +5,6 @@ namespace OdtTemplateEngine\Elements;
 use OdtTemplateEngine\Utils\StyleMapper;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Elements\RichTableCell;
-use OdtTemplateEngine\Contracts\HasStyles;
 use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Utils\StyleWriter;
 use DOMDocument;
@@ -18,7 +17,7 @@ use DOMElement;
  * Supports cell and row styling, column width definitions, header row grouping,
  * style presets, and ratio-based virtual column spans.
  */
-class RichTable extends OdtElement implements HasStyles
+class RichTable extends OdtElement
 {
     /**
      * Global counter to auto-generate unique table names.
@@ -523,15 +522,6 @@ class RichTable extends OdtElement implements HasStyles
     public function getOwnRequiredParagraphStyles(): array
     {
         return [];
-    }
-
-    public function registerStyles(): void
-    {
-        foreach ($this->rows as $row) {
-            foreach ($row['cells'] as $cell) {
-                $cell->registerStyles();
-            }
-        }
     }
 
     public function buildTableFromArray(array $tableData, string $styleName = 'default'): self

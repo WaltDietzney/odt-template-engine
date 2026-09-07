@@ -390,7 +390,7 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
             'text-align' => 'right',
         ]);
         $styleName = $cell->getStyleName();
-        self::assertSame([], $cell->getStyleDefinitions());
+        self::assertFalse(method_exists($cell, 'getStyleDefinitions'));
         self::assertNotEmpty(iterator_to_array($cell->getOwnStyleRequirements()));
 
         $dom = $this->contentDom();
@@ -412,8 +412,8 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
         $styleName = $cell->getStyleName();
         $table = (new RichTable())->addRow([$cell]);
 
-        self::assertSame([], $cell->getStyleDefinitions());
-        self::assertSame([], $table->getStyleDefinitions());
+        self::assertFalse(method_exists($cell, 'getStyleDefinitions'));
+        self::assertFalse(method_exists($table, 'getStyleDefinitions'));
         self::assertSame([$cell], iterator_to_array($table->ownedElements(), false));
     }
 

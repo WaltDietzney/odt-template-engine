@@ -6,7 +6,6 @@ namespace OdtTemplateEngine\Tests\Integration;
 
 use DOMDocument;
 use DOMNode;
-use OdtTemplateEngine\Contracts\HasStyles;
 use OdtTemplateEngine\Elements\ImageElement;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\OdtTemplate;
@@ -146,7 +145,7 @@ final class StyleContextImageCompatibilityAdoptionTest extends TestCase
     }
 }
 
-final class LegacyImageReferenceElement extends OdtElement implements HasStyles
+final class LegacyImageReferenceElement extends OdtElement
 {
     public function __construct(private readonly string $styleName)
     {
@@ -160,12 +159,4 @@ final class LegacyImageReferenceElement extends OdtElement implements HasStyles
         return $frame;
     }
 
-    public function registerStyles(): void
-    {
-    }
-
-    public function getStyleDefinitions(): array
-    {
-        return [];
-    }
 }

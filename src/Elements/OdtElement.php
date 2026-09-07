@@ -4,13 +4,12 @@ namespace OdtTemplateEngine\Elements;
 
 use DOMDocument;
 use DOMNode;
-use OdtTemplateEngine\Contracts\HasStyles;
 use OdtTemplateEngine\Document\FillImageRequirement;
 use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Elements\DOMElement;
 
 
-abstract class OdtElement implements HasStyles
+abstract class OdtElement
 {
     /**
      * @var OdtElement[] $embeddedElements List of embedded elements within this element.
@@ -234,21 +233,4 @@ abstract class OdtElement implements HasStyles
         return [];
     }
 
-    /**
-     * Returns the style definitions for this element and its embedded elements.
-     *
-     * @return array An array of style definitions.
-     */
-    public function getStyleDefinitions(): array
-    {
-        $styles = [];
-
-        foreach ($this->getEmbeddedElements() as $element) {
-            if (method_exists($element, 'getStyleDefinitions')) {
-                $styles = array_merge($styles, $element->getStyleDefinitions());
-            }
-        }
-
-        return $styles;
-    }
 }

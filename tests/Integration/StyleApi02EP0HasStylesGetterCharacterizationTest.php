@@ -21,7 +21,7 @@ final class StyleApi02EP0HasStylesGetterCharacterizationTest extends TestCase
         ]);
         $paragraph->addText('Styled', ['bold' => true]);
 
-        self::assertSame([], $paragraph->getStyleDefinitions());
+        self::assertFalse(method_exists($paragraph, 'getStyleDefinitions'));
         self::assertNotEmpty(iterator_to_array($paragraph->getOwnStyleRequirements()));
     }
 
@@ -32,7 +32,7 @@ final class StyleApi02EP0HasStylesGetterCharacterizationTest extends TestCase
             'padding' => '0.1cm',
         ]);
 
-        self::assertSame([], $cell->getStyleDefinitions());
+        self::assertFalse(method_exists($cell, 'getStyleDefinitions'));
         self::assertNotEmpty(iterator_to_array($cell->getOwnStyleRequirements()));
     }
 
@@ -42,7 +42,7 @@ final class StyleApi02EP0HasStylesGetterCharacterizationTest extends TestCase
             'background-color' => '#abcdef',
         ]);
 
-        self::assertSame([], $box->getStyleDefinitions());
+        self::assertFalse(method_exists($box, 'getStyleDefinitions'));
         self::assertNotEmpty($box->getFrameStyleRequirements());
     }
 
@@ -52,7 +52,7 @@ final class StyleApi02EP0HasStylesGetterCharacterizationTest extends TestCase
             'width' => '3cm',
         ]);
 
-        self::assertSame([], $image->getStyleDefinitions());
+        self::assertFalse(method_exists($image, 'getStyleDefinitions'));
     }
 
     public function testRichTableReturnsAnEmptyInheritedDefinition(): void
@@ -61,13 +61,13 @@ final class StyleApi02EP0HasStylesGetterCharacterizationTest extends TestCase
             new RichTableCell('Cell', ['background' => '#abcdef']),
         ]);
 
-        self::assertSame([], $table->getStyleDefinitions());
+        self::assertFalse(method_exists($table, 'getStyleDefinitions'));
     }
 
     public function testListElementReturnsAnEmptyInheritedDefinition(): void
     {
         $list = (new ListElement())->addItem(new Paragraph('P0ListItem'));
 
-        self::assertSame([], $list->getStyleDefinitions());
+        self::assertFalse(method_exists($list, 'getStyleDefinitions'));
     }
 }

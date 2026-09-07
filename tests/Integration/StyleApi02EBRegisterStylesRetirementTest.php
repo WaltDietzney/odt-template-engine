@@ -8,63 +8,44 @@ use OdtTemplateEngine\Elements\DrawTextBox;
 use OdtTemplateEngine\Elements\ImageElement;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\RichTableCell;
-use OdtTemplateEngine\Utils\StyleMapper;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 
 final class StyleApi02EBRegisterStylesRetirementTest extends TestCase
 {
     #[RunInSeparateProcess]
-    public function testParagraphRegisterStylesNoLongerMutatesLegacyTextOrParagraphRegistries(): void
+    public function testParagraphNoLongerExposesLegacyRegistration(): void
     {
         $paragraph = (new Paragraph('02EB_Paragraph', [
             'margin-left' => '1cm',
         ]))->addText('Text', ['bold' => true]);
-        $paragraphStylesBefore = StyleMapper::getParagraphStyles();
-        $textStylesBefore = StyleMapper::getTextStyles();
-
-        $paragraph->registerStyles();
-
-        self::assertSame($paragraphStylesBefore, StyleMapper::getParagraphStyles());
-        self::assertSame($textStylesBefore, StyleMapper::getTextStyles());
+        self::assertFalse(method_exists($paragraph, 'registerStyles'));
     }
 
     #[RunInSeparateProcess]
-    public function testRichTableCellRegisterStylesDoesNotRepeatLegacyCellRegistration(): void
+    public function testRichTableCellNoLongerExposesLegacyRegistration(): void
     {
         $cell = new RichTableCell('Cell', [
             'background' => '#abcdef',
         ]);
-        $registeredBefore = StyleMapper::getRegisteredTableCellStyles();
-
-        $cell->registerStyles();
-
-        self::assertSame($registeredBefore, StyleMapper::getRegisteredTableCellStyles());
+        self::assertFalse(method_exists($cell, 'registerStyles'));
     }
 
     #[RunInSeparateProcess]
-    public function testDrawTextBoxRegisterStylesDoesNotMutateLegacyFrameRegistry(): void
+    public function testDrawTextBoxNoLongerExposesLegacyRegistration(): void
     {
         $box = new DrawTextBox('02EB_Box', [
             'background-color' => '#abcdef',
         ]);
-        $frameStylesBefore = StyleMapper::$frameStyles;
-
-        $box->registerStyles();
-
-        self::assertSame($frameStylesBefore, StyleMapper::$frameStyles);
+        self::assertFalse(method_exists($box, 'registerStyles'));
     }
 
     #[RunInSeparateProcess]
-    public function testImageRegisterStylesDoesNotReapplyMappedOptions(): void
+    public function testImageNoLongerExposesLegacyRegistration(): void
     {
         $image = new ImageElement(__DIR__ . '/../../assets/WaltDietzney.png', [
             'width' => '3cm',
         ]);
-        $optionsBefore = $image->getImageOptions();
-
-        $image->registerStyles();
-
-        self::assertSame($optionsBefore, $image->getImageOptions());
+        self::assertFalse(method_exists($image, 'registerStyles'));
     }
 }

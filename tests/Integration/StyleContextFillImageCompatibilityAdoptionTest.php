@@ -6,7 +6,6 @@ namespace OdtTemplateEngine\Tests\Integration;
 
 use DOMDocument;
 use DOMNode;
-use OdtTemplateEngine\Contracts\HasStyles;
 use OdtTemplateEngine\Elements\CircularImageElement;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\OdtTemplate;
@@ -169,7 +168,7 @@ final class StyleContextFillImageCompatibilityAdoptionTest extends TestCase
     }
 }
 
-final class LegacyFillReferenceElement extends OdtElement implements HasStyles
+final class LegacyFillReferenceElement extends OdtElement
 {
     public function __construct(private readonly string $fillName)
     {
@@ -182,12 +181,4 @@ final class LegacyFillReferenceElement extends OdtElement implements HasStyles
         return $shape;
     }
 
-    public function registerStyles(): void
-    {
-    }
-
-    public function getStyleDefinitions(): array
-    {
-        return [];
-    }
 }

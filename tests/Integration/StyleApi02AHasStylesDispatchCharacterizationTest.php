@@ -6,7 +6,6 @@ namespace OdtTemplateEngine\Tests\Integration;
 
 use DOMDocument;
 use DOMNode;
-use OdtTemplateEngine\Contracts\HasStyles;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\OdtTemplate;
@@ -34,16 +33,11 @@ final class StyleApi02AHasStylesDispatchCharacterizationTest extends TestCase
         $paragraph = new HasStylesParagraphDispatchProbe();
         $paragraph->addText('HasStyles paragraph probe', ['bold' => true]);
 
-        self::assertInstanceOf(HasStyles::class, $paragraph);
+        self::assertFalse(method_exists($paragraph, 'registerStyles'));
+        self::assertFalse(method_exists($paragraph, 'getStyleDefinitions'));
 
         $template = new OdtTemplate($this->templatePath('template_18_ListStyles.odt'));
         $template->setElement('my_list', $paragraph);
-
-        self::assertSame(
-            0,
-            $paragraph->styleDefinitionsCalls,
-            'Current setElement() does not dispatch the Contracts\\HasStyles compatibility branch.'
-        );
 
         $outputFile = $this->newOutputFile('paragraph');
         $template->save($outputFile);
@@ -56,22 +50,18 @@ final class StyleApi02AHasStylesDispatchCharacterizationTest extends TestCase
     {
         $element = new ExternalHasStylesDispatchProbe();
 
-        self::assertInstanceOf(HasStyles::class, $element);
+        self::assertFalse(method_exists($element, 'registerStyles'));
+        self::assertFalse(method_exists($element, 'getStyleDefinitions'));
 
         $template = new OdtTemplate($this->templatePath('template_18_ListStyles.odt'));
         $template->setElement('my_list', $element);
 
-        self::assertSame(
-            0,
-            $element->styleDefinitionsCalls,
-            'An external OdtElement implementing the public Contracts\\HasStyles contract is not dispatched either.'
-        );
     }
 
     public function testNoRootNamespaceHasStylesContractExists(): void
     {
         self::assertFalse(interface_exists('OdtTemplateEngine\\HasStyles'));
-        self::assertTrue(interface_exists(HasStyles::class));
+        self::assertFalse(interface_exists('OdtTemplateEngine\\Contracts\\HasStyles'));
     }
 
     private function templatePath(string $fileName): string
@@ -108,31 +98,10 @@ final class StyleApi02AHasStylesDispatchCharacterizationTest extends TestCase
 
 final class HasStylesParagraphDispatchProbe extends Paragraph
 {
-    public int $styleDefinitionsCalls = 0;
-
-    public function getStyleDefinitions(): array
-    {
-        ++$this->styleDefinitionsCalls;
-
-        return parent::getStyleDefinitions();
-    }
 }
 
 final class ExternalHasStylesDispatchProbe extends OdtElement
 {
-    public int $styleDefinitionsCalls = 0;
-
-    public function registerStyles(): void
-    {
-    }
-
-    public function getStyleDefinitions(): array
-    {
-        ++$this->styleDefinitionsCalls;
-
-        return [];
-    }
-
     public function toDomNode(DOMDocument $dom): DOMNode
     {
         $paragraph = $dom->createElement('text:p');

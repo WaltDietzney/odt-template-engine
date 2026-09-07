@@ -5,14 +5,13 @@ namespace OdtTemplateEngine\Elements;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
-use OdtTemplateEngine\Contracts\HasStyles;
 use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Utils\StyleMapper;
 
 /**
  * Represents a styled text box (draw:frame with draw:text-box) in an ODT document.
  */
-class DrawTextBox extends OdtElement implements HasStyles
+class DrawTextBox extends OdtElement
 {
     protected string $name;
     protected array $frameOptions = [];
@@ -74,19 +73,6 @@ class DrawTextBox extends OdtElement implements HasStyles
     public function getOwnFrameStyleRequirements(): array
     {
         return $this->getFrameStyleRequirements();
-    }
-
-    /**
-     * Retained legacy style-definition projection.
-     *
-     * Semantic frame requirements are exposed through
-     * getOwnStyleRequirements() instead.
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    public function getStyleDefinitions(): array
-    {
-        return [];
     }
 
     public function toDomNode(DOMDocument $dom): DOMNode
@@ -217,10 +203,6 @@ class DrawTextBox extends OdtElement implements HasStyles
         $this->frameOptions['style:flow-with-text'] = $enable ? 'true' : 'false';
         $this->registerFrameStyle();
         return $this;
-    }
-
-    public function registerStyles(): void
-    {
     }
 
     /** @return array<string, mixed> */

@@ -140,7 +140,7 @@ final class ApiContractP1Test extends TestCase
         });
     }
 
-    public function testDrawTextBoxLegacyRegistrationNoLongerMutatesFrameRegistry(): void
+    public function testDrawTextBoxSemanticStyleNodeRemainsAvailableAfterLegacyRemoval(): void
     {
         $box = new DrawTextBox('ContractBox', [
             'width' => '4cm',
@@ -149,15 +149,13 @@ final class ApiContractP1Test extends TestCase
             'border' => '0.03cm solid #444444',
         ]);
         $box->addElement((new Paragraph())->addText('Frame content'));
-        $frameStylesBefore = StyleMapper::$frameStyles;
-        $box->registerStyles();
+        self::assertFalse(method_exists($box, 'registerStyles'));
 
         $dom = new DOMDocument('1.0', 'UTF-8');
         $styleNode = $box->toStyleDomNode($dom);
 
         self::assertNotNull($styleNode);
         self::assertSame('graphic', $styleNode->getAttribute('style:family'));
-        self::assertSame($frameStylesBefore, StyleMapper::$frameStyles);
     }
 
     private function templatePath(string $fileName): string
