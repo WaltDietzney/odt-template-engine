@@ -21,10 +21,10 @@ This document defines the target public style model that future STYLE-API-02
 implementation slices must converge toward.
 
 The contract is intentionally more ambitious than simple compatibility
-preservation. The library currently has almost no external adoption, while the
-style subsystem contains clear historical overlap. This is therefore the right
-stage to remove or internalize accidental public mechanisms where their useful
-behavior can be preserved through a cleaner semantic API.
+preservation. At the time of this decision, the library has almost no external
+adoption, while the style subsystem contains clear historical overlap. This is
+therefore the right stage to remove or internalize accidental public mechanisms
+where their useful behavior can be preserved through a cleaner semantic API.
 
 The governing principle is:
 
@@ -427,6 +427,11 @@ A characterization test may lead to three different outcomes:
    API;
 3. **remove** — behavior or mechanism is accidental, redundant, or no longer
    part of the desired product contract.
+
+Public or protected compatibility behavior may be removed when the accepted
+target architecture no longer requires it, but such removal must be an explicit
+migration decision. Breaking changes must not be hidden inside refactoring and
+must be documented and release-signalled where applicable.
 
 If removal intentionally changes behavior, the change must be explicit in the
 implementation slice and documentation rather than being hidden inside a
