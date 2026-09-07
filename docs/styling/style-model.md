@@ -98,7 +98,7 @@ For local styling, the engine can generate style names automatically from style 
 For complex documents, semantic named paragraph styles can make the generated ODT easier to understand and maintain:
 
 ```php
-StyleMapper::registerParagraphStyle('CVEntryTitle', [
+$template->styles()->defineParagraph('CVEntryTitle', [
     'margin-top' => '0.1cm',
     'margin-bottom' => '0.03cm',
 ]);
@@ -118,26 +118,37 @@ You normally do not need to manage those XML locations manually. The distinction
 
 ## StyleMapper and StyleWriter
 
-`StyleMapper` translates developer-facing style options into ODF attributes and maintains several style registries.
+`StyleMapper` provides option-to-ODF mapping and still exposes historical
+compatibility registries. It is not the document-local owner of modern named
+paragraph definitions.
 
 `StyleWriter` serializes registered and required styles into the ODT XML package.
 
-Normal application code should generally style elements through `Paragraph`, `RichTableCell`, `ImageElement`, and related public elements. Direct `StyleMapper` registration is useful for advanced reusable semantic styles.
+Normal application code should generally style elements through `Paragraph`, `RichTableCell`, `ImageElement`, and related public elements. Historical direct `StyleMapper` registration remains a compatibility path, not the recommended way to author document styles.
 
 `StyleWriter` is an implementation utility and is not the recommended application-facing styling API.
 
 ## Advanced registration and process scope
 
-The current `StyleMapper` registries are static. Explicit registrations such as:
+The canonical API for a generated reusable named paragraph definition is the
+document-style facade:
 
 ```php
-StyleMapper::registerParagraphStyle(...);
-StyleMapper::registerTextStyle(...);
+$template->styles()->defineParagraph('CVEntryTitle', [
+    'margin-top' => '0.1cm',
+    'margin-bottom' => '0.03cm',
+]);
 ```
 
-can therefore persist across multiple documents generated within the same PHP process.
+The resulting definition belongs to the current logical document. A later
+`new Paragraph('CVEntryTitle')` uses that named style as a reference; it does
+not define or register it.
 
-This does not make semantic registration unusable, but it means the current API should not be treated as a document-scoped style configuration object. A future `StyleContext`-style architecture is tracked in `FUTURE_DEVELOPMENT.md`.
+`StyleContext` is the document-local semantic style authority behind the
+facade. The historical static `StyleMapper` registration methods remain only
+for compatibility and legacy paths; they should not be used as the normal
+application authoring API. Custom structured elements should describe semantic
+style requirements rather than access the compatibility registries directly.
 
 For ordinary element-generated styles, use the element APIs and allow the engine to collect the required styles from the generated content.
 

@@ -104,12 +104,11 @@ Use tabs for compact aligned text. For genuinely tabular data, prefer a native t
 
 ## Semantic reusable styles
 
-For repeated roles in a complex document, register a meaningful paragraph style name:
+For repeated roles in a complex document, define a meaningful named paragraph
+style on the current document:
 
 ```php
-use OdtTemplateEngine\Utils\StyleMapper;
-
-StyleMapper::registerParagraphStyle('InvoiceSectionHeading', [
+$template->styles()->defineParagraph('InvoiceSectionHeading', [
     'margin-top' => '0.4cm',
     'margin-bottom' => '0.1cm',
     'border-bottom' => '1pt solid #333333',
@@ -119,9 +118,12 @@ $heading = new Paragraph('InvoiceSectionHeading');
 $heading->addText('Items', ['bold' => true]);
 ```
 
-The benefit is not only code reuse. The generated ODT also contains a style name that describes its purpose.
+The benefit is not only code reuse. The generated ODT also contains a style
+name that describes its purpose. The later `new Paragraph('InvoiceSectionHeading')`
+call is a named style reference; it does not define or register the style.
 
-For one-off paragraph geometry, constructing the paragraph directly with style options is simpler and avoids global explicit registration.
+For one-off paragraph geometry, constructing the paragraph directly with
+friendly style options is simpler and avoids defining a reusable named style.
 
 ## Named text styles
 

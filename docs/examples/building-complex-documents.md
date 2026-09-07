@@ -106,7 +106,7 @@ This is much easier to maintain than one giant renderer method containing every 
 
 ## 4. Use semantic style names for repeated roles
 
-Sample 21 registers names such as:
+Sample 21 defines reusable names such as:
 
 ```text
 CVSidebarName
@@ -123,7 +123,7 @@ That is preferable to thinking only in terms of visual attributes such as "13pt 
 The semantic name describes why the style exists.
 
 ```php
-StyleMapper::registerParagraphStyle('CVMainHeading', [
+$template->styles()->defineParagraph('CVMainHeading', [
     'margin-top' => '0.45cm',
     'margin-bottom' => '0.10cm',
     'padding-bottom' => '0.03cm',
@@ -132,7 +132,9 @@ StyleMapper::registerParagraphStyle('CVMainHeading', [
 ]);
 ```
 
-Remember the current advanced-API caveat: explicit `StyleMapper` registries are static process state. The project roadmap tracks a future document-scoped style context.
+The definition belongs to the current logical document. Content can reference
+the named style later with `new Paragraph('CVMainHeading')`; that constructor
+call is a style reference and does not define the style.
 
 ## 5. Compose RichText from native elements
 
