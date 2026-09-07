@@ -93,7 +93,7 @@ final class StyleContextGraphicImageLegacyCompatibilityTest extends TestCase
             'background-color' => '#d4a100',
         ]);
         $template = $this->legacyTemplate($box);
-        $styleName = array_key_first($box->getStyleDefinitions());
+        $styleName = array_key_first($box->getFrameStyleRequirements());
         self::assertIsString($styleName);
 
         $output = $this->save($template);

@@ -44,7 +44,7 @@ final class StyleContextGraphicImageCharacterizationTest extends TestCase
     public function testUnattachedDrawTextBoxDoesNotLeakIntoNormalDocumentFinalization(): void
     {
         $box = new DrawTextBox('D1ForeignBox', ['background-color' => '#d101fd']);
-        $style = array_key_first($box->getStyleDefinitions());
+        $style = array_key_first($box->getFrameStyleRequirements());
         self::assertIsString($style);
 
         $output = $this->saveTemplate(new OdtTemplate($this->templatePath('template_18_ListStyles.odt')));
@@ -112,8 +112,7 @@ final class StyleContextGraphicImageCharacterizationTest extends TestCase
             self::assertSame(1, substr_count($styles, 'style:name="' . $image->getImageOptions()['style-name'] . '"'));
         }
 
-        // Construction itself registers the frame style even when the box is not inserted.
-        $frameStyle = array_key_first($box->getStyleDefinitions());
+        $frameStyle = array_key_first($box->getFrameStyleRequirements());
         self::assertIsString($frameStyle);
         self::assertNotSame('', $frameStyle);
     }
@@ -194,7 +193,7 @@ final class StyleContextGraphicImageCharacterizationTest extends TestCase
     public function testDrawTextBoxFrameStyleIsMaterializedOnceByItsStyleNodePath(): void
     {
         $box = new DrawTextBox('D1FramePath', ['background-color' => '#d1aa00']);
-        $style = array_key_first($box->getStyleDefinitions());
+        $style = array_key_first($box->getFrameStyleRequirements());
         self::assertIsString($style);
         $output = $this->saveTemplateWithElement('test1', $box, 'frame-path');
         $styles = $this->zipEntry($output, 'styles.xml');

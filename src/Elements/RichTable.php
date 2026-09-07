@@ -497,13 +497,6 @@ class RichTable extends OdtElement implements HasStyles
 
         foreach ($this->rows as $row) {
             foreach ($row['cells'] as $cell) {
-                if (method_exists($cell, 'getStyleDefinitions')) {
-                    $cellStyles = $cell->getStyleDefinitions();
-                    if ($cellStyles) {
-                        $styles += $cellStyles;
-                    }
-                }
-
                 if (property_exists($cell, 'content')) {
                     $reflection = new \ReflectionClass($cell);
                     $contentProp = $reflection->getProperty('content');

@@ -76,9 +76,17 @@ class DrawTextBox extends OdtElement implements HasStyles
         return $this->getFrameStyleRequirements();
     }
 
+    /**
+     * Retained legacy style-definition projection.
+     *
+     * Semantic frame requirements are exposed through
+     * getOwnStyleRequirements() instead.
+     *
+     * @return array<string, array<string, mixed>>
+     */
     public function getStyleDefinitions(): array
     {
-        return [$this->frameStyleName => StyleMapper::mapFrameStyleOptions($this->frameOptions)];
+        return [];
     }
 
     public function toDomNode(DOMDocument $dom): DOMNode
