@@ -1,7 +1,7 @@
 # STYLE-API-02C — Canonical Document Style Facade Change Contract
 
-Status: **ACCEPTED IMPLEMENTATION SLICE — SEMANTICS BEFORE IMPLEMENTATION**  
-Baseline: `develop` after merged STYLE-API-02B (PR #61)  
+Status: **ACCEPTED IMPLEMENTATION SLICE — SEMANTICS BEFORE IMPLEMENTATION**
+Baseline: `develop` after merged STYLE-API-02B (PR #61)
 Target branch: `architecture/style-api-02c-document-style-facade`
 
 ## 1. Purpose
