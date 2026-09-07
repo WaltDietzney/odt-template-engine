@@ -4,8 +4,6 @@ require_once '../vendor/autoload.php'; // ggf. anpassen
 
 use OdtTemplateEngine\Elements\ImageElement;
 use OdtTemplateEngine\Elements\Paragraph;
-use OdtTemplateEngine\Elements\Image; // falls du Images testen willst
-use DOMDocument;
 use OdtTemplateEngine\OdtTemplate;
 
 $temp = new OdtTemplate('templates/test_paragraph_methods.odt');
@@ -82,12 +80,3 @@ prettyPrintDOM($p4->toDomNode($doc));
 
 echo "\n\n📄 Test: ParagraphStyle\n";
 prettyPrintDOM($p5->toDomNode($doc));
-
-// Optional: Ausgabe aller Styles
-echo "\n\n🧾 Style Definitions:\n";
-print_r($p1->getStyleDefinitions());
-print_r($p4->getStyleDefinitions());
-print_r($p5->getStyleDefinitions());
-
-
-

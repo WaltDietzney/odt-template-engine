@@ -372,10 +372,6 @@ final class CharacterizationGraphicElement extends OdtElement
         return $dom->createElement('text:span');
     }
 
-    public function registerStyles(): void
-    {
-    }
-
     public function getFrameStyleRequirements(): array
     {
         return ['same-name' => $this->definition];
@@ -389,7 +385,4 @@ final class CharacterizationCompositeElement extends OdtElement
         return $dom->createElement('text:p');
     }
 
-    public function registerStyles(): void
-    {
-    }
 }

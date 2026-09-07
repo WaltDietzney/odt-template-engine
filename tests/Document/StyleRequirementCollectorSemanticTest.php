@@ -50,10 +50,6 @@ final class SemanticProvider extends OdtElement
         return $dom->createElement('text:p');
     }
 
-    public function registerStyles(): void
-    {
-    }
-
     public function getOwnStyleRequirements(): iterable
     {
         yield $this->requirement;
@@ -62,10 +58,6 @@ final class SemanticProvider extends OdtElement
 
 final class SemanticComposite extends OdtElement
 {
-    public function registerStyles(): void
-    {
-    }
-
     public function toDomNode(DOMDocument $dom): DOMNode
     {
         return $dom->createElement('text:p');

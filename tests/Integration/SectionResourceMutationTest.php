@@ -198,7 +198,4 @@ final class FailingSectionImageElement extends OdtElement
         return [['path' => $this->valid], ['path' => $this->missing]];
     }
 
-    public function registerStyles(): void
-    {
-    }
 }
