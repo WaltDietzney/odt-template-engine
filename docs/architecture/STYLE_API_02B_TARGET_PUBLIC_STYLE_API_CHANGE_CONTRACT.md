@@ -1,37 +1,39 @@
 # STYLE-API-02B — Target Public Style API Change Contract
 
-Status: **DRAFT CHANGE CONTRACT — SEMANTICS BEFORE IMPLEMENTATION**  
+Status: **ACCEPTED CHANGE CONTRACT — SEMANTICS BEFORE IMPLEMENTATION**  
 Baseline: `develop` at `e4c48c859a4ef8a1362b8c303d3f3944ebb52d4c`  
 Branch: `architecture/style-api-02b-target-public-api`
 
 ## 1. Purpose
 
 STYLE-API-02A established that the current public style surface contains several
-architectural generations at once. P0 then characterized the three boundaries
-that must be understood before designing a target API:
+architectural generations at once. P0 characterized the important observable
+boundaries before target-API design:
 
 1. normal application styling is primarily element-centric;
-2. reusable named paragraph styles are an intentional advanced public use case;
+2. reusable named paragraph styles are an intentional advanced use case;
 3. custom elements and template subclasses still observe both semantic and
-   compatibility hooks.
+   legacy compatibility hooks;
+4. historical public visibility does not by itself prove that a mechanism
+   belongs to the long-term public API.
 
 This document defines the target public style model that future STYLE-API-02
-implementation slices should converge toward.
+implementation slices must converge toward.
 
-It is a **change contract**, not an implementation patch. It does not authorize
-removing compatibility APIs whose exact behavior is still gated by P1/P2
-characterization.
+The contract is intentionally more ambitious than simple compatibility
+preservation. The library currently has almost no external adoption, while the
+style subsystem contains clear historical overlap. This is therefore the right
+stage to remove or internalize accidental public mechanisms where their useful
+behavior can be preserved through a cleaner semantic API.
 
-The central question is:
+The governing principle is:
 
-> Which style concepts should a library user or extension author understand,
-> and which historical mechanisms should remain compatibility implementation
-> rather than equal peers in the public mental model?
+> Characterization protects observable behavior. It does not automatically
+> preserve the historical mechanism that produced that behavior.
 
-## 2. Sources and accepted baseline
+## 2. Accepted architectural baseline
 
-This contract is based on the current `develop` architecture after PR #60 and
-therefore assumes the completed STYLE-CONTEXT-01 semantic ownership model.
+This contract assumes the completed STYLE-CONTEXT-01 semantic ownership model.
 
 Accepted facts include:
 
@@ -40,48 +42,73 @@ Accepted facts include:
 - structured elements emit semantic `StyleRequirement` definitions and
   references;
 - physical package resources remain owned by `OdtPackage`;
-- normal application documentation teaches `Paragraph`, `RichText`,
-  `RichTableCell`, image/frame elements, and friendly style option arrays;
-- `StyleMapper::registerParagraphStyle()` is intentionally documented and used
-  by the professional CV sample as advanced named-style authoring;
-- direct `StyleWriter` is not taught as the normal application-facing API;
-- semantic and legacy element hooks remain dynamically dispatched;
-- protected/public `OdtTemplate` compatibility facades remain
-  subclass-observable;
+- normal application authoring uses structured elements such as `Paragraph`,
+  `RichText`, `RichTableCell`, image/frame elements, and friendly option arrays;
+- `StyleMapper::registerParagraphStyle()` is currently documented and used by
+  project-owned samples, but this does not make the process-global registry the
+  desired long-term ownership model;
+- direct `StyleWriter` usage is not the normal application-facing authoring
+  model;
+- semantic and legacy element hooks are currently subclass-observable;
+- protected/public `OdtTemplate` compatibility facades remain dynamically
+  dispatchable;
 - the top-level `OdtTemplate::setElement()` `HasStyles` compatibility phase is
   currently non-dispatching because the unqualified interface name does not
-  resolve to `Contracts\HasStyles`.
+  resolve to `Contracts\HasStyles`;
+- `OdtElement` already provides the modern semantic ownership hooks required by
+  the STYLE-CONTEXT-01 pipeline.
 
-No 02B decision may silently contradict those facts.
+No implementation slice may silently contradict these facts.
 
-## 3. Design goals
+## 3. Target design principles
 
-The target public style API should make the following statements easy to
-understand:
+The public style API should make the following statements easy to understand.
 
-1. **Style the element you are creating.**
-   Friendly style options on structured elements are the normal authoring API.
-2. **Reference an existing LibreOffice/ODF style by name when the template owns
-   that style.**
-   A named reference does not imply PHP-side registration.
-3. **Define a reusable generated named style on the current document when
-   application code owns that style.**
-   Generated named definitions must be document-scoped in the target API.
-4. **Implement semantic requirements when authoring custom structured
-   elements.**
-   Extension authors should not need process-global registries to participate
-   in the modern style pipeline.
-5. **Treat historical registries and direct writers as compatibility/low-level
-   surfaces.**
-   They may remain public for compatibility, but they are not equal peers in
-   the recommended API model.
+### 3.1 Style the element you are creating
 
-The target API must preserve ODF distinctions rather than pretending that text,
-paragraph, graphic, and table styles are one CSS-like concept.
+Friendly style options on structured elements are the normal authoring API.
 
-## 4. Target public layers
+### 3.2 Reference an existing style when the document owns it
 
-STYLE-API-02 adopts four explicit public layers.
+A named style reference means that content uses a style already authored in the
+ODT template or otherwise defined in the current document. A reference does not
+implicitly register a process-global PHP style.
+
+### 3.3 Define reusable generated styles on the current document
+
+When application code owns a reusable named style, that definition belongs to
+the current logical document. New canonical APIs must therefore be
+document-scoped.
+
+### 3.4 Custom elements describe semantic requirements
+
+Custom `OdtElement` implementations participate through semantic requirements
+and ownership traversal. They should not need to mutate process-global style
+registries.
+
+### 3.5 Historical implementation surfaces are not equal public peers
+
+Current public visibility, internal project samples, or historical usage are
+not sufficient reasons to preserve a mechanism indefinitely. Legacy style
+infrastructure should be characterized, migrated, reduced, internalized, or
+removed where possible.
+
+### 3.6 Names should describe responsibilities
+
+- a mapper maps;
+- a writer writes/materializes;
+- a document style facade exposes document-oriented authoring operations;
+- semantic ownership remains in `OdtDocumentContext` / `StyleContext`.
+
+The target API must preserve ODF family distinctions rather than pretending
+that paragraph, text, graphic, and table styles are one CSS-like concept.
+
+## 4. Target public API model
+
+STYLE-API-02 defines three canonical public API layers.
+
+Legacy style infrastructure is treated separately as a migration/removal zone,
+not as a fourth equal public layer.
 
 ### Layer A — Recommended application authoring
 
@@ -113,19 +140,19 @@ Contract:
 - the engine may generate automatic style names internally;
 - users should not need to know whether a generated definition is written to
   `styles.xml` or `content.xml`;
-- internal semantic collection/materialization must remain transparent to this
-  layer.
+- semantic collection and materialization remain transparent to this layer.
 
-This layer is **SUPPORTED PRIMARY API**.
+This layer is the **SUPPORTED PRIMARY API**.
 
-### Layer B — Named style reference and document-scoped definition
+### Layer B — Document style authoring
 
-Named styles represent two different operations and the target API must keep
-those operations distinct.
+Layer B handles named style references and explicit document-scoped
+style definitions. These are different operations and the API must keep them
+separate.
 
-#### B1. Reference an authored/existing style
+#### B1. Reference an authored or existing named style
 
-Example conceptual use:
+Example:
 
 ```php
 $paragraph = new Paragraph('CVEntryTitle');
@@ -135,140 +162,284 @@ This means:
 
 > Use the style named `CVEntryTitle` in the current ODT document/template.
 
-It does **not** mean:
+It does not mean:
 
 > Look up or create a process-global PHP registration.
 
 A reference may resolve against an authored style already present in the
-current ODT package or against a document-local generated definition.
+current ODT package or against a generated definition owned by the current
+document.
 
-This is a **SUPPORTED PRIMARY/ADVANCED API** and is central to using
-LibreOffice as the visual template designer.
+Named references are a **SUPPORTED PRIMARY/ADVANCED API** and are important for
+using LibreOffice as the visual template designer.
 
-#### B2. Define a generated named style for the current document
+#### B2. Canonical document style facade
 
-The current advanced pattern is:
-
-```php
-StyleMapper::registerParagraphStyle('CVEntryTitle', [...]);
-```
-
-The capability is valid, but the process-global carrier is not the target
-semantic model.
-
-The target public capability is:
-
-```text
-define named paragraph/text style
-        ↓
-current OdtTemplate / document
-        ↓
-StyleContext semantic definition
-```
-
-The canonical future facade should therefore be **document-scoped**, exposed
-through the public document/template facade rather than through a required
-process-global registry.
-
-The preferred API shape for implementation design is explicit methods on
-`OdtTemplate`, for example conceptually:
+The canonical target API for reusable generated named styles is a small
+style-authoring facade reached from `OdtTemplate`:
 
 ```php
-$template->defineParagraphStyle('CVEntryTitle', [
+$template->styles()->defineParagraph('CVEntryTitle', [
     'margin-top' => '0.1cm',
     'margin-bottom' => '0.03cm',
 ]);
 ```
 
-and, where justified by actual public use:
+Conceptually:
 
-```php
-$template->defineTextStyle('ImportantText', [
-    'bold' => true,
-    'color' => '#a40000',
-]);
+```text
+OdtTemplate
+    ↓
+styles()
+    ↓
+small public document-style facade
+    ↓
+OdtDocumentContext
+    ↓
+StyleContext
 ```
 
-The exact method signatures are approved only after the relevant P1 registry
-behavior is characterized. The architectural decision made here is the
-**scope and ownership**:
+The public facade is an access and authoring boundary. It is **not** the
+semantic owner of style state.
 
-> New canonical named-style definition APIs are document-scoped facade APIs,
-> not new process-global registries.
+Semantic ownership remains document-local:
 
-Why facade methods rather than exposing `StyleContext` directly:
+```text
+OdtDocumentContext -> StyleContext
+```
 
-- `StyleContext` is document infrastructure and should not become a general
-  mutable public context object merely to solve API naming;
-- `OdtTemplate` already represents the public current-document lifecycle;
-- facade methods can preserve validation, compatibility adoption, and future
-  internal refactoring without exposing semantic storage internals;
-- this avoids creating another general-purpose `StyleManager` unless later
-  evidence proves one is necessary.
+The facade must therefore not become a second mutable style store.
+
+#### B3. Facade lifecycle
+
+A style facade represents the `OdtTemplate` instance and its **current logical
+document**.
+
+Conceptually:
+
+```php
+$styles = $template->styles();
+$template->load($otherTemplate);
+$styles->defineParagraph('Heading', [...]);
+```
+
+The operation must target the template's current document state. The facade
+must not retain a stale `StyleContext` from a previously loaded document.
+
+Implementation may achieve this through delegation, a context provider, or
+another narrow mechanism, but the observable lifecycle rule is fixed by this
+contract.
+
+#### B4. Convenience methods
+
+Direct convenience methods on `OdtTemplate` may later be added, for example:
+
+```php
+$template->defineParagraphStyle('CVEntryTitle', [...]);
+```
+
+If such methods are introduced, they must be thin delegates to the canonical
+`styles()` facade and must not create a second semantic API or separate state.
+
+STYLE-API-02 does not require these convenience methods.
+
+#### B5. No generic public style manager
+
+This contract does not expose `StyleContext` directly and does not introduce a
+general-purpose mutable `StyleManager`.
+
+The facade should remain small, document-oriented, and authoring-focused.
+Internal operations such as requirement registration, XML writing,
+materialization, or direct context access do not belong on the public facade.
 
 ### Layer C — Custom structured-element extension API
 
 The target extension model is semantic ownership.
 
-Preferred hooks:
+Preferred hooks include:
 
 - `getOwnStyleRequirements()`;
 - `ownedElements()`;
-- corresponding semantic resource/dependency hooks where applicable;
+- semantic resource/dependency hooks where applicable;
 - `toDomNode()` for native element materialization.
 
 Contract:
 
-- a custom `OdtElement` describes its own semantic style definitions and
-  references;
+- a custom `OdtElement` describes semantic style definitions and references;
 - ownership traversal composes child requirements;
-- custom elements should not need to mutate `StyleMapper` to participate in
-  normal `setElement()`;
-- semantic hooks remain polymorphic and therefore must continue to dispatch to
-  external subclasses.
+- custom elements should not need process-global `StyleMapper` registries;
+- semantic hooks remain polymorphic and must continue to dispatch to external
+  subclasses while they are part of the supported extension contract.
 
-Legacy `getOwnRequired*()` getter families remain **SUPPORTED COMPATIBILITY
-FACADE** until an explicit later migration proves that wrappers can preserve
-observable behavior.
+Direct construction of `StyleRequirement` is the canonical semantic extension
+model for STYLE-API-02. This contract does **not** claim that it must remain the
+final convenience surface forever. A later helper/builder API may be introduced
+if real usage demonstrates value, but 02B does not invent one speculatively.
 
-`HasStyles` is not promoted as the canonical modern extension contract in 02B.
-The current top-level compatibility dispatch is inactive, and reactivating it
-would be a behavior change. Its eventual status requires a separate explicit
-compatibility decision after the target semantic extension contract is in
-place.
+## 5. Legacy infrastructure policy
 
-### Layer D — Low-level and compatibility API
+Historical style infrastructure is not part of the target public mental model
+merely because it is currently public.
 
-This layer contains mechanisms that may remain callable but are not the
-recommended mental model for ordinary application code.
+The target is:
 
-Examples include:
+```text
+Application author
+    ├── element style options
+    └── $template->styles()
 
-- process-global `StyleMapper` registries;
+Custom element author
+    └── semantic StyleRequirement ownership
+
+Internal style infrastructure
+    ├── mapping
+    ├── semantic context
+    ├── collection/materialization
+    └── ODF writing
+```
+
+Legacy mechanisms may be retained temporarily while their behavior is migrated,
+but the desired endpoint is a smaller, clearer surface.
+
+### 5.1 `HasStyles`
+
+`HasStyles` is a **LEGACY REMOVAL CANDIDATE**.
+
+Its current contract is based on the historical model:
+
+```text
+element -> register styles -> expose style definition arrays
+```
+
+The modern model is:
+
+```text
+element -> describe semantic requirements -> document context owns state
+```
+
+In addition, the intended top-level `OdtTemplate::setElement()` compatibility
+phase is currently inactive because of the namespace mismatch characterized in
+02A.
+
+Therefore 02B does not promote `HasStyles` as a permanent compatibility API.
+Before removal:
+
+1. characterize remaining direct/composite behavior that still depends on it;
+2. migrate useful behavior to semantic ownership hooks;
+3. remove redundant `implements HasStyles`, `registerStyles()`, and
+   `getStyleDefinitions()` paths when they no longer serve a distinct purpose;
+4. do not "repair" the inactive top-level dispatch first unless a deliberate
+   migration requires that behavior.
+
+The default target is removal, not indefinite preservation.
+
+### 5.2 `StyleMapper`
+
+`StyleMapper` should converge toward what its name says: **stateless mapping**.
+
+Target responsibility:
+
+```text
+friendly authoring options -> normalized ODF property structures
+```
+
+Examples of appropriate responsibilities:
+
+- paragraph option mapping;
+- text option mapping;
+- table-cell option mapping;
+- frame option mapping;
+- CSS-like inline option parsing where this remains semantically coherent.
+
+Historical responsibilities that do not belong to the target mapper include:
+
+- process-global paragraph/text/table/graphic registries;
 - mutable public registry properties;
-- legacy `registerStyles()` / `getStyleDefinitions()` projections;
-- direct `StyleWriter` calls;
-- historical registration/getter variants.
+- document ownership;
+- deciding which registered styles belong to a document.
 
-Contract:
+Accordingly:
 
-- public visibility alone does not make a mechanism a recommended authoring
-  API;
-- existing compatibility behavior must be preserved until explicitly
-  deprecated or migrated;
-- no new application documentation should teach these mechanisms where Layer A
-  or B expresses the requirement cleanly;
-- implementation code may continue to use them as compatibility transport while
-  migration is incomplete.
+- `StyleMapper::registerParagraphStyle()` is a migration target for
+  `$template->styles()->defineParagraph()`;
+- text/table/graphic registration variants are migration/removal candidates
+  subject to their P1 characterization;
+- public mutable registry properties are removal/internalization candidates;
+- overlapping mapper methods should be consolidated after characterization;
+- style-name generation may remain temporarily but should be evaluated
+  separately because naming is not mapping.
 
-The exact keep/deprecate/wrap decision for individual methods is subject to P1
-and P2 gates.
+No new process-global style registry API may be introduced.
 
-## 5. Canonical terminology
+### 5.3 `StyleWriter`
+
+`StyleWriter` should converge toward what its name says: **ODF style
+serialization/materialization**.
+
+Appropriate responsibility includes:
+
+- creating ODF style nodes;
+- writing property groups;
+- appending style structures to the correct DOM location;
+- serialization details required by the semantic materialization pipeline.
+
+`StyleWriter` must not be the semantic owner of which styles belong to a
+document.
+
+Current direct reads from global `StyleMapper` registries and element-specific
+direct writer calls are migration targets. They are evidence about current
+behavior, not proof that those couplings belong to the target architecture.
+
+Direct application-facing `StyleWriter` usage is not part of the recommended
+public API.
+
+### 5.4 Legacy element getters and template facades
+
+Legacy `getOwnRequired*()` families and historical template facade callbacks are
+observable today and therefore must be characterized before removal or semantic
+replacement.
+
+However, 02B does not declare them permanent public concepts.
+
+Where equivalent modern semantic hooks can preserve the useful behavior and
+polymorphic extension semantics, legacy getters may be migrated, reduced, and
+removed in explicit later slices.
+
+Protected facade removal still requires special care because subclass override
+behavior is observable.
+
+## 6. Characterization and compatibility principle
+
+STYLE-API-02 uses characterization as a migration safety mechanism, not as an
+automatic compatibility veto.
+
+The rule is:
+
+> Preserve intentional useful behavior where practical; do not preserve an
+> obsolete mechanism merely because a characterization test proves that it
+> exists today.
+
+A characterization test may lead to three different outcomes:
+
+1. **retain** — behavior is still intentional and the current mechanism remains
+   appropriate;
+2. **migrate** — behavior is useful but should move behind the target semantic
+   API;
+3. **remove** — behavior or mechanism is accidental, redundant, or no longer
+   part of the desired product contract.
+
+If removal intentionally changes behavior, the change must be explicit in the
+implementation slice and documentation rather than being hidden inside a
+refactor.
+
+Project-owned samples and documentation are migration targets when they teach an
+API that the accepted architecture supersedes.
+
+## 7. Canonical terminology
 
 The public model should use terminology that communicates semantics and scope.
 
-### 5.1 `style options`
+### 7.1 `style options`
 
 Friendly developer-facing arrays attached to an element or text run.
 
@@ -280,222 +451,136 @@ Examples:
 - `background`;
 - `padding`.
 
-These are **authoring options**, not ODF style definitions by themselves.
+These are authoring options, not ODF style definitions by themselves.
 
-### 5.2 `style reference`
+### 7.2 `style reference`
 
-A named reference used by document content, such as a Paragraph that points to
-`CVEntryTitle`.
+A named reference used by document content, such as a `Paragraph` that points
+to `CVEntryTitle`.
 
 A reference does not own or create its definition.
 
-### 5.3 `style definition`
+### 7.3 `style definition`
 
-The properties defining a named or generated ODF style in a specific family and
+Properties defining a named or generated ODF style in a specific family and
 scope.
 
 Definitions belong to the current document in the modern semantic model.
 
-### 5.4 `define`
+### 7.4 `define`
 
-Preferred verb for a new canonical document-scoped named-style API.
+Preferred verb for the canonical document-scoped named-style API.
 
 Reasoning:
 
-- `register` is historically associated with `StyleMapper`'s process-global
-  registry;
+- `register` is historically associated with process-global registries;
 - `set` is ambiguous about replacement semantics;
 - `add` does not communicate duplicate/conflict behavior;
-- `define` describes the semantic operation without promising a particular
-  backing store.
+- `define` describes the semantic operation without promising a backing store.
 
-Exact duplicate/conflict semantics remain tied to `StyleContext` behavior and
-must be reflected by implementation tests.
-
-### 5.5 `map`
+### 7.5 `map`
 
 Reserved for stateless conversion of friendly options into normalized ODF
 property structures.
 
-A method named `map...` should not also mutate process-global registry state.
-Where historical methods violate this separation, compatibility wrappers may
-remain, but new APIs should respect it.
+New methods named `map...` must not also mutate process-global state.
 
-### 5.6 `write` / `materialize`
+### 7.6 `write` / `materialize`
 
-Serialization operations. These are not normal authoring verbs.
+Serialization operations. These are not normal application authoring verbs.
 
-Public application code should not need to manually invoke style
-materialization for standard `OdtTemplate` workflows.
-
-## 6. Family-specific public semantics
+## 8. Family-specific public semantics
 
 02B deliberately does **not** introduce one generic public
 `defineStyle($family, ...)` API.
 
 ODF style families have different property models, locations, references, and
-lifecycle constraints. A generic method would expose internal family strings
-and create a false promise of uniform semantics.
-
-The target is explicit family-oriented capability where public need is proven.
+lifecycle constraints. A generic family string would leak internal concepts and
+create a false promise of uniform semantics.
 
 ### Paragraph
 
 - friendly paragraph options: primary API;
-- named Paragraph reference: supported;
-- generated named paragraph definition: approved capability for a
-  document-scoped facade;
-- current `StyleMapper::registerParagraphStyle()` remains compatibility during
-  migration.
+- named paragraph reference: supported;
+- generated named paragraph definition: approved through
+  `$template->styles()->defineParagraph(...)`;
+- current `StyleMapper::registerParagraphStyle()` becomes a migration target,
+  not a permanent canonical API.
 
 ### Text
 
 - friendly inline text options: primary API;
-- generated automatic text definitions remain transparent;
-- explicit named text definition is an advanced capability, but exact canonical
-  method scope waits for GAP-04 characterization because the current registry
-  variants are not semantic synonyms.
+- automatic generated text styles remain transparent;
+- explicit named text definition may be added to the document style facade only
+  if GAP-04 and actual usage justify it;
+- do not add `defineText()` merely for symmetry.
 
 ### Table / table-cell / table-column / table-row
 
 - element-specific options and structural APIs remain primary;
-- do not expose a generic named-style registry merely because semantic
-  `StyleRequirement` now supports these families;
-- future public named table-style definition requires demonstrated application
-  need and P1/P2 characterization of current table compatibility paths.
+- no generic named table-style registry is introduced merely because semantic
+  `StyleRequirement` supports the family;
+- existing table registry behavior should be characterized and migrated or
+  removed according to demonstrated need.
 
 ### Graphic / frame / image
 
 - element layout/style options remain primary;
-- do not use STYLE-API-02 to redesign anchor, wrap, or positioning semantics;
-- FRAME-LAYOUT-01 / IMAGE-LAYOUT-01 remain separate work;
-- no generic graphic-style registration API is approved here.
+- STYLE-API-02 does not redesign anchor, wrap, or positioning semantics;
+- no generic public graphic-style registry is introduced;
+- process-global frame/image/fill registries are migration/removal candidates.
 
-## 7. Compatibility contract
+## 9. Duplicate and conflict semantics
 
-Backward compatibility remains a first-class requirement.
-
-### 7.1 Current `StyleMapper` named paragraph API
-
-`StyleMapper::registerParagraphStyle()` is explicitly documented and used in a
-representative professional sample. It therefore remains a **SUPPORTED
-COMPATIBILITY API** during STYLE-API-02 migration.
-
-02B does not authorize immediate deprecation.
-
-A future document-scoped facade may become the recommended API only after:
-
-1. equivalent use cases are proven;
-2. migration behavior is tested;
-3. current process-global persistence differences are documented;
-4. the documentation/sample migration strategy is explicit.
-
-### 7.2 Legacy element getters
-
-Evidence-backed `getOwnRequired*()` methods remain polymorphic compatibility
-facades.
-
-Implementation may eventually derive their result from semantic requirements,
-but only if characterization proves equivalent override behavior. They must not
-be bypassed by non-polymorphic shortcuts while still supported.
-
-### 7.3 `HasStyles`
-
-Do not repair the top-level namespace mismatch as incidental cleanup.
-
-Possible later outcomes include:
-
-- retain the interface for direct/composite compatibility but leave the
-  top-level phase inactive;
-- restore top-level dispatch deliberately with characterization of the added
-  effects;
-- provide a semantic facade and later deprecate the interface.
-
-02B makes no irreversible choice among those outcomes because the modern
-extension model does not require the decision to proceed.
-
-### 7.4 `StyleWriter`
-
-`StyleWriter::writeAllStyles()` retains its direct-call compatibility behavior
-unless P1 proves a narrower contract is safe.
-
-No new recommended application API should depend on callers invoking
-`StyleWriter` directly.
-
-### 7.5 Public mutable static properties
-
-No public static registry property may be privatized or removed before GAP-02
-characterization determines observable direct-write behavior.
-
-## 8. Duplicate/conflict semantics for new document-scoped definitions
-
-A new canonical definition facade must delegate to document-local semantic
-conflict rules rather than invent a second policy.
+The canonical document style facade must delegate to document-local semantic
+conflict rules rather than inventing a second policy.
 
 Target behavior:
 
 - same semantic identity + equivalent definition: idempotent;
 - same semantic identity + conflicting definition: explicit failure;
-- existing authored style in the template: treated according to current
-  `StyleContext` resolution/materialization semantics, not silently overwritten;
+- authored style already present in the template: handled according to
+  document-local resolution/materialization semantics, never silently
+  overwritten by an unrelated generated definition;
 - definition lifetime: current logical document/template instance;
-- `load()`/new template lifecycle follows document-context lifecycle rather than
-  static process lifetime.
+- `load()` and new-template lifecycle follow document-context lifecycle rather
+  than static process lifetime.
 
-The public exception type/message can be refined in implementation, but silent
-last-write-wins behavior is not the target for the new document-scoped API.
+Exact public exception classes/messages may be refined during implementation.
+Silent last-write-wins behavior is not the target.
 
-This is intentionally different from some retained first-write-wins legacy
-registries. Compatibility wrappers may continue their historical behavior;
-new canonical APIs should follow semantic document-local rules.
+## 10. Public facade ownership and naming
 
-## 9. Documentation contract
+The exact concrete class name returned by `OdtTemplate::styles()` is not fixed by
+02B. A name such as `DocumentStyles` is conceptually appropriate because the
+object is a document-oriented authoring facade rather than a manager of all
+style internals.
 
-After implementation begins, public documentation should clearly separate the
-layers.
+The public contract is fixed at the behavioral level:
 
-Recommended structure:
-
-```text
-Styling
-├── Element style options              ← start here
-├── Using existing named ODT styles    ← LibreOffice template styles
-├── Defining reusable generated styles ← advanced, document-scoped
-├── Custom element style requirements  ← extension authors
-└── Legacy / low-level compatibility   ← migration/reference
+```php
+$template->styles()->defineParagraph(...);
 ```
 
-The stale statement in `docs/styling/style-model.md` that `StyleContext` is a
-future architecture must be corrected when the 02B contract is accepted.
+The facade must:
 
-Documentation should not hide compatibility APIs, but it should stop presenting
-process-global registration as the conceptual owner of modern style state.
+- be document-oriented;
+- remain small;
+- delegate to current semantic document ownership;
+- avoid owning duplicate mutable style state;
+- avoid exposing `StyleContext` internals;
+- avoid low-level XML/materialization APIs;
+- resolve the current document lifecycle correctly.
 
-## 10. Non-goals
+## 11. P1/P2 gates
 
-STYLE-API-02B does not approve or design:
+The target architecture is accepted now, but compatibility-sensitive
+implementation still requires focused characterization before affected
+mechanisms are changed.
 
-- document defaults or `style:default-style`;
-- `setDefaultFont()` or other DOCUMENT-DEFAULTS-01 APIs;
-- frame/image positioning, anchor, or wrap redesign;
-- table width or column geometry APIs;
-- list layout redesign;
-- template syntax changes;
-- lifecycle redesign of `assign()` / `render()` / `save()`;
-- removal of process-global compatibility state;
-- generic public exposure of `StyleContext`;
-- a general-purpose `StyleManager` object;
-- one universal family-agnostic `defineStyle()` API;
-- silent activation of the currently inactive top-level `HasStyles` phase.
+### P1 — behavior gates
 
-## 11. P1/P2 gates that still constrain implementation
-
-The target layer model can be approved before every compatibility detail is
-resolved, but implementation decisions remain gated as follows.
-
-### P1 — contract gates
-
-Before changing the affected public surface, characterize:
+Before changing the relevant mechanisms, characterize:
 
 1. GAP-07 — direct `StyleWriter` audience;
 2. GAP-02 — direct writes to public static registry properties;
@@ -503,114 +588,212 @@ Before changing the affected public surface, characterize:
 4. GAP-04 — text registry variants;
 5. GAP-06 — `RichTable::getTableStyleDefinitions()` side effects.
 
-These results may alter wrappers/deprecation sequencing, but they should not
-change the four-layer model unless new evidence shows a genuinely different
-public use case.
+The purpose of these gates is to understand what must be retained, migrated, or
+intentionally removed. They do not automatically require permanent wrappers.
 
 ### P2 — implementation gate
 
 Before merging/removing secondary table-cell registry state, characterize
 GAP-05.
 
-## 12. Proposed implementation sequence after contract approval
+## 12. Proposed implementation sequence
 
-Implementation should proceed in small slices.
+Implementation should proceed in small slices and should keep semantic change
+separate from mechanical cleanup where practical.
 
-### 02C — Document-scoped named paragraph definition facade
+### 02C — Canonical document style facade + named paragraph definition
 
-Characterize all behavior required by the current named paragraph use case,
-then introduce the smallest public document-scoped facade that can replace the
-recommended need for global `StyleMapper::registerParagraphStyle()`.
+Characterize the behavior required by the current named paragraph use case,
+then introduce the smallest canonical facade:
 
-Expected properties:
+```php
+$template->styles()->defineParagraph(...);
+```
 
-- facade on `OdtTemplate`;
-- delegates to current document semantic style ownership;
+Required properties:
+
 - no global registration required for the new path;
-- named Paragraph references continue to work;
-- repeated definitions/conflicts tested;
-- existing authored style resolution tested;
-- repeated `save()` / `load()` lifecycle tested;
-- no deprecation of the old API in the same slice.
+- semantic definition owned by the current document context;
+- named `Paragraph` references continue to work;
+- repeated equivalent definitions are idempotent;
+- conflicting definitions fail explicitly;
+- authored template style resolution is covered;
+- facade lifecycle across `load()` / repeated `save()` is covered;
+- no stale `StyleContext` reference survives document replacement;
+- no convenience alias is required in the same slice.
 
-### 02D — Documentation/sample migration for named paragraph styles
+### 02D — Named paragraph migration
 
-Update the style guide and professional CV sample to demonstrate the canonical
-new document-scoped API while documenting the legacy process-scoped facade.
+Migrate project-owned documentation and representative samples from
+`StyleMapper::registerParagraphStyle()` to the canonical `styles()` facade.
 
-No sample output artifacts should be committed merely because the sample code
-changes.
+This slice should determine whether the old registration method still serves a
+meaningful supported compatibility purpose. If not, it may be prepared for
+removal/deprecation in a later explicit cleanup slice.
 
-### 02E — Text style API decision
+No `samples/output/*.odt` artifacts should be committed merely because sample
+code changes.
 
-Close GAP-04 and decide whether explicit named text-style definition merits a
-matching document-scoped facade. Do not create it solely for symmetry.
+### 02E — `HasStyles` retirement analysis and migration
 
-### 02F — Compatibility surface decisions
+Characterize remaining active direct/composite `HasStyles` behavior.
 
-After relevant P1 characterizations, classify individual `StyleMapper`,
-`StyleWriter`, mutable registry, getter, and mapper methods as:
+Then:
 
-- supported compatibility;
-- deprecated compatibility wrapper;
-- internal-accidental candidate;
-- retained low-level API.
+- migrate useful behavior to semantic hooks;
+- remove redundant `registerStyles()` / `getStyleDefinitions()` paths where
+  possible;
+- remove `HasStyles` when no distinct supported contract remains;
+- do not silently activate the currently inactive top-level dispatch.
 
-Deprecation and visibility changes should be separate from the primary facade
-implementation where practical.
+### 02F — Mapper/registry cleanup
 
-### 02G — Final docs / API consistency closeout
+Close GAP-02, GAP-03, GAP-04, GAP-05, and relevant registry behavior.
 
-Reconcile README, public styling guides, API examples, ROADMAP, and
-FUTURE_DEVELOPMENT with the accepted model and perform final compatibility
-preflight.
+Then move `StyleMapper` toward a stateless mapping role:
 
-## 13. Acceptance criteria for STYLE-API-02B
+- consolidate overlapping map methods;
+- remove or internalize process-global registries where semantic ownership has
+  replaced them;
+- remove public mutable registry properties where no intentional contract
+  remains;
+- decide whether style-name generation remains there or moves to a narrower
+  responsibility.
 
-02B is ready for approval when all of the following are accepted:
+### 02G — Writer boundary cleanup
 
-1. element-centric style options are the primary authoring API;
+Close GAP-07 and migrate `StyleWriter` toward pure writing/materialization:
+
+- no semantic document ownership;
+- reduce/remove direct dependency on process-global registries;
+- retain only direct-call compatibility that is still intentionally supported;
+- keep low-level serialization concerns out of application authoring APIs.
+
+### 02H — Legacy getter/facade cleanup
+
+Review legacy `getOwnRequired*()` methods and protected/public template
+compatibility facades against the accepted semantic extension model.
+
+Migrate or remove only with explicit characterization of polymorphic behavior.
+
+### 02I — Final documentation and API consistency closeout
+
+Reconcile README, styling guides, API examples, ROADMAP,
+FUTURE_DEVELOPMENT, and architecture documentation with the accepted model.
+
+## 13. Documentation contract
+
+Public documentation should converge toward this structure:
+
+```text
+Styling
+├── Element style options
+├── Using existing named ODT styles
+├── Defining reusable generated styles with $template->styles()
+├── Custom element style requirements
+└── Migration / legacy notes where still relevant
+```
+
+Documentation should not present process-global registration as the conceptual
+owner of modern style state.
+
+The stale statement in `docs/styling/style-model.md` that `StyleContext` is
+future architecture must be corrected during STYLE-API-02 documentation
+migration.
+
+Project-owned samples should demonstrate the recommended current API rather
+than preserve historical mechanisms for their own sake.
+
+## 14. Non-goals
+
+STYLE-API-02B does not design:
+
+- document defaults or `style:default-style`;
+- `setDefaultFont()` or other DOCUMENT-DEFAULTS-01 APIs;
+- frame/image positioning, anchor, or wrap redesign;
+- table width or column geometry redesign;
+- list layout redesign;
+- template syntax changes;
+- lifecycle redesign of `assign()` / `render()` / `save()` beyond what is
+  necessary to make document style facade lifecycle correct;
+- direct public exposure of `StyleContext`;
+- a general-purpose mutable `StyleManager`;
+- one universal family-agnostic `defineStyle()` API;
+- speculative builder APIs for custom element style requirements.
+
+## 15. Acceptance criteria
+
+STYLE-API-02B is accepted with the following decisions:
+
+1. element-centric style options are the primary application authoring API;
 2. named style **reference** and named style **definition** are distinct public
    concepts;
 3. new canonical generated named-style definitions are document-scoped;
-4. the public `OdtTemplate` facade, not direct `StyleContext` exposure, is the
-   preferred ownership boundary for such definitions;
-5. custom elements use semantic style requirement hooks as the preferred modern
-   extension model;
-6. legacy element getters and template facade callbacks remain compatibility
-   dispatch until explicitly migrated;
-7. `StyleMapper::registerParagraphStyle()` remains supported during migration;
-8. direct `StyleWriter` and static registries are low-level/compatibility, not
-   the recommended application model;
-9. no generic family-agnostic public style registry is introduced;
-10. P1/P2 gates remain binding before affected compatibility changes.
+4. `$template->styles()` is the canonical public document-style authoring
+   facade;
+5. the facade is not the semantic owner; ownership remains in
+   `OdtDocumentContext` / `StyleContext`;
+6. a retained style facade must follow the template's current logical document
+   and must not retain stale document context state;
+7. direct `OdtTemplate::define...Style()` methods, if added later, are optional
+   thin convenience delegates only;
+8. custom elements use semantic `StyleRequirement` ownership as the preferred
+   modern extension model;
+9. direct `StyleRequirement` construction is canonical semantics but is not
+   declared the final possible convenience surface forever;
+10. `HasStyles` is a legacy removal candidate, not a target permanent public
+    contract;
+11. `StyleMapper` should converge toward stateless mapping;
+12. process-global style registries and mutable registry properties are
+    migration/removal candidates;
+13. `StyleWriter` should converge toward writing/materialization and must not
+    own document style semantics;
+14. historical public visibility and project-owned samples do not by themselves
+    require permanent API preservation;
+15. characterization protects behavior but does not automatically preserve the
+    historical mechanism;
+16. P1/P2 gates remain binding before compatibility-sensitive removals;
+17. no generic family-agnostic public style registry is introduced.
 
-## 14. Decision summary
+## 16. Decision summary
 
-The target public model is:
+The accepted target public model is:
 
 ```text
 Application author
     │
     ├── element style options -------------------- primary
     │
-    ├── named style reference -------------------- existing/authored or generated
+    ├── named style reference -------------------- authored/existing/generated
     │
-    └── document-scoped named style definition --- advanced facade
+    └── $template->styles() ---------------------- document style authoring
+             │
+             └── defineParagraph(...)
 
 Custom element author
     │
     └── semantic StyleRequirement ownership ------ modern extension contract
 
-Compatibility / low-level caller
+Internal architecture
     │
-    ├── StyleMapper static registries
-    ├── legacy getters / HasStyles projections
-    └── StyleWriter direct serialization
+    ├── OdtDocumentContext / StyleContext -------- semantic authority
+    ├── collectors / materializers --------------- pipeline
+    ├── StyleMapper ------------------------------ target: stateless mapping
+    └── StyleWriter ------------------------------ target: ODF writing
+
+Legacy infrastructure
+    │
+    ├── HasStyles -------------------------------- removal candidate
+    ├── process-global registries ---------------- migration/removal candidates
+    ├── mutable registry properties -------------- migration/removal candidates
+    └── legacy getters/facades ------------------- characterize, migrate, remove
+                                                   where safely possible
 ```
 
-The architectural direction is therefore **not** to expose more of the internal
-style machinery. It is to make the existing document-local semantic ownership
-visible through a smaller, clearer public facade while preserving historical
-surfaces as explicit compatibility rather than allowing them to define the
-main API model.
+The architectural direction is therefore not to expose more internal machinery
+and not to freeze historical public APIs unnecessarily.
+
+The direction is to provide a small, coherent, document-oriented authoring API,
+keep semantic ownership document-local, give extension authors a clear semantic
+contract, and actively retire legacy mechanisms whose responsibilities are
+better represented by the modern architecture.
