@@ -19,7 +19,7 @@ final class StyleApi02EP0SemanticIndependenceCharacterizationTest extends TestCa
 {
     public function testParagraphAndTextInsertionUsesSemanticRequirementsWithoutLegacyMethods(): void
     {
-        $paragraph = (new StyleApi02EP0LegacyProbeParagraph('P0SemanticParagraph', [
+        $paragraph = (new Paragraph('P0SemanticParagraph', [
             'margin-left' => '1cm',
         ]))->addText('Semantic text', ['bold' => true]);
         $richText = (new RichText())->addElement($paragraph);
@@ -27,8 +27,8 @@ final class StyleApi02EP0SemanticIndependenceCharacterizationTest extends TestCa
 
         $template->setElement('my_list', $richText);
 
-        self::assertSame(0, $paragraph->registerStylesCalls);
-        self::assertSame(0, $paragraph->styleDefinitionsCalls);
+        self::assertFalse(method_exists($paragraph, 'registerStyles'));
+        self::assertFalse(method_exists($paragraph, 'getStyleDefinitions'));
         $families = array_map(
             static fn (StyleRequirement $requirement): string => $requirement->family(),
             array_values($template->semanticDefinitions())
@@ -41,15 +41,15 @@ final class StyleApi02EP0SemanticIndependenceCharacterizationTest extends TestCa
 
     public function testGraphicInsertionUsesSemanticRequirementsWithoutLegacyMethods(): void
     {
-        $box = new StyleApi02EP0LegacyProbeTextBox('P0SemanticBox', [
+        $box = new DrawTextBox('P0SemanticBox', [
             'background-color' => '#abcdef',
         ]);
         $template = new StyleApi02EP0InspectableTemplate($this->templatePath('sample_textfeld.odt'));
 
         $template->setElement('test1', $box);
 
-        self::assertSame(0, $box->registerStylesCalls);
-        self::assertSame(0, $box->styleDefinitionsCalls);
+        self::assertFalse(method_exists($box, 'registerStyles'));
+        self::assertFalse(method_exists($box, 'getStyleDefinitions'));
         $families = array_map(
             static fn (StyleRequirement $requirement): string => $requirement->family(),
             array_values($template->semanticDefinitions())
@@ -60,7 +60,7 @@ final class StyleApi02EP0SemanticIndependenceCharacterizationTest extends TestCa
 
     public function testTableInsertionUsesSemanticCellRequirementsWithoutLegacyMethods(): void
     {
-        $cell = new StyleApi02EP0LegacyProbeCell('Cell', [
+        $cell = new RichTableCell('Cell', [
             'background' => '#abcdef',
         ]);
         $table = (new RichTable())->addRow([$cell]);
@@ -68,8 +68,8 @@ final class StyleApi02EP0SemanticIndependenceCharacterizationTest extends TestCa
 
         $template->setElement('tableblock', $table);
 
-        self::assertSame(0, $cell->registerStylesCalls);
-        self::assertSame(0, $cell->styleDefinitionsCalls);
+        self::assertFalse(method_exists($cell, 'registerStyles'));
+        self::assertFalse(method_exists($cell, 'getStyleDefinitions'));
         $families = array_map(
             static fn (StyleRequirement $requirement): string => $requirement->family(),
             array_values($template->semanticDefinitions())
@@ -78,17 +78,14 @@ final class StyleApi02EP0SemanticIndependenceCharacterizationTest extends TestCa
         self::assertStringContainsString('table:table', $template->contentXml());
     }
 
-    public function testDirectPublicLegacyOverridesRemainObservable(): void
+    public function testBuiltInElementsNoLongerExposeLegacyMethods(): void
     {
-        $paragraph = new StyleApi02EP0LegacyProbeParagraph('P0DirectParagraph', [
+        $paragraph = new Paragraph('P0DirectParagraph', [
             'margin-left' => '1cm',
         ]);
 
-        $paragraph->registerStyles();
-        $paragraph->getStyleDefinitions();
-
-        self::assertSame(1, $paragraph->registerStylesCalls);
-        self::assertSame(1, $paragraph->styleDefinitionsCalls);
+        self::assertFalse(method_exists($paragraph, 'registerStyles'));
+        self::assertFalse(method_exists($paragraph, 'getStyleDefinitions'));
     }
 
     private function templatePath(string $name): string
@@ -116,62 +113,5 @@ final class StyleApi02EP0InspectableTemplate extends OdtTemplate
     public function contentXml(): string
     {
         return $this->documentContext()->contentDom()->saveXML();
-    }
-}
-
-final class StyleApi02EP0LegacyProbeParagraph extends Paragraph
-{
-    public int $registerStylesCalls = 0;
-    public int $styleDefinitionsCalls = 0;
-
-    public function registerStyles(): void
-    {
-        ++$this->registerStylesCalls;
-        parent::registerStyles();
-    }
-
-    public function getStyleDefinitions(): array
-    {
-        ++$this->styleDefinitionsCalls;
-
-        return parent::getStyleDefinitions();
-    }
-}
-
-final class StyleApi02EP0LegacyProbeTextBox extends DrawTextBox
-{
-    public int $registerStylesCalls = 0;
-    public int $styleDefinitionsCalls = 0;
-
-    public function registerStyles(): void
-    {
-        ++$this->registerStylesCalls;
-        parent::registerStyles();
-    }
-
-    public function getStyleDefinitions(): array
-    {
-        ++$this->styleDefinitionsCalls;
-
-        return parent::getStyleDefinitions();
-    }
-}
-
-final class StyleApi02EP0LegacyProbeCell extends RichTableCell
-{
-    public int $registerStylesCalls = 0;
-    public int $styleDefinitionsCalls = 0;
-
-    public function registerStyles(): void
-    {
-        ++$this->registerStylesCalls;
-        parent::registerStyles();
-    }
-
-    public function getStyleDefinitions(): array
-    {
-        ++$this->styleDefinitionsCalls;
-
-        return parent::getStyleDefinitions();
     }
 }

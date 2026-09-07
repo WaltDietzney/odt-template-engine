@@ -5,7 +5,6 @@ namespace OdtTemplateEngine\Elements;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
-use OdtTemplateEngine\Contracts\HasStyles;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Utils\StyleMapper;
 
@@ -13,7 +12,7 @@ use OdtTemplateEngine\Utils\StyleMapper;
  * Represents an image element that can be inserted into an ODT document.
  * Handles image positioning, sizing, wrapping, and style definitions.
  */
-class ImageElement extends OdtElement implements HasStyles
+class ImageElement extends OdtElement
 {
     /**
      * Summary of imagePath
@@ -243,16 +242,6 @@ class ImageElement extends OdtElement implements HasStyles
     }
 
     /**
-     * Returns style definitions (if any) associated with this image.
-     *
-     * @return array Empty or customized style array.
-     */
-    public function getStyleDefinitions(): array
-    {
-        return [];
-    }
-
-    /**
      * Gets the full path to the image file.
      *
      * @return string
@@ -276,10 +265,6 @@ class ImageElement extends OdtElement implements HasStyles
      * Summary of registerStyles
      * @return void
      */
-    public function registerStyles(): void
-    {
-    }
-
 
     /**
      * Summary of setStyle

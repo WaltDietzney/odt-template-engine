@@ -297,7 +297,6 @@ class OdtTemplate
             $element,
             $semanticOwnedLegacyStyles
         );
-        $this->registerStructuredHasStylesCompatibility($element);
         $this->prepareStructuredResources($element);
         $this->materializeStructuredElement($placeholder, $element);
         $this->finalizeStructuredCompatibility($element);
@@ -387,16 +386,6 @@ class OdtTemplate
                     ]);
                 }
             }
-        }
-    }
-
-    /**
-     * Preserve the existing HasStyles compatibility registration phase.
-     */
-    private function registerStructuredHasStylesCompatibility(OdtElement $element): void
-    {
-        if ($element instanceof HasStyles) {
-            $this->registerStyles($element->getStyleDefinitions());
         }
     }
 

@@ -4,7 +4,6 @@ namespace OdtTemplateEngine\Elements;
 
 use OdtTemplateEngine\Utils\StyleMapper;
 use OdtTemplateEngine\Utils\StyleOptionSplitter;
-use OdtTemplateEngine\Contracts\HasStyles;
 use OdtTemplateEngine\Document\StyleRequirement;
 use DOMDocument;
 use DOMNode;
@@ -15,7 +14,7 @@ use DOMNode;
  * Supports inline text styling, line breaks, tabs, hyperlinks, paragraph styles,
  * list formatting (bulleted/numbered), and embedded elements (like images).
  */
-class Paragraph extends OdtElement implements HasStyles
+class Paragraph extends OdtElement
 {
     /**
      * Text parts and inline content of the paragraph.
@@ -408,18 +407,6 @@ public function setParagraphStyleOptions(array $options): self
         return !empty($this->listStyle);
     }
 
-    // ------------- Style Registration -------------
-
-    /**
-     * Retained legacy registration hook.
-     *
-     * Semantic paragraph and text requirements are collected from
-     * getOwnStyleRequirements() and owned by the current document context.
-     */
-    public function registerStyles(): void
-    {
-    }
-
     /**
      * Returns all inline text styles required by this paragraph.
      *
@@ -503,19 +490,6 @@ public function setParagraphStyleOptions(array $options): self
         if ($this->paragraphStyle && !empty($this->paragraphStyleOptions)) {
             return [$this->paragraphStyle => $this->paragraphStyleOptions];
         }
-        return [];
-    }
-
-    /**
-     * Retained legacy style-definition projection.
-     *
-     * Semantic style requirements are exposed through
-     * getOwnStyleRequirements() instead.
-     *
-     * @return array<string, array>
-     */
-    public function getStyleDefinitions(): array
-    {
         return [];
     }
 

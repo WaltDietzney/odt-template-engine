@@ -5,7 +5,6 @@ namespace OdtTemplateEngine\Elements;
 use DOMDocument;
 use DOMNode;
 use OdtTemplateEngine\OdtTemplate;
-use OdtTemplateEngine\Contracts\HasStyles;
 use OdtTemplateEngine\Elements\NumberedList;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Utils\StyleMapper;
@@ -18,7 +17,7 @@ use OdtTemplateEngine\Utils\StyleOptionSplitter;
  *
  * @package OdtTemplateEngine\Elements
  */
-class RichText extends OdtElement implements HasStyles
+class RichText extends OdtElement
 {
     /**
      * @var array<int, OdtElement> List of contained elements (Paragraph, ImageElement, RichTable, etc.)
@@ -248,32 +247,6 @@ class RichText extends OdtElement implements HasStyles
             }
         }
         return $all;
-    }
-
-    /**
-     * Register all styles for all contained elements.
-     *
-     * @return void
-     */
-    public function registerStyles(): void
-    {
-        foreach ($this->elements as $element) {
-            $element->registerStyles();
-        }
-    }
-
-    /**
-     * Collect style definitions from all elements.
-     *
-     * @return array
-     */
-    public function getStyleDefinitions(): array
-    {
-        $styles = [];
-        foreach ($this->elements as $element) {
-            $styles = array_merge_recursive($styles, $element->getStyleDefinitions());
-        }
-        return $styles;
     }
 
     public function addElement(OdtElement $element): self

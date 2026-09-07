@@ -3,11 +3,10 @@ namespace OdtTemplateEngine\Elements;
 
 use DOMDocument;
 use DOMNode;
-use OdtTemplateEngine\Contracts\HasStyles;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Elements\Paragraph;
 
-class ListElement extends OdtElement implements HasStyles
+class ListElement extends OdtElement
 {
     protected string $styleName;
     protected string $type; // 'numbered' oder 'bullet'
@@ -71,8 +70,6 @@ class ListElement extends OdtElement implements HasStyles
         
         return $list;
     }
-
-    public function registerStyles(): void{}
 
     /**
      * Collect text styles from all list items.

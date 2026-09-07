@@ -5,7 +5,6 @@ namespace OdtTemplateEngine\Elements;
 use DOMDocument;
 use DOMNode;
 use DOMElement;
-use OdtTemplateEngine\Contracts\HasStyles;
 use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Utils\StyleMapper;
 use OdtTemplateEngine\Utils\StyleOptionSplitter;
@@ -24,7 +23,7 @@ use OdtTemplateEngine\Utils\StyleOptionSplitter;
  *     ->setColspan(2);
  * ```
  */
-class RichTableCell extends OdtElement implements HasStyles
+class RichTableCell extends OdtElement
 {
     /**
      * The content of the cell.
@@ -258,31 +257,6 @@ class RichTableCell extends OdtElement implements HasStyles
     public function getStyleName(): string
     {
         return $this->styleName;
-    }
-
-    /**
-     * Retained legacy registration hook.
-     *
-     * The cell style is mapped and registered when the cell style is changed,
-     * while normal document insertion uses getOwnStyleRequirements().
-     *
-     * @return void
-     */
-    public function registerStyles(): void
-    {
-    }
-
-    /**
-     * Retained legacy style-definition projection.
-     *
-     * Semantic cell requirements are exposed through
-     * getOwnStyleRequirements() instead.
-     *
-     * @return array<string, array<string, string>>
-     */
-    public function getStyleDefinitions(): array
-    {
-        return [];
     }
 
     /**
