@@ -30,12 +30,18 @@ final class DocumentStylesTest extends TestCase
         self::assertInstanceOf(DOMElement::class, $style);
         self::assertSame('Standard', $style->getAttribute('style:parent-style-name'));
 
-        $paragraphProperties = $style->getElementsByTagName('style:paragraph-properties')->item(0);
+        $paragraphProperties = $style->getElementsByTagNameNS(
+            'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+            'paragraph-properties'
+        )->item(0);
         self::assertInstanceOf(DOMElement::class, $paragraphProperties);
         self::assertSame('0.1cm', $paragraphProperties->getAttribute('fo:margin-top'));
         self::assertSame('0.03cm', $paragraphProperties->getAttribute('fo:margin-bottom'));
 
-        $textProperties = $style->getElementsByTagName('style:text-properties')->item(0);
+        $textProperties = $style->getElementsByTagNameNS(
+            'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+            'text-properties'
+        )->item(0);
         self::assertInstanceOf(DOMElement::class, $textProperties);
         self::assertSame('bold', $textProperties->getAttribute('fo:font-weight'));
         self::assertSame('#123456', $textProperties->getAttribute('fo:color'));
@@ -82,7 +88,10 @@ XML);
         self::assertSame(1, $this->paragraphStyleCount($context->stylesDom(), 'AuthoredStyle'));
         $style = $this->paragraphStyle($context->stylesDom(), 'AuthoredStyle');
         self::assertInstanceOf(DOMElement::class, $style);
-        $properties = $style->getElementsByTagName('style:paragraph-properties')->item(0);
+        $properties = $style->getElementsByTagNameNS(
+            'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+            'paragraph-properties'
+        )->item(0);
         self::assertInstanceOf(DOMElement::class, $properties);
         self::assertSame('9cm', $properties->getAttribute('fo:margin-top'));
     }
@@ -108,7 +117,10 @@ XML);
 
         $style = $this->paragraphStyle($context->stylesDom(), 'LifecycleStyle');
         self::assertInstanceOf(DOMElement::class, $style);
-        $properties = $style->getElementsByTagName('style:paragraph-properties')->item(0);
+        $properties = $style->getElementsByTagNameNS(
+            'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+            'paragraph-properties'
+        )->item(0);
         self::assertInstanceOf(DOMElement::class, $properties);
         self::assertSame('0.2cm', $properties->getAttribute('fo:margin-top'));
     }
