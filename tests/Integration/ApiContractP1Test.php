@@ -140,7 +140,7 @@ final class ApiContractP1Test extends TestCase
         });
     }
 
-    public function testDrawTextBoxRegistersOnlyGraphicFrameStyle(): void
+    public function testDrawTextBoxLegacyRegistrationNoLongerMutatesFrameRegistry(): void
     {
         $box = new DrawTextBox('ContractBox', [
             'width' => '4cm',
@@ -149,6 +149,7 @@ final class ApiContractP1Test extends TestCase
             'border' => '0.03cm solid #444444',
         ]);
         $box->addElement((new Paragraph())->addText('Frame content'));
+        $frameStylesBefore = StyleMapper::$frameStyles;
         $box->registerStyles();
 
         $dom = new DOMDocument('1.0', 'UTF-8');
@@ -156,7 +157,7 @@ final class ApiContractP1Test extends TestCase
 
         self::assertNotNull($styleNode);
         self::assertSame('graphic', $styleNode->getAttribute('style:family'));
-        self::assertNotEmpty(StyleMapper::$frameStyles);
+        self::assertSame($frameStylesBefore, StyleMapper::$frameStyles);
     }
 
     private function templatePath(string $fileName): string
