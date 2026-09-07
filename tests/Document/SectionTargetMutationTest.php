@@ -135,9 +135,6 @@ final class SectionTargetMutationTest extends TestCase
                 return $dom->createElement('text:span');
             }
 
-            public function registerStyles(): void
-            {
-            }
         };
 
         try {

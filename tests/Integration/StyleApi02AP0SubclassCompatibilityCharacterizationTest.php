@@ -61,10 +61,6 @@ final class ExternalStyleHookProbeElement extends OdtElement
     public int $imageRequirementCalls = 0;
     public int $fillImageRequirementCalls = 0;
 
-    public function registerStyles(): void
-    {
-    }
-
     public function getOwnStyleRequirements(): iterable
     {
         ++$this->semanticRequirementCalls;
@@ -112,11 +108,6 @@ final class ExternalStyleHookProbeElement extends OdtElement
     {
         ++$this->fillImageRequirementCalls;
 
-        return [];
-    }
-
-    public function getStyleDefinitions(): array
-    {
         return [];
     }
 

@@ -112,10 +112,6 @@ final class TransitiveRequirementElement extends OdtElement
         return $dom->createElement('text:span');
     }
 
-    public function registerStyles(): void
-    {
-    }
-
     /** @return array<string, array<string, mixed>> */
     public function getOwnImageStyleRequirements(): array
     {
@@ -125,10 +121,6 @@ final class TransitiveRequirementElement extends OdtElement
 
 final class TransitiveRequirementComposite extends OdtElement
 {
-    public function registerStyles(): void
-    {
-    }
-
     public function toDomNode(DOMDocument $dom): DOMNode
     {
         return $dom->createElement('text:p');

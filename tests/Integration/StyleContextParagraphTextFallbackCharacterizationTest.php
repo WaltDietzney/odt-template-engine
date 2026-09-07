@@ -357,15 +357,6 @@ final class StyleContextLegacyTextReferenceElement extends OdtElement
         yield new StyleRequirement(StyleRequirement::KIND_REFERENCE, null, 'text', null, $this->styleName);
     }
 
-    public function registerStyles(): void
-    {
-    }
-
-    public function getStyleDefinitions(): array
-    {
-        return [];
-    }
-
     public function toDomNode(DOMDocument $dom): DOMNode
     {
         $paragraph = $dom->createElement('text:p');
