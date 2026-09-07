@@ -83,9 +83,7 @@ class ListElement extends OdtElement implements HasStyles
     {
         $styles = [];
         foreach ($this->items as $item) {
-            if ($item instanceof HasStyles) {
-                $styles = array_merge($styles, $item->getRequiredStyles());
-            }
+            $styles = array_merge($styles, $item->getRequiredStyles());
         }
         return $styles;
     }
