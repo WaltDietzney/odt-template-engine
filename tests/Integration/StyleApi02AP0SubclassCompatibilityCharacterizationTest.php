@@ -6,7 +6,6 @@ namespace OdtTemplateEngine\Tests\Integration;
 
 use DOMDocument;
 use DOMNode;
-use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\OdtTemplate;
 use PHPUnit\Framework\TestCase;
