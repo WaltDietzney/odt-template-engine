@@ -33,7 +33,6 @@ use OdtTemplateEngine\Template\TemplateProcessor;
 use OdtTemplateEngine\Template\TemplateStructureInspection;
 use OdtTemplateEngine\Template\TemplateStructureInspector;
 use OdtTemplateEngine\Template\TemplateStructureNormalizer;
-use OdtTemplateEngine\Utils\StyleWriter;
 use OdtTemplateEngine\Utils\StyleMapper;
 
 
@@ -1987,9 +1986,17 @@ class OdtTemplate
     protected function registerStyles(array $styleDefinitions): void
     {
         $stylesDom = $this->documentContext()->stylesDom();
+        $xpath = new DOMXPath($stylesDom);
+        $this->prepareNamespaces($xpath);
+        $officeStyles = $xpath->query('//office:styles')->item(0);
+        if (!$officeStyles) {
+            $officeStyles = $stylesDom->createElement('office:styles');
+            $stylesDom->documentElement->appendChild($officeStyles);
+        }
+
         foreach ($styleDefinitions as $name => $definition) {
             $family = $definition['family'];
-            if (StyleWriter::styleAlreadyExists($stylesDom, $name, $family)) {
+            if ($this->styleDefinitionExists($stylesDom, $name, $family)) {
                 continue;
             }
             $style = $stylesDom->createElement('style:style');
@@ -2010,8 +2017,43 @@ class OdtTemplate
                 }
                 $style->appendChild($properties);
             }
-            StyleWriter::appendStyleToStylesXml($stylesDom, $style);
+            $officeStyles->appendChild($style);
         }
+    }
+
+    private function styleDefinitionExists(DOMDocument $stylesDom, string $name, string $family): bool
+    {
+        foreach ($stylesDom->getElementsByTagName('*') as $element) {
+            if (!$element instanceof DOMElement
+                || ($element->localName !== 'style' && $element->nodeName !== 'style:style')
+            ) {
+                continue;
+            }
+
+            $styleName = $element->getAttributeNS(
+                'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+                'name'
+            );
+            $styleFamily = $element->getAttributeNS(
+                'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+                'family'
+            );
+            if ($styleName === '' || $styleFamily === '') {
+                foreach ($element->attributes as $attribute) {
+                    if ($attribute->nodeName === 'style:name') {
+                        $styleName = $attribute->nodeValue;
+                    } elseif ($attribute->nodeName === 'style:family') {
+                        $styleFamily = $attribute->nodeValue;
+                    }
+                }
+            }
+
+            if ($styleName === $name && $styleFamily === $family) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function extractTemplateVariables(): array

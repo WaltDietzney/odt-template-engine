@@ -84,6 +84,11 @@ milestone.
 - duplicate checks are performed by semantic materializers or the target DOM,
   not process-global writer state.
 
+The protected `OdtTemplate::registerStyles(array)` facade remains temporarily
+for compatibility. It performs its bounded DOM insertion locally and does not
+depend on `StyleWriter`; its retirement or replacement is deferred to
+STYLE-API-02H.
+
 ### Mapping
 
 Mapping is removed from writer finalization. Paragraph/text mapping remains in
