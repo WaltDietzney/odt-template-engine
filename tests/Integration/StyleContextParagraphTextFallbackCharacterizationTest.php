@@ -270,15 +270,10 @@ final class StyleContextParagraphTextFallbackCharacterizationTest extends TestCa
     }
 
     #[RunInSeparateProcess]
-    public function testStyleMapperAndDirectStyleWriterCompatibilityRemainSeparateFromTemplateIsolation(): void
+    public function testLegacyParagraphFallbackRemainsSeparateFromTemplateIsolation(): void
     {
         $name = 'SC01B_DirectWriterParagraph_' . bin2hex(random_bytes(4));
         StyleMapper::registerParagraphStyle($name, ['margin-left' => '7cm']);
-
-        $dom = new \DOMDocument('1.0', 'UTF-8');
-        self::assertTrue($dom->loadXML('<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"/>'));
-        \OdtTemplateEngine\Utils\StyleWriter::writeAllStyles($dom);
-        self::assertStringContainsString('style:name="' . $name . '"', $dom->saveXML());
 
         $template = $this->template();
         $output = $this->temporaryDirectory . '/filtered.odt';

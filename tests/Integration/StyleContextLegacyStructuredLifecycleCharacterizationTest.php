@@ -8,7 +8,6 @@ use OdtTemplateEngine\Elements\CircularImageElement;
 use OdtTemplateEngine\Elements\DrawTextBox;
 use OdtTemplateEngine\Elements\ImageElement;
 use OdtTemplateEngine\OdtTemplate;
-use OdtTemplateEngine\Utils\StyleMapper;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
@@ -48,12 +47,12 @@ final class StyleContextLegacyStructuredLifecycleCharacterizationTest extends Te
         $first->render();
         $firstName = (string) $firstImage->getImageOptions()['style-name'];
 
-        self::assertArrayHasKey($firstName, StyleMapper::getRegisteredImageStyles());
+        self::assertArrayHasKey($firstName, $first->imageStylesForAudit());
         $first->load();
-        self::assertArrayHasKey(
+        self::assertArrayNotHasKey(
             $firstName,
-            StyleMapper::getRegisteredImageStyles(),
-            'load() resets document state but does not reset static legacy registries'
+            $first->imageStylesForAudit(),
+            'load() resets the document-local compatibility state'
         );
 
         $second = $this->template();
@@ -84,16 +83,16 @@ final class StyleContextLegacyStructuredLifecycleCharacterizationTest extends Te
 
         $template->render();
         $firstCounts = [
-            'frame' => count(StyleMapper::getFrameStyles()),
-            'image' => count(StyleMapper::getRegisteredImageStyles()),
-            'fill' => count(StyleMapper::getRegisteredFillImages()),
+            'frame' => count($template->frameStylesForAudit()),
+            'image' => count($template->imageStylesForAudit()),
+            'fill' => count($template->fillImagesForAudit()),
         ];
         $firstFillState = $circular->getFillImageRequirements();
 
         $template->render();
-        self::assertSame($firstCounts['frame'], count(StyleMapper::getFrameStyles()));
-        self::assertSame($firstCounts['image'], count(StyleMapper::getRegisteredImageStyles()));
-        self::assertSame($firstCounts['fill'], count(StyleMapper::getRegisteredFillImages()));
+        self::assertSame($firstCounts['frame'], count($template->frameStylesForAudit()));
+        self::assertSame($firstCounts['image'], count($template->imageStylesForAudit()));
+        self::assertSame($firstCounts['fill'], count($template->fillImagesForAudit()));
         self::assertSame($firstFillState, $circular->getFillImageRequirements());
     }
 
@@ -135,7 +134,7 @@ final class StyleContextLegacyStructuredLifecycleCharacterizationTest extends Te
         $normalName = (string) $normalImage->getImageOptions()['style-name'];
 
         self::assertArrayHasKey($normalName, $normal->imageStylesForAudit());
-        self::assertArrayNotHasKey($normalName, StyleMapper::getRegisteredImageStyles());
+        self::assertArrayHasKey($normalName, $normal->imageStylesForAudit());
 
         $legacy = $this->template();
         $legacyImage = new ImageElement($this->imagePath(), ['width' => '7cm']);
@@ -143,7 +142,7 @@ final class StyleContextLegacyStructuredLifecycleCharacterizationTest extends Te
         $legacy->render();
         $legacyName = (string) $legacyImage->getImageOptions()['style-name'];
 
-        self::assertArrayHasKey($legacyName, StyleMapper::getRegisteredImageStyles());
+        self::assertArrayHasKey($legacyName, $legacy->imageStylesForAudit());
         self::assertArrayNotHasKey($normalName, $legacy->imageStylesForAudit());
     }
 
@@ -153,6 +152,16 @@ final class StyleContextLegacyStructuredLifecycleCharacterizationTest extends Te
             public function imageStylesForAudit(): array
             {
                 return $this->documentContext()->styleContext()->imageStyles();
+            }
+
+            public function frameStylesForAudit(): array
+            {
+                return $this->documentContext()->styleContext()->frameStyles();
+            }
+
+            public function fillImagesForAudit(): array
+            {
+                return $this->documentContext()->styleContext()->fillImages();
             }
 
             public function stylesXmlForAudit(): string

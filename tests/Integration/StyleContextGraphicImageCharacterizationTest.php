@@ -9,7 +9,6 @@ use OdtTemplateEngine\Elements\DrawTextBox;
 use OdtTemplateEngine\Elements\ImageElement;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\OdtTemplate;
-use OdtTemplateEngine\Utils\StyleMapper;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
@@ -83,16 +82,6 @@ final class StyleContextGraphicImageCharacterizationTest extends TestCase
             self::assertStringNotContainsString('style:name="' . $styleA . '"', $styles);
             self::assertStringNotContainsString('style:name="' . $styleB . '"', $styles);
         }
-    }
-
-    #[RunInSeparateProcess]
-    public function testSameImageStyleNameUsesLatestRegisteredDefinition(): void
-    {
-        $name = 'D1_Conflicting_Image';
-        StyleMapper::registerImageStyle($name, ['svg:width' => '1cm']);
-        StyleMapper::registerImageStyle($name, ['svg:width' => '9cm']);
-
-        self::assertSame(['svg:width' => '9cm'], StyleMapper::getRegisteredImageStyles()[$name]);
     }
 
     #[RunInSeparateProcess]

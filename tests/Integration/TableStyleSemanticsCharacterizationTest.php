@@ -10,7 +10,6 @@ use DOMXPath;
 use OdtTemplateEngine\Elements\RichTable;
 use OdtTemplateEngine\Elements\RichTableCell;
 use OdtTemplateEngine\OdtTemplate;
-use OdtTemplateEngine\Utils\StyleMapper;
 use OdtTemplateEngine\Utils\StyleWriter;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
@@ -107,33 +106,6 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
     }
 
     #[RunInSeparateProcess]
-    public function testNormalFinalizationFiltersUnrelatedStaticTableStyles(): void
-    {
-        $firstStyle = 'SR07_Table_A_' . bin2hex(random_bytes(4));
-        $secondStyle = 'SR07_Table_B_' . bin2hex(random_bytes(4));
-
-        StyleMapper::registerTableStyle($firstStyle, ['table:align' => 'left']);
-        $first = $this->template();
-        $firstTable = (new RichTable())->setTableStyleName($firstStyle)->addRow(['A']);
-        $first->setElement('tableblock', $firstTable);
-        $first->save($this->outputPath('table-leak-first'));
-
-        StyleMapper::registerTableStyle($secondStyle, ['table:align' => 'right']);
-        $second = $this->template();
-        $secondTable = (new RichTable())->setTableStyleName($secondStyle)->addRow(['B']);
-        $second->setElement('tableblock', $secondTable);
-        $output = $this->outputPath('table-leak-second');
-        $second->save($output);
-
-        $styles = $this->entry($output, 'styles.xml');
-
-        self::assertSame(0, $this->styleCount($styles, $firstStyle, 'table'));
-        self::assertSame(0, $this->styleCount($styles, $secondStyle, 'table'));
-        self::assertArrayHasKey($firstStyle, StyleMapper::getRegisteredTableStyles());
-        self::assertArrayHasKey($secondStyle, StyleMapper::getRegisteredTableStyles());
-    }
-
-    #[RunInSeparateProcess]
     public function testNormalFinalizationKeepsSemanticCellsLocalAndFiltersLegacyResidue(): void
     {
         $firstCell = new RichTableCell('A', ['background' => '#ffe0e0']);
@@ -158,62 +130,7 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
         self::assertSame(0, $this->styleCount($styles, $secondName, 'table-cell'));
         self::assertSame(0, $this->styleCount($content, $firstName, 'table-cell'));
         self::assertSame(1, $this->styleCount($content, $secondName, 'table-cell'));
-        self::assertArrayNotHasKey($firstName, StyleMapper::getRegisteredTableCellStyles());
     }
-
-    #[RunInSeparateProcess]
-    public function testCurrentCellReferenceDoesNotAdoptSameNamedTableRegistration(): void
-    {
-        $cell = new RichTableCell('A', ['background' => '#e0ffe0']);
-        $sharedName = $cell->getStyleName();
-        StyleMapper::registerTableStyle($sharedName, ['table:align' => 'center']);
-
-        $template = $this->template();
-        $template->setElement('tableblock', (new RichTable())->addRow([$cell]));
-        $output = $this->outputPath('cross-family-filter');
-        $template->save($output);
-
-        $styles = $this->entry($output, 'styles.xml');
-        $content = $this->entry($output, 'content.xml');
-        self::assertSame(0, $this->styleCount($styles, $sharedName, 'table'));
-        self::assertSame(0, $this->styleCount($styles, $sharedName, 'table-cell'));
-        self::assertSame(1, $this->styleCount($content, $sharedName, 'table-cell'));
-    }
-
-    #[RunInSeparateProcess]
-    public function testNormalSemanticFilteringAlsoAppliesAfterRefresh(): void
-    {
-        $unrelated = 'SR07_Refresh_Unrelated_' . bin2hex(random_bytes(4));
-        StyleMapper::registerTableStyle($unrelated, ['table:align' => 'left']);
-        $template = $this->template();
-        $template->setElement('tableblock', (new RichTable())->addRow(['A']));
-        $template->refresh();
-
-        $output = $this->outputPath('refresh-filter');
-        $template->save($output);
-        self::assertSame(0, $this->styleCount($this->entry($output, 'styles.xml'), $unrelated, 'table'));
-        self::assertArrayHasKey($unrelated, StyleMapper::getRegisteredTableStyles());
-    }
-
-    #[RunInSeparateProcess]
-    public function testLoadDoesNotResetStaticTableRegistries(): void
-    {
-        $tableStyle = 'SR07_Load_Table_' . bin2hex(random_bytes(4));
-        StyleMapper::registerTableStyle($tableStyle, ['table:align' => 'center']);
-
-        $cell = new RichTableCell('Persistent', ['background' => '#eeeeee']);
-        $cellStyle = $cell->getStyleName();
-
-        self::assertArrayHasKey($tableStyle, StyleMapper::getRegisteredTableStyles());
-        self::assertArrayNotHasKey($cellStyle, StyleMapper::getRegisteredTableCellStyles());
-
-        $template = $this->template();
-        $template->load();
-
-        self::assertArrayHasKey($tableStyle, StyleMapper::getRegisteredTableStyles());
-        self::assertArrayNotHasKey($cellStyle, StyleMapper::getRegisteredTableCellStyles());
-    }
-
     #[RunInSeparateProcess]
     public function testExplicitColumnWidthsMaterializeAutomaticColumnStylesOnlyInContentXml(): void
     {
@@ -340,45 +257,6 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
         self::assertSame(0, $this->styledTableRowCount($xml));
         self::assertStringNotContainsString('#ff0000', $xml);
         self::assertStringNotContainsString('2cm', $xml);
-    }
-
-    #[RunInSeparateProcess]
-    public function testExistingCommonTableAndCellDefinitionsRemainAuthoritativeInStyleWriter(): void
-    {
-        $tableName = 'SR07ExistingTable';
-        $cellName = 'SR07ExistingCell';
-        $dom = $this->stylesDom();
-        $officeStyles = $this->officeStyles($dom);
-
-        $this->appendStyle(
-            $dom,
-            $officeStyles,
-            $tableName,
-            'table',
-            'table-properties',
-            ['table:align' => 'center']
-        );
-        $this->appendStyle(
-            $dom,
-            $officeStyles,
-            $cellName,
-            'table-cell',
-            'table-cell-properties',
-            ['fo:background-color' => '#123456']
-        );
-
-        StyleMapper::registerTableStyle($tableName, ['table:align' => 'left']);
-        StyleMapper::registerTableCellStyle($cellName, ['background' => '#abcdef']);
-
-        StyleWriter::writeAllStyles($dom);
-        $xml = $dom->saveXML() ?: '';
-
-        self::assertSame(1, $this->styleCount($xml, $tableName, 'table'));
-        self::assertSame(1, $this->styleCount($xml, $cellName, 'table-cell'));
-        self::assertStringContainsString('table:align="center"', $xml);
-        self::assertStringNotContainsString('table:align="left"', $xml);
-        self::assertStringContainsString('fo:background-color="#123456"', $xml);
-        self::assertStringNotContainsString('fo:background-color="#abcdef"', $xml);
     }
 
     #[RunInSeparateProcess]

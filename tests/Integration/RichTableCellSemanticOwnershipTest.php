@@ -11,8 +11,6 @@ use OdtTemplateEngine\Document\StyleRequirementCollector;
 use OdtTemplateEngine\Elements\RichTable;
 use OdtTemplateEngine\Elements\RichTableCell;
 use OdtTemplateEngine\OdtTemplate;
-use OdtTemplateEngine\Utils\StyleMapper;
-use OdtTemplateEngine\Utils\StyleWriter;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
@@ -115,17 +113,6 @@ final class RichTableCellSemanticOwnershipTest extends TestCase
         $table->toDomNode($dom);
 
         self::assertSame(1, $this->styleCount($dom->saveXML() ?: '', $cell->getStyleName(), 'table-cell'));
-    }
-
-    #[RunInSeparateProcess]
-    public function testExplicitStaticCellRegistrationRemainsCommonCompatibility(): void
-    {
-        $name = 'ExplicitCell_' . bin2hex(random_bytes(3));
-        StyleMapper::registerTableCellStyle($name, ['fo:background-color' => '#abcdef']);
-        $dom = $this->dom('<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"><office:styles/></office:document-styles>');
-        StyleWriter::writeAllStyles($dom);
-
-        self::assertSame(1, $this->styleCount($dom->saveXML() ?: '', $name, 'table-cell'));
     }
 
     #[RunInSeparateProcess]

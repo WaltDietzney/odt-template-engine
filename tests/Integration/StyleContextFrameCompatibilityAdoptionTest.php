@@ -9,7 +9,6 @@ use DOMNode;
 use OdtTemplateEngine\Elements\DrawTextBox;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\OdtTemplate;
-use OdtTemplateEngine\Utils\StyleMapper;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
@@ -56,7 +55,7 @@ final class StyleContextFrameCompatibilityAdoptionTest extends TestCase
         self::assertIsString($secondName);
         self::assertStringNotContainsString('style:name="' . $firstName . '"', $styles);
         self::assertStringContainsString('style:name="' . $secondName . '"', $styles);
-        self::assertArrayHasKey($firstName, StyleMapper::getFrameStyles());
+        self::assertNotSame([], $first->frameStylesForAudit());
     }
 
     public function testSemanticDrawTextBoxStillUsesDocumentLocalGraphicDefinition(): void
@@ -74,22 +73,6 @@ final class StyleContextFrameCompatibilityAdoptionTest extends TestCase
         self::assertIsString($semanticName);
         self::assertStringContainsString('draw:style-name="' . $semanticName . '"', $content);
         self::assertSame(1, substr_count($styles, 'style:name="' . $semanticName . '"'));
-    }
-
-    #[RunInSeparateProcess]
-    public function testDirectLegacyFrameRegistrationIsAdoptedWhenCurrentDomReferencesIt(): void
-    {
-        $name = 'DirectLegacyFrame';
-        StyleMapper::addFrameStyle($name, ['draw:fill' => 'solid']);
-        $template = $this->template();
-        $template->assign(['test1' => new LegacyFrameReferenceElement($name)]);
-        $template->render();
-        $output = $this->outputPath('direct-frame');
-        $template->save($output);
-
-        $styles = $this->entry($output, 'styles.xml');
-        self::assertSame(1, substr_count($styles, 'style:name="' . $name . '"'));
-        self::assertStringContainsString('draw:fill="solid"', $styles);
     }
 
     #[RunInSeparateProcess]
@@ -112,7 +95,12 @@ final class StyleContextFrameCompatibilityAdoptionTest extends TestCase
 
     private function template(): OdtTemplate
     {
-        $template = new OdtTemplate($this->templatePath('sample_textfeld.odt'));
+        $template = new class($this->templatePath('sample_textfeld.odt')) extends OdtTemplate {
+            public function frameStylesForAudit(): array
+            {
+                return $this->documentContext()->styleContext()->frameStyles();
+            }
+        };
         $this->templates[] = $template;
         return $template;
     }

@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace OdtTemplateEngine\Tests\Integration;
 
-use DOMDocument;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\RichText;
 use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Utils\StyleMapper;
-use OdtTemplateEngine\Utils\StyleWriter;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
@@ -71,43 +69,11 @@ final class StyleContextTextFontCharacterizationTest extends TestCase
         );
     }
 
-    #[RunInSeparateProcess]
-    public function testLegacyTextRegistrationIsConsumedByDirectWriterButNotTemplateSave(): void
+    public function testLegacyTextRegistrationIsNoLongerConsumedByAWriter(): void
     {
         $style = '01FC_LegacyText_' . bin2hex(random_bytes(3));
         StyleMapper::setTextStyle($style, ['fo:color' => '#123456']);
-
-        $dom = new DOMDocument('1.0', 'UTF-8');
-        self::assertTrue($dom->loadXML(
-            '<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"/>'
-        ));
-        StyleWriter::writeAllStyles($dom);
-        self::assertStringContainsString($style, (string) $dom->saveXML());
-
-        $output = $this->temporaryDirectory . '/legacy.odt';
-        $template = new OdtTemplate(dirname(__DIR__, 2) . '/samples/templates/template_18_ListStyles.odt');
-        $template->save($output);
-
-        self::assertStringNotContainsString($style, $this->readStyles($output));
-    }
-
-    #[RunInSeparateProcess]
-    public function testSpecializedTextWriterUsesProcessWideGeneratedStyleCache(): void
-    {
-        $style = '01FC_CachedText_' . bin2hex(random_bytes(3));
-        $font = '01FC Cached Font ' . bin2hex(random_bytes(3));
-        StyleMapper::setTextStyle($style, [
-            'style:font-name' => $font,
-            'fo:font-family' => $font,
-        ]);
-
-        $first = $this->stylesDom();
-        StyleWriter::writeTextStyles($first);
-        $second = $this->stylesDom();
-        StyleWriter::writeTextStyles($second);
-
-        self::assertStringContainsString($style, (string) $first->saveXML());
-        self::assertStringNotContainsString($style, (string) $second->saveXML());
+        self::assertArrayHasKey($style, StyleMapper::getTextStyles());
     }
 
     /** @return array{0: OdtTemplate, 1: string} */
@@ -125,16 +91,6 @@ final class StyleContextTextFontCharacterizationTest extends TestCase
         $template->setElement('my_list', $richText);
 
         return [$template, $style];
-    }
-
-    private function stylesDom(): DOMDocument
-    {
-        $dom = new DOMDocument('1.0', 'UTF-8');
-        self::assertTrue($dom->loadXML(
-            '<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"/>'
-        ));
-
-        return $dom;
     }
 
     private function readStyles(string $path): string

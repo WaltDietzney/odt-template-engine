@@ -10,8 +10,6 @@ use OdtTemplateEngine\Document\StyleRequirementMaterializer;
 use OdtTemplateEngine\Elements\RichTable;
 use OdtTemplateEngine\OdtDocumentContext;
 use OdtTemplateEngine\OdtTemplate;
-use OdtTemplateEngine\Utils\StyleMapper;
-use OdtTemplateEngine\Utils\StyleWriter;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
@@ -81,76 +79,8 @@ final class RichTableSemanticOwnershipTest extends TestCase
         self::assertSame(0, $this->styleCount($styles, 'UnknownStyle', 'table'));
     }
 
-    #[RunInSeparateProcess]
-    public function testRegisteredTableStyleNameRemainsAReference(): void
-    {
-        StyleMapper::registerTableStyle('MyTableStyle', [
-            'table:align' => 'left',
-            'style:width' => '15cm',
-        ]);
-        $table = (new RichTable())
-            ->setTableName('TestTable')
-            ->setTableStyleName('MyTableStyle')
-            ->addRow(['A']);
-        $requirements = array_values(array_filter(
-            iterator_to_array($table->getOwnStyleRequirements(), false),
-            static fn (StyleRequirement $requirement): bool => $requirement->family() === 'table'
-        ));
-
-        self::assertCount(1, $requirements);
-        self::assertSame(StyleRequirement::KIND_REFERENCE, $requirements[0]->kind());
-        self::assertNull($requirements[0]->scope());
-        self::assertNull($requirements[0]->documentPart());
-        self::assertSame('MyTableStyle', $requirements[0]->name());
-        self::assertNull($requirements[0]->parentStyleName());
-        self::assertSame([], $requirements[0]->propertyGroups());
-    }
-
-    #[RunInSeparateProcess]
-    public function testOnlyCurrentRegisteredTableReferenceIsAdopted(): void
-    {
-        StyleMapper::registerTableStyle('RegisteredA', ['table:align' => 'left']);
-        StyleMapper::registerTableStyle('RegisteredB', ['table:align' => 'right']);
-        $table = (new RichTable())->setTableStyleName('RegisteredB')->addRow(['A']);
-
-        $names = array_map(
-            static fn (StyleRequirement $requirement): string => $requirement->name(),
-            array_values(array_filter(
-                iterator_to_array($table->getOwnStyleRequirements(), false),
-                static fn (StyleRequirement $requirement): bool => $requirement->family() === 'table'
-            ))
-        );
-
-        self::assertSame(['RegisteredB'], $names);
-    }
-
-    #[RunInSeparateProcess]
-    public function testReferencedRegisteredTableStyleIsNotAdoptedAsDocumentDefinition(): void
-    {
-        StyleMapper::registerTableStyle('MyTableStyle', [
-            'table:align' => 'left',
-            'style:width' => '15cm',
-        ]);
-        $template = new OdtTemplate($this->templatePath('template_11_table.odt'));
-        $template->setElement(
-            'tableblock',
-            (new RichTable())->setTableStyleName('MyTableStyle')->addRow(['A'])
-        );
-        $output = $this->outputPath('registered-table');
-        $template->save($output);
-
-        $content = $this->entry($output, 'content.xml');
-        $styles = $this->entry($output, 'styles.xml');
-        self::assertSame(0, $this->styleCount($styles, 'MyTableStyle', 'table'));
-        self::assertSame(0, $this->styleCount($content, 'MyTableStyle', 'table'));
-        self::assertStringContainsString('table:style-name="MyTableStyle"', $content);
-        self::assertStringNotContainsString('table:align="left"', $styles);
-        self::assertStringNotContainsString('style:width="15cm"', $styles);
-    }
-
     public function testAuthoredCommonTableDefinitionRemainsAuthoritative(): void
     {
-        StyleMapper::registerTableStyle('AuthoredTable', ['table:align' => 'left']);
         $context = $this->context();
         $styles = $context->stylesDom()->getElementsByTagNameNS(self::OFFICE_NS, 'styles')->item(0);
         self::assertNotNull($styles);
@@ -183,33 +113,6 @@ final class RichTableSemanticOwnershipTest extends TestCase
         $xml = $dom->saveXML() ?: '';
         self::assertStringContainsString('table:style-name="DirectStyle"', $xml);
         self::assertSame(0, $this->styleCount($xml, 'DirectStyle', 'table'));
-    }
-
-    #[RunInSeparateProcess]
-    public function testStyleWriterDirectTableCompatibilityRemainsAvailable(): void
-    {
-        StyleMapper::registerTableStyle('DirectRegistered', ['table:align' => 'center']);
-        $dom = $this->stylesDom();
-        StyleWriter::writeAllStyles($dom);
-
-        self::assertSame(1, $this->styleCount($dom->saveXML() ?: '', 'DirectRegistered', 'table'));
-    }
-
-    #[RunInSeparateProcess]
-    public function testRepeatedSaveDoesNotAdoptReferencedGlobalTableDefinition(): void
-    {
-        StyleMapper::registerTableStyle('RepeatedTable', ['table:align' => 'left']);
-        $template = new OdtTemplate($this->templatePath('template_11_table.odt'));
-        $template->setElement(
-            'tableblock',
-            (new RichTable())->setTableStyleName('RepeatedTable')->addRow(['A'])
-        );
-        $first = $this->outputPath('repeated-table-first');
-        $second = $this->outputPath('repeated-table-second');
-        $template->save($first);
-        $template->save($second);
-
-        self::assertSame(0, $this->styleCount($this->entry($second, 'styles.xml'), 'RepeatedTable', 'table'));
     }
 
     private const OFFICE_NS = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0';

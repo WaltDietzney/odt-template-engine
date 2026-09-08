@@ -8,7 +8,6 @@ use OdtTemplateEngine\Elements\CircularImageElement;
 use OdtTemplateEngine\Elements\DrawTextBox;
 use OdtTemplateEngine\Elements\ImageElement;
 use OdtTemplateEngine\OdtTemplate;
-use OdtTemplateEngine\Utils\StyleMapper;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
@@ -67,7 +66,6 @@ final class StyleContextLegacyGraphicCompatibilityAuditTest extends TestCase
 
         // The same normal occurrence is visible in both semantic and legacy
         // state today. Physical de-duplication is a later ownership concern.
-        self::assertArrayNotHasKey($fillName, StyleMapper::getRegisteredFillImages());
         self::assertArrayHasKey(
             (string) array_key_first($circular->getImageStyleRequirements()),
             $circularTemplate->imageStylesForAudit()
@@ -89,7 +87,7 @@ final class StyleContextLegacyGraphicCompatibilityAuditTest extends TestCase
         $fillName = 'cv_photo_' . pathinfo($this->imagePath(), PATHINFO_FILENAME);
 
         self::assertArrayHasKey($fillName, $template->fillImagesForAudit());
-        self::assertArrayNotHasKey($fillName, $template->legacyFillImagesForAudit());
+        self::assertArrayHasKey($fillName, $template->legacyFillImagesForAudit());
         self::assertSame(1, substr_count($styles, 'draw:name="' . $fillName . '"'));
     }
 
@@ -103,15 +101,13 @@ final class StyleContextLegacyGraphicCompatibilityAuditTest extends TestCase
 
         self::assertTrue($template->legacyStructuredValuesMaterializedForAudit());
         self::assertSame([], $template->semanticDefinitionsForAudit());
-        self::assertSame([], $template->imageStylesForAudit());
-        self::assertSame([], $template->fillImagesForAudit());
         self::assertArrayHasKey(
             (string) array_key_first($image->getImageStyleRequirements()),
-            StyleMapper::getRegisteredImageStyles()
+            $template->imageStylesForAudit()
         );
         self::assertArrayHasKey(
             'cv_photo_' . pathinfo($this->imagePath(), PATHINFO_FILENAME),
-            StyleMapper::getRegisteredFillImages()
+            $template->fillImagesForAudit()
         );
 
         $output = sys_get_temp_dir() . '/sr06f-legacy-circular-' . bin2hex(random_bytes(6)) . '.odt';
@@ -147,7 +143,7 @@ final class StyleContextLegacyGraphicCompatibilityAuditTest extends TestCase
 
             public function legacyFillImagesForAudit(): array
             {
-                return \OdtTemplateEngine\Utils\StyleMapper::getRegisteredFillImages();
+                return $this->documentContext()->styleContext()->fillImages();
             }
 
             public function semanticFillImageNamesForAudit(): array

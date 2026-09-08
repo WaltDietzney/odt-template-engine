@@ -9,7 +9,6 @@ use DOMNode;
 use OdtTemplateEngine\Elements\CircularImageElement;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\OdtTemplate;
-use OdtTemplateEngine\Utils\StyleMapper;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
@@ -56,7 +55,7 @@ final class StyleContextFillImageCompatibilityAdoptionTest extends TestCase
         self::assertStringContainsString('draw:name="' . $secondName . '"', $styles);
         self::assertStringContainsString('Pictures/banner.png', $styles);
         self::assertTrue($this->contains($output, 'Pictures/banner.png'));
-        self::assertArrayHasKey($firstName, StyleMapper::getRegisteredFillImages());
+        self::assertArrayHasKey($firstName, $first->fillImagesForAudit());
     }
 
     #[RunInSeparateProcess]
@@ -71,23 +70,7 @@ final class StyleContextFillImageCompatibilityAdoptionTest extends TestCase
         self::assertSame(1, substr_count($styles, 'draw:name="cv_photo_Logo"'));
         self::assertStringContainsString('Pictures/Logo.png', $styles);
         self::assertTrue($this->contains($output, 'Pictures/Logo.png'));
-        self::assertArrayNotHasKey('cv_photo_Logo', StyleMapper::getRegisteredFillImages());
-    }
-
-    #[RunInSeparateProcess]
-    public function testDirectLegacyFillRegistrationIsAdoptedWhenCurrentDomReferencesIt(): void
-    {
-        $name = 'DirectLegacyFill';
-        StyleMapper::registerFillImage($name, $this->imagePath('Logo.png'));
-        $template = $this->template();
-        $template->assign(['test1' => new LegacyFillReferenceElement($name)]);
-        $template->render();
-        $output = $this->outputPath('direct-fill');
-        $template->save($output);
-
-        $styles = $this->entry($output, 'styles.xml');
-        self::assertSame(1, substr_count($styles, 'draw:name="' . $name . '"'));
-        self::assertStringContainsString('Pictures/Logo.png', $styles);
+        self::assertArrayHasKey('cv_photo_Logo', $template->fillImagesForAudit());
     }
 
     #[RunInSeparateProcess]
@@ -121,7 +104,12 @@ final class StyleContextFillImageCompatibilityAdoptionTest extends TestCase
 
     private function template(): OdtTemplate
     {
-        $template = new OdtTemplate($this->templatePath('sample_textfeld.odt'));
+        $template = new class($this->templatePath('sample_textfeld.odt')) extends OdtTemplate {
+            public function fillImagesForAudit(): array
+            {
+                return $this->documentContext()->styleContext()->fillImages();
+            }
+        };
         $this->templates[] = $template;
         return $template;
     }

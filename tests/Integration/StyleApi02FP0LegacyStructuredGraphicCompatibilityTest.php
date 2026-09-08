@@ -8,7 +8,6 @@ use OdtTemplateEngine\Elements\CircularImageElement;
 use OdtTemplateEngine\Elements\DrawTextBox;
 use OdtTemplateEngine\Elements\ImageElement;
 use OdtTemplateEngine\OdtTemplate;
-use OdtTemplateEngine\Utils\StyleMapper;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
@@ -43,7 +42,7 @@ final class StyleApi02FP0LegacyStructuredGraphicCompatibilityTest extends TestCa
         $styles = $this->entry($output, 'styles.xml');
         $styleName = $this->graphicStyleName($content, '02FP0_LegacyFrame');
 
-        self::assertArrayHasKey($styleName, StyleMapper::getFrameStyles());
+        self::assertArrayHasKey($styleName, $template->frameStylesForAudit());
         self::assertStringContainsString('style:name="' . $styleName . '"', $styles);
         self::assertStringContainsString('style:family="graphic"', $styles);
         self::assertStringContainsString('draw:fill-color="#d4a100"', $styles);
@@ -59,7 +58,7 @@ final class StyleApi02FP0LegacyStructuredGraphicCompatibilityTest extends TestCa
         $styles = $this->entry($output, 'styles.xml');
         $styleName = (string) $image->getImageOptions()['style-name'];
 
-        self::assertArrayHasKey($styleName, StyleMapper::getRegisteredImageStyles());
+        self::assertArrayHasKey($styleName, $template->imageStylesForAudit());
         self::assertStringContainsString('draw:style-name="' . $styleName . '"', $content);
         self::assertStringContainsString('style:name="' . $styleName . '"', $styles);
     }
@@ -74,15 +73,30 @@ final class StyleApi02FP0LegacyStructuredGraphicCompatibilityTest extends TestCa
         $imageName = (string) array_key_first($image->getImageStyleRequirements());
         $fillName = (string) array_key_first($image->getFillImageRequirements());
 
-        self::assertArrayHasKey($imageName, StyleMapper::getRegisteredImageStyles());
-        self::assertArrayHasKey($fillName, StyleMapper::getRegisteredFillImages());
+        self::assertArrayHasKey($imageName, $template->imageStylesForAudit());
+        self::assertArrayHasKey($fillName, $template->fillImagesForAudit());
         self::assertStringContainsString('style:name="' . $imageName . '"', $styles);
         self::assertStringContainsString('draw:name="' . $fillName . '"', $styles);
     }
 
     private function legacyTemplate(object $element): OdtTemplate
     {
-        $template = new OdtTemplate($this->templatePath('sample_textfeld.odt'));
+        $template = new class($this->templatePath('sample_textfeld.odt')) extends OdtTemplate {
+            public function frameStylesForAudit(): array
+            {
+                return $this->documentContext()->styleContext()->frameStyles();
+            }
+
+            public function imageStylesForAudit(): array
+            {
+                return $this->documentContext()->styleContext()->imageStyles();
+            }
+
+            public function fillImagesForAudit(): array
+            {
+                return $this->documentContext()->styleContext()->fillImages();
+            }
+        };
         $this->templates[] = $template;
         $template->assign(['test1' => $element]);
         $template->render();
