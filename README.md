@@ -39,7 +39,7 @@ This makes the engine useful for documents such as:
 - **Lists** — generate numbered and bulleted lists, including nested structures.
 - **Tables** — create native ODT tables and styled table cells.
 - **HTML import** — convert supported HTML fragments into native ODT content.
-- **Styles** — map text, paragraph and table-cell styling to ODF markup.
+- **Styles** — use friendly element styling and document-local named paragraph styles.
 - **Metadata** — write document title, author, description, dates and other metadata.
 - **ODT-aware processing** — normalize editor-generated spans and manipulate the XML inside real ODT packages.
 
@@ -129,7 +129,18 @@ $richText->addParagraph($paragraph);
 $template->setElement('intro', $richText);
 ```
 
-The repository also contains elements and helpers for tables, table cells, images, lists, styles and HTML imports.
+For reusable named paragraph styles in the current document, use the document-style facade:
+
+```php
+$template->styles()->defineParagraph('ReportHeading', [
+    'margin-top' => '0.3cm',
+    'margin-bottom' => '0.1cm',
+]);
+
+$heading = new Paragraph('ReportHeading');
+```
+
+The repository also contains elements and helpers for tables, table cells, images, lists and HTML imports.
 
 ## Interactive samples
 
@@ -185,7 +196,7 @@ The project also uses generated sample documents for practical LibreOffice-orien
 
 The developer documentation is published at [odt.walter-dietz.de/docs/](https://odt.walter-dietz.de/docs/). Its versioned Markdown source lives in [`docs/`](docs/) and is built with Zensical.
 
-Start with the [Quick Start](https://odt.walter-dietz.de/docs/getting-started/quick-start/) and then continue with the template-language and rich-document guides.
+Start with the [Quick Start](https://odt.walter-dietz.de/docs/getting-started/quick-start/) and then continue with the template-language, rich-document and styling guides.
 
 Useful repository areas:
 
@@ -202,13 +213,13 @@ docs/                    Developer documentation source
 
 ## Project status
 
-The engine is actively maintained and already supports substantial real-world ODT generation. The public API and internal architecture are still evolving, so applications should pin an appropriate package version when stable API behavior is important.
+The engine is actively maintained and already supports substantial real-world ODT generation. The public API and internal architecture continue to evolve, but the current style system has a document-local ownership model with explicit named paragraph authoring and semantic structured-element requirements.
 
 Current development priorities include:
 
 - broader integration coverage for representative document features;
-- richer text and style capabilities;
-- improved table and style mapping;
+- layout work for frames, tables, lists and page flow;
+- template-authoring and format-preservation improvements;
 - continued LibreOffice compatibility testing;
 - practical requirements discovered through real document-generation projects.
 
@@ -218,13 +229,13 @@ Please report suspected vulnerabilities according to [`SECURITY.md`](SECURITY.md
 
 ## Contributing
 
-Issues, reproducible bug reports and focused pull requests are welcome. Before submitting code, please install development dependencies and run:
+Issues, reproducible bug reports and focused pull requests are welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for development and contribution guidance.
+
+Before submitting code, please install development dependencies and run:
 
 ```bash
 composer test
 ```
-
-A dedicated contribution guide will be added as the public release process is formalized.
 
 ## Support the project
 
