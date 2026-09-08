@@ -1,14 +1,14 @@
 # How the Engine Works
 
-The ODT Template Engine combines a real office document with application data. It is template-driven, but it is not limited to replacing text placeholders.
+The ODT Template Engine combines a real office document with application data. It is template-driven, but it is not limited to replacing text placeholders or generating content from PHP.
 
 A useful rule of thumb is:
 
-> **Use LibreOffice for document design. Use PHP for dynamic content.**
+> **Use LibreOffice for durable document design. Use PHP for dynamic data, generated content, and bounded operations on semantic document structures.**
 
-The engine supports three complementary levels of document generation.
+The engine supports three complementary document-authoring models.
 
-## Level 1: Template syntax
+## Level 1: Template expressions
 
 Create the stable document structure in LibreOffice Writer or another ODT-compatible editor and mark dynamic positions with placeholders:
 
@@ -24,13 +24,13 @@ $template->assign([
 ]);
 ```
 
-Template syntax also supports filters, conditions, and repeating blocks. This is the simplest approach when the ODT template already owns the document structure.
+Template syntax also supports filters, conditions, and repeating blocks. This is the simplest approach when the ODT template already owns the structure and PHP mainly supplies values and lightweight logic.
 
 See [Variables & Filters](../template-language/variables-and-filters.md) and [Conditions & Loops](../template-language/conditions-and-loops.md).
 
-## Level 2: Structured PHP content
+## Level 2: Programmatically generated ODT content
 
-When the structure itself depends on application data, build native ODT content with PHP elements such as `RichText`, `Paragraph`, `ListElement`, `ImageElement`, and `RichTable`.
+When PHP genuinely owns a dynamic content subtree, build native ODT content with elements such as `RichText`, `Paragraph`, `ListElement`, `ImageElement`, and `RichTable`.
 
 ```php
 use OdtTemplateEngine\Elements\Paragraph;
@@ -47,15 +47,39 @@ $richText->addParagraph($paragraph);
 $template->setElement('content', $richText);
 ```
 
-The template contains a placeholder such as `{{content}}`, but PHP supplies a document structure rather than plain text.
+The template contains a placeholder such as `{{content}}`, but PHP supplies a native document structure rather than plain text.
 
-This is useful for dynamic lists, tables, styled paragraphs, images, and larger generated sections.
+This is useful for dynamic lists, tables, styled paragraphs, images, and larger generated regions.
 
-## Level 3: Advanced document control
+## Level 3: Addressable native ODT structures
 
-Advanced workflows can also control document-level concerns such as:
+A LibreOffice template can also contain named native structures that PHP addresses directly:
 
-- reusable styles;
+```php
+$inspection = $template->inspect();
+$bookmark = $template->bookmark('ApplicantName');
+$section = $template->section('ExperienceEntry');
+$table = $template->table('SkillsTable');
+$frame = $template->frame('ProfilePhoto');
+```
+
+This model keeps the native ODT structure authored in LibreOffice while giving application code stable semantic handles.
+
+The current public target types deliberately have different capabilities:
+
+- bookmarks support bounded text replacement;
+- named sections support inspection, cloning, data-bound instantiation, finalized collections, and nested owner scopes;
+- named tables and drawing frames currently expose typed resolution and read-only descriptors.
+
+This is not a generic DOM API. The engine exposes bounded operations where semantics have been defined and tested.
+
+See [Addressable Native ODT Structures](../rich-documents/addressable-document.md) and [Named Sections](../rich-documents/named-sections.md).
+
+## Document-level capabilities
+
+The three authoring models work alongside document-level features such as:
+
+- reusable document-local paragraph styles;
 - HTML import;
 - document metadata;
 - page layout;
@@ -63,7 +87,7 @@ Advanced workflows can also control document-level concerns such as:
 
 These features still operate on a real ODT package rather than converting the document to another format.
 
-## The ODT package
+## The ODT package and document context
 
 An `.odt` file is a ZIP package containing XML and related assets. Important package members include:
 
@@ -73,22 +97,24 @@ An `.odt` file is a ZIP package containing XML and related assets. Important pac
 - `META-INF/manifest.xml` — package file declarations;
 - `Pictures/` — embedded image assets when present.
 
-The engine extracts the template into a temporary working directory, loads the relevant XML documents, modifies them, and writes a new ODT package when `save()` is called.
+Internally, `OdtPackage` owns the physical package and its resources. The current logical document is represented through `OdtDocumentContext`, which owns the active content/styles DOMs and document-local semantic dependencies such as style requirements.
 
-You normally do not need to edit this XML manually. Understanding the package structure becomes useful when diagnosing advanced styling, layout, or interoperability behavior.
+Application code normally works through `OdtTemplate`; it should not manipulate those internal DOMs or services directly.
 
 ## The normal processing lifecycle
 
-A typical document follows this sequence:
+A typical document can combine all three models:
 
 ```text
 LibreOffice ODT template
         ↓
 new OdtTemplate(...)
         ↓
-assign values / repeating data
-        ↓
-add generated ODT elements
+assign template values
+        +
+insert generated OdtElement content
+        +
+inspect/address native named structures
         ↓
 render()
         ↓
@@ -97,23 +123,39 @@ save(...)
 editable .odt document
 ```
 
-`OdtTemplate` loads the source ODT during construction. `render()` applies assigned values, repeating blocks, and conditional template logic. `save()` writes styles and XML changes and packages the result as an ODT file.
+`OdtTemplate` loads and prepares the source document during construction. Template-language processing is delegated to `TemplateProcessor`. Structured elements contribute semantic requirements and physical resources before their native ODF subtree is materialized. Typed target resolvers address supported native structures in the current document state. `save()` finalizes the modified package as an ODT file.
+
+## Semantic dependencies are document-local
+
+Generated ODT structures may require paragraph, text, table-family, graphic, font-face, or fill-image definitions. These dependencies are collected from structured elements and registered against the current `OdtDocumentContext`.
+
+`StyleContext` is the document-local semantic authority for style requirements. `StyleMapper` is a stateless option-mapping and identity helper, while `StyleWriter` is a narrow serialization helper. Neither is a process-global style owner.
+
+Normal application code does not need to orchestrate these internals. Use element options for one-off formatting and `$template->styles()->defineParagraph()` for a reusable generated paragraph style in the current document.
+
+See [Style Model](../styling/style-model.md) for the public style model.
 
 ## Template layout and PHP content work together
 
-The most useful documents often combine the three levels instead of choosing only one.
+The strongest documents often combine the models instead of choosing only one:
 
 ```text
 LibreOffice template
 ├── page and stable layout
-├── static text
+├── static text and authored styles
 ├── {{simple_value}}
-└── {{generated_section}}
+├── {{generated_region}}
+└── named native structures
+    ├── ApplicantName bookmark
+    ├── ExperienceEntry section
+    ├── SkillsTable
+    └── ProfilePhoto frame
 
 PHP
 ├── assigns simple values
-├── controls conditions and loops
-└── builds generated ODT elements
+├── controls template conditions and loops
+├── builds generated ODT elements
+└── addresses supported native targets
 
                     ↓
             ODT Template Engine
@@ -121,4 +163,6 @@ PHP
           fully editable .odt file
 ```
 
-The [Editable CV Showcase](../examples/cv-showcase.md) demonstrates this architecture with a two-column LibreOffice template, programmatically generated sidebar and main content, native lists, an image, reusable styles, and programmatic page margins.
+Sample 21 demonstrates the programmatically generated-region model. Sample 25 demonstrates the native structured-template model with named sections and data-bound collections. Both are valid architecture patterns; the right choice depends on whether PHP or the LibreOffice template should own the dynamic structure.
+
+See [Building Complex Documents](../examples/building-complex-documents.md), [Editable CV Showcase](../examples/cv-showcase.md), and the [Sample Guide](../examples/sample-guide.md).
