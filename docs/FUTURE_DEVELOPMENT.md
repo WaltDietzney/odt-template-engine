@@ -4,40 +4,41 @@ This document is the issue-oriented backlog for known limitations, architectural
 
 It complements [`ROADMAP.md`](ROADMAP.md). The roadmap defines strategic sequencing; this file records individual topics without implying that every item is approved for immediate implementation.
 
-The current planning baseline incorporates [`architecture/ROADMAP_REFRESH_02_POST_SR05_ARCHITECTURE_REASSESSMENT.md`](architecture/ROADMAP_REFRESH_02_POST_SR05_ARCHITECTURE_REASSESSMENT.md) and the completed SR-06 milestone recorded in [`architecture/SR-06_SEMANTIC_GRAPHIC_STYLE_REQUIREMENTS_CLOSEOUT.md`](architecture/SR-06_SEMANTIC_GRAPHIC_STYLE_REQUIREMENTS_CLOSEOUT.md). Backlog descriptions must be interpreted against the current `develop` architecture rather than the earlier placeholder-centric or pre-SR-06 architecture.
+The current planning baseline incorporates the completed semantic style architecture through STYLE-CONTEXT-01 and STYLE-API-02. Backlog descriptions must be interpreted against the current `develop` architecture rather than the earlier placeholder-centric, static-registry, or pre-semantic architecture.
 
-## Style and dependency architecture
+## Completed style and dependency architecture
 
 ### STYLE-CONTEXT-01 — Document-scoped style context — COMPLETE / FINAL GO
 
-**Priority:** High architecture closeout
+The core ownership problem is no longer future work. The current baseline includes document-local `StyleContext` ownership, semantic structured-element traversal, conflict-preserving transitive requirement discovery, semantic `StyleRequirement` values, paragraph/text, table-family and graphic semantic materialization, document-local font-face dependencies, document-local fill-image dependencies, and package-owned physical resource preparation.
 
-The core ownership problem is no longer future work. The current baseline includes document-local `StyleContext` ownership, semantic structured-element traversal, conflict-preserving transitive requirement discovery, semantic `StyleRequirement` values, paragraph/text and graphic semantic materialization, document-local font-face dependencies, document-local fill-image dependencies, and document-reference-based legacy graphic compatibility adoption.
+The completed architecture sequence includes SR-01 through SR-07 and D5C through D5G.
 
-D5C–D5E and SR-01–SR-06 are accepted architecture baseline. SR-06 is COMPLETE / FINAL GO.
+### STYLE-API-02 — Public style API consistency — COMPLETE / FINAL GO
 
-The final audit and paragraph/text fallback characterization are complete.
-Remaining static registries, broad direct StyleWriter defaults, legacy getters,
-and protected compatibility facades are retained by explicit compatibility
-decision, not because modern semantic ownership is incomplete.
+STYLE-API-02 is no longer active backlog debt.
 
-The completed sequence was:
+The completed public/compatibility cleanup established:
 
-```text
-SR-07 Table / Table-Cell Requirements — COMPLETE
-        ↓
-D5F Lifecycle / Materialization Integration — COMPLETE
-        ↓
-D5G Compatibility Closeout — COMPLETE
-        ↓
-STYLE-CONTEXT-01 — COMPLETE / FINAL GO
-```
+- element options and fluent APIs as the primary application styling surface;
+- `$template->styles()->defineParagraph()` for generated reusable named paragraph styles in the current document;
+- authored-template named style references through elements such as `new Paragraph('StyleName')`;
+- semantic custom-element extension through `getOwnStyleRequirements()`, `ownedElements()`, typed resource/dependency hooks, and `toDomNode()`;
+- stateless `StyleMapper` mapping/identity behavior;
+- a narrow explicit-input `StyleWriter` serialization role;
+- removal of `HasStyles`;
+- removal of `LegacyStyleRegistry` and StyleMapper paragraph/text registry/getter facades;
+- removal of process-global paragraph/text reference fallback from `StyleContext`;
+- removal of redundant paragraph/text array getter families and generic protected style registration;
+- bounded retention of graphic/resource compatibility traversal only where active legacy or section-mutation callers still require it.
 
-Do not solve remaining transition complexity through constructor resets, process-global current-document state, or premature lifecycle abstraction.
+Named paragraph/text references no longer resolve through process-global PHP registry state.
+
+Future style work should therefore be driven by concrete ODF capability needs, not by reintroducing a generic registry or symmetrical `define*()` methods without semantic justification.
 
 ### SR-06 — Semantic Graphic Style Requirements — COMPLETE / FINAL GO
 
-SR-06 migrated structured graphic-style definitions and references from historical `frame` / `image` / related engine-role buckets into the semantic `StyleRequirement` model while preserving compatibility boundaries.
+SR-06 migrated structured graphic-style definitions and references from historical engine-role buckets into the semantic `StyleRequirement` model while preserving the distinction between drawing structure, graphic-style properties, fill-image declarations, and physical image resources.
 
 Completed distinctions and outcomes include:
 
@@ -46,66 +47,27 @@ Completed distinctions and outcomes include:
 - style definitions kept separate from physical image resources;
 - a dedicated document-local `FillImageRequirement` model for `draw:fill-image` declarations;
 - package-owned physical resource preparation;
-- current-document reference-based adoption of legacy image, fill-image, and frame registrations;
-- preservation of public/static compatibility APIs and protected lifecycle hooks;
 - manual LibreOffice visual-regression FINAL GO.
 
 SR-06 deliberately did not redesign frame positioning, image anchor/wrap APIs, table layout, or the public layout model. Those remain separate future work.
 
 ### SR-07 — Semantic Table / Table-Cell Requirements — COMPLETE / FINAL GO
 
-**Priority:** Completed architecture milestone
+SR-07 completed the semantic migration and compatibility closeout for the table-related style families required by structured insertion: `table`, `table-column`, `table-row`, and `table-cell`.
 
-SR-07 completed the semantic migration and compatibility closeout for the
-table-related style families required by structured insertion: `table`,
-`table-column`, `table-row`, and `table-cell`.
+SR-07H completed visual review for Samples 11, 13, 19, and 20 and the focused row minimum-height proof. The corrected Sample 20 relative-width behavior is an intentional correction of the historical virtual-column representation.
 
-SR-07H completed visual review for Samples 11, 13, 19, and 20 and the focused
-row minimum-height proof. The corrected Sample 20 relative-width behavior is
-an intentional correction of the historical virtual-column representation.
+Style family and property group remain independent concepts. Future table geometry and cell-layout work must remain separate from this completed ownership migration.
 
-Style family and property group remain independent concepts. Future table
-geometry and cell-layout work must remain separate from this completed
-ownership migration.
+### D5F / D5G — Lifecycle integration and compatibility closeout — COMPLETE
 
-### D5F — Lifecycle / materialization integration — COMPLETE
-
-**Priority:** High after SR-07
-
-D5F established the authoritative pre-materialization semantic/resource path
-and bounded post-materialization compatibility adoption after the SR-07
-families were migrated or explicitly bounded. It did not centralize native
-element rendering in `OdtTemplate` or create a God renderer.
-
-### D5G — Compatibility closeout — COMPLETE
-
-**Priority:** Completed after D5F
-
-D5G completed the evidence-based review of:
-
-- protected extension surfaces and external subclass compatibility;
-- legacy style registration/finalization paths;
-- repeated `render()` / `save()` behavior;
-- content.xml / styles.xml compatibility behavior;
-- remaining structured-value legacy paths.
-
-Public static registries, direct broad `StyleWriter` defaults, legacy getters,
-and documented ImageElement/CircularImageElement lifecycle quirks remain
-compatibility residue. They are now handed off to `STYLE-API-02` or the
-relevant future layout/lifecycle topic; do not remove these surfaces
-implicitly as part of unrelated work.
-
-### STYLE-API-02 — Style API consistency
-
-**Priority:** Medium architectural/API debt
-
-Reassess public style semantics only after the internal semantic ownership and family migration is complete. Do not combine public API redesign with SR-07 unless a compatibility requirement makes it unavoidable.
+D5F established the authoritative pre-materialization semantic/resource path and bounded post-materialization compatibility adoption. D5G completed the evidence-based review of protected extension surfaces, repeated render/save behavior, content/styles compatibility behavior, and remaining lifecycle residue. STYLE-API-02 subsequently retired the paragraph/text static-registry and redundant getter surfaces that D5G had intentionally left for a dedicated public-API decision.
 
 ## Document defaults and state
 
 ### DOCUMENT-DEFAULTS-01 — Document-level defaults — RESEARCH/DESIGN
 
-**Priority:** High research after STYLE-CONTEXT closeout
+**Priority:** High research after style architecture closeout
 
 The user-facing goal remains useful: applications should eventually be able to express appropriate document-wide defaults without repeating the same options on every element.
 
@@ -143,19 +105,19 @@ Clarify the relationship between generated assets, package assets, manifest upda
 
 **Priority:** Medium
 
-Continue documenting and, where justified, simplifying lifecycle semantics around load/render/save/repeated operations without silently breaking compatible behavior. Coordinate with D5F/D5G rather than creating a competing lifecycle architecture.
+Continue documenting and, where justified, simplifying lifecycle semantics around load/render/save/repeated operations without silently breaking compatible behavior. Build on D5F/D5G rather than creating a competing lifecycle architecture.
 
 ## Layout and document rendering
 
 ### FRAME-LAYOUT-01 — Unified frame positioning
 
-**Priority:** High after semantic graphic requirement foundation
+**Priority:** High
 
 Define a shared frame-positioning model for drawing content instead of allowing images and text boxes to evolve separate positioning semantics.
 
 Research areas include anchor type, horizontal/vertical position, relation/reference area, wrap behavior, size, existing-template mutation, constructed frames, LibreOffice behavior, and Word round-trip behavior where relevant.
 
-Use real LibreOffice-authored ODF as primary implementation evidence. SR-06 has established the semantic graphic-style foundation; FRAME-LAYOUT-01 remains separate public/layout work.
+Use real LibreOffice-authored ODF as primary implementation evidence. SR-06 established the semantic graphic-style foundation; FRAME-LAYOUT-01 remains separate public/layout work.
 
 ### FRAME-LAYOUT-02 — DrawTextBox positioning
 
@@ -173,7 +135,7 @@ Reassess after the unified frame model is understood. Image-specific behavior sh
 
 **Priority:** Very high
 
-Reliable explicit column widths remain one of the most visible professional-layout limitations. Characterize the existing table-column/style path before introducing new APIs. Prefer beginning this product/layout work after SR-07 has clarified the semantic table-style foundation.
+Reliable explicit column widths remain one of the most visible professional-layout limitations. Characterize the existing table-column/style path before introducing new APIs.
 
 ### TABLE-LAYOUT-01 — Explicit table width
 
@@ -187,12 +149,7 @@ Provide reliable explicit table-width semantics based on actual ODF behavior and
 
 Investigate and support relative table sizing without relying on accidental LibreOffice behavior.
 
-SR-07H provides evidence for a narrower, already-corrected concern: relative
-*column* widths are distinct from table width and structural repeated columns.
-For positive integer column ratios, LibreOffice Writer interoperability uses
-its 65535-unit relative width space with the integer-division remainder on the
-final logical column. This is evidence for future table-width work, not a new
-table-width API or a claim that ODF mandates 65535.
+SR-07H provides evidence for a narrower, already-corrected concern: relative *column* widths are distinct from table width and structural repeated columns. For positive integer column ratios, LibreOffice Writer interoperability uses its 65535-unit relative width space with the integer-division remainder on the final logical column. This is evidence for future table-width work, not a new table-width API or a claim that ODF mandates 65535.
 
 ### TABLE-LAYOUT-03 — Row and minimum height
 
@@ -331,16 +288,15 @@ Generated files under `samples/output/` remain local regression artifacts unless
 
 ## Planning notes
 
-Current preferred strategic order:
+With STYLE-CONTEXT-01 and STYLE-API-02 complete, current high-value directions are:
 
-1. final `STYLE-CONTEXT-01` closeout after completed D5F/D5G;
-2. reassess `DOCUMENT-DEFAULTS-01`, `FRAME-LAYOUT-01`, and table-layout priorities from the completed semantic baseline;
-3. template-authoring / format-preservation re-audit;
-4. page/master-style and page-flow work;
-5. named-object operations and dynamic-content research;
-6. `DOCUMENT-IMPORT-01` and broader round-trip workflows later.
+1. reassess `DOCUMENT-DEFAULTS-01`, `FRAME-LAYOUT-01`, and table-layout priorities from the completed semantic/style baseline;
+2. template-authoring / format-preservation re-audit;
+3. page/master-style and page-flow work;
+4. named-object operations and dynamic-content research;
+5. `DOCUMENT-IMPORT-01` and broader round-trip workflows later.
 
-The sequence after STYLE-CONTEXT closeout remains revisitable. Smaller independent list, lifecycle, sample-infrastructure, asset, or reference-fixture slices may be inserted where useful.
+The sequence remains revisitable. Smaller independent list, lifecycle, sample-infrastructure, asset, or reference-fixture slices may be inserted where useful.
 
 Most importantly:
 
