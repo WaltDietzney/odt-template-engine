@@ -82,7 +82,7 @@ final class RichTableSemanticOwnershipTest extends TestCase
     }
 
     #[RunInSeparateProcess]
-    public function testReferencedRegisteredTableStyleBecomesCommonSemanticDefinition(): void
+    public function testRegisteredTableStyleNameRemainsAReference(): void
     {
         StyleMapper::registerTableStyle('MyTableStyle', [
             'table:align' => 'left',
@@ -98,15 +98,12 @@ final class RichTableSemanticOwnershipTest extends TestCase
         ));
 
         self::assertCount(1, $requirements);
-        self::assertSame(StyleRequirement::KIND_DEFINITION, $requirements[0]->kind());
-        self::assertSame(StyleRequirement::SCOPE_COMMON, $requirements[0]->scope());
-        self::assertSame(StyleRequirement::PART_STYLES, $requirements[0]->documentPart());
+        self::assertSame(StyleRequirement::KIND_REFERENCE, $requirements[0]->kind());
+        self::assertNull($requirements[0]->scope());
+        self::assertNull($requirements[0]->documentPart());
         self::assertSame('MyTableStyle', $requirements[0]->name());
         self::assertNull($requirements[0]->parentStyleName());
-        self::assertSame(
-            ['style:table-properties' => ['table:align' => 'left', 'style:width' => '15cm']],
-            $requirements[0]->propertyGroups()
-        );
+        self::assertSame([], $requirements[0]->propertyGroups());
     }
 
     #[RunInSeparateProcess]
@@ -128,7 +125,7 @@ final class RichTableSemanticOwnershipTest extends TestCase
     }
 
     #[RunInSeparateProcess]
-    public function testRegisteredTableStyleIsMaterializedOnceInStylesXml(): void
+    public function testReferencedRegisteredTableStyleIsNotAdoptedAsDocumentDefinition(): void
     {
         StyleMapper::registerTableStyle('MyTableStyle', [
             'table:align' => 'left',
@@ -144,11 +141,11 @@ final class RichTableSemanticOwnershipTest extends TestCase
 
         $content = $this->entry($output, 'content.xml');
         $styles = $this->entry($output, 'styles.xml');
-        self::assertSame(1, $this->styleCount($styles, 'MyTableStyle', 'table'));
+        self::assertSame(0, $this->styleCount($styles, 'MyTableStyle', 'table'));
         self::assertSame(0, $this->styleCount($content, 'MyTableStyle', 'table'));
         self::assertStringContainsString('table:style-name="MyTableStyle"', $content);
-        self::assertStringContainsString('table:align="left"', $styles);
-        self::assertStringContainsString('style:width="15cm"', $styles);
+        self::assertStringNotContainsString('table:align="left"', $styles);
+        self::assertStringNotContainsString('style:width="15cm"', $styles);
     }
 
     public function testAuthoredCommonTableDefinitionRemainsAuthoritative(): void
@@ -199,7 +196,7 @@ final class RichTableSemanticOwnershipTest extends TestCase
     }
 
     #[RunInSeparateProcess]
-    public function testRepeatedSaveDoesNotDuplicateCurrentSemanticTableDefinition(): void
+    public function testRepeatedSaveDoesNotAdoptReferencedGlobalTableDefinition(): void
     {
         StyleMapper::registerTableStyle('RepeatedTable', ['table:align' => 'left']);
         $template = new OdtTemplate($this->templatePath('template_11_table.odt'));
@@ -212,7 +209,7 @@ final class RichTableSemanticOwnershipTest extends TestCase
         $template->save($first);
         $template->save($second);
 
-        self::assertSame(1, $this->styleCount($this->entry($second, 'styles.xml'), 'RepeatedTable', 'table'));
+        self::assertSame(0, $this->styleCount($this->entry($second, 'styles.xml'), 'RepeatedTable', 'table'));
     }
 
     private const OFFICE_NS = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0';

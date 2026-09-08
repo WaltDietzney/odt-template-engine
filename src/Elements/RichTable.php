@@ -40,6 +40,9 @@ class RichTable extends OdtElement
      */
     protected ?string $tableStyleName = null;
 
+    /** @var array<string, mixed> Element-owned table style properties. */
+    protected array $tableStyleOptions = [];
+
     /**
      * Number of header rows that will be wrapped in `<table:table-header-rows>`.
      *
@@ -149,6 +152,23 @@ class RichTable extends OdtElement
     public function setTableStyleName(string $styleName): self
     {
         $this->tableStyleName = $styleName;
+        $this->tableStyleOptions = [];
+        return $this;
+    }
+
+    /**
+     * Assigns element-owned properties for a generated table style.
+     *
+     * The resulting style is materialized through semantic requirements and
+     * is not registered in process-global StyleMapper state.
+     *
+     * @param array<string, mixed> $style
+     * @return self
+     */
+    public function setStyle(array $style): self
+    {
+        $this->tableStyleOptions = $style;
+        $this->tableStyleName = StyleMapper::generateStyleName($style);
         return $this;
     }
 
@@ -423,8 +443,7 @@ class RichTable extends OdtElement
             return;
         }
 
-        $registeredTableStyles = StyleMapper::getRegisteredTableStyles();
-        if (array_key_exists($this->tableStyleName, $registeredTableStyles)) {
+        if ($this->tableStyleOptions !== []) {
             yield new StyleRequirement(
                 StyleRequirement::KIND_DEFINITION,
                 StyleRequirement::SCOPE_COMMON,
@@ -432,7 +451,7 @@ class RichTable extends OdtElement
                 StyleRequirement::PART_STYLES,
                 $this->tableStyleName,
                 null,
-                ['style:table-properties' => $registeredTableStyles[$this->tableStyleName]]
+                ['style:table-properties' => $this->tableStyleOptions]
             );
 
             return;
