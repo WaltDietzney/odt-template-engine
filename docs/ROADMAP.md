@@ -9,7 +9,7 @@ It complements [`FUTURE_DEVELOPMENT.md`](FUTURE_DEVELOPMENT.md):
 
 The roadmap is intentionally conservative about public API changes. Existing application-facing APIs should remain stable where practical, and future APIs shown here are conceptual unless explicitly documented as implemented.
 
-The current sequencing incorporates the decision recorded in [`architecture/ROADMAP_REFRESH_02_POST_SR05_ARCHITECTURE_REASSESSMENT.md`](architecture/ROADMAP_REFRESH_02_POST_SR05_ARCHITECTURE_REASSESSMENT.md) and the SR-06 closeout recorded in [`architecture/SR-06_SEMANTIC_GRAPHIC_STYLE_REQUIREMENTS_CLOSEOUT.md`](architecture/SR-06_SEMANTIC_GRAPHIC_STYLE_REQUIREMENTS_CLOSEOUT.md).
+The current sequencing incorporates the decision recorded in [`architecture/ROADMAP_REFRESH_02_POST_SR05_ARCHITECTURE_REASSESSMENT.md`](architecture/ROADMAP_REFRESH_02_POST_SR05_ARCHITECTURE_REASSESSMENT.md), the SR-06 closeout recorded in [`architecture/SR-06_SEMANTIC_GRAPHIC_STYLE_REQUIREMENTS_CLOSEOUT.md`](architecture/SR-06_SEMANTIC_GRAPHIC_STYLE_REQUIREMENTS_CLOSEOUT.md), and the completed STYLE-API-02 architecture series.
 
 ## Current baseline
 
@@ -33,10 +33,12 @@ Established capabilities include:
 - transitive style-requirement and physical image-resource discovery;
 - document-local style ownership through `StyleContext`;
 - semantic `StyleRequirement` values with definition/reference, ODF family, common/automatic scope, document-part ownership, parent dependency, and typed property groups;
-- semantic paragraph/text and graphic style materialization;
+- semantic paragraph/text, table-family, and graphic style materialization;
 - document-local font-face dependency discovery, resolution, conflict handling, and materialization;
 - document-local fill-image dependency discovery, declaration materialization, and package-owned resource preparation;
-- compatibility adoption of legacy image, fill-image, and frame registrations only when referenced by the current document;
+- public document-style authoring through `DocumentStyles`, currently with `defineParagraph()`;
+- stateless style-option mapping through `StyleMapper` without process-global paragraph/text registries;
+- a narrow `StyleWriter` serialization boundary rather than registry ownership;
 - a complete CV showcase proving the structured-section model against a realistic LibreOffice-authored document.
 
 The rendering-sensitive validation workflow remains:
@@ -97,35 +99,49 @@ The completed milestone includes native section discovery, typed targets, exact 
 
 Sections are therefore an implemented structured-template primitive, not merely a future design direction.
 
-### STYLE-CONTEXT / semantic requirement foundation — COMPLETE / FINAL GO
+### STYLE-CONTEXT-01 — COMPLETE / FINAL GO
 
-The original roadmap described `STYLE-CONTEXT-01` as the preferred next architecture block. That description is obsolete.
+The document-local semantic style foundation is complete.
 
-Completed work now includes:
+Completed work includes:
 
 - document-local `StyleContext` ownership and reset semantics;
-- compatibility isolation of legacy static registration paths;
 - one semantic ownership tree for composite structured elements;
 - conflict-preserving transitive requirement collection;
 - transitive physical image-resource discovery and package-owned preparation;
 - semantic `StyleRequirement` representation;
-- semantic paragraph/text producers and materialization;
-- semantic graphic-style producers, resolution, and materialization;
+- semantic paragraph/text, table-family, and graphic-style producers and materialization;
 - document-local fill-image dependency discovery and declaration materialization;
 - preservation of already-native ODF properties;
-- document-local font-face dependency handling;
-- document-reference-based compatibility adoption for legacy image, fill-image, and frame state.
+- document-local font-face dependency handling.
 
-D5C through D5E and SR-01 through SR-06 are accepted architecture baseline. SR-06 is COMPLETE / FINAL GO.
+D5C through D5G and SR-01 through SR-07 are accepted architecture baseline.
 
-STYLE-CONTEXT-01-A through 01-D complete the final audit, paragraph/text
-fallback characterization, and regression closeout. The remaining static
-registries, legacy getters, and broad direct-writer defaults are explicitly
-retained compatibility surfaces rather than modern semantic authority.
+### STYLE-API-02 — COMPLETE / FINAL GO
 
-## Immediate architecture sequence
+STYLE-API-02 aligned the public and compatibility style surfaces with the document-local semantic architecture.
 
-The preferred sequence is now:
+The completed series established:
+
+- application authoring through element options and fluent element APIs;
+- explicit document-style authoring through `$template->styles()`;
+- `DocumentStyles::defineParagraph()` as the current generated reusable named paragraph-style API;
+- semantic structured-element extension through `getOwnStyleRequirements()`, `ownedElements()`, typed dependency/resource hooks, and `toDomNode()`;
+- stateless `StyleMapper` mapping and identity responsibilities;
+- a narrow explicit-input `StyleWriter` serialization boundary;
+- removal of `HasStyles`;
+- removal of `LegacyStyleRegistry` and StyleMapper paragraph/text registration/getter facades;
+- removal of process-global paragraph/text fallback from `StyleContext`;
+- removal of redundant paragraph/text array getter families and the generic protected `OdtTemplate::registerStyles(array)` facade;
+- preservation only of bounded graphic/resource compatibility traversal where active legacy or section-mutation callers still require it.
+
+Named paragraph references now resolve against authored styles in the current document or document-local semantic definitions. They no longer search process-global PHP registry state.
+
+STYLE-API-02I is the final documentation/API-consistency closeout of this completed architecture series, not a new style redesign.
+
+## Completed architecture sequence
+
+The architecture sequence that produced the current style baseline is now:
 
 ```text
 SR-07 Semantic Table / Table-Cell Requirements — COMPLETE
@@ -136,15 +152,10 @@ D5G Compatibility Closeout — COMPLETE
         ↓
 STYLE-CONTEXT-01 — COMPLETE / FINAL GO
         ↓
-STYLE-API-02 / evidence-driven next architecture work
+STYLE-API-02 — COMPLETE / FINAL GO
 ```
 
-D5F established the authoritative pre-materialization semantic/resource path
-and bounded post-materialization compatibility adoption. D5G completed the
-evidence-based compatibility closeout while retaining public static registries
-and legacy lifecycle facades. STYLE-CONTEXT-01 now confirms the final
-document-local semantic boundary; no static API removal or lifecycle redesign
-is implied.
+This sequence established semantic ownership first, then deliberately removed or narrowed obsolete public compatibility mechanisms. No process-global paragraph/text style registry remains part of the current architecture.
 
 ### SR-06 — Semantic Graphic Style Requirements — COMPLETE / FINAL GO
 
@@ -156,37 +167,24 @@ Completed outcomes include:
 - semantic graphic producers for supported structured drawing elements;
 - document-local resolution and materialization;
 - a dedicated document-local fill-image dependency model and declaration materializer;
-- compatibility narrowing for legacy frame, image, and fill-image registries based on current-document references;
-- preservation of public/static compatibility APIs and protected lifecycle hooks;
+- compatibility narrowing for legacy frame, image, and fill-image behavior;
 - manual LibreOffice visual-regression FINAL GO.
 
 SR-06 deliberately did not redesign frame positioning, image anchor/wrap APIs, table layout, or the public layout model. The closeout is recorded in [`architecture/SR-06_SEMANTIC_GRAPHIC_STYLE_REQUIREMENTS_CLOSEOUT.md`](architecture/SR-06_SEMANTIC_GRAPHIC_STYLE_REQUIREMENTS_CLOSEOUT.md).
 
 ### SR-07 — Semantic Table / Table-Cell Requirements — COMPLETE / FINAL GO
 
-SR-07 completed the semantic table-family migration and compatibility closeout
-for structured insertion. The completed families are `table`, `table-column`,
-`table-row`, and `table-cell`, with document-local semantic ownership and
-preserved legacy compatibility facades.
+SR-07 completed the semantic table-family migration and compatibility closeout for structured insertion. The completed families are `table`, `table-column`, `table-row`, and `table-cell`, with document-local semantic ownership.
 
-SR-07H completed the visual closeout for Samples 11, 13, 19, and 20 and the
-focused `min-row-height` proof. Sample 11's corrected explicit widths and
-Sample 20's corrected relative-width semantics are intentional behavior
-corrections, not baseline regressions. The distinction between table width,
-absolute/relative column width, and structural repetition/spans remains
-important evidence for later table-layout work.
+SR-07H completed the visual closeout for Samples 11, 13, 19, and 20 and the focused `min-row-height` proof. Sample 11's corrected explicit widths and Sample 20's corrected relative-width semantics are intentional behavior corrections, not baseline regressions. The distinction between table width, absolute/relative column width, and structural repetition/spans remains important evidence for later table-layout work.
 
 ### D5F / D5G — lifecycle integration and compatibility closeout — COMPLETE
 
-D5F completed the lifecycle/orchestration integration around the coherent
-semantic model without removing compatibility paths. D5G completed the review
-of protected extension surfaces, repeated render/save behavior, and remaining
-legacy registration/finalization behavior. Static registries and direct
-compatibility defaults remain documented residue for `STYLE-CONTEXT-01`.
+D5F completed lifecycle/orchestration integration around the semantic model. D5G completed the evidence-based review of protected extension surfaces, repeated render/save behavior, and remaining legacy registration/finalization behavior. STYLE-API-02 subsequently retired the paragraph/text static-registry and redundant getter residue that D5G had intentionally preserved for later public-API review.
 
-## Document defaults — RESEARCH/DESIGN AFTER STYLE-CONTEXT CLOSEOUT
+## Document defaults — RESEARCH/DESIGN
 
-`DOCUMENT-DEFAULTS-01` remains an important product goal, but it is no longer the immediate implementation step.
+`DOCUMENT-DEFAULTS-01` remains an important product goal.
 
 The ODF/LibreOffice research shows that "document defaults" can refer to distinct mechanisms:
 
@@ -210,7 +208,7 @@ Goal: define consistent frame semantics across images, text boxes, and other dra
 
 Research must start from real LibreOffice-authored ODF and existing engine behavior. Topics include anchor types, horizontal/vertical position, relation/reference area, wrapping, size, existing-template frame mutation, constructed frames, and interoperability where relevant.
 
-SR-06 has established the semantic graphic-style foundation. FRAME-LAYOUT-01 remains a separate public/layout design problem and must not be retroactively folded into SR-06.
+SR-06 established the semantic graphic-style foundation. FRAME-LAYOUT-01 remains a separate public/layout design problem.
 
 ### TABLE-LAYOUT — Reliable table geometry
 
@@ -222,8 +220,7 @@ Priority topics remain:
 - `TABLE-LAYOUT-03` — row/minimum height;
 - `TABLE-CELL-01` — vertical cell alignment.
 
-SR-07 has established the relevant semantic style foundation. These remain
-separate behavior/API topics and are not implicitly solved by SR-07.
+SR-07 established the relevant semantic style foundation. These remain separate behavior/API topics and are not implicitly solved by style ownership cleanup.
 
 ### Smaller layout topics
 
@@ -265,14 +262,13 @@ Potential future targets include frames, text boxes, tables, images/drawing obje
 
 A renderer-independent semantic document model also remains a later design direction and must not force premature abstraction into the current ODT model.
 
-## Strategic sequence after STYLE-CONTEXT closeout
+## Strategic sequence after the style architecture closeout
 
-After the immediate SR-07 → D5F → D5G sequence, ordering remains evidence-driven rather than fixed:
+With STYLE-CONTEXT-01 and STYLE-API-02 complete, ordering is evidence-driven rather than fixed:
 
 ```text
-STYLE-CONTEXT-01 — COMPLETE
+completed semantic/style architecture
         ├── DOCUMENT-DEFAULTS-01 research/design
-        ├── STYLE-API-02 public style API consistency
         ├── FRAME-LAYOUT-01
         ├── TABLE-LAYOUT-* / TABLE-CELL-01
         ├── template authoring / format-preservation re-audit
