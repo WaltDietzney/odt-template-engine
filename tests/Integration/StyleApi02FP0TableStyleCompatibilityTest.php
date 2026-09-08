@@ -47,11 +47,11 @@ final class StyleApi02FP0TableStyleCompatibilityTest extends TestCase
         ));
 
         self::assertCount(1, $requirements);
-        self::assertSame(StyleRequirement::KIND_DEFINITION, $requirements[0]->kind());
-        self::assertSame(StyleRequirement::SCOPE_COMMON, $requirements[0]->scope());
-        self::assertSame(StyleRequirement::PART_STYLES, $requirements[0]->documentPart());
+        self::assertSame(StyleRequirement::KIND_REFERENCE, $requirements[0]->kind());
+        self::assertNull($requirements[0]->scope());
+        self::assertNull($requirements[0]->documentPart());
         self::assertSame($name, $requirements[0]->name());
-        self::assertSame(['style:table-properties' => $properties], $requirements[0]->propertyGroups());
+        self::assertSame([], $requirements[0]->propertyGroups());
 
         $template = new OdtTemplate($this->templatePath('template_11_table.odt'));
         $template->setElement('tableblock', $table);
@@ -62,11 +62,10 @@ final class StyleApi02FP0TableStyleCompatibilityTest extends TestCase
         $content = $this->entry($output, 'content.xml');
         $styles = $this->entry($output, 'styles.xml');
         self::assertStringContainsString('table:style-name="' . $name . '"', $content);
-        self::assertStringContainsString('style:name="' . $name . '"', $styles);
-        self::assertStringContainsString('style:family="table"', $styles);
-        self::assertStringContainsString('table:width="15cm"', $styles);
-        self::assertStringContainsString('table:align="left"', $styles);
-        self::assertStringContainsString('style:rel-width="100%"', $styles);
+        self::assertStringNotContainsString('style:name="' . $name . '"', $styles);
+        self::assertStringNotContainsString('table:width="15cm"', $styles);
+        self::assertStringNotContainsString('table:align="left"', $styles);
+        self::assertStringNotContainsString('style:rel-width="100%"', $styles);
     }
 
     private function entry(string $path, string $name): string

@@ -128,8 +128,9 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
         $styles = $this->entry($output, 'styles.xml');
 
         self::assertSame(0, $this->styleCount($styles, $firstStyle, 'table'));
-        self::assertSame(1, $this->styleCount($styles, $secondStyle, 'table'));
+        self::assertSame(0, $this->styleCount($styles, $secondStyle, 'table'));
         self::assertArrayHasKey($firstStyle, StyleMapper::getRegisteredTableStyles());
+        self::assertArrayHasKey($secondStyle, StyleMapper::getRegisteredTableStyles());
     }
 
     #[RunInSeparateProcess]
@@ -157,7 +158,7 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
         self::assertSame(0, $this->styleCount($styles, $secondName, 'table-cell'));
         self::assertSame(0, $this->styleCount($content, $firstName, 'table-cell'));
         self::assertSame(1, $this->styleCount($content, $secondName, 'table-cell'));
-        self::assertArrayHasKey($firstName, StyleMapper::getRegisteredTableCellStyles());
+        self::assertArrayNotHasKey($firstName, StyleMapper::getRegisteredTableCellStyles());
     }
 
     #[RunInSeparateProcess]
@@ -204,13 +205,13 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
         $cellStyle = $cell->getStyleName();
 
         self::assertArrayHasKey($tableStyle, StyleMapper::getRegisteredTableStyles());
-        self::assertArrayHasKey($cellStyle, StyleMapper::getRegisteredTableCellStyles());
+        self::assertArrayNotHasKey($cellStyle, StyleMapper::getRegisteredTableCellStyles());
 
         $template = $this->template();
         $template->load();
 
         self::assertArrayHasKey($tableStyle, StyleMapper::getRegisteredTableStyles());
-        self::assertArrayHasKey($cellStyle, StyleMapper::getRegisteredTableCellStyles());
+        self::assertArrayNotHasKey($cellStyle, StyleMapper::getRegisteredTableCellStyles());
     }
 
     #[RunInSeparateProcess]

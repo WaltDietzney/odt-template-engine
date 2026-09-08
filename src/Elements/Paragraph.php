@@ -538,7 +538,7 @@ public function setParagraphStyleOptions(array $options): self
 
                     } elseif (!empty($part['style'])) {
                         // 🛟 Fallback: styleName nachträglich generieren
-                        $styleName = StyleMapper::registerTextStyle($part['style']);
+                        $styleName = StyleMapper::generateStyleName($part['style']);
                         $span = $dom->createElement('text:span');
                         $span->setAttribute('text:style-name', $styleName);
                         $span->appendChild($node);

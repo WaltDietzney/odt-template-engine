@@ -164,7 +164,6 @@ class RichTableCell extends OdtElement
         $split = StyleOptionSplitter::split($style, 'table-cell');
         $this->style = StyleMapper::mapTableCellStyleOptions($split['cell']);
         $this->styleName = StyleMapper::generateStyleName($this->style);
-        StyleMapper::registerTableCellStyle($this->styleName, $this->style);
 
         if (
             $this->contentCreatedFromString
@@ -543,7 +542,6 @@ class RichTableCell extends OdtElement
     {
         $this->style = StyleMapper::mapTableCellStyleOptions($this->style);
         $this->styleName = StyleMapper::generateStyleName($this->style);
-        StyleMapper::registerTableCellStyle($this->styleName, $this->style);
         return $this;
     }
 

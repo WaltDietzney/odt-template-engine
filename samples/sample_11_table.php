@@ -10,7 +10,6 @@
 use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Elements\RichTable;
 use OdtTemplateEngine\Elements\RichTableCell;
-use OdtTemplateEngine\Utils\StyleMapper;
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
@@ -18,13 +17,11 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
 $template = new OdtTemplate(__DIR__ . '/templates/template_11_table.odt');
 
 // Create a fixed-width table style and apply it to the table.
-$table = new RichTable();
-StyleMapper::registerTableStyle('MyFixedTableStyle', [
+$table = (new RichTable())->setStyle([
     'table:width' => '15cm',
     'table:align' => 'left',
     'style:rel-width' => '100%',
 ]);
-$table->setTableStyleName('MyFixedTableStyle');
 
 // First cell: red background, bold and centered text.
 $cell1 = (new RichTableCell('Important Notice'))
