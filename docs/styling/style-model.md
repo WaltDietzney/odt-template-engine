@@ -108,49 +108,59 @@ $paragraph = new Paragraph('CVEntryTitle');
 
 Names such as `CVEntryTitle`, `ReportHeading`, or `InvoiceTotal` communicate intent when inspecting the generated XML or editing the resulting document.
 
+A named reference does not create a definition. `new Paragraph('CVEntryTitle')` means "use this paragraph style in the current document". Define generated reusable paragraph styles explicitly through `$template->styles()->defineParagraph(...)`, or reference a style already authored in the ODT template.
+
+## Public authoring model
+
+The current public styling model has three layers:
+
+```text
+Application authoring
+    element options / fluent element APIs
+
+Document style authoring
+    $template->styles()->defineParagraph(...)
+
+Custom structured-element extension
+    getOwnStyleRequirements()
+    ownedElements()
+    typed resource/dependency hooks
+    toDomNode()
+```
+
+For ordinary application code, the first two layers are normally sufficient.
+
+`DocumentStyles` is the public document-oriented facade for generated named paragraph definitions. It does not own process-global state; definitions belong to the current logical document.
+
+Custom `OdtElement` implementations can describe semantic style requirements through `StyleRequirement` without registering styles in a global registry.
+
+## Internal style pipeline
+
+The implementation behind the public API is document-local:
+
+```text
+Element options / DocumentStyles / custom StyleRequirement
+                    ↓
+             StyleRequirement
+                    ↓
+              StyleContext
+                    ↓
+               materializers
+                    ↓
+             ODF style output
+```
+
+`StyleContext` is an internal document-local semantic authority. `StyleMapper` is a stateless mapping and identity utility. `StyleWriter` is a narrow serialization helper for explicit data and is not an application-facing style registry or authoring API.
+
+There is no process-global paragraph/text registry fallback in the current style architecture.
+
 ## Where styles are stored
 
 An ODT package can contain styles in more than one XML location.
 
-The engine currently writes document styles primarily through `styles.xml`, while some generated automatic structures such as table-column and table-cell styles may also involve `content.xml` automatic styles.
+The engine writes document styles primarily through `styles.xml`, while generated automatic structures such as table-column and table-cell styles may also involve `content.xml` automatic styles.
 
 You normally do not need to manage those XML locations manually. The distinction becomes important when diagnosing missing or duplicated styles.
-
-## StyleMapper and StyleWriter
-
-`StyleMapper` provides option-to-ODF mapping and still exposes historical
-compatibility registries. It is not the document-local owner of modern named
-paragraph definitions.
-
-`StyleWriter` serializes registered and required styles into the ODT XML package.
-
-Normal application code should generally style elements through `Paragraph`, `RichTableCell`, `ImageElement`, and related public elements. Historical direct `StyleMapper` registration remains a compatibility path, not the recommended way to author document styles.
-
-`StyleWriter` is an implementation utility and is not the recommended application-facing styling API.
-
-## Advanced registration and process scope
-
-The canonical API for a generated reusable named paragraph definition is the
-document-style facade:
-
-```php
-$template->styles()->defineParagraph('CVEntryTitle', [
-    'margin-top' => '0.1cm',
-    'margin-bottom' => '0.03cm',
-]);
-```
-
-The resulting definition belongs to the current logical document. A later
-`new Paragraph('CVEntryTitle')` uses that named style as a reference; it does
-not define or register it.
-
-`StyleContext` is the document-local semantic style authority behind the
-facade. The historical static `StyleMapper` registration methods remain only
-for compatibility and legacy paths; they should not be used as the normal
-application authoring API. Custom structured elements should describe semantic
-style requirements rather than access the compatibility registries directly.
-
-For ordinary element-generated styles, use the element APIs and allow the engine to collect the required styles from the generated content.
 
 ## Prefer semantic intent over visual hacks
 
