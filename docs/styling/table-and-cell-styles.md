@@ -82,7 +82,7 @@ $cell
     ->setRowspan(2);
 ```
 
-The engine writes native ODF span attributes to the table cell.
+The engine writes native ODF span attributes to the table cell. Relative column-width ratios are a separate table-column concern and do not alter these spans.
 
 ## Table style names
 
@@ -131,11 +131,11 @@ ODF allows style definitions in different package locations. The current table p
 
 Application code should not depend on the exact XML destination of a generated cell or table-column style. Treat `RichTable`, `RichTableCell`, and their documented style options as the public abstraction.
 
-Style ownership and materialization are already document-local. Remaining table work in the roadmap concerns layout and geometry semantics rather than another general style-registry consolidation.
+Style ownership and materialization are already document-local. Remaining table work concerns layout and geometry semantics rather than another general style-registry consolidation.
 
 ## Current limitations
 
-Styling a cell does not solve exact table geometry. Physical table width, precise column widths, and row heights have separate known limitations documented in the [Tables](../rich-documents/tables.md) guide.
+Styling a cell does not solve exact table geometry. `RichTable` already supports explicit column widths, relative column-width ratios, and row-level `min-row-height`, but overall table width, exact layout across document contexts, fixed row heights, and more advanced geometry/page-flow semantics remain separate concerns.
 
 Always distinguish:
 
@@ -147,11 +147,13 @@ layout/geometry problem
 
 when diagnosing a generated table.
 
+See the [Tables](../rich-documents/tables.md) guide for the current geometry APIs and their boundaries.
+
 ## Related samples
 
 - Sample 12 — advanced table styling
 - Sample 13 — cell configuration
 - Sample 15 — styled table
-- Sample 20 — ratio-based layout
+- Sample 20 — relative column-width ratios
 
 See [Style Model](style-model.md) for the general styling architecture.

@@ -15,7 +15,7 @@ use DOMElement;
  * Represents a rich, styleable table element in an ODT document.
  *
  * Supports cell and row styling, column width definitions, header row grouping,
- * style presets, and ratio-based virtual column spans.
+ * style presets, and relative column width definitions.
  */
 class RichTable extends OdtElement
 {
@@ -103,7 +103,7 @@ class RichTable extends OdtElement
      * requirements; they do not alter caller-defined cell spans.
      *
      * @param array $cells Array of cell content or RichTableCell instances.
-     * @param array $style Optional row-level style (currently unused).
+     * @param array $style Optional row-level style; currently supports `min-row-height`.
      * @return self
      */
     public function addRow(array $cells, array $style = []): self

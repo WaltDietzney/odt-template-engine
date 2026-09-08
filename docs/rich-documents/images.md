@@ -1,11 +1,12 @@
 # Images
 
-The engine supports both template-level image replacement and programmatically generated `ImageElement` objects.
+The engine supports template-level image replacement, programmatically generated `ImageElement` objects, and structured insertion of image content into named native sections.
 
 Choose the approach based on who owns the document structure:
 
 - use template image replacement when LibreOffice already contains the intended image position;
-- use `ImageElement` when PHP needs to create the image as part of a generated `RichText` or `Paragraph` structure.
+- use `ImageElement` when PHP needs to create the image as part of generated ODT content;
+- use a named section target when LibreOffice owns a semantic region whose content should be replaced with an image element.
 
 ## ImageElement
 
@@ -71,6 +72,22 @@ This keeps layout decisions in LibreOffice while PHP supplies the actual asset. 
 
 See Samples 05 and 06 for the existing image replacement and image-settings workflows.
 
+## Images in named sections
+
+A named native section can also be the semantic insertion boundary:
+
+```php
+$image = new ImageElement(__DIR__ . '/assets/photo.png', [
+    'width' => '4cm',
+    'height' => '3cm',
+    'anchor' => 'as-char',
+]);
+
+$template->section('ImageSection')->replaceContent($image);
+```
+
+Here LibreOffice owns the named section while PHP supplies its new structured content. The image still participates in the normal package-resource pipeline. Sample 24 demonstrates this model.
+
 ## Image assets in the ODT package
 
 Generated images are embedded into the ODT package under `Pictures/`, and the package manifest is updated so LibreOffice recognizes the asset.
@@ -102,6 +119,7 @@ Always inspect representative output in the target office suite when using advan
 - Sample 05 — replace an image in an existing template structure
 - Sample 06 — image settings and sizing
 - Sample 16 — image placement combined with tabs/positioning options
-- Sample 21 — profile image embedded in a generated CV section
+- Sample 21 — profile image embedded in a generated CV region
+- Sample 24 — replace named section content with an `ImageElement`
 
-See [How the Engine Works](../concepts/how-it-works.md) for the general template-first design principle.
+See [How the Engine Works](../concepts/how-it-works.md) for the general template-first design principle and [Addressable Native ODT Structures](addressable-document.md) for named targets.

@@ -88,7 +88,7 @@ $cell = (new RichTableCell('Shared value'))
     ->setRowspan(2);
 ```
 
-The engine writes the corresponding ODF span attributes.
+The engine writes the corresponding ODF span attributes. Spans are caller-defined structural properties and are independent from column-width ratios.
 
 ## Building tables from arrays
 
@@ -129,9 +129,9 @@ $table->buildTableFromArray($rows, 'invoice');
 
 ## Column widths and ratios
 
-`RichTable` currently exposes `setColumnWidths()` and `setColumnWidthRatios()`. These APIs are used by existing samples, but precise table geometry is one of the areas where ODF generation and LibreOffice layout behavior remain under active development.
+`RichTable` supports explicit physical column widths and relative column-width ratios.
 
-For example:
+Explicit widths:
 
 ```php
 $table->setColumnWidths([
@@ -141,27 +141,41 @@ $table->setColumnWidths([
 ]);
 ```
 
-or ratio-based layout:
+are represented as semantic table-column requirements using ODF `style:column-width`.
+
+Relative widths:
 
 ```php
 $table->setColumnWidthRatios([3, 2, 1]);
 ```
 
-The ratio implementation maps logical ratios to virtual column spans. It is useful for existing layouts, but it should not be interpreted as a general guarantee of exact physical column widths.
+are normalized and represented as semantic table-column requirements using ODF `style:rel-column-width`. Ratios describe the relative widths of the actual table columns; they do **not** create virtual columns and they do not modify caller-defined cell spans.
+
+Relative widths are useful when the relationship between columns matters more than a fixed physical width. As with all table geometry, verify representative output in LibreOffice because final layout also depends on the surrounding document and office-suite layout behavior.
+
+## Row minimum height
+
+`addRow()` accepts a supported row-level `min-row-height` option:
+
+```php
+$table->addRow(
+    ['Product', 'Quantity', 'Price'],
+    ['min-row-height' => '0.8cm']
+);
+```
+
+The engine materializes this as an ODF table-row style with `style:min-row-height`. This is minimum-height support, not a general promise of exact fixed row-height control.
 
 ## Current limitations
 
-Precise programmatic table geometry is not yet a fully solved part of the public API.
-
-Known development areas include:
+Table layout and geometry are deliberately separate from the style-ownership model. Areas that still deserve care include:
 
 - reliable explicit overall table width;
-- exact per-column physical widths across LibreOffice layouts;
-- explicit row-height control;
-- simplifying the current ratio/virtual-column workaround;
-- clearer ownership of some table-cell style serialization paths.
+- exact physical layout across different LibreOffice document contexts;
+- fixed/exact row-height semantics beyond the supported minimum height;
+- more advanced table geometry and page-flow behavior.
 
-When exact geometry matters, prefer defining the stable table structure in the LibreOffice template where practical. Use PHP-generated tables for dynamic structure, and verify representative output in LibreOffice.
+When exact stable geometry matters, prefer defining that structure in the LibreOffice template where practical. Use PHP-generated tables for dynamic structure, and verify representative output in LibreOffice.
 
 ## Related samples
 
@@ -170,6 +184,6 @@ When exact geometry matters, prefer defining the stable table structure in the L
 - Sample 13 — table-cell configuration
 - Sample 15 — styled simple table
 - Sample 19 — HTML table import into native ODT structures
-- Sample 20 — ratio-based table layout
+- Sample 20 — relative column-width ratios
 
 See [Table & Cell Styles](../styling/table-and-cell-styles.md) for the style-responsibility model.

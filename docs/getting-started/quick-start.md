@@ -64,16 +64,21 @@ Call `render()` after all normal and repeating values have been assigned, then s
 
 ## 4. Choose the right content model
 
-Use template syntax when the document already contains the structure and PHP only supplies values or controls which sections are visible.
+The engine supports three complementary authoring models. Choose according to who should own the document structure.
 
-Use PHP document elements such as `RichText`, `Paragraph`, `ListElement`, `ImageElement`, and `RichTable` when PHP needs to construct the document structure itself.
+Use **template expressions** when LibreOffice already owns the structure and PHP only supplies scalar values or lightweight conditions and loops.
 
-Both approaches can be combined in the same ODT template.
+Use **programmatic ODT elements** such as `RichText`, `Paragraph`, `ListElement`, `ImageElement`, and `RichTable` when PHP genuinely owns a dynamic content subtree.
+
+Use **addressable native ODT structures** when LibreOffice should remain the visual and structural author, but PHP needs stable semantic handles for named sections, bookmarks, tables, or frames. Named sections can also act as repeatable native prototypes for data-bound instantiation.
+
+The three models can be combined in the same ODT template.
 
 ## Next steps
 
 - Read [Creating Templates](creating-templates.md) before building more complex template layouts.
 - Continue with [Variables & Filters](../template-language/variables-and-filters.md).
 - Continue with [Conditions & Loops](../template-language/conditions-and-loops.md).
+- Learn about [Addressable Native ODT Structures](../rich-documents/addressable-document.md).
 - Read [How the Engine Works](../concepts/how-it-works.md) for the complete processing model.
 - Explore the executable examples in the [public Sample Explorer](https://odt.walter-dietz.de/).

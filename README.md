@@ -2,7 +2,7 @@
 
 **Generate real, editable OpenDocument Text (`.odt`) files from PHP.**
 
-ODT Template Engine is an open-source PHP library for turning existing ODT templates into structured documents with variables, loops, conditions, images, rich text, lists, tables, styles, HTML imports and metadata.
+ODT Template Engine is an open-source PHP library for turning existing ODT templates into structured documents with variables, loops, conditions, images, rich text, lists, tables, styles, HTML imports, metadata, and addressable native ODT structures.
 
 [![CI](https://github.com/WaltDietzney/odt-template-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/WaltDietzney/odt-template-engine/actions/workflows/ci.yml)
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-777BB4.svg)](https://www.php.net/)
@@ -19,7 +19,7 @@ ODT Template Engine is an open-source PHP library for turning existing ODT templ
 
 Many document-generation workflows start with HTML and end with PDF. That is useful when the final document is meant to be fixed, but it is less convenient when users need to continue editing the result in an office application.
 
-ODT Template Engine works directly with OpenDocument Text packages. Templates can be designed in LibreOffice, populated from PHP and saved again as real `.odt` files.
+ODT Template Engine works directly with OpenDocument Text packages. Templates can be designed in LibreOffice, populated from PHP, structurally addressed by native ODT identities, and saved again as real `.odt` files.
 
 This makes the engine useful for documents such as:
 
@@ -27,7 +27,42 @@ This makes the engine useful for documents such as:
 - reports and structured business documents;
 - letters and document templates;
 - tables and data-driven documents;
+- documents whose repeatable structures should remain authored in LibreOffice;
 - documents that must remain editable after generation.
+
+## Three complementary ways to work with a document
+
+The engine is not limited to one templating model.
+
+### 1. Template language
+
+Use visible expressions for scalar values, filters, conditions, and lightweight loops:
+
+```text
+Hello {{customer_name}}
+
+{{#foreach:items}}
+{{name}} — {{price}}
+{{#endforeach}}
+```
+
+### 2. Programmatic ODT elements
+
+When PHP owns a dynamic region's internal structure, build native ODT elements such as `RichText`, `Paragraph`, `ListElement`, `RichTable`, and `ImageElement`, then insert them into a template placeholder.
+
+### 3. Addressable native ODT structures
+
+When LibreOffice should own the structure, address native named document objects directly:
+
+```php
+$inspection = $template->inspect();
+$template->bookmark('FullName')->replaceText('Jane Smith');
+$experience = $template->section('ExperienceEntry');
+```
+
+Named sections can be cloned or instantiated from data, including nested repeatable collections. Named tables and frames can be resolved through typed targets for the operations currently supported by those target types.
+
+These models can coexist in one document. The important design choice is **who owns the structure: the template or PHP?**
 
 ## Features
 
@@ -37,11 +72,15 @@ This makes the engine useful for documents such as:
 - **Images** — insert new images or replace existing images in ODT packages.
 - **Rich content** — build styled text and paragraphs programmatically.
 - **Lists** — generate numbered and bulleted lists, including nested structures.
-- **Tables** — create native ODT tables and styled table cells.
+- **Tables** — create native ODT tables, styled cells, relative column widths, and supported row geometry.
 - **HTML import** — convert supported HTML fragments into native ODT content.
 - **Styles** — use friendly element styling and document-local named paragraph styles.
 - **Metadata** — write document title, author, description, dates and other metadata.
-- **ODT-aware processing** — normalize editor-generated spans and manipulate the XML inside real ODT packages.
+- **Document inspection** — inspect native named sections, bookmarks, tables, and frames.
+- **Typed native targets** — resolve native ODT objects by semantic name instead of application XPath.
+- **Named sections** — replace section content, clone native structure, and instantiate repeatable section collections.
+- **Nested collections** — expand owner-scoped nested section prototypes without manually constructing generated native names.
+- **ODT-aware processing** — preserve and manipulate native ODF structures inside real ODT packages.
 
 ## Requirements
 
@@ -142,21 +181,35 @@ $heading = new Paragraph('ReportHeading');
 
 The repository also contains elements and helpers for tables, table cells, images, lists and HTML imports.
 
+## Native structured templates
+
+LibreOffice-authored structure can also remain the source of truth for repeatable blocks.
+
+```php
+$experiences = $template
+    ->section('ExperienceEntry')
+    ->instantiateMany([
+        ['note' => 'Current role', 'position' => 'Senior Project Manager'],
+        ['note' => 'Previous role', 'position' => 'Project Coordinator'],
+    ]);
+```
+
+Each returned `SectionTarget` represents the generated native section and can address nested section prototypes relative to its own subtree. This allows application data to drive collections without rebuilding the visual block in PHP.
+
+Use `inspect()` when you need an immutable snapshot of the native named sections, bookmarks, tables, frames, and diagnostics present in the current document.
+
 ## Interactive samples
 
 Want to see what the engine actually produces before installing it? **[Try the live Sample Explorer](https://odt.walter-dietz.de/)**. You can open the PHP source behind each example, inspect the template variables and generate the real editable ODT output yourself.
 
 The same Sample Explorer is included in the repository under [`demo/sample-explorer/`](demo/sample-explorer/), while the growing collection of real ODT templates and executable examples lives under [`samples/`](samples/).
 
-The explorer lets you:
+The later samples include two complementary CV architecture showcases:
 
-- browse examples by feature area;
-- search the sample collection;
-- inspect template variables;
-- inspect the PHP source;
-- generate and download the resulting ODT document.
+- **Sample 21** — PHP-generated `RichText`/element regions inside a LibreOffice-designed shell;
+- **Sample 25** — LibreOffice-authored named section collections instantiated from application data.
 
-Run it locally with PHP's development server:
+Run the explorer locally with PHP's development server:
 
 ```bash
 php -S localhost:8085 -t demo/sample-explorer
@@ -196,15 +249,17 @@ The project also uses generated sample documents for practical LibreOffice-orien
 
 The developer documentation is published at [odt.walter-dietz.de/docs/](https://odt.walter-dietz.de/docs/). Its versioned Markdown source lives in [`docs/`](docs/) and is built with Zensical.
 
-Start with the [Quick Start](https://odt.walter-dietz.de/docs/getting-started/quick-start/) and then continue with the template-language, rich-document and styling guides.
+Start with the [Quick Start](https://odt.walter-dietz.de/docs/getting-started/quick-start/) and then continue with the template-language, rich-document, addressable-structure and styling guides.
 
 Useful repository areas:
 
 ```text
 src/                     Core library
+src/Document/            Document context, inspection, typed targets and document services
 src/Elements/            Rich ODT document elements
 src/Import/              Import helpers such as HTML import
-src/Utils/               Style and XML utilities
+src/Style/               Document-local style authoring and semantic style services
+src/Utils/               Mapping, serialization and XML utilities
 tests/                   Unit and integration tests
 samples/                 Example scripts, templates and assets
 demo/sample-explorer/    Interactive local showcase
@@ -213,7 +268,7 @@ docs/                    Developer documentation source
 
 ## Project status
 
-The engine is actively maintained and already supports substantial real-world ODT generation. The public API and internal architecture continue to evolve, but the current style system has a document-local ownership model with explicit named paragraph authoring and semantic structured-element requirements.
+The engine is actively maintained and already supports substantial real-world ODT generation. Its architecture now combines document-local package/context services, structured ODT elements, semantic style requirements, and typed access to native named ODT structures.
 
 Current development priorities include:
 
@@ -221,7 +276,7 @@ Current development priorities include:
 - layout work for frames, tables, lists and page flow;
 - template-authoring and format-preservation improvements;
 - continued LibreOffice compatibility testing;
-- practical requirements discovered through real document-generation projects.
+- further structured-document capabilities driven by real document-generation requirements.
 
 ## Security
 
