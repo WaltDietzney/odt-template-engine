@@ -512,11 +512,11 @@ class StyleMapper
 
 
     /**
-     * Registers a new text style.
-     * 
-     * This method generates a unique name for the style and stores it in the static array of registered text styles.
-     * 
-     * @param array $style The text style array.
+     * Legacy compatibility facade for direct text-style registration.
+     *
+     * @deprecated Not a supported authoring API; retained for direct
+     * StyleWriter compatibility until STYLE-API-02G.
+     * @param array<string, mixed> $style
      */
     public static function registerTextStyle(array $style): string
     {
@@ -525,6 +525,13 @@ class StyleMapper
         return $styleName;
     }
 
+    /**
+     * Legacy compatibility facade for explicit-name text registration.
+     *
+     * @deprecated Not a supported authoring API; retained for direct
+     * StyleWriter compatibility until STYLE-API-02G.
+     * @param array<string, mixed> $style
+     */
     public static function setTextStyle(string $styleName, array $style): void
     {
         LegacyStyleCompatibilityState::setTextStyle($styleName, $style);
@@ -532,12 +539,11 @@ class StyleMapper
 
 
     /**
-     * Registers a new paragraph style.
-     * 
-     * This method registers the paragraph style under the provided name in the static array of registered paragraph styles.
-     * 
-     * @param string $styleName The name of the paragraph style.
-     * @param array $style The paragraph style array.
+     * Legacy compatibility facade for paragraph registration.
+     *
+     * @deprecated Use document-local semantic style authoring instead; retained
+     * for legacy paragraph references and direct writer compatibility.
+     * @param array<string, mixed> $style
      */
     public static function registerParagraphStyle(string $styleName, array $style): void
     {
@@ -546,9 +552,11 @@ class StyleMapper
 
 
     /**
-     * Retrieves all registered styles (text and paragraph).
-     * 
-     * @return array The merged array of all registered text and paragraph styles.
+     * Legacy compatibility facade exposing text and paragraph registrations.
+     *
+     * @deprecated Not a supported application authoring API; retained for
+     * StyleContext fallback and direct writer compatibility.
+     * @return array<string, array<string, mixed>>
      */
     public static function getRegisteredStyles(): array
     {
@@ -556,9 +564,11 @@ class StyleMapper
     }
 
     /**
-     * Retrieves all registered text styles.
-     * 
-     * @return array The array of registered text styles.
+     * Legacy compatibility facade exposing text registrations.
+     *
+     * @deprecated Not a supported application authoring API; retained for
+     * StyleContext fallback and direct writer compatibility.
+     * @return array<string, array<string, mixed>>
      */
     public static function getTextStyles(): array
     {
@@ -566,9 +576,11 @@ class StyleMapper
     }
 
     /**
-     * Retrieves all registered paragraph styles.
-     * 
-     * @return array The array of registered paragraph styles.
+     * Legacy compatibility facade exposing paragraph registrations.
+     *
+     * @deprecated Not a supported application authoring API; retained for
+     * StyleContext fallback and direct writer compatibility.
+     * @return array<string, array<string, mixed>>
      */
     public static function getParagraphStyles(): array
     {
@@ -576,9 +588,11 @@ class StyleMapper
     }
 
     /**
-     * Retrieves all registered styles (text, paragraph, and table-cell).
-     * 
-     * @return array The array of all registered styles categorized by type.
+     * Legacy compatibility facade aggregating old registry views.
+     *
+     * @deprecated Not a supported application authoring API; retained only for
+     * existing compatibility inspection callers.
+     * @return array<string, array<string, array<string, mixed>>>
      */
     public static function getAllRegisteredStyles(): array
     {
@@ -590,12 +604,11 @@ class StyleMapper
     }
 
     /**
-     * Registers a new table-cell style.
-     * 
-     * This method registers the table-cell style with the provided name and style options.
-     * 
-     * @param string $name The name of the table-cell style.
-     * @param array $options The style options for the table-cell.
+     * Legacy compatibility facade for table-cell registration.
+     *
+     * @deprecated Normal RichTableCell ownership is semantic and document-local;
+     * retained for direct StyleWriter compatibility until STYLE-API-02G.
+     * @param array<string, mixed> $options
      */
     public static function registerTableCellStyle(string $name, array $options): void
     {
@@ -606,9 +619,11 @@ class StyleMapper
     }
 
     /**
-     * Retrieves all registered table-cell styles.
-     * 
-     * @return array The array of registered table-cell styles.
+     * Legacy compatibility facade exposing table-cell registrations.
+     *
+     * @deprecated Not a supported application authoring API; retained for
+     * direct StyleWriter compatibility until STYLE-API-02G.
+     * @return array<string, array<string, mixed>>
      */
     public static function getRegisteredTableCellStyles(): array
     {
@@ -616,9 +631,9 @@ class StyleMapper
     }
 
     /**
-     * Summary of hasTextStyle
-     * @param string $styleName
-     * @return bool
+     * Checks the legacy text compatibility facade.
+     *
+     * @deprecated Not a supported application authoring API.
      */
     public static function hasTextStyle(string $styleName): bool
     {
@@ -626,11 +641,12 @@ class StyleMapper
     }
 
     /**
-     * Registriert einen Bildstil unter einem stabilen Namen.
+     * Legacy compatibility facade for image-style registration.
      *
-     * @param string|null $name Optionaler Stilname. Wenn leer, wird er aus den Optionen generiert.
-     * @param array $options Stiloptionen
-     * @return void
+     * @deprecated Normal image insertion is document-local; retained for
+     * legacy assign/render and direct writer compatibility until STYLE-API-02G.
+     * @param string|null $name Optional compatibility style name.
+     * @param array<string, mixed> $options
      */
     public static function registerImageStyle(?string $name, array $options): void
     {
@@ -650,8 +666,11 @@ class StyleMapper
 
 
     /**
-     * Summary of getRegisteredImageStyles
-     * @return array
+     * Legacy compatibility facade exposing image registrations.
+     *
+     * @deprecated Not a supported application authoring API; retained for
+     * legacy assign/render and direct writer compatibility until STYLE-API-02G.
+     * @return array<string, array<string, mixed>>
      */
     public static function getRegisteredImageStyles(): array
     {
@@ -659,11 +678,10 @@ class StyleMapper
     }
 
     /**
-     * Registers a fill-image for use with draw:fill="bitmap".
+     * Legacy compatibility facade for fill-image registration.
      *
-     * @param string $name The unique name (referenced by draw:fill-image-name).
-     * @param string $imagePath Absolute path to the image file.
-     * @return void
+     * @deprecated Normal fill-image ownership is document/package-local;
+     * retained for legacy assign/render compatibility until STYLE-API-02G.
      */
     public static function registerFillImage(string $name, string $imagePath): void
     {
@@ -671,8 +689,10 @@ class StyleMapper
     }
 
     /**
-     * Returns all registered fill-images.
+     * Legacy compatibility facade exposing fill-image registrations.
      *
+     * @deprecated Not a supported application authoring API; retained for
+     * legacy assign/render compatibility until STYLE-API-02G.
      * @return array<string, array{name: string, path: string, filename: string}>
      */
     public static function getRegisteredFillImages(): array
@@ -708,7 +728,11 @@ class StyleMapper
 
 
     /**
-     * Gibt alle Frame-Styles (für draw:frame etc.) zurück.
+     * Legacy compatibility facade exposing frame styles.
+     *
+     * @deprecated Normal graphic ownership is document-local; retained for
+     * legacy assign/render and direct writer compatibility until STYLE-API-02G.
+     * @return array<string, array<string, mixed>>
      */
     public static function getFrameStyles(): array
     {
@@ -717,7 +741,11 @@ class StyleMapper
 
 
     /**
-     * Registriert einen neuen Frame-Style.
+     * Legacy compatibility facade for frame-style registration.
+     *
+     * @deprecated Normal graphic ownership is document-local; retained for
+     * legacy assign/render and direct writer compatibility until STYLE-API-02G.
+     * @param array<string, mixed> $properties
      */
     public static function addFrameStyle(string $name, array $properties): void
     {
@@ -769,10 +797,24 @@ class StyleMapper
         return [$textStyle, $paragraphStyle];
     }
 
+    /**
+     * Legacy compatibility facade for table-style registration.
+     *
+     * @deprecated RichTable element-owned definitions are the supported model;
+     * retained for direct StyleWriter compatibility until STYLE-API-02G.
+     * @param array<string, mixed> $properties
+     */
     public static function registerTableStyle(string $name, array $properties): void
     {
         LegacyStyleCompatibilityState::registerTableStyle($name, $properties);
     }
+    /**
+     * Legacy compatibility facade exposing table registrations.
+     *
+     * @deprecated Not a supported application authoring API; retained for
+     * direct StyleWriter compatibility until STYLE-API-02G.
+     * @return array<string, array<string, mixed>>
+     */
     public static function getRegisteredTableStyles(): array
     {
         return LegacyStyleCompatibilityState::tableStyles();

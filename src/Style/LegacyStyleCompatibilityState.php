@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace OdtTemplateEngine\Style;
 
 /**
+ * @internal
+ *
  * Bounded process-wide storage for explicitly legacy style compatibility.
  *
  * This state is retained only for direct StyleMapper/StyleWriter compatibility
- * and the historical assign/render graphic path. Normal structured insertion
- * must use document-local semantic ownership instead.
+ * and the historical assign/render graphic path until the STYLE-API-02G
+ * writer-boundary cleanup can retire or further reduce it. It is not a
+ * supported application style-authoring API. Normal structured insertion must
+ * use document-local semantic ownership instead.
  */
 final class LegacyStyleCompatibilityState
 {
@@ -66,16 +70,10 @@ final class LegacyStyleCompatibilityState
         return self::$tableCellStyles;
     }
 
-    /** @param array<string, mixed> $options */
+    /** @param array<string, mixed> $options Already-normalized compatibility data. */
     public static function registerImageStyle(string $name, array $options): void
     {
-        $normalized = array_filter(
-            $options,
-            fn ($key): bool => !in_array($key, ['align', 'style-name'], true),
-            ARRAY_FILTER_USE_KEY
-        );
-        ksort($normalized);
-        self::$imageStyles[$name] = $normalized;
+        self::$imageStyles[$name] = $options;
     }
 
     /** @return array<string, array<string, mixed>> */
