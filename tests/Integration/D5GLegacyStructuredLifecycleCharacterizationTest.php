@@ -17,7 +17,6 @@ use OdtTemplateEngine\Elements\RichTable;
 use OdtTemplateEngine\Elements\RichTableCell;
 use OdtTemplateEngine\Elements\RichText;
 use OdtTemplateEngine\OdtTemplate;
-use OdtTemplateEngine\Utils\StyleMapper;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
@@ -257,14 +256,14 @@ final class D5GLegacyStructuredLifecycleCharacterizationTest extends TestCase
     public function testLegacyDocumentsDoNotMaterializeUnrelatedStaticGraphicState(): void
     {
         $first = $this->legacyTemplate(new DrawTextBox('Document A', ['width' => '4cm']));
-        $firstName = (string) array_key_first(StyleMapper::getFrameStyles());
+        $firstName = (string) array_key_first($first->frameStyles());
         $this->save($first, 'document-a');
 
         $second = $this->legacyTemplate(new ImageElement($this->imagePath('banner.png')));
         $output = $this->save($second, 'document-b');
         $styles = $this->entry($output, 'styles.xml');
 
-        self::assertArrayHasKey($firstName, StyleMapper::getFrameStyles());
+        self::assertArrayHasKey($firstName, $first->frameStyles());
         self::assertStringNotContainsString('style:name="' . $firstName . '"', $styles);
     }
 
@@ -292,9 +291,9 @@ final class D5GLegacyStructuredLifecycleCharacterizationTest extends TestCase
         return $template;
     }
 
-    private function template(): OdtTemplate
+    private function template(): LegacyLifecycleProbeTemplate
     {
-        $template = new OdtTemplate($this->templatePath('sample_textfeld.odt'));
+        $template = new LegacyLifecycleProbeTemplate($this->templatePath('sample_textfeld.odt'));
         $this->templates[] = $template;
         return $template;
     }
@@ -344,6 +343,11 @@ final class D5GLegacyStructuredLifecycleCharacterizationTest extends TestCase
 
 final class LegacyLifecycleProbeTemplate extends OdtTemplate
 {
+    public function frameStyles(): array
+    {
+        return $this->documentContext()->styleContext()->frameStyles();
+    }
+
     public function legacyStructuredValuesMaterialized(): bool
     {
         return (bool) (new ReflectionProperty(OdtTemplate::class, 'legacyStructuredValuesMaterialized'))

@@ -13,7 +13,6 @@ use OdtTemplateEngine\Document\FontFaceRequirementMaterializer;
 use OdtTemplateEngine\OdtDocumentContext;
 use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Utils\StyleMapper;
-use OdtTemplateEngine\Utils\StyleWriter;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
@@ -74,42 +73,6 @@ final class StyleRequirementFontMaterializationTest extends TestCase
         }
     }
 
-    #[RunInSeparateProcess]
-    public function testLegacyStyleWriterStillMaterializesNonSemanticCompatibilityFonts(): void
-    {
-        $style = 'SR05E_Legacy_' . bin2hex(random_bytes(3));
-        $font = 'SR05E Legacy Font ' . bin2hex(random_bytes(3));
-        StyleMapper::setTextStyle($style, ['style:font-name' => $font]);
-        ini_set('error_log', '/dev/null');
-        $dom = $this->dom('<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0"/>');
-
-        StyleWriter::writeTextStyles($dom);
-        StyleWriter::writeFontFaces($dom);
-
-        self::assertSame(1, $dom->getElementsByTagName('style:font-face')->length);
-    }
-
-    #[RunInSeparateProcess]
-    public function testSemanticAndUnrelatedLegacyFontsRemainSeparatePhysicalResponsibilities(): void
-    {
-        $semanticIdentity = 'SR05E Semantic Identity ' . bin2hex(random_bytes(3));
-        $semanticFamily = 'Semantic Family';
-        $legacyStyle = 'SR05E_Mixed_Legacy_' . bin2hex(random_bytes(3));
-        $legacyFont = 'SR05E Unrelated Legacy Font ' . bin2hex(random_bytes(3));
-        $styles = $this->dom('<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0"><office:styles/></office:document-styles>');
-        $context = new OdtDocumentContext($this->dom('<office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"/>'), $styles, $this->dom('<office:document-meta xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"/>'));
-        $semantic = new FontFaceRequirement(FontFaceRequirement::PART_STYLES, $semanticIdentity, $semanticFamily);
-        $context->registerFontFaceRequirement($semantic);
-        StyleMapper::setTextStyle($legacyStyle, ['style:font-name' => $legacyFont]);
-        ini_set('error_log', '/dev/null');
-
-        (new FontFaceRequirementMaterializer())->materializeAll($context, $context->fontFaceRequirements()->requirements());
-        StyleWriter::writeAllStyles($styles);
-
-        self::assertSame(1, $this->fontFaceCount($styles, $semanticIdentity));
-        self::assertStringContainsString('style:name="' . $legacyFont . '"', (string) $styles->saveXML());
-        self::assertSame($semanticFamily, $this->fontFace($styles, $semanticIdentity)->getAttributeNS($this->namespace('svg'), 'font-family'));
-    }
 
     private function save(RichText $element): string
     {

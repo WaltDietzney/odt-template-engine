@@ -9,7 +9,6 @@ use DOMNode;
 use OdtTemplateEngine\Elements\ImageElement;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\OdtTemplate;
-use OdtTemplateEngine\Utils\StyleMapper;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
@@ -54,24 +53,8 @@ final class StyleContextImageCompatibilityAdoptionTest extends TestCase
         $styles = $this->entry($output, 'styles.xml');
         self::assertStringNotContainsString('style:name="' . $firstName . '"', $styles);
         self::assertStringContainsString('style:name="' . $secondName . '"', $styles);
-        self::assertArrayHasKey($firstName, StyleMapper::getRegisteredImageStyles());
-        self::assertArrayHasKey($secondName, StyleMapper::getRegisteredImageStyles());
-    }
-
-    #[RunInSeparateProcess]
-    public function testDirectLegacyImageRegistrationIsAdoptedWhenCurrentDomReferencesIt(): void
-    {
-        $name = 'DirectLegacyImageStyle';
-        StyleMapper::registerImageStyle($name, ['style:wrap' => 'none', 'svg:width' => '6cm']);
-        $template = $this->template();
-        $template->assign(['test1' => new LegacyImageReferenceElement($name)]);
-        $template->render();
-        $output = $this->outputPath('direct-image');
-        $template->save($output);
-
-        $styles = $this->entry($output, 'styles.xml');
-        self::assertStringContainsString('style:name="' . $name . '"', $styles);
-        self::assertStringContainsString('style:wrap="none"', $styles);
+        self::assertArrayHasKey($firstName, $first->imageStylesForAudit());
+        self::assertArrayHasKey($secondName, $second->imageStylesForAudit());
     }
 
     #[RunInSeparateProcess]
@@ -109,7 +92,12 @@ final class StyleContextImageCompatibilityAdoptionTest extends TestCase
 
     private function template(): OdtTemplate
     {
-        $template = new OdtTemplate($this->templatePath('sample_textfeld.odt'));
+        $template = new class($this->templatePath('sample_textfeld.odt')) extends OdtTemplate {
+            public function imageStylesForAudit(): array
+            {
+                return $this->documentContext()->styleContext()->imageStyles();
+            }
+        };
         $this->templates[] = $template;
         return $template;
     }

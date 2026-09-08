@@ -1,7 +1,7 @@
 # STYLE-API-02G — Writer Boundary Cleanup
 
-Status: **ACCEPTED CHANGE CONTRACT — SEMANTICS BEFORE IMPLEMENTATION**  
-Baseline: `develop` at `8d69f62af2b30ceb414b4ba5e7ffd5c25dd90b1a`  
+Status: **ACCEPTED CHANGE CONTRACT — SEMANTICS BEFORE IMPLEMENTATION**
+Baseline: `develop` at `8d69f62af2b30ceb414b4ba5e7ffd5c25dd90b1a`
 Branch: `architecture/style-api-02g-writer-boundary-cleanup`
 
 ## Problem
@@ -69,9 +69,10 @@ table. No replacement global carrier is introduced.
 
 ### LegacyStyleRegistry and StyleContext fallback
 
-`LegacyStyleRegistry` remains only for paragraph reference-resolution
-compatibility. `StyleWriter` no longer depends on it. The existing
-paragraph/text fallback semantics are not redesigned in this milestone.
+`LegacyStyleRegistry` remains only for narrow paragraph/text
+reference-resolution compatibility. `StyleWriter` no longer depends on it.
+The existing paragraph/text fallback semantics are not redesigned in this
+milestone.
 
 ### Writer methods
 

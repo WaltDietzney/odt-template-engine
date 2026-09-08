@@ -13,7 +13,6 @@ use OdtTemplateEngine\Elements\RichText;
 use OdtTemplateEngine\OdtDocumentContext;
 use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Utils\StyleMapper;
-use OdtTemplateEngine\Utils\StyleWriter;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
@@ -127,8 +126,6 @@ final class StyleRequirementFontCurrentBehaviorCharacterizationTest extends Test
             ['style:text-properties' => ['style:font-name' => $identity]]
         ));
 
-        StyleWriter::writeAllStyles($dom, false, false, false);
-
         $fontFace = $this->fontFace($dom, $identity);
         self::assertSame(1, $this->fontFaceCount($dom, $identity));
         self::assertSame('DejaVu Serif', $fontFace->getAttributeNS($this->namespace('svg'), 'font-family'));
@@ -150,31 +147,8 @@ final class StyleRequirementFontCurrentBehaviorCharacterizationTest extends Test
             ['style:text-properties' => ['style:font-name' => $font]]
         ));
 
-        StyleWriter::writeAllStyles($styles, false, false, false);
-
         self::assertSame(0, $this->fontFaceCount($content, $font));
         self::assertSame(0, $this->fontFaceCount($styles, $font));
-    }
-
-    #[RunInSeparateProcess]
-    public function testSpecializedLegacyWriterFontStateIsProcessGlobalAcrossDocuments(): void
-    {
-        $styleName = 'SR05A_Legacy_Text_' . bin2hex(random_bytes(3));
-        $font = 'SR05A Legacy Font ' . bin2hex(random_bytes(3));
-        StyleMapper::setTextStyle($styleName, ['style:font-name' => $font]);
-        ini_set('error_log', '/dev/null');
-
-        $first = $this->dom('<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"/>');
-        StyleWriter::writeTextStyles($first);
-        StyleWriter::writeFontFaces($first);
-
-        $second = $this->dom('<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"/>');
-        StyleWriter::writeTextStyles($second);
-        StyleWriter::writeFontFaces($second);
-
-        self::assertSame(1, $first->getElementsByTagName('style:style')->length);
-        self::assertSame(0, $second->getElementsByTagName('style:style')->length);
-        self::assertSame(1, $second->getElementsByTagName('style:font-face')->length);
     }
 
     private function save(RichText $richText): string

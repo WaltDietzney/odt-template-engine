@@ -11,7 +11,6 @@ use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Document\StyleRequirementCollector;
 use OdtTemplateEngine\Import\HtmlImporter;
 use OdtTemplateEngine\OdtTemplate;
-use OdtTemplateEngine\Utils\StyleMapper;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
@@ -50,7 +49,6 @@ final class StyleApi02FADocumentOwnershipTest extends TestCase
             ['style:table-properties' => $properties],
             $requirements[0]->propertyGroups()
         );
-        self::assertArrayNotHasKey($requirements[0]->name(), StyleMapper::getRegisteredTableStyles());
 
         $template = new OdtTemplate($this->templatePath('template_11_table.odt'));
         $template->setElement('tableblock', $table);
@@ -102,19 +100,14 @@ final class StyleApi02FADocumentOwnershipTest extends TestCase
     #[RunInSeparateProcess]
     public function testRichTableCellOwnsCellDefinitionWithoutGlobalRegistration(): void
     {
-        $before = StyleMapper::getRegisteredTableCellStyles();
         $cell = new RichTableCell('Cell', ['background' => '#ddeeff', 'padding' => '0.2cm']);
 
-        self::assertSame($before, StyleMapper::getRegisteredTableCellStyles());
         self::assertCount(1, iterator_to_array($cell->getOwnStyleRequirements(), false));
     }
 
     #[RunInSeparateProcess]
     public function testHtmlImporterUsesSemanticParagraphAndTextOwnership(): void
     {
-        $beforeText = StyleMapper::getTextStyles();
-        $beforeParagraph = StyleMapper::getParagraphStyles();
-
         $richText = HtmlImporter::fromHtml(
             '<p style="margin-top: 0.2cm"><strong>Imported</strong></p>'
         );
@@ -131,18 +124,14 @@ final class StyleApi02FADocumentOwnershipTest extends TestCase
             $requirements,
             static fn ($requirement): bool => $requirement->family() === 'text'
         ));
-        self::assertSame($beforeText, StyleMapper::getTextStyles());
-        self::assertSame($beforeParagraph, StyleMapper::getParagraphStyles());
     }
 
     #[RunInSeparateProcess]
     public function testParagraphStyledTextDoesNotRegisterGlobally(): void
     {
-        $before = StyleMapper::getTextStyles();
         $paragraph = (new Paragraph())->addText('Local', ['bold' => true]);
 
         self::assertNotEmpty(iterator_to_array($paragraph->getOwnStyleRequirements(), false));
-        self::assertSame($before, StyleMapper::getTextStyles());
     }
 
     private function templatePath(string $name): string

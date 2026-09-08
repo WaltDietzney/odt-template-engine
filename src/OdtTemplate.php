@@ -78,9 +78,6 @@ class OdtTemplate
      */
     private bool $legacyStructuredValuesMaterialized = false;
 
-    /** @var array<string, true> */
-    private array $legacyFrameStylesMaterialized = [];
-
     private ?DocumentStyles $documentStyles = null;
 
     /** @var list<string> */
@@ -135,7 +132,6 @@ class OdtTemplate
     {
         $this->package->resetFromTemplate();
         $this->legacyStructuredValuesMaterialized = false;
-        $this->legacyFrameStylesMaterialized = [];
         $this->prepareLoadedTemplate();
     }
 
@@ -488,70 +484,6 @@ class OdtTemplate
         }
 
         return $owned;
-    }
-
-    /** @return array<string, true> */
-    private function semanticOwnedTableCellStyles(): array
-    {
-        $owned = [];
-        foreach ($this->documentContext()->styleContext()->semanticDefinitions() as $requirement) {
-            if ($requirement->family() === 'table-cell'
-                && $requirement->scope() === StyleRequirement::SCOPE_AUTOMATIC
-                && $requirement->documentPart() === StyleRequirement::PART_CONTENT) {
-                $owned[$requirement->name()] = true;
-            }
-        }
-
-        return $owned;
-    }
-
-    /** @return array<string, true> */
-    private function tableStyleNamesReferencedByCurrentDocument(): array
-    {
-        return $this->styleNamesReferencedByStructuralElements('table');
-    }
-
-    /** @return array<string, true> */
-    private function tableCellStyleNamesReferencedByCurrentDocument(): array
-    {
-        return $this->styleNamesReferencedByStructuralElements('table-cell');
-    }
-
-    /** @return array<string, true> */
-    private function styleNamesReferencedByStructuralElements(string $elementLocalName): array
-    {
-        $names = [];
-        $tableNamespace = 'urn:oasis:names:tc:opendocument:xmlns:table:1.0';
-
-        foreach ([$this->documentContext()->contentDom(), $this->documentContext()->stylesDom()] as $dom) {
-            foreach ($dom->getElementsByTagNameNS($tableNamespace, $elementLocalName) as $element) {
-                if (!$element instanceof DOMElement) {
-                    continue;
-                }
-                $name = $element->getAttributeNS($tableNamespace, 'style-name');
-                if ($name === '') {
-                    $name = $element->getAttribute('table:style-name');
-                }
-                if ($name !== '') {
-                    $names[$name] = true;
-                }
-            }
-
-            foreach ($dom->getElementsByTagName('*') as $element) {
-                if (!$element instanceof DOMElement
-                    || ($element->localName !== $elementLocalName
-                        && $element->nodeName !== 'table:' . $elementLocalName)
-                    || $element->namespaceURI !== null) {
-                    continue;
-                }
-                $name = $element->getAttribute('table:style-name');
-                if ($name !== '') {
-                    $names[$name] = true;
-                }
-            }
-        }
-
-        return $names;
     }
 
     /**
@@ -1367,31 +1299,10 @@ class OdtTemplate
     {
         $this->injectImageStyles();
         $this->injectDocumentGraphicStyles();
-        $legacyFrameStyleNames = $this->legacyStructuredValuesMaterialized
-            ? $this->legacyFrameStylesReferencedByCurrentDocument()
-            : [];
-        $pendingLegacyFrameStyleNames = array_diff_key(
-            $legacyFrameStyleNames,
-            $this->legacyFrameStylesMaterialized
-        );
-        $legacyFrameStylesEnabled = $legacyFrameStyleNames !== [];
         (new FontFaceRequirementMaterializer())->materializeAll(
             $this->documentContext(),
             $this->documentContext()->fontFaceRequirements()->requirements()
         );
-        StyleWriter::writeAllStyles(
-            $this->documentContext()->stylesDom(),
-            false,
-            false,
-            $legacyFrameStylesEnabled,
-            $legacyFrameStylesEnabled
-                ? $pendingLegacyFrameStyleNames
-                : null,
-            $this->semanticOwnedTableCellStyles(),
-            $this->tableStyleNamesReferencedByCurrentDocument(),
-            $this->tableCellStyleNamesReferencedByCurrentDocument()
-        );
-        $this->legacyFrameStylesMaterialized += $legacyFrameStyleNames;
         $this->adjustBulletIndentation();
         $this->package->saveAs($outputPath);
     }
@@ -1402,16 +1313,6 @@ class OdtTemplate
         (new FontFaceRequirementMaterializer())->materializeAll(
             $this->documentContext(),
             $this->documentContext()->fontFaceRequirements()->requirements()
-        );
-        StyleWriter::writeAllStyles(
-            $this->documentContext()->stylesDom(),
-            false,
-            false,
-            false,
-            null,
-            $this->semanticOwnedTableCellStyles(),
-            $this->tableStyleNamesReferencedByCurrentDocument(),
-            $this->tableCellStyleNamesReferencedByCurrentDocument()
         );
         $this->package->persistCoreDocuments();
         $this->load();
@@ -1746,223 +1647,12 @@ class OdtTemplate
      */
     protected function injectImageStyles(): void
     {
-        if ($this->legacyStructuredValuesMaterialized) {
-            $this->injectLegacyImageStyles();
-        }
+        // Retained as a protected lifecycle hook; graphic requirements are
+        // already owned by the current StyleContext before save finalization.
     }
 
     /** Register requirements materialized through the explicit legacy path. */
     private function registerLegacyGraphicRequirements(OdtElement $element): void
-    {
-        if (method_exists($element, 'getFrameStyleRequirements')) {
-            foreach ($element->getFrameStyleRequirements() as $name => $definition) {
-                StyleMapper::addFrameStyle($name, $definition);
-            }
-        }
-
-        if (method_exists($element, 'getImageStyleRequirements')) {
-            foreach ($element->getImageStyleRequirements() as $name => $definition) {
-                StyleMapper::registerImageStyle($name, $definition);
-            }
-        }
-
-        if (method_exists($element, 'getFillImageRequirements')) {
-            $fillImageAssets = [];
-            foreach ($element->getFillImageRequirements() as $name => $definition) {
-                $path = $definition['path'] ?? null;
-                if (is_string($path)) {
-                    StyleMapper::registerFillImage($name, $path);
-                    $fillImageAssets[] = [
-                        'id' => basename($path),
-                        'path' => $path,
-                    ];
-                }
-            }
-            if ($fillImageAssets !== []) {
-                $this->package->copyImageResourcesAtomically($fillImageAssets);
-            }
-        }
-    }
-
-    /** @deprecated Legacy implementation retained for source reference only. */
-    protected function injectLegacyImageStyles(): void
-    {
-        $stylesDom = $this->documentContext()->stylesDom();
-        $xpath = new DOMXPath($stylesDom);
-        $this->prepareNamespaces($xpath);
-        $xpath->registerNamespace('draw', 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0');
-        $xpath->registerNamespace('xlink', 'http://www.w3.org/1999/xlink');
-
-        $officeStyles = $xpath->query('//office:styles')->item(0);
-        foreach ($this->legacyFillImagesReferencedByCurrentDocument() as $name => $image) {
-            if (!$officeStyles || $this->hasFillImageDeclaration($stylesDom, $name)) {
-                continue;
-            }
-            $fillImage = $stylesDom->createElement('draw:fill-image');
-            $fillImage->setAttribute('draw:name', $image['name']);
-            $fillImage->setAttribute('xlink:href', 'Pictures/' . $image['filename']);
-            $fillImage->setAttribute('xlink:type', 'simple');
-            $fillImage->setAttribute('xlink:show', 'embed');
-            $fillImage->setAttribute('xlink:actuate', 'onLoad');
-            $officeStyles->insertBefore($fillImage, $officeStyles->firstChild);
-        }
-
-        $automaticStyles = $xpath->query('//office:automatic-styles')->item(0);
-        foreach ($this->legacyImageStylesReferencedByCurrentDocument() as $styleName => $options) {
-            if (!$automaticStyles) {
-                continue;
-            }
-            $existing = null;
-            foreach ($stylesDom->getElementsByTagName('*') as $candidate) {
-                if (!$candidate instanceof DOMElement
-                    || !in_array($candidate->localName, ['style', 'style:style'], true)) {
-                    continue;
-                }
-                if ($this->graphicStyleAttribute($candidate, 'style:name', 'name') === $styleName
-                    && $this->graphicStyleAttribute($candidate, 'style:family', 'family') === 'graphic') {
-                    $existing = $candidate;
-                    break;
-                }
-            }
-            if ($existing) {
-                $props = $existing->getElementsByTagName('style:graphic-properties')->item(0);
-                if ($props instanceof DOMElement && !$props->hasAttributes()) {
-                    $this->applyImageStyleProps($props, $options);
-                }
-                continue;
-            }
-            $style = $stylesDom->createElement('style:style');
-            $style->setAttribute('style:name', $styleName);
-            $style->setAttribute('style:family', 'graphic');
-            $style->setAttribute('style:parent-style-name', 'Standard');
-            $props = $stylesDom->createElement('style:graphic-properties');
-            $this->applyImageStyleProps($props, $options);
-            $style->appendChild($props);
-            $automaticStyles->appendChild($style);
-        }
-    }
-
-    /**
-     * Adopt only legacy image styles referenced by this document's structured
-     * content. The static StyleMapper registry remains a compatibility
-     * facade, but is not an implicit source of unrelated document state.
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    private function legacyImageStylesReferencedByCurrentDocument(): array
-    {
-        $referencedNames = [];
-        $graphicStyleNames = $this->graphicStyleNamesReferencedByCurrentDocument();
-        foreach ($graphicStyleNames as $name => $_true) {
-            $referencedNames[$name] = true;
-        }
-
-        $adopted = [];
-        foreach (StyleMapper::getRegisteredImageStyles() as $styleName => $options) {
-            if (isset($referencedNames[$styleName])) {
-                $adopted[$styleName] = $options;
-            }
-        }
-
-        return $adopted;
-    }
-
-    /** @return array<string, true> */
-    private function legacyFrameStylesReferencedByCurrentDocument(): array
-    {
-        return $this->graphicStyleNamesReferencedByCurrentDocument();
-    }
-
-    /** @return array<string, true> */
-    private function graphicStyleNamesReferencedByCurrentDocument(): array
-    {
-        $referencedNames = [];
-        foreach ([$this->documentContext()->contentDom(), $this->documentContext()->stylesDom()] as $dom) {
-            foreach ($dom->getElementsByTagName('*') as $element) {
-                if (!$element instanceof DOMElement) {
-                    continue;
-                }
-                foreach ($element->attributes as $attribute) {
-                    if ($attribute->nodeName === 'draw:style-name'
-                        || ($attribute->localName === 'style-name'
-                            && $attribute->namespaceURI === 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0')) {
-                        $referencedNames[$attribute->nodeValue] = true;
-                    }
-                }
-            }
-        }
-
-        return $referencedNames;
-    }
-
-    /**
-     * Adopt only legacy fill-image declarations referenced by this document.
-     * A fill-image can be referenced directly by a graphic property or
-     * indirectly through a legacy graphic style used by a drawing object.
-     *
-     * @return array<string, array{name: string, path: string, filename: string}>
-     */
-    private function legacyFillImagesReferencedByCurrentDocument(): array
-    {
-        $fillNames = [];
-        $graphicStyleNames = [];
-
-        foreach ([$this->documentContext()->contentDom(), $this->documentContext()->stylesDom()] as $dom) {
-            foreach ($dom->getElementsByTagName('*') as $element) {
-                if (!$element instanceof DOMElement) {
-                    continue;
-                }
-                foreach ($element->attributes as $attribute) {
-                    if ($attribute->nodeName === 'draw:fill-image-name'
-                        || ($attribute->localName === 'fill-image-name'
-                            && $attribute->namespaceURI === 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0')) {
-                        $fillNames[$attribute->nodeValue] = true;
-                    }
-                    if ($attribute->nodeName === 'draw:style-name'
-                        || ($attribute->localName === 'style-name'
-                            && $attribute->namespaceURI === 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0')) {
-                        $graphicStyleNames[$attribute->nodeValue] = true;
-                    }
-                }
-            }
-        }
-
-        foreach (StyleMapper::getRegisteredImageStyles() as $styleName => $options) {
-            if (isset($graphicStyleNames[$styleName]) && isset($options['draw:fill-image-name'])) {
-                $fillNames[$options['draw:fill-image-name']] = true;
-            }
-        }
-
-        $adopted = [];
-        foreach (StyleMapper::getRegisteredFillImages() as $name => $image) {
-            if (isset($fillNames[$name])) {
-                $adopted[$name] = $image;
-            }
-        }
-
-        return $adopted;
-    }
-
-    private function hasFillImageDeclaration(DOMDocument $dom, string $name): bool
-    {
-        foreach ($dom->getElementsByTagName('*') as $element) {
-            if (!$element instanceof DOMElement
-                || !in_array($element->localName, ['fill-image', 'draw:fill-image'], true)) {
-                continue;
-            }
-            foreach ($element->attributes as $attribute) {
-                if (($attribute->nodeName === 'draw:name' || $attribute->localName === 'name')
-                    && $attribute->nodeValue === $name) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /** Adopt only the element's own graphic/image requirements after materialization. */
-    private function adoptTopLevelGraphicRequirements(OdtElement $element): void
     {
         $styleContext = $this->documentContext()->styleContext();
 
@@ -1979,11 +1669,23 @@ class OdtTemplate
         }
 
         if (method_exists($element, 'getFillImageRequirements')) {
+            $fillImageAssets = [];
             foreach ($element->getFillImageRequirements() as $name => $definition) {
-                $styleContext->registerFillImage($name, $definition);
+                $path = $definition['path'] ?? null;
+                if (is_string($path)) {
+                    $styleContext->registerFillImage($name, $definition);
+                    $fillImageAssets[] = [
+                        'id' => basename($path),
+                        'path' => $path,
+                    ];
+                }
+            }
+            if ($fillImageAssets !== []) {
+                $this->package->copyImageResourcesAtomically($fillImageAssets);
             }
         }
     }
+
 
     /** Write document-owned graphic requirements using the existing ODF placement. */
     private function injectDocumentGraphicStyles(): void
@@ -2009,7 +1711,21 @@ class OdtTemplate
 
         if ($officeStyles) {
             foreach ($styleContext->fillImages() as $name => $definition) {
-                if ($xpath->query("//draw:fill-image[@draw:name='$name']")->length > 0) {
+                $alreadyDeclared = false;
+                foreach ($stylesDom->getElementsByTagName('*') as $existing) {
+                    if (!$existing instanceof DOMElement
+                        || ($existing->localName !== 'fill-image' && $existing->nodeName !== 'draw:fill-image')
+                    ) {
+                        continue;
+                    }
+                    foreach ($existing->attributes as $attribute) {
+                        if ($attribute->nodeName === 'draw:name' && $attribute->nodeValue === $name) {
+                            $alreadyDeclared = true;
+                            break 2;
+                        }
+                    }
+                }
+                if ($alreadyDeclared) {
                     continue;
                 }
                 $fillImage = $stylesDom->createElement('draw:fill-image');
@@ -2076,22 +1792,6 @@ class OdtTemplate
             if ($node instanceof DOMElement) {
                 $node->setAttribute('fo:margin-left', '0.35cm');
                 $node->setAttribute('fo:text-indent', '-0.25cm');
-            }
-        }
-    }
-
-    private function applyImageStyleProps(DOMElement $props, array $options): void
-    {
-        $attributes = [
-            'style:wrap', 'style:horizontal-pos', 'style:horizontal-rel',
-            'style:vertical-pos', 'style:vertical-rel', 'fo:margin-left',
-            'fo:margin-right', 'fo:margin-top', 'fo:margin-bottom', 'draw:fill',
-            'draw:fill-image-name', 'draw:fill-image-width', 'draw:fill-image-height',
-            'style:repeat', 'draw:stroke',
-        ];
-        foreach ($attributes as $attribute) {
-            if (isset($options[$attribute])) {
-                $props->setAttribute($attribute, (string) $options[$attribute]);
             }
         }
     }
