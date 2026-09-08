@@ -1,7 +1,7 @@
 # STYLE-API-02F — Mapper / Registry Cleanup Change Contract
 
-Status: **ACCEPTED CHANGE CONTRACT — SEMANTICS BEFORE IMPLEMENTATION**  
-Baseline: `develop` at `fb459226239b9b77072f69cbee617ceb99b7a1d9`  
+Status: **ACCEPTED CHANGE CONTRACT — SEMANTICS BEFORE IMPLEMENTATION**
+Baseline: `develop` at `fb459226239b9b77072f69cbee617ceb99b7a1d9`
 Branch: `architecture/style-api-02f-mapper-registry-cleanup`
 
 ## 1. Purpose
