@@ -1,12 +1,16 @@
 # Editable CV Showcase
 
-Sample 21 demonstrates how the ODT Template Engine can be used for a realistic document rather than only isolated feature examples.
+The repository contains two complementary CV architecture showcases.
 
-The result is a fully editable two-column CV generated from an ODT template and structured PHP content.
+**Sample 21** demonstrates a realistic document whose large dynamic regions are constructed from structured PHP elements and inserted into a LibreOffice-designed shell.
 
-## What the sample demonstrates
+**Sample 25** demonstrates a LibreOffice-authored CV whose repeatable native sections are addressed and instantiated directly from PHP.
 
-The sample combines:
+Both produce editable ODT output. They differ mainly in **who owns the dynamic structure**.
+
+## Sample 21 — PHP-generated document regions
+
+Sample 21 combines:
 
 - a two-column LibreOffice template;
 - a dark sidebar and main content column;
@@ -17,9 +21,7 @@ The sample combines:
 - text and paragraph styles;
 - dynamic professional experience, education, qualifications, skills, and languages.
 
-## Template and PHP have different responsibilities
-
-The ODT template defines the stable column structure and contains two placeholders:
+The ODT template defines the stable column structure and contains two large placeholders:
 
 ```text
 {{cv_sidebar}}
@@ -41,76 +43,79 @@ PHP
 └── adjusts page margins
 ```
 
-This keeps the document editable in an office application while allowing application data to control the generated content.
-
-## Programmatic page margins
-
-Sample 21 uses the page-layout-aware template class:
-
-```php
-use OdtTemplateEngine\PageLayoutOdtTemplate;
-
-$template = new PageLayoutOdtTemplate(
-    'samples/templates/template_21_cvProfile.odt'
-);
-
-$template->setPageMargins(
-    '0cm',
-    '0.8cm',
-    '0cm',
-    '0cm'
-);
-```
-
-`PageLayoutOdtTemplate` extends the regular template processor and changes the page layout referenced by the document's master page in `styles.xml`.
-
-## Building the sidebar
-
-The sidebar is assembled as a `RichText` block. Individual `Paragraph` objects provide paragraph and text styling, while an `ImageElement` inserts the profile image.
-
-```php
-use OdtTemplateEngine\Elements\ImageElement;
-use OdtTemplateEngine\Elements\RichText;
-
-$sidebar = new RichText();
-
-$sidebar->addImage(new ImageElement($cv['personal']['photo'], [
-    'width' => '3.4cm',
-    'height' => '3.4cm',
-    'anchor' => 'as-char',
-    'align' => 'left',
-]));
-```
-
-The complete sample also uses native `ListElement` objects for sidebar lists.
-
-## Building dynamic experience entries
-
-Professional experience is generated from application data. Each station creates several paragraphs followed by a native bullet list for its tasks.
-
-The same approach is used for education and additional qualifications, which makes the example representative of data-driven business documents.
-
-## Injecting the finished content
-
 After both content blocks have been built, they are assigned to the template placeholders:
 
 ```php
 $template->setElement('cv_sidebar', $sidebar);
 $template->setElement('cv_content', $content);
-$template->save('samples/output/output_21_cvProfile.odt');
 ```
 
-The generated file remains an editable ODT document.
+Use this model when PHP genuinely owns the internal structure of a dynamic region.
 
-## Architecture behind the showcase
+## Sample 25 — LibreOffice-authored native sections
 
-The showcase is intentionally short. For the architectural lessons behind it — section builders, semantic styles, template/application boundaries, and how to scale from a sample to a production renderer — continue with [Building Complex Documents](building-complex-documents.md).
+Sample 25 keeps more structure in the ODT template itself. Scalar values still use ordinary assignment, while repeatable CV entries are native named sections authored in LibreOffice.
 
-## Run the complete example
+```php
+$template->assign([
+    'firstname' => 'Max',
+    'lastname' => 'Mustermann',
+    'profession' => 'Senior Projektmanager',
+]);
 
-The documentation intentionally shows only the architectural parts of the example. The executable source remains the single source of truth:
+$experienceInstances = $template
+    ->section('ExperienceEntry')
+    ->instantiateMany($experienceRows);
+```
 
-- [View `sample_21_cvProfile.php` on GitHub](https://github.com/WaltDietzney/odt-template-engine/blob/master/samples/sample_21_cvProfile.php)
-- [Open the public Sample Explorer](https://odt.walter-dietz.de/)
+Each generated experience instance then owns its own nested `ActivityEntry` prototype, which can be expanded independently.
 
-For the underlying processing model, see [How the Engine Works](../concepts/how-it-works.md). For the individual numbered examples, see the [Sample Guide](sample-guide.md).
+```php
+foreach ($experienceInstances as $index => $experience) {
+    $experience
+        ->section('ActivityEntry')
+        ->instantiateMany($activities[$index]);
+}
+```
+
+This model is useful when repeatable blocks should remain visually editable in LibreOffice and PHP should address semantic template objects rather than reconstruct their native structure.
+
+## Choosing between the two
+
+A useful rule is:
+
+| Need | Prefer |
+| --- | --- |
+| PHP owns a dynamic region's internal composition | Sample 21 / `RichText` + `setElement()` |
+| LibreOffice owns a repeatable semantic block | Sample 25 / named sections + `instantiateMany()` |
+| only scalar values or lightweight logic change | normal template expressions |
+
+The models can also coexist in one document. A named section may contain ordinary placeholders, and PHP-generated elements can still be used where application-owned structure is appropriate.
+
+## Why both matter
+
+Sample 21 remains an important benchmark for the structured-element layer: paragraphs, lists, images, styles, and large generated regions.
+
+Sample 25 is the benchmark for the newer addressable native-document layer: semantic section identities, nested ownership, cloning/instantiation, collection finalization, and preservation of LibreOffice-authored structure.
+
+Together they show the direction of the engine more accurately than either sample alone:
+
+```text
+LibreOffice visual authoring
+        +
+lightweight template language
+        +
+programmatic ODT elements
+        +
+addressable native ODT structures
+        ↓
+editable ODT output
+```
+
+## Continue exploring
+
+For Sample 21, read [Building Complex Documents](building-complex-documents.md).
+
+For Sample 25, read [Named Sections](../rich-documents/named-sections.md) and the [Practical ODT template authoring guide](../getting-started/template-authoring-guide.md).
+
+For the complete numbered example map, see the [Sample Guide](sample-guide.md).
