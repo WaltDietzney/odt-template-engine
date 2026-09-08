@@ -27,8 +27,12 @@ Start with the smallest sample that demonstrates the feature you need. The later
 | 17 | Text field | text-box / field-related document structure |
 | 18 | List styles | native bullet, numbered, and nested lists |
 | 19 | HTML table | HTML table import into native ODT table structures |
-| 20 | Table ratios | ratio-based dynamic table layout |
-| 21 | CV profile | a real-world composed document using multiple engine layers |
+| 20 | Table ratios | relative native table-column widths |
+| 21 | Generated CV profile | a real-world document composed from large PHP-generated regions |
+| 22 | Bookmark text replacement | addressing and replacing text in native named bookmarks |
+| 23 | Section content replacement | replacing the children of a native named section with structured ODT content |
+| 24 | Section image replacement | replacing section content with an image and package resource |
+| 25 | Native CV section collections | LibreOffice-authored repeatable sections, nested collections, and scalar binding |
 
 The repository also contains additional focused or historical sample scripts outside the numbered sequence. Treat the numbered samples as the primary learning path.
 
@@ -108,29 +112,35 @@ For **template language**, read Samples 01–03 and 10 together with the Templat
 
 For **rich generated content**, read Samples 09, 14, and 18 before moving to Sample 21.
 
-For **tables**, start with 11, then 13, and use 20 only when you specifically need the ratio-based layout mechanism.
+For **addressable native ODT structures**, start with Sample 22, continue with 23 and 24, and then study Sample 25 together with [Addressable ODT Structures](../rich-documents/addressable-document.md) and [Named Sections](../rich-documents/named-sections.md).
+
+For **tables**, start with 11, then 13, and use 20 when you need relative table-column widths.
 
 For **HTML**, use 08 for general import and 19 for table import.
 
-For **images**, compare 05/06 with the generated-image use in Sample 21. This shows the difference between replacing a LibreOffice-owned image position and creating an image as part of a generated content block.
+For **images**, compare 05/06 with the generated-image use in Sample 21 and the native-section replacement in Sample 24. These show three different ownership models: replacing an existing image position, generating an image inside a PHP-owned content block, and replacing the content of a native named section.
 
-## Sample 21 is different
+## Two CV architecture showcases
 
-Sample 21 is intentionally not a minimal API demonstration. It is the repository's real-world composition example.
+Samples 21 and 25 are both real-world CV examples, but they demonstrate different and complementary architecture patterns.
 
-It combines:
+### Sample 21 — programmatically generated regions
 
-- a LibreOffice-designed two-column template;
-- `PageLayoutOdtTemplate`;
-- reusable semantic paragraph styles;
-- `RichText` section builders;
-- paragraphs and inline text styles;
-- native lists;
-- an embedded profile image;
-- multiple application-data collections;
-- dynamic replacement of large document regions.
+Sample 21 uses a LibreOffice-designed two-column shell with large placeholders. PHP constructs the dynamic regions with `RichText`, `Paragraph`, `ListElement`, `ImageElement`, and document-local paragraph styles, then inserts those regions with `setElement()`.
 
-Read [Building Complex Documents](building-complex-documents.md) before using Sample 21 as a model for application architecture.
+Use this pattern when PHP genuinely owns the dynamic document structure inside a larger template-owned layout.
+
+Read [Building Complex Documents](building-complex-documents.md) for this approach.
+
+### Sample 25 — native structured template sections
+
+Sample 25 keeps more of the repeatable document structure in LibreOffice. PHP assigns scalar values and expands native named `ExperienceEntry` and nested `ActivityEntry` section prototypes with `instantiateMany()`.
+
+Use this pattern when the repeatable structure should remain visually authored in LibreOffice and application code should address semantic template objects rather than rebuild them.
+
+Read [Named Sections](../rich-documents/named-sections.md) and the [Practical ODT template authoring guide](../getting-started/template-authoring-guide.md) for this approach.
+
+Neither sample replaces the other. They demonstrate two different ownership boundaries between the ODT template and PHP.
 
 ## Verification samples
 
@@ -142,16 +152,18 @@ When changing a public sample, run the normal test suite in addition to opening 
 
 Do not copy the largest sample when a smaller one demonstrates the feature you need.
 
-A good progression is:
+A useful progression is:
 
 ```text
 small API sample
       ↓
 feature guide
       ↓
-combine two or three concepts
+choose the ownership model
       ↓
-Sample 21 architecture
+Sample 21: PHP-generated regions
+or
+Sample 25: native structured sections
 ```
 
 This keeps application rendering code understandable and makes ODT-specific problems much easier to isolate.
