@@ -81,6 +81,25 @@ final class StyleApi02FADocumentOwnershipTest extends TestCase
     }
 
     #[RunInSeparateProcess]
+    public function testEmptyTableStyleProducesNoDefinitionOrPhantomReference(): void
+    {
+        $table = (new RichTable())->setStyle([])->addRow(['A']);
+        self::assertSame([], iterator_to_array($table->getOwnStyleRequirements(), false));
+
+        $template = new OdtTemplate($this->templatePath('template_11_table.odt'));
+        $template->setElement('tableblock', $table);
+        $output = $this->outputPath('empty-table-style');
+        $template->save($output);
+
+        $content = $this->entry($output, 'content.xml');
+        $dom = new \DOMDocument();
+        self::assertTrue($dom->loadXML($content));
+        $xpath = new \DOMXPath($dom);
+        $xpath->registerNamespace('table', 'urn:oasis:names:tc:opendocument:xmlns:table:1.0');
+        self::assertSame(0, $xpath->query('//table:table/@table:style-name')?->length);
+    }
+
+    #[RunInSeparateProcess]
     public function testRichTableCellOwnsCellDefinitionWithoutGlobalRegistration(): void
     {
         $before = StyleMapper::getRegisteredTableCellStyles();

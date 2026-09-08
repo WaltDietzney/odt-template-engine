@@ -167,6 +167,12 @@ class RichTable extends OdtElement
      */
     public function setStyle(array $style): self
     {
+        if ($style === []) {
+            $this->tableStyleOptions = [];
+            $this->tableStyleName = null;
+            return $this;
+        }
+
         $this->tableStyleOptions = $style;
         $this->tableStyleName = StyleMapper::generateStyleName($style);
         return $this;
