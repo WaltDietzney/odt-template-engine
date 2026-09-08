@@ -80,7 +80,7 @@ final class StyleContextFrameCompatibilityAdoptionTest extends TestCase
     public function testDirectLegacyFrameRegistrationIsAdoptedWhenCurrentDomReferencesIt(): void
     {
         $name = 'DirectLegacyFrame';
-        StyleMapper::$frameStyles[$name] = ['draw:fill' => 'solid'];
+        StyleMapper::addFrameStyle($name, ['draw:fill' => 'solid']);
         $template = $this->template();
         $template->assign(['test1' => new LegacyFrameReferenceElement($name)]);
         $template->render();

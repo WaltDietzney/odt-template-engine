@@ -62,11 +62,13 @@ final class StyleContextTextFontCharacterizationTest extends TestCase
     {
         $font = '01FC Mapping Font ' . bin2hex(random_bytes(3));
 
-        self::assertSame('', StyleMapper::getRegisteredFontsXml());
-
-        StyleMapper::mapTextStyleOptions(['font-family' => $font]);
-
-        self::assertSame('', StyleMapper::getRegisteredFontsXml());
+        self::assertSame(
+            [
+                'style:font-name' => $font,
+                'fo:font-family' => $font,
+            ],
+            StyleMapper::mapTextStyleOptions(['font-family' => $font])
+        );
     }
 
     #[RunInSeparateProcess]

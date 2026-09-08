@@ -1756,7 +1756,7 @@ class OdtTemplate
     {
         if (method_exists($element, 'getFrameStyleRequirements')) {
             foreach ($element->getFrameStyleRequirements() as $name => $definition) {
-                StyleMapper::$frameStyles[$name] = $definition;
+                StyleMapper::addFrameStyle($name, $definition);
             }
         }
 
