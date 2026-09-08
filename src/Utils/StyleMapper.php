@@ -2,11 +2,10 @@
 
 namespace OdtTemplateEngine\Utils;
 
-use OdtTemplateEngine\Style\LegacyStyleRegistry;
-
 /**
- * Stateless mapping and identity helpers with bounded legacy compatibility
- * facades. Normal document style ownership belongs to StyleContext.
+ * Stateless mapping and identity helpers.
+ *
+ * Document style ownership belongs to StyleContext and semantic requirements.
  */
 class StyleMapper
 {
@@ -509,107 +508,6 @@ class StyleMapper
     }
 
 
-
-    /**
-     * Legacy compatibility facade for direct text-style registration.
-     *
-     * @deprecated Not a supported authoring API; retained for direct
-     * StyleWriter compatibility until STYLE-API-02G.
-     * @param array<string, mixed> $style
-     */
-    public static function registerTextStyle(array $style): string
-    {
-        $styleName = self::generateStyleName($style);
-        LegacyStyleRegistry::registerTextStyle($styleName, $style);
-        return $styleName;
-    }
-
-    /**
-     * Legacy compatibility facade for explicit-name text registration.
-     *
-     * @deprecated Not a supported authoring API; retained for direct
-     * StyleWriter compatibility until STYLE-API-02G.
-     * @param array<string, mixed> $style
-     */
-    public static function setTextStyle(string $styleName, array $style): void
-    {
-        LegacyStyleRegistry::registerTextStyle($styleName, $style);
-    }
-
-
-    /**
-     * Legacy compatibility facade for paragraph registration.
-     *
-     * @deprecated Use document-local semantic style authoring instead; retained
-     * for legacy paragraph references and direct writer compatibility.
-     * @param array<string, mixed> $style
-     */
-    public static function registerParagraphStyle(string $styleName, array $style): void
-    {
-        LegacyStyleRegistry::registerParagraphStyle($styleName, $style);
-    }
-
-
-    /**
-     * Legacy compatibility facade exposing text and paragraph registrations.
-     *
-     * @deprecated Not a supported application authoring API; retained for
-     * StyleContext fallback and direct writer compatibility.
-     * @return array<string, array<string, mixed>>
-     */
-    public static function getRegisteredStyles(): array
-    {
-        return array_merge(LegacyStyleRegistry::textStyles(), LegacyStyleRegistry::paragraphStyles());
-    }
-
-    /**
-     * Legacy compatibility facade exposing text registrations.
-     *
-     * @deprecated Not a supported application authoring API; retained for
-     * StyleContext fallback and direct writer compatibility.
-     * @return array<string, array<string, mixed>>
-     */
-    public static function getTextStyles(): array
-    {
-        return LegacyStyleRegistry::textStyles();
-    }
-
-    /**
-     * Legacy compatibility facade exposing paragraph registrations.
-     *
-     * @deprecated Not a supported application authoring API; retained for
-     * StyleContext fallback and direct writer compatibility.
-     * @return array<string, array<string, mixed>>
-     */
-    public static function getParagraphStyles(): array
-    {
-        return LegacyStyleRegistry::paragraphStyles();
-    }
-
-    /**
-     * Legacy compatibility facade aggregating old registry views.
-     *
-     * @deprecated Not a supported application authoring API; retained only for
-     * existing compatibility inspection callers.
-     * @return array<string, array<string, array<string, mixed>>>
-     */
-    public static function getAllRegisteredStyles(): array
-    {
-        return [
-            'text' => LegacyStyleRegistry::textStyles(),
-            'paragraph' => LegacyStyleRegistry::paragraphStyles(),
-        ];
-    }
-
-    /**
-     * Checks the legacy text compatibility facade.
-     *
-     * @deprecated Not a supported application authoring API.
-     */
-    public static function hasTextStyle(string $styleName): bool
-    {
-        return LegacyStyleRegistry::hasTextStyle($styleName);
-    }
 
     /**
      * Summary of parseInlineStyle

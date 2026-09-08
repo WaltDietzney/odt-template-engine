@@ -7,7 +7,6 @@ namespace OdtTemplateEngine\Style;
 use DOMDocument;
 use LogicException;
 use OdtTemplateEngine\Document\StyleRequirement;
-use OdtTemplateEngine\Utils\StyleMapper;
 
 /**
  * Holds pending style requirements for one logical ODT document.
@@ -41,12 +40,6 @@ final class StyleContext
         private ?DOMDocument $stylesDom = null
     ) {
     }
-
-    /** @var array<string, array<string, mixed>> */
-    private array $paragraphStyles = [];
-
-    /** @var array<string, array<string, mixed>> */
-    private array $textStyles = [];
 
     /** @var array<string, array<string, mixed>> */
     private array $frameStyles = [];
@@ -143,25 +136,7 @@ final class StyleContext
     /** @return list<StyleRequirement> */
     public function materializationRequirements(): array
     {
-        $requirements = array_values($this->semanticDefinitions);
-        $identities = [];
-        foreach ($requirements as $requirement) {
-            $identities[$this->semanticIdentity($requirement)] = true;
-        }
-
-        foreach ($this->semanticReferences as $reference) {
-            if ($this->referenceResolution($reference) !== 'legacy') {
-                continue;
-            }
-            $requirement = $this->legacyRequirement($reference);
-            $identity = $this->semanticIdentity($requirement);
-            if (!isset($identities[$identity])) {
-                $requirements[] = $requirement;
-                $identities[$identity] = true;
-            }
-        }
-
-        return $requirements;
+        return array_values($this->semanticDefinitions);
     }
 
     /** @return list<StyleRequirement> */
@@ -202,67 +177,6 @@ final class StyleContext
         $this->contentDom = $contentDom;
         $this->stylesDom = $stylesDom;
         $this->refreshReferenceResolutions();
-    }
-
-    /**
-     * Register one pending paragraph style definition.
-     *
-     * Re-registering an equivalent definition is idempotent. Reusing the same
-     * name for a different definition is an explicit conflict.
-     *
-     * @param array<string, mixed> $definition
-     */
-    public function registerParagraphStyle(string $name, array $definition): void
-    {
-        if (!isset($this->paragraphStyles[$name])) {
-            $this->paragraphStyles[$name] = $definition;
-
-            return;
-        }
-
-        if ($this->paragraphStyles[$name] === $definition) {
-            return;
-        }
-
-        throw new LogicException(sprintf(
-            'Paragraph style "%s" is already registered with a different definition.',
-            $name
-        ));
-    }
-
-    /** @return array<string, array<string, mixed>> */
-    public function paragraphStyles(): array
-    {
-        return $this->paragraphStyles;
-    }
-
-    /**
-     * Register one pending text style definition for this document.
-     *
-     * @param array<string, mixed> $definition
-     */
-    public function registerTextStyle(string $name, array $definition): void
-    {
-        if (!isset($this->textStyles[$name])) {
-            $this->textStyles[$name] = $definition;
-
-            return;
-        }
-
-        if ($this->textStyles[$name] === $definition) {
-            return;
-        }
-
-        throw new LogicException(sprintf(
-            'Text style "%s" is already registered with a different definition.',
-            $name
-        ));
-    }
-
-    /** @return array<string, array<string, mixed>> */
-    public function textStyles(): array
-    {
-        return $this->textStyles;
     }
 
     /**
@@ -323,8 +237,6 @@ final class StyleContext
         $this->referenceResolutions = [];
         $this->referenceCandidates = [];
         $this->ambiguousReferenceCandidates = [];
-        $this->paragraphStyles = [];
-        $this->textStyles = [];
         $this->frameStyles = [];
         $this->imageStyles = [];
         $this->fillImages = [];
@@ -391,10 +303,6 @@ final class StyleContext
             return ['document-local', $localCandidates];
         }
 
-        if ($this->legacyStyleExists($reference)) {
-            return ['legacy', [$this->legacyCandidate($reference)]];
-        }
-
         return [null, []];
     }
 
@@ -443,51 +351,6 @@ final class StyleContext
         }
 
         return $candidates;
-    }
-
-    private function legacyStyleExists(StyleRequirement $reference): bool
-    {
-        if ($reference->family() === 'paragraph') {
-            return array_key_exists($reference->name(), StyleMapper::getParagraphStyles());
-        }
-
-        if ($reference->family() === 'text') {
-            return array_key_exists($reference->name(), StyleMapper::getTextStyles());
-        }
-
-        return false;
-    }
-
-    /** @return array<string, mixed> */
-    private function legacyCandidate(StyleRequirement $reference): array
-    {
-        return [
-            'source' => 'legacy',
-            'family' => $reference->family(),
-            'name' => $reference->name(),
-            'scope' => null,
-            'documentPart' => null,
-        ];
-    }
-
-    private function legacyRequirement(StyleRequirement $reference): StyleRequirement
-    {
-        $properties = $reference->family() === 'paragraph'
-            ? StyleMapper::mapParagraphStyle(StyleMapper::getParagraphStyles()[$reference->name()])
-            : StyleMapper::mapTextStyleOptions(StyleMapper::getTextStyles()[$reference->name()]);
-        $group = $reference->family() === 'paragraph'
-            ? 'style:paragraph-properties'
-            : 'style:text-properties';
-
-        return new StyleRequirement(
-            StyleRequirement::KIND_DEFINITION,
-            StyleRequirement::SCOPE_COMMON,
-            $reference->family(),
-            StyleRequirement::PART_STYLES,
-            $reference->name(),
-            'Standard',
-            [$group => $properties]
-        );
     }
 
     private function documentStyleScope(\DOMElement $style): ?string

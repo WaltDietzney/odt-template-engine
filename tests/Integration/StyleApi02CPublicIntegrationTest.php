@@ -10,7 +10,6 @@ use LogicException;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Style\DocumentStyles;
-use OdtTemplateEngine\Utils\StyleMapper;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
 
@@ -43,8 +42,6 @@ final class StyleApi02CPublicIntegrationTest extends TestCase
             'bold' => true,
             'color' => '#123456',
         ]);
-
-        self::assertArrayNotHasKey($styleName, StyleMapper::getParagraphStyles());
 
         $output = $this->artifactPath('public-api');
         $template->setElement(

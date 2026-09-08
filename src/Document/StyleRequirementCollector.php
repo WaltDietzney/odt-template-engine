@@ -53,8 +53,6 @@ final class StyleRequirementCollector
     private function collectElement(OdtElement $element): iterable
     {
         foreach ([
-            'paragraph' => $element->getOwnRequiredParagraphStyles(),
-            'text' => $element->getOwnRequiredStyles(),
             'frame' => $element->getOwnFrameStyleRequirements(),
             'image' => $element->getOwnImageStyleRequirements(),
             'fill-image' => $element->getOwnFillImageRequirements(),

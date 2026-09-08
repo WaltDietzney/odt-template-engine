@@ -76,9 +76,10 @@ and table aggregations and their duplicate paragraph-definition views.
 
 Keep direct graphic compatibility hooks required by the legacy assign/render
 path (`getOwnFrameStyleRequirements()`, `getOwnImageStyleRequirements()`, and
-`getOwnFillImageRequirements()`) until their specific migration is accepted.
-Transitive graphic aggregation is performed by the compatibility collector,
-not by a second ownership model.
+`getOwnFillImageRequirements()`). The bounded transitive graphic and image
+asset views remain only where current assign/render and section mutation paths
+still call them; they are compatibility traversal, not style ownership, and
+are not expanded.
 
 Keep `getOwnImageAssets()` as the direct resource hook. Remove or narrow
 transitive `getImageAssets()` callers where `StructuredResourceCollector`
@@ -124,8 +125,8 @@ requirements, `ownedElements()`, and typed resource hooks.
 3. StyleContext has no process-global paragraph/text fallback.
 4. Normal semantic paragraph/text, table, graphic, image, and resource paths
    remain green and document-local.
-5. Collector traversal, rather than transitive element getter aggregation,
-   owns semantic style/resource traversal.
+5. Semantic style and resource collectors own normal traversal; the remaining
+   transitive graphic/resource compatibility views have explicit active callers.
 6. Legacy assign/render output remains covered and functional through its
    bounded direct compatibility hooks.
 7. `ensureTextStylesExist()` and `ensureParagraphStylesExist()` remain

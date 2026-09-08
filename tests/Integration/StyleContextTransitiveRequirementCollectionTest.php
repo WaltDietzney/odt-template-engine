@@ -24,7 +24,11 @@ final class StyleContextTransitiveRequirementCollectionTest extends TestCase
         $template->setElement('my_list', $box);
 
         self::assertCount(1, $template->frameStyles());
-        self::assertCount(1, $template->textStyles());
+        $textDefinitions = array_filter(
+            $template->semanticDefinitions(),
+            static fn ($requirement): bool => $requirement->family() === 'text'
+        );
+        self::assertCount(1, $textDefinitions);
     }
 
     public function testEquivalentDuplicateRequirementsRemainIdempotent(): void
@@ -81,6 +85,11 @@ final class StyleContextTransitiveRequirementCollectionTest extends TestCase
 
 final class TransitiveInspectableTemplate extends OdtTemplate
 {
+    public function semanticDefinitions(): array
+    {
+        return $this->documentContext()->styleContext()->semanticDefinitions();
+    }
+
     /** @return array<string, array<string, mixed>> */
     public function imageStyles(): array
     {
@@ -93,11 +102,6 @@ final class TransitiveInspectableTemplate extends OdtTemplate
         return $this->documentContext()->styleContext()->frameStyles();
     }
 
-    /** @return array<string, array<string, mixed>> */
-    public function textStyles(): array
-    {
-        return $this->documentContext()->styleContext()->textStyles();
-    }
 }
 
 final class TransitiveRequirementElement extends OdtElement

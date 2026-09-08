@@ -21,7 +21,9 @@ final class StyleContextElementIntegrationTest extends TestCase
 
         $template->setElement('my_list', $this->richText($style, ['margin-left' => '1cm']));
 
-        self::assertSame(['margin-left' => '1cm'], $template->paragraphStyles()[$style]);
+        $definition = $this->semanticDefinition($template, $style);
+        self::assertNotNull($definition);
+        self::assertSame(['fo:margin-left' => '1cm'], $definition->propertyGroups()['style:paragraph-properties']);
     }
 
     public function testSetElementRegistersTextRequirementInCurrentDocument(): void
@@ -31,12 +33,20 @@ final class StyleContextElementIntegrationTest extends TestCase
         $element = (new RichText())->addParagraph(
             (new Paragraph())->addText('Document-local text', $textStyle)
         );
-        $style = array_key_first($element->getRequiredStyles());
+        $style = null;
+        foreach ($element->ownedElements() as $paragraph) {
+            foreach ($paragraph->getOwnStyleRequirements() as $requirement) {
+                if ($requirement->family() === 'text') {
+                    $style = $requirement->name();
+                    break 2;
+                }
+            }
+        }
 
         self::assertIsString($style);
         $template->setElement('my_list', $element);
 
-        self::assertSame([$style => $textStyle], $template->textStyles());
+        self::assertNotNull($this->semanticDefinition($template, (string) $style));
     }
 
     public function testSetElementRegistersSemanticParagraphRequirementInCurrentDocument(): void
@@ -66,7 +76,6 @@ final class StyleContextElementIntegrationTest extends TestCase
 
         self::assertSame(0, $template->paragraphEnsureCalls);
         self::assertSame(0, $template->textEnsureCalls);
-        self::assertArrayHasKey($style, $template->paragraphStyles());
         self::assertCount(2, $template->semanticDefinitions());
     }
 
@@ -90,10 +99,10 @@ final class StyleContextElementIntegrationTest extends TestCase
         $templateA->setElement('my_list', $this->richText($styleA, ['margin-left' => '2cm']));
         $templateB->setElement('my_list', $this->richText($styleB, ['margin-left' => '3cm']));
 
-        self::assertArrayHasKey($styleA, $templateA->paragraphStyles());
-        self::assertArrayNotHasKey($styleA, $templateB->paragraphStyles());
-        self::assertArrayHasKey($styleB, $templateB->paragraphStyles());
-        self::assertArrayNotHasKey($styleB, $templateA->paragraphStyles());
+        self::assertNotNull($this->semanticDefinition($templateA, $styleA));
+        self::assertNull($this->semanticDefinition($templateB, $styleA));
+        self::assertNotNull($this->semanticDefinition($templateB, $styleB));
+        self::assertNull($this->semanticDefinition($templateA, $styleB));
     }
 
     public function testEquivalentRepeatedRequirementsAreIdempotent(): void
@@ -106,7 +115,8 @@ final class StyleContextElementIntegrationTest extends TestCase
         $template->setElement('my_list', $element);
         $template->setElement('my_list_second', $this->richText($style, ['margin-left' => '4cm']));
 
-        self::assertSame([$style => ['margin-left' => '4cm']], $template->paragraphStyles());
+        self::assertCount(1, $template->semanticDefinitions());
+        self::assertNotNull($this->semanticDefinition($template, $style));
     }
 
     public function testConflictingPendingRequirementFailsBeforeSecondElementMaterialization(): void
@@ -133,11 +143,11 @@ final class StyleContextElementIntegrationTest extends TestCase
         $template = new StyleContextInspectableTemplate($this->templatePath());
 
         $template->setElement('my_list', $this->richText($style, ['margin-left' => '7cm']));
-        self::assertArrayHasKey($style, $template->paragraphStyles());
+        self::assertNotNull($this->semanticDefinition($template, $style));
 
         $template->load();
 
-        self::assertArrayNotHasKey($style, $template->paragraphStyles());
+        self::assertNull($this->semanticDefinition($template, $style));
     }
 
     public function testSetElementPersistsRegisteredParagraphStyleInSavedStylesXml(): void
@@ -181,22 +191,21 @@ final class StyleContextElementIntegrationTest extends TestCase
     {
         return dirname(__DIR__, 2) . '/samples/templates/template_18_ListStyles.odt';
     }
+
+    private function semanticDefinition(StyleContextInspectableTemplate $template, string $name): ?\OdtTemplateEngine\Document\StyleRequirement
+    {
+        foreach ($template->semanticDefinitions() as $definition) {
+            if ($definition->name() === $name) {
+                return $definition;
+            }
+        }
+
+        return null;
+    }
 }
 
 final class StyleContextInspectableTemplate extends OdtTemplate
 {
-    /** @return array<string, array<string, mixed>> */
-    public function paragraphStyles(): array
-    {
-        return $this->documentContext()->styleContext()->paragraphStyles();
-    }
-
-    /** @return array<string, array<string, mixed>> */
-    public function textStyles(): array
-    {
-        return $this->documentContext()->styleContext()->textStyles();
-    }
-
     /** @return array<string, \OdtTemplateEngine\Document\StyleRequirement> */
     public function semanticDefinitions(): array
     {
@@ -243,12 +252,6 @@ final class StyleContextMaterializationOwnershipProbe extends OdtTemplate
     {
         $this->paragraphEnsureCalls = 0;
         $this->textEnsureCalls = 0;
-    }
-
-    /** @return array<string, array<string, mixed>> */
-    public function paragraphStyles(): array
-    {
-        return $this->documentContext()->styleContext()->paragraphStyles();
     }
 
     /** @return array<string, \OdtTemplateEngine\Document\StyleRequirement> */

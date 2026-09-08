@@ -9,7 +9,6 @@ use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Document\StyleRequirementMaterializer;
 use OdtTemplateEngine\OdtDocumentContext;
 use OdtTemplateEngine\Style\StyleContext;
-use OdtTemplateEngine\Utils\StyleMapper;
 use PHPUnit\Framework\TestCase;
 
 final class StyleRequirementMaterializerTest extends TestCase
@@ -154,24 +153,6 @@ final class StyleRequirementMaterializerTest extends TestCase
         $materializer->materialize($context, $definition);
 
         self::assertSame(1, $this->styleCount($context->stylesDom(), 'LocalStyle', 'paragraph'));
-    }
-
-    public function testDemandDrivenLegacyMaterializationExcludesUnreferencedStyles(): void
-    {
-        $used = 'UsedLegacy_' . bin2hex(random_bytes(4));
-        $unused = 'UnusedLegacy_' . bin2hex(random_bytes(4));
-        StyleMapper::registerParagraphStyle($used, ['text-align' => 'center']);
-        StyleMapper::registerParagraphStyle($unused, ['text-align' => 'right']);
-        $context = $this->context();
-        $context->styleContext()->registerRequirement(new StyleRequirement(StyleRequirement::KIND_REFERENCE, null, 'paragraph', null, $used));
-
-        $materializer = new StyleRequirementMaterializer();
-        foreach ($context->styleContext()->materializationRequirements() as $requirement) {
-            $materializer->materialize($context, $requirement);
-        }
-
-        self::assertSame(1, $this->styleCount($context->stylesDom(), $used, 'paragraph'));
-        self::assertSame(0, $this->styleCount($context->stylesDom(), $unused, 'paragraph'));
     }
 
     /** @param array<string, array<string, mixed>> $groups */

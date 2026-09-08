@@ -23,7 +23,6 @@ use OdtTemplateEngine\Document\StructuredElementMaterializer;
 use OdtTemplateEngine\Document\StructuredResourceCollector;
 use OdtTemplateEngine\Document\StyleRequirementCollector;
 use OdtTemplateEngine\Document\StyleRequirementMaterializer;
-use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Document\TableTarget;
 use OdtTemplateEngine\Document\TemplateTargetResolver;
 use OdtTemplateEngine\Document\TypedTargetResolver;
@@ -286,12 +285,7 @@ class OdtTemplate
      */
     public function setElement(string $placeholder, OdtElement $element): void
     {
-        $semanticOwnedLegacyStyles = $this->prepareStructuredSemanticState($element);
-
-        $this->registerStructuredLegacyParagraphTextCompatibility(
-            $element,
-            $semanticOwnedLegacyStyles
-        );
+        $this->prepareStructuredSemanticState($element);
         $this->prepareStructuredResources($element);
         $this->materializeStructuredElement($placeholder, $element);
         $this->finalizeStructuredCompatibility($element);
@@ -300,13 +294,11 @@ class OdtTemplate
     /**
      * Prepare all document-local semantic state before native DOM rendering.
      *
-     * @return array<string, array<string, mixed>>
      */
-    private function prepareStructuredSemanticState(OdtElement $element): array
+    private function prepareStructuredSemanticState(OdtElement $element): void
     {
         $collector = new StyleRequirementCollector();
         $semanticRequirements = iterator_to_array($collector->collectSemantic($element), false);
-        $semanticOwnedLegacyStyles = $this->semanticOwnedLegacyStyles($semanticRequirements);
         $fontDiscovery = new FontFaceRequirementDiscovery();
         foreach ($semanticRequirements as $requirement) {
             $this->documentContext()->styleContext()->registerRequirement($requirement);
@@ -319,7 +311,6 @@ class OdtTemplate
         $this->prepareStructuredFillImageDependencies($element);
         $this->materializeStructuredSemanticStyles();
 
-        return $semanticOwnedLegacyStyles;
     }
 
     /**
@@ -346,41 +337,6 @@ class OdtTemplate
         $materializer = new StyleRequirementMaterializer();
         foreach ($this->documentContext()->styleContext()->materializationRequirements() as $requirement) {
             $materializer->materialize($this->documentContext(), $requirement);
-        }
-    }
-
-    /**
-     * Preserve legacy paragraph/text registration around semantic ownership.
-     *
-     * @param array<string, array<string, mixed>> $semanticOwnedLegacyStyles
-     */
-    private function registerStructuredLegacyParagraphTextCompatibility(
-        OdtElement $element,
-        array $semanticOwnedLegacyStyles
-    ): void {
-        $collector = new StyleRequirementCollector();
-        foreach ($collector->collect($element) as $requirement) {
-            if ($requirement['family'] === 'paragraph') {
-                $this->documentContext()->styleContext()->registerParagraphStyle(
-                    $requirement['name'],
-                    $requirement['definition']
-                );
-                if (!$this->isSemanticParagraphTextRequirement($requirement, $semanticOwnedLegacyStyles)) {
-                    $this->ensureParagraphStylesExist([
-                        $requirement['name'] => $requirement['definition'],
-                    ]);
-                }
-            } elseif ($requirement['family'] === 'text') {
-                $this->documentContext()->styleContext()->registerTextStyle(
-                    $requirement['name'],
-                    $requirement['definition']
-                );
-                if (!$this->isSemanticParagraphTextRequirement($requirement, $semanticOwnedLegacyStyles)) {
-                    $this->ensureTextStylesExist([
-                        $requirement['name'] => $requirement['definition'],
-                    ]);
-                }
-            }
         }
     }
 
@@ -456,46 +412,6 @@ class OdtTemplate
                 $styleContext->registerFillImage($requirement['name'], $requirement['definition']);
                 break;
         }
-    }
-
-    /**
-     * Return the bounded legacy identities superseded by semantic producers.
-     *
-     * Current Paragraph/Text producers materialize definitions as common
-     * styles in styles.xml. The legacy collector has no scope or document
-     * part dimensions, so this bridge intentionally applies only to that
-     * current producer contract.
-     *
-     * @param list<\OdtTemplateEngine\Document\StyleRequirement> $requirements
-     * @return array<string, true>
-     */
-    private function semanticOwnedLegacyStyles(array $requirements): array
-    {
-        $owned = [];
-        foreach ($requirements as $requirement) {
-            if ($requirement->kind() !== StyleRequirement::KIND_DEFINITION
-                || $requirement->scope() !== StyleRequirement::SCOPE_COMMON
-                || $requirement->documentPart() !== StyleRequirement::PART_STYLES
-                || !in_array($requirement->family(), ['paragraph', 'text'], true)) {
-                continue;
-            }
-            $owned[$requirement->family() . "\0" . $requirement->name()] = true;
-        }
-
-        return $owned;
-    }
-
-    /**
-     * @param array{family: string, name: string, definition: array<string, mixed>} $requirement
-     * @param array<string, true> $semanticOwnedLegacyStyles
-     */
-    private function isSemanticParagraphTextRequirement(array $requirement, array $semanticOwnedLegacyStyles): bool
-    {
-        if (!in_array($requirement['family'], ['paragraph', 'text'], true)) {
-            return false;
-        }
-
-        return isset($semanticOwnedLegacyStyles[$requirement['family'] . "\0" . $requirement['name']]);
     }
 
     /**
@@ -1981,79 +1897,6 @@ class OdtTemplate
             'LeftPara' => ['text-align' => 'left'],
             'RightPara' => ['text-align' => 'right'],
         ]);
-    }
-
-    protected function registerStyles(array $styleDefinitions): void
-    {
-        $stylesDom = $this->documentContext()->stylesDom();
-        $xpath = new DOMXPath($stylesDom);
-        $this->prepareNamespaces($xpath);
-        $officeStyles = $xpath->query('//office:styles')->item(0);
-        if (!$officeStyles) {
-            $officeStyles = $stylesDom->createElement('office:styles');
-            $stylesDom->documentElement->appendChild($officeStyles);
-        }
-
-        foreach ($styleDefinitions as $name => $definition) {
-            $family = $definition['family'];
-            if ($this->styleDefinitionExists($stylesDom, $name, $family)) {
-                continue;
-            }
-            $style = $stylesDom->createElement('style:style');
-            $style->setAttribute('style:name', $name);
-            $style->setAttribute('style:family', $family);
-            $style->setAttribute('style:parent-style-name', 'Standard');
-            $elementName = match ($family) {
-                'text' => 'style:text-properties',
-                'paragraph' => 'style:paragraph-properties',
-                'table-cell' => 'style:table-cell-properties',
-                'graphic' => 'style:graphic-properties',
-                default => null,
-            };
-            if ($elementName) {
-                $properties = $stylesDom->createElement($elementName);
-                foreach ($definition['properties'] as $key => $value) {
-                    $properties->setAttribute($key, $value);
-                }
-                $style->appendChild($properties);
-            }
-            $officeStyles->appendChild($style);
-        }
-    }
-
-    private function styleDefinitionExists(DOMDocument $stylesDom, string $name, string $family): bool
-    {
-        foreach ($stylesDom->getElementsByTagName('*') as $element) {
-            if (!$element instanceof DOMElement
-                || ($element->localName !== 'style' && $element->nodeName !== 'style:style')
-            ) {
-                continue;
-            }
-
-            $styleName = $element->getAttributeNS(
-                'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
-                'name'
-            );
-            $styleFamily = $element->getAttributeNS(
-                'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
-                'family'
-            );
-            if ($styleName === '' || $styleFamily === '') {
-                foreach ($element->attributes as $attribute) {
-                    if ($attribute->nodeName === 'style:name') {
-                        $styleName = $attribute->nodeValue;
-                    } elseif ($attribute->nodeName === 'style:family') {
-                        $styleFamily = $attribute->nodeValue;
-                    }
-                }
-            }
-
-            if ($styleName === $name && $styleFamily === $family) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public function extractTemplateVariables(): array

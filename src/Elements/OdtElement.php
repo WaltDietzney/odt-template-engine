@@ -71,22 +71,6 @@ abstract class OdtElement
     }
 
     /**
-     * Optional: Returns the styles that should be defined for this element in the styles.xml.
-     *
-     * @return array An array of style definitions for this element.
-     */
-    public function getRequiredStyles(): array
-    {
-        return [];
-    }
-
-    /** @return array<string, array<string, mixed>> */
-    public function getOwnRequiredStyles(): array
-    {
-        return $this->getRequiredStyles();
-    }
-
-    /**
      * Returns semantic style requirements owned directly by this element.
      *
      * Traversal of owned elements belongs to StyleRequirementCollector; leaf
@@ -114,12 +98,6 @@ abstract class OdtElement
     }
 
     /** @return array<string, array<string, mixed>> */
-    public function getOwnRequiredParagraphStyles(): array
-    {
-        return [];
-    }
-
-    /** @return array<string, array<string, mixed>> */
     public function getOwnFrameStyleRequirements(): array
     {
         return [];
@@ -137,51 +115,29 @@ abstract class OdtElement
         return [];
     }
 
-    /**
-     * Returns frame graphic-style requirements from this element's subtree.
-     *
-     * Composite elements may override this method to expose their own
-     * requirement and still use the embedded-element convention for child
-     * requirements.
-     *
-     * @return array<string, array<string, mixed>>
-     */
+    /** @return array<string, array<string, mixed>> */
     public function getFrameStyleRequirements(): array
     {
         return $this->collectGraphicRequirements('getFrameStyleRequirements');
     }
 
-    /**
-     * Returns image graphic-style requirements from this element's subtree.
-     *
-     * @return array<string, array<string, mixed>>
-     */
+    /** @return array<string, array<string, mixed>> */
     public function getImageStyleRequirements(): array
     {
         return $this->collectGraphicRequirements('getImageStyleRequirements');
     }
 
-    /**
-     * Returns fill-image declaration requirements from this element's subtree.
-     *
-     * @return array<string, array<string, mixed>>
-     */
+    /** @return array<string, array<string, mixed>> */
     public function getFillImageRequirements(): array
     {
         return $this->collectGraphicRequirements('getFillImageRequirements');
     }
 
-    /**
-     * Collect one graphic requirement family from embedded elements.
-     *
-     * @param non-empty-string $method
-     * @return array<string, array<string, mixed>>
-     */
+    /** @param non-empty-string $method */
     private function collectGraphicRequirements(string $method): array
     {
         $requirements = [];
-
-        foreach ($this->getEmbeddedElements() as $element) {
+        foreach ($this->ownedElements() as $element) {
             if (method_exists($element, $method)) {
                 $requirements = array_merge($requirements, $element->{$method}());
             }
@@ -202,24 +158,6 @@ abstract class OdtElement
     }
 
     /**
-     * Returns the image assets embedded within this element and its sub-elements.
-     *
-     * @return array An array of image assets.
-     */
-    public function getImageAssets(): array
-    {
-        $assets = [];
-
-        foreach ($this->getEmbeddedElements() as $element) {
-            if (method_exists($element, 'getImageAssets')) {
-                $assets = array_merge($assets, $element->getImageAssets());
-            }
-        }
-
-        return $assets;
-    }
-
-    /**
      * Returns physical image resources produced directly by this element.
      *
      * Composite traversal is intentionally supplied by the resource collector
@@ -231,6 +169,19 @@ abstract class OdtElement
     public function getOwnImageAssets(): array
     {
         return [];
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    public function getImageAssets(): array
+    {
+        $assets = [];
+        foreach ($this->ownedElements() as $element) {
+            if (method_exists($element, 'getImageAssets')) {
+                $assets = array_merge($assets, $element->getImageAssets());
+            }
+        }
+
+        return $assets;
     }
 
 }

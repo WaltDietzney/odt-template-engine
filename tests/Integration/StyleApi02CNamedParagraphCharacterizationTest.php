@@ -8,47 +8,12 @@ use LogicException;
 use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\OdtTemplate;
-use OdtTemplateEngine\Utils\StyleMapper;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
 
 final class StyleApi02CNamedParagraphCharacterizationTest extends TestCase
 {
-    #[RunInSeparateProcess]
-    public function testLegacyNamedParagraphRegistrationMaterializesForNamedReference(): void
-    {
-        $styleName = 'StyleApi02CLegacyNamedParagraph';
-        StyleMapper::registerParagraphStyle($styleName, [
-            'margin-top' => '0.1cm',
-            'margin-bottom' => '0.03cm',
-        ]);
-
-        $template = new OdtTemplate($this->templatePath('template_17_textfield.odt'));
-        $output = sys_get_temp_dir() . '/odt-style-api-02c-legacy-' . bin2hex(random_bytes(6)) . '.odt';
-
-        try {
-            $template->setElement(
-                'INLINE_BOX',
-                (new Paragraph($styleName))->addText('STYLE-API-02C legacy named paragraph')
-            );
-            $template->save($output);
-
-            $content = $this->zipEntry($output, 'content.xml');
-            $styles = $this->zipEntry($output, 'styles.xml');
-
-            self::assertStringContainsString('text:style-name="' . $styleName . '"', $content);
-            self::assertStringContainsString('style:name="' . $styleName . '"', $styles);
-            self::assertStringContainsString('fo:margin-top="0.1cm"', $styles);
-            self::assertStringContainsString('fo:margin-bottom="0.03cm"', $styles);
-        } finally {
-            $template->cleanup();
-            if (is_file($output)) {
-                unlink($output);
-            }
-        }
-    }
-
     public function testParagraphConvenienceOptionsAlreadyProduceTheTargetSemanticDefinitionShape(): void
     {
         $paragraph = new Paragraph('StyleApi02CSemanticParagraph', [
