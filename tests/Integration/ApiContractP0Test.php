@@ -38,9 +38,9 @@ final class ApiContractP0Test extends TestCase
         ]);
         $paragraph->addText('Anonymous paragraph style');
 
-        $styles = $paragraph->getRequiredParagraphStyles();
-        self::assertCount(1, $styles);
-        $styleName = array_key_first($styles);
+        $requirements = iterator_to_array($paragraph->getOwnStyleRequirements(), false);
+        self::assertCount(1, $requirements);
+        $styleName = $requirements[0]->name();
         self::assertIsString($styleName);
         self::assertStringStartsWith('para_', $styleName);
 

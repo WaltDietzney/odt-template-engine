@@ -7,7 +7,6 @@ namespace OdtTemplateEngine\Tests\Elements;
 use DOMDocument;
 use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Elements\Paragraph;
-use OdtTemplateEngine\Utils\StyleMapper;
 use PHPUnit\Framework\TestCase;
 
 final class ParagraphTest extends TestCase
@@ -54,16 +53,11 @@ final class ParagraphTest extends TestCase
         ]);
         $paragraph->addText('Styled text', ['bold' => true]);
 
-        self::assertCount(1, $paragraph->getRequiredStyles());
-        self::assertSame(
-            [
-                'CustomParagraph' => [
-                    'text-align' => 'center',
-                    'margin-top' => '0.2cm',
-                ],
-            ],
-            $paragraph->getRequiredParagraphStyles()
-        );
+        $requirements = iterator_to_array($paragraph->getOwnStyleRequirements(), false);
+        self::assertCount(2, $requirements);
+        self::assertSame('paragraph', $requirements[0]->family());
+        self::assertSame('CustomParagraph', $requirements[0]->name());
+        self::assertSame('text', $requirements[1]->family());
     }
 
     public function testCanMarkParagraphAsBulletedOrNumbered(): void
@@ -185,30 +179,15 @@ final class ParagraphTest extends TestCase
         ], $requirements[0]->propertyGroups());
     }
 
-    public function testSemanticDiscoveryDoesNotMutateLegacyStyleRegistries(): void
-    {
-        $paragraph = new Paragraph('SemanticOnlyParagraph', ['text-align' => 'center']);
-        $paragraph->addText('text', ['color' => '#123456']);
-        $paragraphStylesBefore = StyleMapper::getParagraphStyles();
-        $textStylesBefore = StyleMapper::getTextStyles();
-
-        iterator_to_array($paragraph->getOwnStyleRequirements(), false);
-
-        self::assertSame($paragraphStylesBefore, StyleMapper::getParagraphStyles());
-        self::assertSame($textStylesBefore, StyleMapper::getTextStyles());
-    }
-
     public function testSemanticTextNamesPreserveExistingGenerationAndDeduplication(): void
     {
         $paragraph = (new Paragraph())
             ->addText('one', ['color' => '#123456'])
             ->addText('two', ['color' => '#123456']);
 
-        $legacyNames = array_keys($paragraph->getRequiredStyles());
         $semanticRequirements = iterator_to_array($paragraph->getOwnStyleRequirements(), false);
 
-        self::assertCount(1, $legacyNames);
         self::assertCount(1, $semanticRequirements);
-        self::assertSame($legacyNames[0], $semanticRequirements[0]->name());
+        self::assertSame('text', $semanticRequirements[0]->family());
     }
 }

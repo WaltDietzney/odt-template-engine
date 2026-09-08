@@ -207,48 +207,6 @@ class RichText extends OdtElement
     }
 
 
-    /**
-     * Get all required text styles (e.g., font styles, text properties).
-     *
-     * @return array
-     */
-    public function getRequiredStyles(): array
-    {
-        $styles = [];
-        foreach ($this->elements as $element) {
-            $styles = array_merge($styles, $element->getRequiredStyles());
-        }
-        return $styles;
-    }
-
-    /** @return array<string, array> */
-    public function getOwnRequiredStyles(): array
-    {
-        return [];
-    }
-
-    /** @return array<string, array> */
-    public function getOwnRequiredParagraphStyles(): array
-    {
-        return [];
-    }
-
-    /**
-     * Get all required paragraph styles.
-     *
-     * @return array<string, array> [styleName => styleOptions]
-     */
-    public function getRequiredParagraphStyles(): array
-    {
-        $all = [];
-        foreach ($this->elements as $element) {
-            if ($element instanceof Paragraph) {
-                $all += $element->getRequiredParagraphStyles();
-            }
-        }
-        return $all;
-    }
-
     public function addElement(OdtElement $element): self
     {
         $this->elements[] = $element;

@@ -4,7 +4,6 @@ use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Elements\RichText;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\OdtTemplate;
-use OdtTemplateEngine\Utils\StyleMapper;
 
 // Beispielhafte Instanz deines Templates
 $template = new OdtTemplate('templates/template_richtextblock.odt');
@@ -39,9 +38,6 @@ $rich->addParagraph("🎯 Absatz mit Absatz- und Textstil", "StyledPara", [
     'margin-left' => '2cm',
 ]);
 $rich->addText("Rechter Text", ['bold' => true, 'color' => '#008000']);
-
-// 📄 Paragraph Styles in Template registrieren (kann auch automatisiert sein)
-$template->ensureParagraphStylesExist(StyleMapper::getParagraphStyles());
 
 // ⬇️ RichText ins Dokument einfügen
 $template->setElement('TEXTBLOCK', $rich);

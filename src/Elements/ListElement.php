@@ -72,48 +72,6 @@ class ListElement extends OdtElement
     }
 
     /**
-     * Collect text styles from all list items.
-     *
-     * @return array<string, array>
-     */
-    public function getRequiredStyles(): array
-    {
-        $styles = [];
-        foreach ($this->items as $item) {
-            $styles = array_merge($styles, $item->getRequiredStyles());
-        }
-        return $styles;
-    }
-
-    /** @return array<string, array> */
-    public function getOwnRequiredStyles(): array
-    {
-        return [];
-    }
-
-    /** @return array<string, array> */
-    public function getOwnRequiredParagraphStyles(): array
-    {
-        return [];
-    }
-
-    /**
-     * Collect paragraph styles from all list items.
-     *
-     * @return array<string, array>
-     */
-    public function getRequiredParagraphStyles(): array
-    {
-        $styles = [];
-        foreach ($this->items as $item) {
-            if ($item instanceof Paragraph) {
-                $styles += $item->getRequiredParagraphStyles();
-            }
-        }
-        return $styles;
-    }
-
-    /**
      * Collect image assets from all list items.
      *
      * @return array

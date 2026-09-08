@@ -408,22 +408,6 @@ public function setParagraphStyleOptions(array $options): self
     }
 
     /**
-     * Returns all inline text styles required by this paragraph.
-     *
-     * @return array<string, array>
-     */
-    public function getRequiredStyles(): array
-    {
-        return $this->textStyleMap;
-    }
-
-    /** @return array<string, array> */
-    public function getOwnRequiredParagraphStyles(): array
-    {
-        return $this->getRequiredParagraphStyles();
-    }
-
-    /**
      * Returns semantic style requirements owned directly by this paragraph.
      *
      * @return iterable<int, StyleRequirement>
@@ -478,34 +462,6 @@ public function setParagraphStyleOptions(array $options): self
                 ['style:text-properties' => StyleMapper::mapTextStyleOptions($style)]
             );
         }
-    }
-
-    /**
-     * Returns all paragraph style definitions.
-     *
-     * @return array<string, array>
-     */
-    public function getRequiredParagraphStyles(): array
-    {
-        if ($this->paragraphStyle && !empty($this->paragraphStyleOptions)) {
-            return [$this->paragraphStyle => $this->paragraphStyleOptions];
-        }
-        return [];
-    }
-
-    /**
-     * Returns mapped paragraph style definitions.
-     *
-     * @return array<string, array>
-     */
-    public function getParagraphStyleDefinitions(): array
-    {
-        if ($this->paragraphStyle && !empty($this->paragraphStyleOptions)) {
-            return [
-                $this->paragraphStyle => StyleMapper::mapParagraphStyle($this->paragraphStyleOptions)
-            ];
-        }
-        return [];
     }
 
     // ------------- Rendering -------------

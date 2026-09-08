@@ -515,40 +515,6 @@ class RichTable extends OdtElement
         return $widths;
     }
 
-    public function getRequiredStyles(): array
-    {
-        $styles = [];
-
-        foreach ($this->rows as $row) {
-            foreach ($row['cells'] as $cell) {
-                if (property_exists($cell, 'content')) {
-                    $reflection = new \ReflectionClass($cell);
-                    $contentProp = $reflection->getProperty('content');
-                    $contentProp->setAccessible(true);
-                    $inner = $contentProp->getValue($cell);
-
-                    if ($inner instanceof OdtElement) {
-                        $styles += $inner->getRequiredStyles();
-                    }
-                }
-            }
-        }
-
-        return $styles;
-    }
-
-    /** @return array<string, array> */
-    public function getOwnRequiredStyles(): array
-    {
-        return [];
-    }
-
-    /** @return array<string, array> */
-    public function getOwnRequiredParagraphStyles(): array
-    {
-        return [];
-    }
-
     public function buildTableFromArray(array $tableData, string $styleName = 'default'): self
     {
         $styleSet = $this->customStyles[$styleName] ?? $this->getPredefinedStyles($styleName);

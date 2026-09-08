@@ -69,13 +69,6 @@ final class StyleContextTextFontCharacterizationTest extends TestCase
         );
     }
 
-    public function testLegacyTextRegistrationIsNoLongerConsumedByAWriter(): void
-    {
-        $style = '01FC_LegacyText_' . bin2hex(random_bytes(3));
-        StyleMapper::setTextStyle($style, ['fo:color' => '#123456']);
-        self::assertArrayHasKey($style, StyleMapper::getTextStyles());
-    }
-
     /** @return array{0: OdtTemplate, 1: string} */
     private function templateWithStyledText(string $font, string $color): array
     {
@@ -86,7 +79,13 @@ final class StyleContextTextFontCharacterizationTest extends TestCase
             'color' => $color,
         ]);
         $richText = (new RichText())->addParagraph($paragraph);
-        $style = array_key_first($paragraph->getRequiredStyles());
+        $style = null;
+        foreach ($paragraph->getOwnStyleRequirements() as $requirement) {
+            if ($requirement->family() === 'text') {
+                $style = $requirement->name();
+                break;
+            }
+        }
         self::assertIsString($style);
         $template->setElement('my_list', $richText);
 

@@ -41,7 +41,13 @@ final class StyleRequirementFontCurrentBehaviorCharacterizationTest extends Test
         $paragraphName = 'SR05A_Paragraph_' . bin2hex(random_bytes(3));
         $paragraph = (new Paragraph($paragraphName, ['font-family' => $font]))
             ->addText('fonted', ['font-family' => $font]);
-        $textStyleName = array_key_first($paragraph->getRequiredStyles());
+        $textStyleName = null;
+        foreach ($paragraph->getOwnStyleRequirements() as $requirement) {
+            if ($requirement->family() === 'text') {
+                $textStyleName = $requirement->name();
+                break;
+            }
+        }
         self::assertIsString($textStyleName);
         $output = $this->save((new RichText())->addParagraph($paragraph));
         $styles = $this->xml($output, 'styles.xml');
@@ -91,7 +97,13 @@ final class StyleRequirementFontCurrentBehaviorCharacterizationTest extends Test
             'style:font-name' => $identity,
             'fo:font-family' => "'$family'",
         ]);
-        $textStyleName = array_key_first($paragraph->getRequiredStyles());
+        $textStyleName = null;
+        foreach ($paragraph->getOwnStyleRequirements() as $requirement) {
+            if ($requirement->family() === 'text') {
+                $textStyleName = $requirement->name();
+                break;
+            }
+        }
         self::assertIsString($textStyleName);
 
         $styles = $this->xml($this->save((new RichText())->addParagraph($paragraph)), 'styles.xml');

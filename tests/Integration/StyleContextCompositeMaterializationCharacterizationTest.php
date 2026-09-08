@@ -104,7 +104,13 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
 
         $content = $this->entry($output, 'content.xml');
         $styles = $this->entry($output, 'styles.xml');
-        $textStyleName = (string) array_key_first($paragraph->getRequiredStyles());
+        $textStyleName = '';
+        foreach ($paragraph->getOwnStyleRequirements() as $requirement) {
+            if ($requirement->family() === 'text') {
+                $textStyleName = $requirement->name();
+                break;
+            }
+        }
 
         self::assertStringContainsString('text:style-name="' . $textStyleName . '"', $content);
         self::assertStringContainsString('style:name="' . $textStyleName . '"', $styles);

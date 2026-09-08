@@ -22,22 +22,14 @@ final class StyleApi02AP0SubclassCompatibilityCharacterizationTest extends TestC
             $template->setElement('my_list', $element);
 
             self::assertGreaterThan(0, $element->semanticRequirementCalls);
-            self::assertGreaterThan(0, $element->paragraphRequirementCalls);
-            self::assertGreaterThan(0, $element->textRequirementCalls);
+            self::assertSame(0, $element->paragraphRequirementCalls);
+            self::assertSame(0, $element->textRequirementCalls);
             self::assertGreaterThan(0, $element->frameRequirementCalls);
             self::assertGreaterThan(0, $element->imageRequirementCalls);
             self::assertGreaterThan(0, $element->fillImageRequirementCalls);
 
-            self::assertGreaterThan(
-                0,
-                $template->ensureParagraphStylesExistCalls,
-                'A legacy paragraph requirement from an external element subclass still dispatches through the OdtTemplate facade.'
-            );
-            self::assertGreaterThan(
-                0,
-                $template->ensureTextStylesExistCalls,
-                'A legacy text requirement from an external element subclass still dispatches through the protected OdtTemplate facade.'
-            );
+            self::assertSame(0, $template->ensureParagraphStylesExistCalls);
+            self::assertSame(0, $template->ensureTextStylesExistCalls);
         } finally {
             $template->cleanup();
         }
