@@ -2,55 +2,15 @@
 
 namespace OdtTemplateEngine\Utils;
 
+use OdtTemplateEngine\Style\LegacyStyleCompatibilityState;
 use OdtTemplateEngine\Style\LegacyStyleRegistry;
 
 /**
- * StyleMapper is a utility class responsible for mapping and registering various styles (text, paragraph, and table-cell) 
- * for use in an OpenDocument Text (ODT) document. It allows you to define styles and map them to the required formatting 
- * attributes. Additionally, it handles the generation of unique style names and registers styles to avoid duplication.
+ * Stateless mapping and identity helpers with bounded legacy compatibility
+ * facades. Normal document style ownership belongs to StyleContext.
  */
 class StyleMapper
 {
-    /**
-     * @var array Holds registered text styles.
-     */
-    protected static array $registeredTextStyles = [];
-
-    private static array $textStyles = [];
-
-    /**
-     * @var array Holds registered table cell styles.
-     */
-    protected static array $registeredTableCellStyles = [];
-
-    /**
-     * @var array Holds table cell styles.
-     */
-    protected static array $tableCellStyles = [];
-
-    /**
-     * Summary of registeredImageStyles
-     * @var array
-     */
-    protected static array $registeredImageStyles = [];
-
-    /**
-     * Maps fill-image names to their file paths for draw:fill="bitmap".
-     * @var array<string, array{name: string, path: string, filename: string}>
-     */
-    protected static array $registeredFillImages = [];
-
-    /**
-     * Summary of registeredFonts
-     * @var array
-     */
-    private static array $registeredFonts = [];
-
-    public static array $frameStyles = [];
-
-    public static array $tableStyles = [];
-
-
     /**
      * Maps a set of paragraph style options to their corresponding ODF attributes.
      * 
@@ -158,39 +118,6 @@ class StyleMapper
 
         return $mapped;
     }
-
-    /**
-     * Maps a set of table-cell style options to their corresponding ODF attributes.
-     * 
-     * This method maps table-cell properties, such as 'background', 'border', 'padding', etc., to the appropriate
-     * attributes used for table cells in ODF.
-     * 
-     * @param array $input The input table-cell style options.
-     * @return array The mapped style attributes for table cells.
-     */
-    public static function mapTableCellStyle(array $input): array
-    {
-        $map = [];
-
-        if (!empty($input['background'])) {
-            $map['fo:background-color'] = $input['background'];
-        }
-
-        if (!empty($input['border'])) {
-            $map['fo:border'] = $input['border'];
-        }
-
-        if (!empty($input['padding'])) {
-            $map['fo:padding'] = $input['padding'];
-        }
-
-        if (!empty($input['text-align'])) {
-            $map['fo:text-align'] = $input['text-align'];
-        }
-
-        return $map;
-    }
-
 
     /**
      * Maps a set of text style options to their corresponding ODF attributes.
@@ -408,22 +335,10 @@ class StyleMapper
 
 
 
-    public static function getRegisteredFontsXml(): string
-    {
-        $xml = '';
-
-        foreach (array_keys(self::$registeredFonts) as $fontName) {
-            $xml .= '<style:font-face style:name="' . htmlspecialchars($fontName) . '" svg:font-family="' . htmlspecialchars($fontName) . '"/>' . "\n";
-        }
-
-        return $xml;
-    }
-
-
     /**
      * Maps additional table-cell style options to their corresponding ODF attributes.
      * 
-     * This method extends the functionality of `mapTableCellStyle()` to include more options such as
+     * This mapper covers the supported table-cell options, including
      * 'border', 'padding', and 'text-align'.
      * 
      * @param array $options The input table-cell style options.
@@ -606,18 +521,13 @@ class StyleMapper
     public static function registerTextStyle(array $style): string
     {
         $styleName = self::generateStyleName($style);
-        if (!isset(self::$registeredTextStyles[$styleName])) {
-            self::$registeredTextStyles[$styleName] = $style;
-            self::$textStyles[$styleName] = $style; // <- wenn getTextStyles() das benutzt
-        }
+        LegacyStyleCompatibilityState::registerTextStyle($styleName, $style);
         return $styleName;
     }
 
-    public static function setTextStyle(string $styleName, array $style)
+    public static function setTextStyle(string $styleName, array $style): void
     {
-        if (!isset(self::$registeredTextStyles[$styleName])) {
-            self::$registeredTextStyles[$styleName] = $style;
-        }
+        LegacyStyleCompatibilityState::setTextStyle($styleName, $style);
     }
 
 
@@ -642,7 +552,7 @@ class StyleMapper
      */
     public static function getRegisteredStyles(): array
     {
-        return array_merge(self::$registeredTextStyles, LegacyStyleRegistry::paragraphStyles());
+        return array_merge(LegacyStyleCompatibilityState::textStyles(), LegacyStyleRegistry::paragraphStyles());
     }
 
     /**
@@ -652,7 +562,7 @@ class StyleMapper
      */
     public static function getTextStyles(): array
     {
-        return self::$registeredTextStyles;
+        return LegacyStyleCompatibilityState::textStyles();
     }
 
     /**
@@ -673,9 +583,9 @@ class StyleMapper
     public static function getAllRegisteredStyles(): array
     {
         return [
-            'text' => self::$registeredTextStyles,
+            'text' => LegacyStyleCompatibilityState::textStyles(),
             'paragraph' => LegacyStyleRegistry::paragraphStyles(),
-            'table-cell' => self::$registeredTableCellStyles,
+            'table-cell' => LegacyStyleCompatibilityState::tableCellStyles(),
         ];
     }
 
@@ -689,7 +599,10 @@ class StyleMapper
      */
     public static function registerTableCellStyle(string $name, array $options): void
     {
-        self::$tableCellStyles[$name] = self::mapTableCellStyleOptions($options);
+        LegacyStyleCompatibilityState::registerTableCellStyle(
+            $name,
+            self::mapTableCellStyleOptions($options)
+        );
     }
 
     /**
@@ -699,7 +612,7 @@ class StyleMapper
      */
     public static function getRegisteredTableCellStyles(): array
     {
-        return self::$tableCellStyles;
+        return LegacyStyleCompatibilityState::tableCellStyles();
     }
 
     /**
@@ -709,7 +622,7 @@ class StyleMapper
      */
     public static function hasTextStyle(string $styleName): bool
     {
-        return isset(self::$registeredTextStyles[$styleName]);
+        return LegacyStyleCompatibilityState::hasTextStyle($styleName);
     }
 
     /**
@@ -732,8 +645,7 @@ class StyleMapper
         // Falls kein Name übergeben, Style-Name generieren
         $name ??= self::generateStyleName($normalized);
 
-        // Speichern
-        self::$registeredImageStyles[$name] = $normalized;
+        LegacyStyleCompatibilityState::registerImageStyle($name, $normalized);
     }
 
 
@@ -743,7 +655,7 @@ class StyleMapper
      */
     public static function getRegisteredImageStyles(): array
     {
-        return self::$registeredImageStyles;
+        return LegacyStyleCompatibilityState::imageStyles();
     }
 
     /**
@@ -755,11 +667,7 @@ class StyleMapper
      */
     public static function registerFillImage(string $name, string $imagePath): void
     {
-        self::$registeredFillImages[$name] = [
-            'name' => $name,
-            'path' => $imagePath,
-            'filename' => basename($imagePath),
-        ];
+        LegacyStyleCompatibilityState::registerFillImage($name, $imagePath);
     }
 
     /**
@@ -769,7 +677,7 @@ class StyleMapper
      */
     public static function getRegisteredFillImages(): array
     {
-        return self::$registeredFillImages;
+        return LegacyStyleCompatibilityState::fillImages();
     }
 
     /**
@@ -804,7 +712,7 @@ class StyleMapper
      */
     public static function getFrameStyles(): array
     {
-        return self::$frameStyles;
+        return LegacyStyleCompatibilityState::frameStyles();
     }
 
 
@@ -813,13 +721,7 @@ class StyleMapper
      */
     public static function addFrameStyle(string $name, array $properties): void
     {
-        // Doppelte Styles vermeiden
-        if (!isset(self::$frameStyles[$name])) {
-            self::$frameStyles[$name] = $properties;
-        } else {
-            // Optional: bestehende Styles zusammenführen (wenn sinnvoll)
-            self::$frameStyles[$name] = array_merge(self::$frameStyles[$name], $properties);
-        }
+        LegacyStyleCompatibilityState::addFrameStyle($name, $properties);
     }
 
     public static function splitCssProperties(array $rawCss): array
@@ -869,11 +771,11 @@ class StyleMapper
 
     public static function registerTableStyle(string $name, array $properties): void
     {
-        self::$tableStyles[$name] = $properties;
+        LegacyStyleCompatibilityState::registerTableStyle($name, $properties);
     }
     public static function getRegisteredTableStyles(): array
     {
-        return self::$tableStyles;
+        return LegacyStyleCompatibilityState::tableStyles();
     }
 
 }
