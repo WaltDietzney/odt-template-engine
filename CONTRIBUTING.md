@@ -98,7 +98,9 @@ Small, reviewable pull requests are preferred.
 
 ## Samples and documentation
 
-If a new feature is visible to library users, consider adding or extending a sample under `samples/` and documenting the behavior in `docs/README.md`.
+If a new feature is visible to library users, consider adding or extending a sample under `samples/` and documenting the behavior on the appropriate page under [`docs/`](docs/).
+
+The public documentation starts at [`docs/index.md`](docs/index.md) and is organized by getting-started, template-language, rich-document, styling, advanced, and example topics.
 
 Samples should demonstrate practical usage and should remain runnable from a normal repository checkout after `composer install`.
 
