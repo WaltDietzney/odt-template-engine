@@ -92,7 +92,7 @@ The engine writes native ODF span attributes to the table cell.
 $table->setTableStyleName('InvoiceTable');
 ```
 
-Table-level style registration is an advanced area. For most generated tables, start with cell and paragraph styling unless the document has a clear reusable table-style requirement.
+This is a reference to a table style name. Table-level style authoring is not exposed through a generic global registry. For most generated tables, start with table, cell, paragraph, and text options unless the template already provides an appropriate reusable table style.
 
 ## Style sets for array-built tables
 
@@ -127,11 +127,11 @@ Use these when they simplify application rendering. For a highly designed docume
 
 ## XML placement is an implementation concern
 
-ODF allows style definitions in different package locations. The current table pipeline uses both normal style writing and `content.xml` automatic-style paths for some generated table structures.
+ODF allows style definitions in different package locations. The current table pipeline uses document-local semantic style ownership and may materialize generated table-related structures in `styles.xml` or `content.xml` according to their ODF role.
 
-Application code should not depend on the exact XML destination of a generated cell style. Treat `RichTable`, `RichTableCell`, and their documented style options as the public abstraction.
+Application code should not depend on the exact XML destination of a generated cell or table-column style. Treat `RichTable`, `RichTableCell`, and their documented style options as the public abstraction.
 
-The project roadmap tracks further consolidation of style ownership and serialization paths.
+Style ownership and materialization are already document-local. Remaining table work in the roadmap concerns layout and geometry semantics rather than another general style-registry consolidation.
 
 ## Current limitations
 
