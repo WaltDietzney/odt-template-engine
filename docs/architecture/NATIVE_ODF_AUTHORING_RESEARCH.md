@@ -93,6 +93,236 @@ A central question is whether structural selection can be represented as native,
 
 Sample 10 should serve as a negative/legacy authoring benchmark: determine how much of its visible control structure can be represented more clearly without sacrificing template-author control.
 
+#### RESEARCH-01A empirical findings
+
+The following findings were established with small LibreOffice Writer fixtures and direct inspection of `content.xml`. They characterize observed Writer/ODF behavior; they do not yet define engine APIs.
+
+##### Variable Set/Get
+
+Writer's Set Variable / Show Variable mechanism is represented by a variable declaration plus position-dependent set/get fields, for example:
+
+```xml
+<text:variable-decl office:value-type="string" text:name="customer"/>
+<text:variable-set
+    text:name="customer"
+    text:display="none"
+    text:formula="ooow:Walter"
+    office:value-type="string"
+    office:string-value="Walter"/>
+<text:variable-get text:name="customer">Walter</text:variable-get>
+```
+
+The mechanism has document-flow semantics: a get resolves the applicable preceding set for the same variable. Writer field types matter; a text variable must be authored as text rather than accidentally using the default numeric representation.
+
+##### User Fields
+
+Writer User Fields provide a different model: a central declaration carries the value and any number of references display it.
+
+```xml
+<text:user-field-decl
+    office:value-type="string"
+    office:string-value="Walter"
+    text:name="customer"/>
+<text:user-field-get text:name="customer">Walter</text:user-field-get>
+```
+
+A controlled fixture changed only the central declaration from `Walter` to `Maria`, leaving the visible character data of the field references unchanged. Writer displayed `Maria` immediately on normal open. A direct headless PDF conversion also rendered `Maria`.
+
+This establishes the central declaration as semantically authoritative for Writer evaluation. The character data of `text:user-field-get` acts as materialized/display data rather than the authoritative application value. Other ODF consumers may behave differently, so robust cross-viewer handling remains a separate concern.
+
+##### Conditional Text
+
+Writer Conditional Text is represented as a binary value-selection field:
+
+```xml
+<text:conditional-text
+    text:condition="ooow:customer == &quot;Walter&quot;"
+    text:string-value-if-true="Bedingung ist WAHR"
+    text:string-value-if-false="Bedingung ist FALSCH">
+    Bedingung ist WAHR
+</text:conditional-text>
+```
+
+Changing only the central User Field from `Walter` to another value caused Writer to recalculate the displayed branch on open.
+
+A second fixture placed an engine placeholder inside both branches, for example:
+
+```text
+true:  Sehr geehrte Frau {{lastname}},
+false: Sehr geehrter Herr {{lastname}},
+```
+
+Replacing `{{lastname}}` only in the currently displayed character data was not persistent: Writer recalculated the field and restored the branch value containing the unresolved placeholder. Replacing the placeholder in both `text:string-value-if-true` and `text:string-value-if-false`, as well as the current materialized character data, survived reevaluation and branch switching.
+
+This is an important semantic boundary for the engine:
+
+> For `text:conditional-text`, the true/false attribute values are authoritative branch content. Placeholder processing that supports native Conditional Text must process all authoritative branches, including an inactive branch; text-node replacement alone is insufficient.
+
+Conditional Text is binary value selection. It is not a direct replacement for the engine's general `if` / `elseif` / `else` structural control, which can select arbitrary document subtrees and more than two branches.
+
+##### Hidden Text
+
+Writer Hidden Text can conditionally suppress inline content. A fixture used a string User Field `gender = female` and:
+
+```xml
+<text:hidden-text
+    text:condition="ooow:gender != &quot;female&quot;"
+    text:string-value="FEMALE-TEXT"
+    text:is-hidden="true">
+    FEMALE-TEXT
+</text:hidden-text>
+```
+
+After changing only the central User Field to `male` by script, headless PDF conversion correctly suppressed `FEMALE-TEXT` and retained the surrounding paragraph text.
+
+In the tested DOCX conversion, the hidden inline text was effectively materialized away: the suppressed text did not appear in the resulting Word document. This behavior is promising but should not yet be generalized beyond the characterized conversion case.
+
+##### Hidden Paragraph
+
+Writer Hidden Paragraph can conditionally suppress the complete paragraph containing the field. With `gender = female` and condition `gender != "female"`, the paragraph remained visible. The ODF representation included:
+
+```xml
+<text:hidden-paragraph
+    text:condition="ooow:gender != &quot;female&quot;"/>
+```
+
+After changing only the central User Field to `male` by script, headless PDF conversion correctly removed the complete paragraph from rendered output.
+
+DOCX conversion did not preserve the same result reliably: the paragraph text remained as an ordinary Word paragraph and no equivalent conditional semantics were observed in the generated `word/document.xml` during the experiment.
+
+This creates an interoperability distinction between correct ODF/LibreOffice rendering and conversion to a format that cannot directly carry the same ODF semantics.
+
+##### Conditional Sections
+
+Conditional Writer Sections proved to be the strongest native structural-selection mechanism investigated in RESEARCH-01A so far.
+
+A three-way salutation was authored as three sibling named Sections:
+
+```text
+SalutationFemale
+    hide if gender != "female"
+    Sehr geehrte Frau {{lastname}},
+
+SalutationMale
+    hide if gender != "male"
+    Sehr geehrter Herr {{lastname}},
+
+SalutationDefault
+    hide if (gender == "female") OR (gender == "male")
+    Sehr geehrte Damen und Herren,
+```
+
+The sections were confirmed as sibling `text:section` elements, not nested sections. Their ODF representation combines the semantic condition with `text:display="condition"`; Writer may additionally materialize the current hidden state as `text:is-hidden="true"`.
+
+For example:
+
+```xml
+<text:section
+    text:style-name="Sect1"
+    text:name="SalutationMale"
+    text:condition="ooow:gender != &quot;male&quot;"
+    text:is-hidden="true"
+    text:display="condition">
+```
+
+The fixture was verified manually for `female`, `male`, and a third/default value. Parenthesized comparisons in the OR expression produced the intended default behavior. This observation does not yet establish that parentheses are universally required by Writer's condition grammar.
+
+Most importantly, changing only the central `gender` User Field by script and then converting directly with headless LibreOffice produced the correct PDF branch for both `male` and an unknown/default value. No Writer GUI open/save step was required.
+
+This establishes a useful server-side model:
+
+```text
+LibreOffice-authored conditional structure
+    -> application changes semantic User Field value
+    -> LibreOffice headless evaluates native conditions
+    -> rendered PDF contains the selected structure
+```
+
+##### DOCX interoperability and finalization
+
+The Conditional Section fixture exposed an important export boundary. LibreOffice converted the `gender` User Field to a Word `DOCVARIABLE`, but the tested DOCX did not retain the ODF Section conditions as equivalent Word structural conditions. Section branch content could remain as ordinary Word paragraphs.
+
+Together with the Hidden Paragraph result, this suggests that native ODF conditional semantics must not be assumed to survive DOCX conversion.
+
+A strong architecture candidate therefore emerges for export interoperability:
+
+```text
+semantic template ODT
+    -> bind application data
+    -> evaluate/materialize template semantics
+    -> remove inactive structures/content where required
+    -> finalized static ODT
+    -> PDF and/or DOCX conversion
+```
+
+For PDF, LibreOffice can already evaluate the characterized native conditions during headless rendering. A common explicit finalization stage may nevertheless be valuable if multiple export formats must receive the same resolved document state. Whether such a stage becomes an engine responsibility is an architecture decision for a later phase, not a conclusion of RESEARCH-01A itself.
+
+##### Relationship to engine placeholders
+
+The experiments suggest a complementary rather than exclusive relationship between native Writer semantics and the existing template language.
+
+A useful working distinction is:
+
+- scalar application data can remain concise `{{...}}` placeholders;
+- binary value selection can use native Conditional Text where authoring UX benefits;
+- optional inline content can use Hidden Text;
+- optional complete paragraphs can use Hidden Paragraph;
+- optional complex document blocks can use Conditional Sections.
+
+Native mechanisms do not automatically replace the existing syntax. Their value is strongest where Writer can own meaningful document structure and visual formatting while the engine supplies data and deterministic processing.
+
+##### Research hypothesis: declarative repetition through named Sections
+
+The current engine already has structured Section instantiation semantics, including repeated instantiation. This suggests a further authoring hypothesis that should be investigated rather than immediately implemented.
+
+A Writer-authored named Section could declare repetition through a naming convention, conceptually such as:
+
+```text
+foreach_experience
+```
+
+The template would thereby declare that the Section represents a repeatable block bound to the `experience` collection. Internally, the engine could map that declaration to its existing named-Section and `instantiateMany()` semantics rather than implementing a second loop mechanism.
+
+The important architectural property is ownership:
+
+- the **template** decides that this native document block is repeatable and owns its layout, styles, and internal structure;
+- the **engine** interprets the declaration, resolves the collection, performs structured instantiation, and binds each local data context;
+- the **application** supplies data without having to restate document structure in PHP.
+
+Conceptually:
+
+```text
+LibreOffice Section: foreach_experience
+    -> engine discovers repetition declaration
+    -> resolve collection: experience
+    -> instantiateMany()
+    -> bind each instance
+    -> finalize prototype/result
+```
+
+This could move repetition semantics out of visible `{{#foreach:...}}` control text and out of application orchestration while retaining the engine's existing structured implementation path.
+
+No naming convention is approved by this finding. `foreach_experience`, `foreach:experience`, namespaced identifiers, or another metadata mechanism must be compared for ODF validity, Writer usability, discoverability, diagnostics, and extensibility.
+
+There is also an explicit design risk: hiding the existing template language inside object names would not by itself improve the architecture. A declarative name should describe the semantic role of a native ODT object and map to an appropriate structured engine operation.
+
+This hypothesis is important for the broader question of **who owns what and who is allowed to change what** across template, engine, and application layers.
+
+##### Interim semantic map
+
+The current evidence supports the following research map, without yet making it a public API contract:
+
+| Need | Candidate mechanism |
+| --- | --- |
+| Scalar application value | `{{variable}}` and/or native field depending on ownership need |
+| Binary text/value selection | Conditional Text |
+| Optional inline content | Hidden Text |
+| Optional paragraph | Hidden Paragraph |
+| Optional complex block | Conditional Section |
+| Repeatable complex block | Named Section + existing structured instantiation; declarative naming under investigation |
+
+The experiments strengthen a broader architectural direction: native ODF structures can own document and authoring semantics, while the engine owns data binding, structured transformation, validation, and—where interoperability requires it—possibly final materialization. The exact responsibility boundaries remain a subject for the later architecture pass.
+
 ### RESEARCH-01B — Sections and Native Layout
 
 **Research priority: 2**
@@ -300,6 +530,6 @@ RESEARCH-01 is complete when it provides:
 
 ## 10. Immediate next step
 
-Begin **RESEARCH-01A — Fields, Variables, and Conditional Content**.
+Complete the RESEARCH-01A characterization around native conditional semantics and declarative repetition, then continue with **RESEARCH-01B — Sections and Native Layout**.
 
-The first pass should investigate LibreOffice-authored examples of variable fields, conditional text, hidden text/paragraphs, and conditional sections, then inspect their actual ODF representation and behavior before considering any engine API changes.
+Before implementation decisions, explicitly assess the ownership boundary between LibreOffice-authored template semantics, engine-owned interpretation/transformation, and application-owned data/orchestration.
