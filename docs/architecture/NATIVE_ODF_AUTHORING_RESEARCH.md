@@ -257,71 +257,169 @@ semantic template ODT
 
 For PDF, LibreOffice can already evaluate the characterized native conditions during headless rendering. A common explicit finalization stage may nevertheless be valuable if multiple export formats must receive the same resolved document state. Whether such a stage becomes an engine responsibility is an architecture decision for a later phase, not a conclusion of RESEARCH-01A itself.
 
+##### Field scope and section instantiation
+
+The field experiments expose an important scope distinction for repeated native structures.
+
+A Writer User Field has a central declaration. Cloning a Section containing several `text:user-field-get` references would therefore clone references to the same document-global field rather than automatically create item-local values for each Section instance. That makes User Fields a natural candidate for document-global data, but not an automatic replacement for item-local placeholders inside a repeated collection block.
+
+Set Variable / Show Variable has different, position-dependent document-flow semantics and may therefore interact differently with cloned Sections. This remains an empirical research question. No field-localization or field-identity-rewriting mechanism is currently assumed.
+
+The current working preference is therefore deliberately conservative:
+
+> `{{variable}}` remains the preferred general and portable data-binding mechanism unless a native Writer field provides a clear semantic or authoring advantage.
+
+This preference is strengthened by DOCX interoperability: engine placeholders can be fully materialized to ordinary document content before conversion, whereas native field and conditional semantics may not survive conversion consistently.
+
+Native Writer fields remain valuable research candidates, especially for document-global values, Writer-authored conditions, and cases where native field semantics provide a concrete authoring benefit. RESEARCH-01 does not currently aim to replace the existing placeholder model with Writer fields.
+
 ##### Relationship to engine placeholders
 
-The experiments suggest a complementary rather than exclusive relationship between native Writer semantics and the existing template language.
+The experiments now suggest a more specific hybrid model rather than a competition between native Writer semantics and the existing template language.
 
 A useful working distinction is:
 
-- scalar application data can remain concise `{{...}}` placeholders;
-- binary value selection can use native Conditional Text where authoring UX benefits;
-- optional inline content can use Hidden Text;
-- optional complete paragraphs can use Hidden Paragraph;
+- `{{variable}}` remains a concise, portable value-binding mechanism;
+- scalar filters such as `{{upper:name}}` remain value transformations rather than structural control;
+- native ODT structures can carry structural template semantics;
+- native Writer field/condition mechanisms can express richer Writer-owned conditional semantics where useful;
+- optional inline content can use Hidden Text where appropriate;
+- optional complete paragraphs can use Hidden Paragraph where appropriate;
 - optional complex document blocks can use Conditional Sections.
 
-Native mechanisms do not automatically replace the existing syntax. Their value is strongest where Writer can own meaningful document structure and visual formatting while the engine supplies data and deterministic processing.
+This leads to an important research principle:
 
-##### Research hypothesis: declarative repetition through named Sections
+> **Value binding and structural control do not need to use the same template mechanism.**
 
-The current engine already has structured Section instantiation semantics, including repeated instantiation. This suggests a further authoring hypothesis that should be investigated rather than immediately implemented.
-
-A Writer-authored named Section could declare repetition through a naming convention, conceptually such as:
+For example, a repeated native Section can own the repeatable document block while the content inside each instantiated Section continues to use simple item-local placeholders:
 
 ```text
-foreach_experience
+Section: #foreach:experience
+
+    {{from}} – {{to}}
+    {{position}}
+    {{company}}
 ```
 
-The template would thereby declare that the Section represents a repeatable block bound to the `experience` collection. Internally, the engine could map that declaration to its existing named-Section and `instantiateMany()` semantics rather than implementing a second loop mechanism.
+The Section describes what happens to the block; the placeholders describe which values are materialized inside each resulting instance.
+
+##### Research hypothesis: declarative structural operators on named Sections
+
+The current engine already has structured Section instantiation semantics, including repeated instantiation, local scalar binding, deterministic identity rewriting, nested Section resolution, prototype removal, and rollback behavior. This suggests a declarative authoring layer that should be investigated rather than a second structural-processing implementation.
+
+A Writer-authored named Section could declare repetition through a semantic name such as:
+
+```text
+#foreach:experience
+```
+
+A manual LibreOffice authoring experiment confirmed that Writer accepts a Section name in this form in the Section editor. This is useful authoring evidence, but it is not yet sufficient to approve the syntax. The resulting ODF name, save/reopen stability, cloning behavior, and relevant conversion behavior should still be characterized before a naming contract is chosen.
+
+Conceptually, the template would declare that the Section represents a repeatable block bound to the `experience` collection. Internally, the engine could map that declaration to its existing named-Section and `instantiateMany()` semantics:
+
+```text
+LibreOffice Section: #foreach:experience
+    -> discover structural declaration
+    -> resolve collection: experience
+    -> instantiateMany()
+    -> bind {{...}} values in each local instance
+    -> finalize prototype/result
+```
 
 The important architectural property is ownership:
 
 - the **template** decides that this native document block is repeatable and owns its layout, styles, and internal structure;
-- the **engine** interprets the declaration, resolves the collection, performs structured instantiation, and binds each local data context;
+- the **engine** interprets the declaration, resolves the collection, performs structured instantiation, validates the operation, and binds each local data context;
 - the **application** supplies data without having to restate document structure in PHP.
 
-Conceptually:
+This is not merely a hidden form of the existing text-based loop. The native Section itself provides the structural boundary, so no textual `#endforeach` marker is required. ODT structure replaces part of the control syntax.
+
+The same principle may be useful for a deliberately small set of simple structural operators. Current research candidates are:
 
 ```text
-LibreOffice Section: foreach_experience
-    -> engine discovers repetition declaration
-    -> resolve collection: experience
-    -> instantiateMany()
-    -> bind each instance
-    -> finalize prototype/result
+#foreach:experience
+#if:profile
+#ifnot:photo
 ```
 
-This could move repetition semantics out of visible `{{#foreach:...}}` control text and out of application orchestration while retaining the engine's existing structured implementation path.
+These are **research candidates, not approved syntax**. In particular, `#if`/`#ifnot` still require semantic and lifecycle analysis before any implementation decision.
 
-No naming convention is approved by this finding. `foreach_experience`, `foreach:experience`, namespaced identifiers, or another metadata mechanism must be compared for ODF validity, Writer usability, discoverability, diagnostics, and extensibility.
+Complex expressions should not automatically be pushed into Section names. Syntax such as:
 
-There is also an explicit design risk: hiding the existing template language inside object names would not by itself improve the architecture. A declarative name should describe the semantic role of a native ODT object and map to an appropriate structured engine operation.
+```text
+#if:(country==DE && age>=18) || privileged
+```
 
-This hypothesis is important for the broader question of **who owns what and who is allowed to change what** across template, engine, and application layers.
+would recreate a general expression language inside native object names and undermine the goal of clear Writer authoring. Writer's own field and conditional mechanisms are a more plausible candidate for complex conditions where their semantics and export behavior are suitable.
+
+This suggests a possible division of labor:
+
+```text
+{{name}}, {{upper:name}}, ...
+    -> value binding and value formatting
+
+#foreach:experience, #if:profile, ...
+    -> simple engine-owned structural operations declared by native ODT objects
+
+Writer User Fields / native conditions
+    -> richer Writer-owned conditional semantics where justified
+```
+
+No final operator set is decided. Additional candidates such as local-scope constructs (`#with`) should be added only in response to demonstrated template needs, not for language completeness.
+
+##### Existing SECTION-03 and inspection relationship
+
+Repository review confirms that declarative repetition would primarily add a mapping/discovery layer rather than a second collection engine. Existing SECTION-03 behavior already characterizes collection instantiation, item-local scalar binding, deterministic instance naming, prototype removal for `instantiateMany()`, empty collections, rollback on failure, nested collection instantiation, and save/reopen behavior.
+
+The current `TemplateStructureInspector` should not simply be expanded into a generic native-semantic parser. Its responsibility is inspection of visible `{{...}}` template-language expressions across ODF text-flow scopes. It already recognizes `text:section` as a text-flow boundary and can report expression scopes such as `section:<name>`, which provides a useful bridge without conflating the two models.
+
+This suggests two conceptually distinct inspection concerns:
+
+```text
+native ODT document structure
+    -> sections, tables, frames, bookmarks, ...
+
+visible template expressions
+    -> {{...}} and current textual control expressions
+```
+
+A future declarative structural layer would interpret semantic declarations carried by native objects and map them to existing structured operations. Its architecture, naming, diagnostics, and relationship to existing inspection APIs remain design questions.
+
+##### Template / Engine / Application responsibility model
+
+The research increasingly points toward a three-party responsibility model:
+
+| Layer | Primary responsibility |
+| --- | --- |
+| LibreOffice template | Own visual/native document structure, styles, layout, and selected structural declarations |
+| Engine | Interpret declarations, bind data, perform safe structured transformations, validate, rewrite required identities, and possibly materialize final export state |
+| Application | Supply business/application data and explicitly requested orchestration that does not belong to the template |
+
+This boundary is important not only for convenience but for authority: each layer should have a clear answer to **who owns a structure, who may transform it, and who supplies its data**.
+
+A declarative Section such as `#foreach:experience` would move the decision that a block is repeated from application code into the template while keeping the transformation itself engine-owned. The application would no longer need to know that `ExperienceEntry` must be cloned; it would only supply `experience` data.
 
 ##### Interim semantic map
 
 The current evidence supports the following research map, without yet making it a public API contract:
 
-| Need | Candidate mechanism |
+| Need | Current preferred/candidate mechanism |
 | --- | --- |
-| Scalar application value | `{{variable}}` and/or native field depending on ownership need |
-| Binary text/value selection | Conditional Text |
-| Optional inline content | Hidden Text |
-| Optional paragraph | Hidden Paragraph |
-| Optional complex block | Conditional Section |
-| Repeatable complex block | Named Section + existing structured instantiation; declarative naming under investigation |
+| Scalar application value | `{{variable}}` |
+| Scalar formatting | existing/simple `{{filter:variable}}` filters |
+| Document-global Writer value | User Field where native semantics provide value |
+| Binary text/value selection | Conditional Text where appropriate |
+| Optional inline content | Hidden Text where appropriate |
+| Optional paragraph | Hidden Paragraph where appropriate |
+| Simple optional complex block | native Section declaration such as `#if:...` under investigation |
+| Complex Writer-owned condition | native Writer condition / Conditional Section |
+| Repeatable complex block | native named Section + existing structured instantiation; `#foreach:...` under investigation |
 
-The experiments strengthen a broader architectural direction: native ODF structures can own document and authoring semantics, while the engine owns data binding, structured transformation, validation, and—where interoperability requires it—possibly final materialization. The exact responsibility boundaries remain a subject for the later architecture pass.
+The strongest current working direction is therefore:
+
+> **Use native ODT objects for document structure and selected structural template semantics, keep `{{...}}` for simple portable value binding, and use Writer field/condition semantics selectively where they add genuine authoring or document-semantic value.**
+
+This direction deliberately avoids both extremes: rebuilding Writer semantics in PHP and replacing a simple, portable placeholder mechanism merely because a native field mechanism exists.
 
 ### RESEARCH-01B — Sections and Native Layout
 
@@ -530,6 +628,6 @@ RESEARCH-01 is complete when it provides:
 
 ## 10. Immediate next step
 
-Complete the RESEARCH-01A characterization around native conditional semantics and declarative repetition, then continue with **RESEARCH-01B — Sections and Native Layout**.
+Complete the remaining RESEARCH-01A characterization of declarative Section naming and field/Section scope, including the exact ODF representation and save/reopen behavior of a Writer Section named like `#foreach:experience`.
 
-Before implementation decisions, explicitly assess the ownership boundary between LibreOffice-authored template semantics, engine-owned interpretation/transformation, and application-owned data/orchestration.
+Then evaluate the render lifecycle ordering required for declarative structural processing (`data -> structural expansion/selection -> local scalar binding -> finalization`) before moving to **RESEARCH-01B — Sections and Native Layout**.
