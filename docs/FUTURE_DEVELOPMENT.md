@@ -4,7 +4,20 @@ This document is the issue-oriented backlog for known limitations, architectural
 
 It complements [`ROADMAP.md`](ROADMAP.md). The roadmap defines strategic sequencing; this file records individual topics without implying that every item is approved for immediate implementation.
 
-The current planning baseline incorporates the completed semantic style architecture through STYLE-CONTEXT-01 and STYLE-API-02. Backlog descriptions must be interpreted against the current `develop` architecture rather than the earlier placeholder-centric, static-registry, or pre-semantic architecture.
+The current planning baseline incorporates the completed semantic style architecture and the RESEARCH-01 version-1.0 reassessment recorded in [`architecture/RESEARCH-01_1_0_REASSESSMENT_DECISION.md`](architecture/RESEARCH-01_1_0_REASSESSMENT_DECISION.md).
+
+## Version 1.0 mandatory sequence
+
+The following blocks are now the explicit path to 1.0:
+
+1. `PAGE-FLOW-01` — page styles/page templates, paragraph flow, Section flow, page transitions, and page-style relationship to headers/footers;
+2. `TABLE-LAYOUT-01` — professional table geometry;
+3. `FRAME-LAYOUT-01` — bounded reliable frame geometry core;
+4. `TEMPLATE-RELIABILITY-01` — focused remaining template-format/control audit and only evidence-based fixes;
+5. `FINALIZATION-01` — final document/export lifecycle contract;
+6. `RELEASE-1.0` integration preflight.
+
+High-value backlog items outside this sequence remain valid but are not 1.0 blockers unless a mandatory milestone exposes a concrete dependency.
 
 ## Completed style and dependency architecture
 
@@ -12,62 +25,153 @@ The current planning baseline incorporates the completed semantic style architec
 
 The core ownership problem is no longer future work. The current baseline includes document-local `StyleContext` ownership, semantic structured-element traversal, conflict-preserving transitive requirement discovery, semantic `StyleRequirement` values, paragraph/text, table-family and graphic semantic materialization, document-local font-face dependencies, document-local fill-image dependencies, and package-owned physical resource preparation.
 
-The completed architecture sequence includes SR-01 through SR-07 and D5C through D5G.
-
 ### STYLE-API-02 — Public style API consistency — COMPLETE / FINAL GO
 
-STYLE-API-02 is no longer active backlog debt.
+STYLE-API-02 is no longer active backlog debt. Application element options/fluent APIs, `$template->styles()->defineParagraph()`, authored named style references, semantic custom-element extension, stateless `StyleMapper`, narrow `StyleWriter`, and removal of process-global paragraph/text registry behavior are established baseline.
 
-The completed public/compatibility cleanup established:
+### SR-06 / SR-07 / D5F / D5G — COMPLETE
 
-- element options and fluent APIs as the primary application styling surface;
-- `$template->styles()->defineParagraph()` for generated reusable named paragraph styles in the current document;
-- authored-template named style references through elements such as `new Paragraph('StyleName')`;
-- semantic custom-element extension through `getOwnStyleRequirements()`, `ownedElements()`, typed resource/dependency hooks, and `toDomNode()`;
-- stateless `StyleMapper` mapping/identity behavior;
-- a narrow explicit-input `StyleWriter` serialization role;
-- removal of `HasStyles`;
-- removal of `LegacyStyleRegistry` and StyleMapper paragraph/text registry/getter facades;
-- removal of process-global paragraph/text reference fallback from `StyleContext`;
-- removal of redundant paragraph/text array getter families and generic protected style registration;
-- bounded retention of graphic/resource compatibility traversal only where active legacy or section-mutation callers still require it.
+SR-06 established semantic graphic-style requirements and dependency boundaries without redesigning frame positioning. SR-07 established semantic table-family ownership without completing table geometry. D5F/D5G established lifecycle/materialization integration and compatibility closeout that FINALIZATION-01 must build on rather than replace.
 
-Named paragraph/text references no longer resolve through process-global PHP registry state.
+## PAGE-FLOW-01 — Page styles, paragraph flow, and Section flow
 
-Future style work should therefore be driven by concrete ODF capability needs, not by reintroducing a generic registry or symmetrical `define*()` methods without semantic justification.
+**Priority:** 1.0 BLOCKER / next major architecture milestone
 
-### SR-06 — Semantic Graphic Style Requirements — COMPLETE / FINAL GO
+This milestone supersedes the earlier planning split of `DOC-STRUCTURE-01`, `DOC-STRUCTURE-02`, and `DOC-STRUCTURE-03` as independent later blocks. Those concerns now belong to one evidence-driven page/flow architecture milestone because their native ODF semantics interact.
 
-SR-06 migrated structured graphic-style definitions and references from historical engine-role buckets into the semantic `StyleRequirement` model while preserving the distinction between drawing structure, graphic-style properties, fill-image declarations, and physical image resources.
+### Page style / page template semantics
 
-Completed distinctions and outcomes include:
+Characterize and design around:
 
-- structural drawing/frame semantics separated from ODF `graphic` style properties;
-- semantic graphic definitions/references with document-local resolution and materialization;
-- style definitions kept separate from physical image resources;
-- a dedicated document-local `FillImageRequirement` model for `draw:fill-image` declarations;
-- package-owned physical resource preparation;
-- manual LibreOffice visual-regression FINAL GO.
+- native master/page styles;
+- referenced page layouts;
+- page size, orientation, and margins;
+- first-page versus following-page behavior;
+- next/following page-style relationships where applicable;
+- content-triggered page-style transitions;
+- authored page styles that remain template-owned.
 
-SR-06 deliberately did not redesign frame positioning, image anchor/wrap APIs, table layout, or the public layout model. Those remain separate future work.
+The current `PageLayoutManager` is a narrow mutator of selected properties in an existing master-page/page-layout relationship. It is not a complete page-style system.
 
-### SR-07 — Semantic Table / Table-Cell Requirements — COMPLETE / FINAL GO
+### Paragraph flow semantics
 
-SR-07 completed the semantic migration and compatibility closeout for the table-related style families required by structured insertion: `table`, `table-column`, `table-row`, and `table-cell`.
+The 1.0 behavior target includes:
 
-SR-07H completed visual review for Samples 11, 13, 19, and 20 and the focused row minimum-height proof. The corrected Sample 20 relative-width behavior is an intentional correction of the historical virtual-column representation.
+- keep with next;
+- keep paragraph/content together where native semantics provide it;
+- widow handling;
+- orphan handling;
+- break before;
+- break after;
+- page-style transitions associated with paragraph/document flow.
 
-Style family and property group remain independent concepts. Future table geometry and cell-layout work must remain separate from this completed ownership migration.
+Current paragraph style mapping already supports some of these properties, including `keep-with-next`, `break-before`, and `break-after`. PAGE-FLOW-01 must characterize the complete Writer/ODF behavior rather than assuming the existing option names constitute a finished capability.
 
-### D5F / D5G — Lifecycle integration and compatibility closeout — COMPLETE
+The engine should express or preserve native flow semantics. LibreOffice/Writer remains responsible for actual pagination.
 
-D5F established the authoritative pre-materialization semantic/resource path and bounded post-materialization compatibility adoption. D5G completed the evidence-based review of protected extension surfaces, repeated render/save behavior, content/styles compatibility behavior, and remaining lifecycle residue. STYLE-API-02 subsequently retired the paragraph/text static-registry and redundant getter surfaces that D5G had intentionally left for a dedicated public-API decision.
+### Section flow semantics
+
+Characterize:
+
+- Sections spanning page boundaries;
+- nested Sections;
+- repeated Section instances;
+- paragraph keep/break behavior inside Sections;
+- tables and lists inside Sections;
+- any actual Section-level native pagination semantics;
+- save/reopen and headless rendering behavior.
+
+Do not assume a generic Section-level "keep whole section together" property without evidence.
+
+### Explicit page breaks and transitions
+
+Support the native semantics required for intentional page breaks, page-style changes at breaks, first-page/following-page transitions, and interaction with structured/generated content.
+
+### Headers and footers
+
+Headers and footers must be researched with the page-style model because they are page/master-style-owned content. The full public authoring API may be bounded by the evidence, but PAGE-FLOW-01 must not design a page-style architecture that precludes or mis-models them.
+
+### Non-goals
+
+PAGE-FLOW-01 must not implement a PHP pagination engine, calculate page heights, introduce CV-specific helpers, invent universal page-style APIs before characterization, or absorb unrelated Writer-field semantics.
+
+## TABLE-LAYOUT-01 — Professional table geometry
+
+**Priority:** 1.0 BLOCKER
+
+The previously separate table-layout backlog topics are consolidated for 1.0 planning into one coherent capability block:
+
+- explicit table width;
+- absolute column widths;
+- relative column widths;
+- row/minimum height;
+- vertical cell alignment.
+
+SR-07 already established semantic ownership for `table`, `table-column`, `table-row`, and `table-cell`. This milestone must focus on actual ODF/Writer geometry semantics, public behavior, and rendering reliability rather than reopening style ownership.
+
+Historical identifiers `TABLE-LAYOUT-02`, `TABLE-LAYOUT-03`, `TABLE-LAYOUT-04`, and `TABLE-CELL-01` remain useful provenance for existing discussions/tests, but they are no longer separate strategic 1.0 milestones.
+
+## FRAME-LAYOUT-01 — Reliable frame geometry core
+
+**Priority:** 1.0 BLOCKER / bounded scope
+
+Define a shared frame-positioning model for supported drawing content instead of allowing images and text boxes to evolve separate positioning semantics.
+
+The 1.0 core should cover:
+
+- `draw:frame` structural semantics;
+- anchor type;
+- size;
+- horizontal/vertical position;
+- relation/reference area;
+- fundamental wrap behavior;
+- consistent semantics across images and text boxes;
+- relevant preservation/mutation of LibreOffice-authored existing frames.
+
+`FRAME-LAYOUT-02` and `IMAGE-LAYOUT-01` should be resolved through or consistently with this shared model rather than through independent incompatible APIs.
+
+1.0 does not require every Writer drawing or positioning option.
+
+## TEMPLATE-RELIABILITY-01 — Remaining template-format/control audit
+
+**Priority:** 1.0 BLOCKER AS AUDIT
+
+This replaces the older interpretation of `TEMPLATE-FORMAT-PRESERVATION-01` as a broad unsolved formatting project.
+
+Supported scalar expressions already have logical projection across transparent inline structure, non-mutating inspection, safe normalization, structure-preserving replacement, bookmark preservation, and ODF whitespace preservation.
+
+The remaining 1.0 task is to re-audit:
+
+- conditions;
+- foreach/control structures;
+- `nl2br`;
+- `ul` / `ol` structural placeholders;
+- complex boundary interactions not covered by scalar replacement.
+
+Unexpected legacy behavior should first be characterized. If no relevant defect is found, no implementation is required. Do not reopen solved scalar behavior without evidence.
+
+## FINALIZATION-01 — Final document/export semantics
+
+**Priority:** 1.0 BLOCKER AS ARCHITECTURE DECISION
+
+RESEARCH-01 showed that native ODF semantics can render correctly in LibreOffice/PDF while not surviving DOCX conversion with equivalent semantics. Conditional Sections and Hidden Paragraphs are concrete evidence.
+
+Define:
+
+- when template data binding is complete;
+- when structured instantiation is complete;
+- when native semantic materialization is required for interoperability;
+- engine versus LibreOffice/export-tool responsibility;
+- whether semantic source ODT and finalized static ODT are distinct lifecycle concepts;
+- repeated `render()` / `save()` behavior around finalization.
+
+A universal engine-side evaluator for every Writer field/condition is not required for 1.0. A coherent lifecycle/export contract is.
 
 ## Document defaults and state
 
-### DOCUMENT-DEFAULTS-01 — Document-level defaults — RESEARCH/DESIGN
+### DOCUMENT-DEFAULTS-01 — Document-level defaults — DEFERRED UNLESS DEPENDENCY EMERGES
 
-**Priority:** High research after style architecture closeout
+**Priority:** Post-1.0/high-value research unless PAGE-FLOW-01 exposes a concrete dependency
 
 The user-facing goal remains useful: applications should eventually be able to express appropriate document-wide defaults without repeating the same options on every element.
 
@@ -85,9 +189,7 @@ Do not invent one `setDefault...` API until these mechanisms and their precedenc
 
 **Priority:** Bounded documentation/reference follow-up
 
-The SR-05 contract cites FONT-02 and FONT-03 empirical cases, while corresponding locally created LibreOffice ODT fixtures are not currently part of the versioned reference-fixture baseline.
-
-Inspect provenance and actual ODF structures, reconcile the case descriptions with the semantic reference matrix, and only then decide whether the fixtures belong in the repository. Do not use this task to introduce document-default behavior.
+Inspect provenance and actual ODF structures before deciding whether corresponding local fixtures belong in the repository. Do not use this task to introduce document-default behavior.
 
 ### TEMP-ASSET-01 — Temporary asset lifecycle
 
@@ -103,97 +205,44 @@ Clarify the relationship between generated assets, package assets, manifest upda
 
 ### LIFECYCLE-API-01 — Lifecycle API clarity
 
-**Priority:** Medium
+**Priority:** Medium / coordinate with FINALIZATION-01
 
-Continue documenting and, where justified, simplifying lifecycle semantics around load/render/save/repeated operations without silently breaking compatible behavior. Build on D5F/D5G rather than creating a competing lifecycle architecture.
+Continue documenting and, where justified, simplifying lifecycle semantics around load/render/save/repeated operations without silently breaking compatible behavior. FINALIZATION-01 may absorb or sharpen part of this question; do not create a competing lifecycle architecture.
 
-## Layout and document rendering
-
-### FRAME-LAYOUT-01 — Unified frame positioning
-
-**Priority:** High
-
-Define a shared frame-positioning model for drawing content instead of allowing images and text boxes to evolve separate positioning semantics.
-
-Research areas include anchor type, horizontal/vertical position, relation/reference area, wrap behavior, size, existing-template mutation, constructed frames, LibreOffice behavior, and Word round-trip behavior where relevant.
-
-Use real LibreOffice-authored ODF as primary implementation evidence. SR-06 established the semantic graphic-style foundation; FRAME-LAYOUT-01 remains separate public/layout work.
-
-### FRAME-LAYOUT-02 — DrawTextBox positioning
-
-**Priority:** Medium-high
-
-Resolve `DrawTextBox` positioning through or consistently with `FRAME-LAYOUT-01`, not through an independent incompatible API.
-
-### IMAGE-LAYOUT-01 — Image anchor, wrap, and position
-
-**Priority:** High
-
-Reassess after the unified frame model is understood. Image-specific behavior should not duplicate general frame semantics.
-
-### TABLE-LAYOUT-02 — Explicit column widths
-
-**Priority:** Very high
-
-Reliable explicit column widths remain one of the most visible professional-layout limitations. Characterize the existing table-column/style path before introducing new APIs.
-
-### TABLE-LAYOUT-01 — Explicit table width
-
-**Priority:** High
-
-Provide reliable explicit table-width semantics based on actual ODF behavior and LibreOffice output. Do not introduce an API until existing table-style paths are characterized.
-
-### TABLE-LAYOUT-04 — Reliable relative table width
-
-**Priority:** High
-
-Investigate and support relative table sizing without relying on accidental LibreOffice behavior.
-
-SR-07H provides evidence for a narrower, already-corrected concern: relative *column* widths are distinct from table width and structural repeated columns. For positive integer column ratios, LibreOffice Writer interoperability uses its 65535-unit relative width space with the integer-division remainder on the final logical column. This is evidence for future table-width work, not a new table-width API or a claim that ODF mandates 65535.
-
-### TABLE-LAYOUT-03 — Row and minimum height
-
-**Priority:** Medium-high
-
-Support explicit row-height/minimum-height semantics where ODF and LibreOffice behavior permit reliable control.
-
-### TABLE-CELL-01 — Vertical cell alignment
-
-**Priority:** Medium
-
-Support vertical alignment inside table cells through native ODF style semantics. Keep this behavioral capability separate from SR-07's architecture migration unless evidence requires otherwise.
-
-### LIST-LAYOUT-01 / LIST-LAYOUT-02
-
-**Priority:** Medium
-
-Provide reliable list indentation and nested list style control using native list/paragraph semantics.
-
-## Template structure and authoring
-
-### TEMPLATE-FORMAT-PRESERVATION-01 — Re-audit remaining paths
-
-**Priority:** Medium-high
-
-The completed TEMPLATE-STRUCTURE work substantially changed this backlog item. Supported scalar expressions now have logical projection across transparent inline structure, non-mutating inspection, safe normalization, structure-preserving replacement, bookmark preservation, and ODF whitespace preservation.
-
-Remaining work begins with a fresh audit of:
-
-- conditions;
-- foreach/control structures;
-- `nl2br`;
-- `ul` / `ol` structural placeholders;
-- complex boundary interactions not covered by scalar replacement.
-
-Unexpected legacy behavior should first be characterized rather than opportunistically changed.
+## Template authoring and native semantics
 
 ### TEMPLATE-AUTHORING-UX-01 — Template authoring experience
 
-**Priority:** Medium-high research/design
+**Priority:** High-value, non-blocking
 
 LibreOffice should remain the visual template designer where practical. Research topics include naming conventions, validation and diagnostics, inspection tooling, discoverability of structured capabilities, flow versus fixed-layout guidance, realistic maximum-content tests, and clearer separation between simple syntax and structured object operations.
 
-No new template syntax is implied.
+### DECLARATIVE-SECTION-01 — Native Section declarations such as `#foreach:collection`
+
+**Priority:** High-value, non-blocking / research-design candidate
+
+RESEARCH-01A established that Writer can author and serialize `#foreach:experience` unchanged and that the existing Section resolver plus `instantiateMany()` machinery can already process that exact native Section name mechanically.
+
+A future declarative layer should therefore be treated as discovery/orchestration over SECTION-03 rather than a second foreach renderer.
+
+Still undecided:
+
+- whether `#foreach:...` becomes approved syntax;
+- automatic discovery timing;
+- missing-data diagnostics;
+- render/save lifecycle ordering;
+- interaction with nested declarations;
+- whether any operators beyond collection repetition are justified.
+
+Do not silently fuzzy-correct declaration names such as the characterized `#foreach:expiriene` typo.
+
+### NATIVE-FIELDS-01 — Writer fields and conditional content
+
+**Priority:** Post-1.0/selective earlier use only when justified
+
+User Fields, Set/Get Variables, Conditional Text, Hidden Text, Hidden Paragraphs, and Conditional Sections remain valuable native mechanisms. Broad public support is deferred because field scope, authoritative branch content, lifecycle evaluation, and DOCX interoperability differ from the existing placeholder model.
+
+`{{variable}}` remains the preferred general/portable scalar-binding mechanism unless a native field provides a concrete semantic or authoring advantage.
 
 ### HTML-IMPORT-01 — Extended HTML import
 
@@ -205,11 +254,11 @@ Extend HTML import only where there is a concrete application need and semantics
 
 ### NAMED-OBJECT-OPERATIONS-01 — Addressable native object operations
 
-**Priority:** Future architectural/product direction
+**Priority:** Post-1.0 architectural/product direction
 
 The completed section API demonstrates that native LibreOffice/ODF structures can act as addressable template objects when identity and lifecycle semantics are understood.
 
-Investigate extending the model to additional native object families while preserving the distinction between:
+Investigate extending the model while preserving the distinction between:
 
 ```text
 replace content
@@ -226,41 +275,19 @@ Potential targets include frames, text boxes, tables, images/drawing objects, an
 
 Treat dynamic graphics initially as content supplied to or replacing content in a named template object. Keep SVG, PNG, and native ODF chart strategies open until empirical LibreOffice package research justifies a choice.
 
-A desirable workflow remains:
+## List layout
 
-```text
-LibreOffice template owns layout
-        ↓
-engine addresses named object
-        ↓
-dynamic renderer supplies content
-```
+### LIST-LAYOUT-01 / LIST-LAYOUT-02
 
-## Higher document structure
+**Priority:** Medium / bounded independent follow-up
 
-### DOC-STRUCTURE-01 — Page styles and master pages
-
-**Priority:** Future major document-structure block
-
-Support explicit page/master-style concepts based on native ODF structures.
-
-### DOC-STRUCTURE-02 — Header and footer content
-
-**Priority:** Future major document-structure block
-
-Support headers and footers associated with page/master styles.
-
-### DOC-STRUCTURE-03 — Page-flow semantics
-
-**Priority:** Future major document-structure block
-
-Focus on page breaks, keep-with-next, keep-together, page-style transitions, and structured-content interaction with page/master styles. Future section extensions must build on the established section target/clone/instantiate semantics.
+Provide reliable list indentation and nested list style control using native list/paragraph semantics. May be inserted before 1.0 only if it is independent and does not destabilize the mandatory sequence or if PAGE-FLOW/TEMPLATE-RELIABILITY exposes a concrete dependency.
 
 ## Document import and round-trip workflows
 
 ### DOCUMENT-IMPORT-01 — Engine document identification and structured data extraction
 
-**Priority:** Later
+**Priority:** Later / post-1.0
 
 Possible future workflow: identify engine/schema metadata, inspect known structured objects, reconstruct application-level data where semantics are defined, select another template, and render again.
 
@@ -270,7 +297,7 @@ No public import API is approved.
 
 ## Shared document model / additional renderers
 
-**Priority:** Later
+**Priority:** Later / post-1.0
 
 A future semantic model may describe Paragraph, List, Table, Image, Section, PageBreak, Header/Footer, and PageStyle for more than one renderer. This remains a design direction, not an approved abstraction. Do not introduce a renderer-neutral context merely because multiple renderers are imaginable.
 
@@ -286,17 +313,62 @@ Rendering-sensitive changes require actual LibreOffice rendering and inspection 
 
 Generated files under `samples/output/` remain local regression artifacts unless a task explicitly changes that policy. LibreOffice `.~lock.*#` files must never be committed.
 
+## Product/tooling layer candidates
+
+Potential higher-level capabilities exposed by RESEARCH-01 include:
+
+- template validation and linting;
+- diagnostics for malformed/unresolved semantic object names;
+- visual inspection of named template objects;
+- template authoring assistants;
+- professional template kits;
+- maximum-content / overflow testing;
+- export/conversion workflow tooling;
+- application-specific CV/application-document tooling built on generic engine capabilities.
+
+Fundamental ODF correctness and core document semantics belong in the engine rather than being withheld to create a commercial boundary. Higher-level workflow, validation, designer assistance, packaged templates, and application services are more appropriate product-layer candidates.
+
+## Release 1.0 integration preflight
+
+After PAGE-FLOW-01, TABLE-LAYOUT-01, FRAME-LAYOUT-01, TEMPLATE-RELIABILITY-01, and FINALIZATION-01, stop adding unrelated features and perform a dedicated release preflight.
+
+It should include, as applicable:
+
+- focused PHPUnit tests;
+- full `composer test`;
+- PHP lint for `src/` and `tests/`;
+- `composer validate`;
+- `git diff --check`;
+- public sample smoke tests;
+- ODT/ZIP/XML integrity;
+- LibreOffice headless rendering;
+- manual visual regression;
+- save/reopen and repeated lifecycle behavior;
+- PDF output;
+- representative DOCX interoperability for behavior explicitly promised by 1.0;
+- a professional multi-page CV benchmark using generic engine capabilities.
+
 ## Planning notes
 
-With STYLE-CONTEXT-01 and STYLE-API-02 complete, current high-value directions are:
+The current strategic order is no longer the pre-RESEARCH-01 list of defaults, frames, tables, template work, and later page flow.
 
-1. reassess `DOCUMENT-DEFAULTS-01`, `FRAME-LAYOUT-01`, and table-layout priorities from the completed semantic/style baseline;
-2. template-authoring / format-preservation re-audit;
-3. page/master-style and page-flow work;
-4. named-object operations and dynamic-content research;
-5. `DOCUMENT-IMPORT-01` and broader round-trip workflows later.
+The mandatory path is now:
 
-The sequence remains revisitable. Smaller independent list, lifecycle, sample-infrastructure, asset, or reference-fixture slices may be inserted where useful.
+```text
+PAGE-FLOW-01
+    ↓
+TABLE-LAYOUT-01
+    ↓
+FRAME-LAYOUT-01
+    ↓
+TEMPLATE-RELIABILITY-01
+    ↓
+FINALIZATION-01
+    ↓
+RELEASE-1.0
+```
+
+Smaller independent list, lifecycle, sample-infrastructure, asset, or reference-fixture slices may be inserted where useful, but they must not obscure the 1.0 blockers.
 
 Most importantly:
 
