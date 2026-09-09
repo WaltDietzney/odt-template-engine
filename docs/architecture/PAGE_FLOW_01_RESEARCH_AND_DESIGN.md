@@ -123,6 +123,252 @@ Create small Writer-authored fixtures for:
 
 Inspect at least `styles.xml` and `content.xml` for each fixture.
 
+### Empirical findings
+
+The first PAGE-FLOW-01A fixtures were authored manually in LibreOffice Writer and inspected directly at ODT package/XML level. They are research artifacts and are not yet committed as public samples or permanent test fixtures.
+
+#### Page-style identity and page-layout geometry are distinct
+
+A Writer document with `First Page` followed by `Standard` initially used the same page-layout definition for both master pages. After assigning a visibly different top margin to `First Page`, Writer emitted two separate page-layout definitions and referenced them from the two master pages.
+
+Representative structure:
+
+```xml
+<style:page-layout style:name="Mpm1">
+    <style:page-layout-properties
+        fo:page-width="21.001cm"
+        fo:page-height="29.7cm"
+        fo:margin-top="2cm"
+        fo:margin-bottom="2cm"
+        fo:margin-left="2cm"
+        fo:margin-right="2cm"/>
+</style:page-layout>
+
+<style:page-layout style:name="Mpm2">
+    <style:page-layout-properties
+        fo:page-width="21.001cm"
+        fo:page-height="29.7cm"
+        fo:margin-top="5.001cm"
+        fo:margin-bottom="2cm"
+        fo:margin-left="2cm"
+        fo:margin-right="2cm"/>
+</style:page-layout>
+```
+
+The corresponding master pages referenced those layouts independently:
+
+```xml
+<style:master-page
+    style:name="Standard"
+    style:page-layout-name="Mpm1"/>
+
+<style:master-page
+    style:name="First_20_Page"
+    style:display-name="First Page"
+    style:page-layout-name="Mpm2"
+    style:next-style-name="Standard"/>
+```
+
+This confirms the initial hypothesis that page-style identity and page geometry are separate native concepts. A `style:master-page` represents page-style/master-page identity and relationships, while `style:page-layout` carries geometry and related layout properties.
+
+The same page layout may be shared by multiple master pages when their geometry is identical. Writer may create distinct page layouts when their geometry diverges.
+
+#### First-page selection is content-triggered
+
+Writer selected the initial `First Page` master page through an automatic paragraph style in `content.xml`:
+
+```xml
+<style:style
+    style:name="P1"
+    style:family="paragraph"
+    style:parent-style-name="Standard"
+    style:master-page-name="First_20_Page">
+    <style:paragraph-properties style:page-number="auto"/>
+</style:style>
+```
+
+The first body paragraph referenced that automatic paragraph style.
+
+The resulting semantic chain is therefore:
+
+```text
+first content paragraph
+    ↓ automatic paragraph style
+style:master-page-name="First_20_Page"
+    ↓
+First Page master page
+```
+
+The initial page style is therefore not inferred merely from physical page position. Content can explicitly request a master page through paragraph-style semantics.
+
+#### Automatic page-style succession is a separate mechanism
+
+The `First Page` master page used:
+
+```xml
+style:next-style-name="Standard"
+```
+
+The `Standard` master page did not require `style:next-style-name="Standard"`; omission leaves the current master page in effect for normal continuing page flow.
+
+The characterized succession is:
+
+```text
+First Page
+    ↓ style:next-style-name
+Standard
+    ↓ no successor requested
+Standard ...
+```
+
+An accidental research state also proved useful: Writer temporarily serialized `Standard -> First Page -> Standard`, which caused a later page to receive the First Page style unexpectedly. Correcting `Standard` to have no `First Page` successor removed that behavior. This provides negative evidence that `style:next-style-name` is an active flow relationship rather than descriptive metadata.
+
+#### Explicit page break and page-style request are distinct semantics
+
+A later manual page break with an explicitly selected page style produced separate automatic paragraph-style semantics.
+
+A pure page break was represented as:
+
+```xml
+<style:style
+    style:name="P3"
+    style:family="paragraph"
+    style:parent-style-name="Standard">
+    <style:paragraph-properties fo:break-before="page"/>
+</style:style>
+```
+
+The explicit request for `First Page` was represented separately through another automatic paragraph style:
+
+```xml
+<style:style
+    style:name="P4"
+    style:family="paragraph"
+    style:parent-style-name="Standard"
+    style:master-page-name="First_20_Page">
+    <style:paragraph-properties style:page-number="auto"/>
+</style:style>
+```
+
+This establishes an important semantic distinction:
+
+> **Forcing a new page and requesting a particular page style are different ODF operations, even when Writer exposes them together in one authoring action.**
+
+`fo:break-before="page"` is paragraph-flow semantics. `style:master-page-name` is a page-style/master-page reference associated with content/paragraph-style semantics. Future APIs must not collapse these concepts merely because Writer's UI can configure them together.
+
+The break fixture also provides early empirical confirmation for PAGE-FLOW-01B that page breaks live in `style:paragraph-properties`, matching the existing `StyleMapper` direction. The complete paragraph-flow mapping remains to be characterized in PAGE-FLOW-01B.
+
+#### Header content is master-page-owned; header geometry is page-layout-owned
+
+A controlled fixture assigned distinct headers to the `First Page` and `Standard` page styles while retaining different page geometry. Writer serialized each header as content owned directly by its corresponding master page:
+
+```xml
+<style:master-page
+    style:name="Standard"
+    style:page-layout-name="Mpm1">
+    <style:header>
+        <text:p text:style-name="Header">STANDARD PAGE HEADER</text:p>
+    </style:header>
+</style:master-page>
+
+<style:master-page
+    style:name="First_20_Page"
+    style:display-name="First Page"
+    style:page-layout-name="Mpm2"
+    style:next-style-name="Standard">
+    <style:header>
+        <text:p text:style-name="Header">FIRST PAGE HEADER</text:p>
+    </style:header>
+</style:master-page>
+```
+
+Header geometry, however, was represented through `style:header-style` / `style:header-footer-properties` under the referenced page layout.
+
+The resulting ownership model is therefore:
+
+```text
+Master Page / Page Style
+├── identity
+├── successor relationship
+├── header/footer content
+└── page-layout reference
+        ↓
+Page Layout
+├── page size
+├── margins
+├── orientation
+└── header/footer geometry
+```
+
+This is directly relevant to future page-style architecture: mutating page geometry and manipulating page-owned content are related through the master-page/page-layout relationship but are not the same responsibility.
+
+#### Writer also supports first-page header variants within one master page
+
+A separate exploratory fixture unexpectedly used a different native mechanism: the `Standard` master page contained both a normal header and a first-page-specific header:
+
+```xml
+<style:master-page style:name="Standard" style:page-layout-name="Mpm1">
+    <style:header>...</style:header>
+    <style:header-first>...</style:header-first>
+</style:master-page>
+```
+
+This is distinct from using separate `First Page` and `Standard` master pages with separate `style:header` content.
+
+The finding is retained because it demonstrates that Writer/ODF has more than one valid first-page/header authoring model. PAGE-FLOW-01 must not assume that all first-page differences require a separate master page. A broad convenience API for these variants is not implied by this finding.
+
+#### Current architecture consequence
+
+The empirical model is richer than the current `PageLayoutManager` abstraction:
+
+```text
+Content / Paragraph Flow
+├── page break request
+└── master-page request
+        ↓
+Master Page / Page Style
+├── identity
+├── successor relationship
+├── page-owned content
+└── page-layout reference
+        ↓
+Page Layout
+└── geometry and header/footer layout properties
+```
+
+`PageLayoutManager` currently resolves an existing master page, follows its `style:page-layout-name`, and mutates selected `style:page-layout-properties`. That remains useful behavior, but it does not model page-style identity, succession, content-triggered page-style references, or page-owned content.
+
+This strengthens the design constraint that a broader page-style model, if introduced, should not be implemented merely by adding unrelated responsibilities to `PageLayoutManager`.
+
+### PAGE-FLOW-01A interim conclusions
+
+The following findings are now supported by Writer-authored ODF evidence:
+
+1. `style:master-page` and `style:page-layout` are distinct semantic structures.
+2. A master page references page geometry rather than containing it directly.
+3. Multiple master pages may share a page layout; different geometry can produce separate layouts.
+4. First-page selection can be triggered from content through `style:master-page-name` on paragraph-style semantics.
+5. Automatic page-style succession uses `style:next-style-name` on the master page.
+6. A normal continuing page style does not need to point to itself explicitly.
+7. Explicit page breaking and explicit page-style selection are separate semantics.
+8. Header/footer content belongs to the master-page layer, while header/footer geometry belongs to the page-layout layer.
+9. Writer also supports first-page-specific header content within a single master page via `style:header-first`.
+10. The current `PageLayoutManager` is confirmed as a narrow geometry mutator rather than a complete page-style/page-template abstraction.
+
+These conclusions are architecture evidence, not yet a public API decision.
+
+### Remaining PAGE-FLOW-01A questions
+
+The core page-style anatomy needed to proceed to paragraph-flow research is now sufficiently characterized. The following details remain candidates for later PAGE-FLOW-01 research where they become material to the 1.0 model:
+
+- page number restart/continuation semantics associated with transitions;
+- left/right page variants;
+- footer variants corresponding to the characterized header ownership model;
+- full save/reopen/headless-PDF characterization through the engine rather than Writer alone;
+- exact processing boundaries for placeholders/structured content inside master-page-owned header/footer content.
+
+Those questions should not block PAGE-FLOW-01B unless evidence shows they affect paragraph-flow architecture.
+
 ## 4.2 PAGE-FLOW-01B — Paragraph Flow Semantics
 
 ### Required 1.0 topics
@@ -229,6 +475,8 @@ Investigate:
 PAGE-FLOW-01 must understand header/footer ownership well enough that the page-style architecture is correct.
 
 It does not automatically require a broad convenience API for every possible header/footer authoring operation before 1.0.
+
+The PAGE-FLOW-01A fixtures already establish that normal header content is directly owned by `style:master-page`, while header geometry is represented in the referenced page layout. They also establish the existence of `style:header-first` as a distinct first-page variant within one master page. PAGE-FLOW-01D should build on those facts rather than rediscover them.
 
 ## 5. ODF evidence to collect
 
