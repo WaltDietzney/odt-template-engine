@@ -4,9 +4,9 @@
 
 **Research evidence only. No syntax or API contract is approved by this note.**
 
-This note records the empirical LibreOffice evidence for using a native Writer Section name as a possible carrier of engine-specific structural template semantics.
+This note records the empirical LibreOffice and current-engine evidence for using a native Writer Section name as a possible carrier of engine-specific structural template semantics.
 
-## Fixture
+## 1. Initial Writer fixture
 
 User-authored LibreOffice fixture:
 
@@ -22,7 +22,7 @@ The Section was named in Writer as:
 
 The misspelling is preserved here deliberately because it is part of the fixture evidence and also illustrates a future diagnostics requirement.
 
-## ODF representation
+### ODF representation
 
 The saved `content.xml` contains the Section name unchanged:
 
@@ -42,7 +42,7 @@ This confirms that, for this Writer-authored fixture:
 - the semantic-looking name does not replace the normal native Section structure;
 - the Section remains associated with its ordinary Section style through `text:style-name`.
 
-The observation is therefore compatible with a model in which the native Section continues to own layout and document structure while its name optionally carries a declarative template role.
+The observation is compatible with a model in which the native Section continues to own layout and document structure while its name optionally carries a declarative template role.
 
 Conceptually:
 
@@ -56,9 +56,102 @@ text:style-name="Sect1"
 
 These concerns remain orthogonal in the characterized fixture.
 
-## Architecture relevance
+## 2. Canonical placeholder fixture
 
-The existing SECTION-03 implementation already provides the difficult mutation semantics required for repeated Sections:
+A second Writer-authored fixture was created specifically to test the existing SECTION-03 path:
+
+```text
+07-foreach-section-placeholders.odt
+```
+
+Its document structure is:
+
+```text
+ABSATZ VORHER
+
+Section: #foreach:experience
+    {{position}}
+    {{company}}
+
+ABSATZ NACHHER
+```
+
+Writer serializes the candidate declaration as an ordinary native Section whose name is exactly:
+
+```text
+#foreach:experience
+```
+
+The `#` and `:` characters therefore survive normal Writer authoring and ODF serialization without normalization.
+
+## 3. Current-engine characterization
+
+The canonical fixture was processed with the current engine only. No production code, template-processing feature, Section service, or automatic `#foreach` interpretation was added.
+
+The characterization used the existing public structured Section API:
+
+```php
+$template = new \OdtTemplateEngine\OdtTemplate(
+    'research/07-foreach-section-placeholders.odt'
+);
+
+$template
+    ->section('#foreach:experience')
+    ->instantiateMany([
+        [
+            'position' => 'Projektleiter',
+            'company' => 'Firma A',
+        ],
+        [
+            'position' => 'Entwickler',
+            'company' => 'Firma B',
+        ],
+    ]);
+
+$template->save('/tmp/research-07-foreach-section-placeholders-result.odt');
+```
+
+The saved result was then reopened through `OdtTemplate` to characterize persistence.
+
+### Observed behavior
+
+The current engine successfully:
+
+1. resolved `section('#foreach:experience')`;
+2. executed the existing `instantiateMany()` path;
+3. bound both item-local placeholder sets correctly;
+4. generated deterministic Section names:
+   - `#foreach:experience_1`
+   - `#foreach:experience_2`;
+5. removed the original `#foreach:experience` prototype;
+6. preserved `ABSATZ VORHER` and `ABSATZ NACHHER` unchanged;
+7. saved the resulting ODT;
+8. reopened the saved ODT successfully.
+
+The relevant resulting structure was:
+
+```xml
+<text:p>ABSATZ VORHER</text:p>
+<text:section text:name="#foreach:experience_1">
+  <text:p>Projektleiter</text:p>
+  <text:p>Firma A</text:p>
+</text:section>
+<text:section text:name="#foreach:experience_2">
+  <text:p>Entwickler</text:p>
+  <text:p>Firma B</text:p>
+</text:section>
+<text:p>ABSATZ NACHHER</text:p>
+```
+
+No exception, XPath problem, normalization, naming problem, identity-rewrite problem, or lifecycle failure was observed because of `#` or `:`. Both characters were preserved in the generated Section identities.
+
+The generated output was deliberately written outside the repository. No `samples/output/` artifact was touched by the experiment.
+
+## 4. Architecture relevance
+
+This characterization answers an important mechanical question.
+
+The existing SECTION-03 implementation already provides the mutation semantics required for a declarative repeated Section:
 
 - named Section resolution;
 - repeated instantiation;
@@ -70,13 +163,15 @@ The existing SECTION-03 implementation already provides the difficult mutation s
 - nested Section collections;
 - save/reopen persistence.
 
-A declarative name such as:
+The experiment proves that these existing mechanics also accept a prototype named `#foreach:experience` unchanged.
+
+Therefore, a future declarative name such as:
 
 ```text
 #foreach:experience
 ```
 
-would therefore be investigated as a discovery/mapping layer over the existing structured Section operation, not as a second foreach renderer.
+would not require a second foreach renderer merely to perform collection instantiation. The remaining candidate capability is principally a **declaration discovery and orchestration layer** over the existing structured Section operation.
 
 The working semantic model is:
 
@@ -89,7 +184,9 @@ Writer Section: #foreach:experience
     -> remove/finalize prototype
 ```
 
-## Hybrid authoring hypothesis
+This is a stronger conclusion than the initial Writer-only fixture allowed: the candidate native name is not only representable in ODF, it is already compatible with the current SECTION-03 execution mechanism.
+
+## 5. Hybrid authoring hypothesis
 
 The current preferred research direction separates structural control from value binding.
 
@@ -102,15 +199,15 @@ Section: #foreach:experience
     {{company}}
 ```
 
-The native Section declares the repeatable document block. The existing `{{...}}` syntax remains responsible for item-local scalar values.
+The native Section can carry the repeatable document boundary. The existing `{{...}}` syntax remains responsible for item-local scalar values.
 
 This avoids the scope problem of document-global Writer User Fields inside collections and retains a materializable, DOCX-friendly value-binding path.
 
 Native Writer fields and conditions remain relevant for cases in which they provide genuine Writer/ODF semantic value, especially document-global values and richer conditional logic. They are not currently assumed to replace `{{variable}}` generally.
 
-## Diagnostics implication
+## 6. Diagnostics implication
 
-The fixture's actual name is:
+The first fixture's actual name is:
 
 ```text
 #foreach:expiriene
@@ -118,40 +215,41 @@ The fixture's actual name is:
 
 A future declarative processor must not silently guess that this means `experience`.
 
-If the application provides no `expiriene` collection, diagnostics should report the template declaration and missing data key explicitly. Fuzzy correction would hide authoring errors and would make template semantics non-deterministic.
+If the application provides no `expiriene` collection, diagnostics should report the template declaration and missing data key explicitly. Fuzzy correction would hide authoring errors and make template semantics non-deterministic.
 
-## Remaining characterization
+## 7. What is proven and what remains undecided
 
-Before any naming syntax is approved, create a canonical fixture with:
+### Proven by characterization
 
-```text
-Section: #foreach:experience
+- Writer can author and serialize Section names containing `#` and `:`.
+- `#foreach:experience` survives as the native `text:name` value.
+- The current Section resolver accepts that exact name.
+- Existing `instantiateMany()` can clone that Section repeatedly.
+- Existing item-local `{{...}}` binding works inside the clones.
+- Existing identity rewriting produces valid deterministic names while preserving the candidate prefix.
+- Collection finalization removes the prototype.
+- The resulting ODT survives save/reopen through the engine.
 
-    {{position}}
-    {{company}}
-```
+### Not decided by this research
 
-Then verify:
+- `#foreach:...` is not yet an approved public template syntax.
+- Automatic discovery of such declarations is not yet designed.
+- Render lifecycle ordering for automatic structural processing is not yet contracted.
+- Missing-data diagnostics and validation behavior are not yet designed.
+- No decision is made here about `#if`, `#ifnot`, `#with`, or a broader object-name language.
+- No decision is made here to replace current visible foreach syntax.
+- Finalization/materialization for DOCX remains a separate interoperability architecture question.
 
-1. exact `content.xml` representation;
-2. Writer save/reopen stability;
-3. current `section('#foreach:experience')` resolution;
-4. current `instantiateMany()` behavior with `#` and `:` in the prototype name;
-5. generated instance names and native identity rewriting;
-6. item-local placeholder binding for at least two items;
-7. empty collection behavior;
-8. save/reopen of the finalized ODT;
-9. whether the final static ODT converts cleanly to DOCX;
-10. whether any current regex or identity code incorrectly assumes `\w+` Section names.
+This distinction is deliberate: the experiment validates the execution substrate without prematurely approving the declarative frontend.
 
-The purpose of this next fixture is not to implement automatic declaration discovery yet. It is to prove that the **existing SECTION-03 machinery accepts the candidate native name unchanged**.
+## 8. RESEARCH-01A conclusion
 
-## Current conclusion
+The declarative Section hypothesis is now mechanically well supported.
 
-The empirical evidence supports continued investigation of named native Sections as declarative structural carriers.
+> A future declarative `#foreach:collection` can be designed as a template-side semantic declaration over the existing SECTION-03 structured instantiation path rather than as a new collection-processing engine.
 
-It does **not** yet establish `#foreach:...` as public syntax.
-
-The strongest current working direction remains:
+The broader RESEARCH-01 direction remains:
 
 > Use native ODT objects for document structure and selected structural template semantics, keep `{{...}}` for simple portable value binding, and use Writer field/condition semantics selectively where they add genuine authoring or document-semantic value.
+
+The next planning step should not automatically be implementation of declarative foreach. RESEARCH-01 was established to improve the evidence available for roadmap decisions. Its findings should therefore be evaluated together with the existing `ROADMAP.md`, `FUTURE_DEVELOPMENT.md`, architecture decisions, implementation state, interoperability requirements, and version-1.0 goals before selecting the next implementation milestone.
