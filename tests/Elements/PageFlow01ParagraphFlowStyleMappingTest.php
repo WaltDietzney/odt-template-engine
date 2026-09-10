@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace OdtTemplateEngine\Tests\Elements;
 
+use DOMDocument;
+use DOMXPath;
 use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Elements\Paragraph;
+use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Utils\StyleMapper;
 use PHPUnit\Framework\TestCase;
+use ZipArchive;
 
 final class PageFlow01ParagraphFlowStyleMappingTest extends TestCase
 {
@@ -106,5 +110,51 @@ final class PageFlow01ParagraphFlowStyleMappingTest extends TestCase
             ],
             $requirements[0]->propertyGroups()
         );
+    }
+
+    public function testParagraphFlowPropertiesAreMaterializedIntoStylesXml(): void
+    {
+        $output = tempnam(sys_get_temp_dir(), 'odt-page-flow-01-paragraph-') . '.odt';
+
+        try {
+            $template = new OdtTemplate(dirname(__DIR__, 2) . '/samples/templates/template_18_ListStyles.odt');
+            $template->setElement('my_list', new Paragraph('MaterializedPageFlow', [
+                'keep-together' => 'always',
+                'widows' => 2,
+                'orphans' => 3,
+            ]));
+            $template->save($output);
+
+            $zip = new ZipArchive();
+            self::assertTrue($zip->open($output));
+            $stylesXml = $zip->getFromName('styles.xml');
+            $zip->close();
+
+            self::assertIsString($stylesXml);
+            $stylesDom = new DOMDocument();
+            self::assertTrue($stylesDom->loadXML($stylesXml));
+            $xpath = new DOMXPath($stylesDom);
+            $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
+            $xpath->registerNamespace('fo', 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0');
+
+            $properties = $xpath->query(
+                '//style:style[@style:name="MaterializedPageFlow"]/style:paragraph-properties'
+            )->item(0);
+            self::assertNotNull($properties);
+            self::assertSame('always', $properties->getAttributeNS(
+                'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0',
+                'keep-together'
+            ));
+            self::assertSame('2', $properties->getAttributeNS(
+                'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0',
+                'widows'
+            ));
+            self::assertSame('3', $properties->getAttributeNS(
+                'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0',
+                'orphans'
+            ));
+        } finally {
+            @unlink($output);
+        }
     }
 }

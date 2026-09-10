@@ -7,7 +7,6 @@ namespace OdtTemplateEngine\Tests\Integration;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
-use OdtTemplateEngine\Elements\ImageElement;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\OdtTemplate;
 use PHPUnit\Framework\TestCase;
@@ -46,8 +45,9 @@ final class PageFlow01DPageOwnedContentCharacterizationTest extends TestCase
             $template->render();
             $template->save($output);
 
-            [, $stylesDom] = $this->readCoreXml($output);
+            [$contentDom, $stylesDom] = $this->readCoreXml($output);
             $xpath = $this->xpath($stylesDom);
+            $contentXPath = $this->xpath($contentDom);
 
             $firstHeader = $xpath->query(
                 '//style:master-page[@style:name="First_20_Page"]/style:header'
@@ -115,6 +115,10 @@ final class PageFlow01DPageOwnedContentCharacterizationTest extends TestCase
             self::assertSame('Mpm1', $standardMaster->getAttribute('style:page-layout-name'));
             self::assertSame('Mpm1', $firstMaster->getAttribute('style:page-layout-name'));
             self::assertSame('Standard', $firstMaster->getAttribute('style:next-style-name'));
+
+            $bodyStyle = $contentXPath->query('//style:style[@style:name="P1"]')->item(0);
+            self::assertInstanceOf(DOMElement::class, $bodyStyle);
+            self::assertSame('First_20_Page', $bodyStyle->getAttribute('style:master-page-name'));
         } finally {
             @unlink($fixture);
             @unlink($output);
@@ -132,13 +136,10 @@ final class PageFlow01DPageOwnedContentCharacterizationTest extends TestCase
                 'header_block',
                 (new Paragraph())->addText('STRUCTURED HEADER BLOCK')
             );
-            $template->setElement(
-                'header_logo',
-                new ImageElement(__DIR__ . '/../../assets/Logo.png', [
-                    'width' => '1cm',
-                    'anchor' => 'as-char',
-                ])
-            );
+            $template->setImage('header_logo', __DIR__ . '/../../assets/Logo.png', [
+                'width' => '1cm',
+                'anchor' => 'as-char',
+            ]);
             $template->setValues([
                 'person_name' => 'Walter Beispiel',
                 'role' => 'Projektleiter',
