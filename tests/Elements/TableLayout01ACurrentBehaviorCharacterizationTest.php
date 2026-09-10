@@ -26,10 +26,10 @@ final class TableLayout01ACurrentBehaviorCharacterizationTest extends TestCase
 
         self::assertCount(1, $requirements);
         $requirement = $requirements[0];
-        self::assertSame(StyleRequirement::KIND_DEFINITION, $requirement->kind);
-        self::assertSame(StyleRequirement::SCOPE_COMMON, $requirement->scope);
-        self::assertSame('table', $requirement->family);
-        self::assertSame(StyleRequirement::PART_STYLES, $requirement->part);
+        self::assertSame(StyleRequirement::KIND_DEFINITION, $requirement->kind());
+        self::assertSame(StyleRequirement::SCOPE_COMMON, $requirement->scope());
+        self::assertSame('table', $requirement->family());
+        self::assertSame(StyleRequirement::PART_STYLES, $requirement->documentPart());
         self::assertSame([
             'style:table-properties' => [
                 'style:width' => '10cm',
@@ -38,59 +38,63 @@ final class TableLayout01ACurrentBehaviorCharacterizationTest extends TestCase
                 'fo:margin-left' => '1cm',
                 'fo:margin-right' => '2cm',
             ],
-        ], $requirement->properties);
+        ], $requirement->propertyGroups());
     }
 
     public function testAbsoluteTableGeometryAndAbsoluteColumnWidthsRemainIndependentRequirements(): void
     {
-        $table = (new RichTable())
-            ->setStyle(['style:width' => '12cm', 'table:align' => 'left'])
-            ->setColumnWidths(['4cm', '8cm']);
+        $table = (new RichTable())->setStyle([
+            'style:width' => '12cm',
+            'table:align' => 'left',
+        ]);
+        $table->setColumnWidths(['4cm', '8cm']);
 
         $requirements = iterator_to_array($table->getOwnStyleRequirements());
 
         self::assertCount(3, $requirements);
-        self::assertSame('table-column', $requirements[0]->family);
+        self::assertSame('table-column', $requirements[0]->family());
         self::assertSame(
             ['style:table-column-properties' => ['style:column-width' => '4cm']],
-            $requirements[0]->properties
+            $requirements[0]->propertyGroups()
         );
-        self::assertSame('table-column', $requirements[1]->family);
+        self::assertSame('table-column', $requirements[1]->family());
         self::assertSame(
             ['style:table-column-properties' => ['style:column-width' => '8cm']],
-            $requirements[1]->properties
+            $requirements[1]->propertyGroups()
         );
-        self::assertSame('table', $requirements[2]->family);
+        self::assertSame('table', $requirements[2]->family());
         self::assertSame(
             ['style:table-properties' => ['style:width' => '12cm', 'table:align' => 'left']],
-            $requirements[2]->properties
+            $requirements[2]->propertyGroups()
         );
     }
 
     public function testRelativeColumnRatiosKeepExistingWriter65535NormalizationAlongsideTableGeometry(): void
     {
-        $table = (new RichTable())
-            ->setStyle(['style:rel-width' => '60%', 'table:align' => 'left'])
-            ->setColumnWidthRatios([2, 1, 1]);
+        $table = (new RichTable())->setStyle([
+            'style:rel-width' => '60%',
+            'table:align' => 'left',
+        ]);
+        $table->setColumnWidthRatios([2, 1, 1]);
 
         $requirements = iterator_to_array($table->getOwnStyleRequirements());
 
         self::assertCount(4, $requirements);
         self::assertSame(
             ['style:table-column-properties' => ['style:rel-column-width' => '32766*']],
-            $requirements[0]->properties
+            $requirements[0]->propertyGroups()
         );
         self::assertSame(
             ['style:table-column-properties' => ['style:rel-column-width' => '16383*']],
-            $requirements[1]->properties
+            $requirements[1]->propertyGroups()
         );
         self::assertSame(
             ['style:table-column-properties' => ['style:rel-column-width' => '16386*']],
-            $requirements[2]->properties
+            $requirements[2]->propertyGroups()
         );
         self::assertSame(
             ['style:table-properties' => ['style:rel-width' => '60%', 'table:align' => 'left']],
-            $requirements[3]->properties
+            $requirements[3]->propertyGroups()
         );
     }
 
@@ -103,10 +107,10 @@ final class TableLayout01ACurrentBehaviorCharacterizationTest extends TestCase
         $requirements = iterator_to_array($table->getOwnStyleRequirements());
 
         self::assertCount(1, $requirements);
-        self::assertSame('table-row', $requirements[0]->family);
+        self::assertSame('table-row', $requirements[0]->family());
         self::assertSame(
             ['style:table-row-properties' => ['style:min-row-height' => '2cm']],
-            $requirements[0]->properties
+            $requirements[0]->propertyGroups()
         );
     }
 
@@ -118,10 +122,10 @@ final class TableLayout01ACurrentBehaviorCharacterizationTest extends TestCase
 
         $requirements = iterator_to_array($cell->getOwnStyleRequirements());
         self::assertCount(1, $requirements);
-        self::assertSame('table-cell', $requirements[0]->family);
+        self::assertSame('table-cell', $requirements[0]->family());
         self::assertSame(
             ['style:table-cell-properties' => ['style:vertical-align' => 'middle']],
-            $requirements[0]->properties
+            $requirements[0]->propertyGroups()
         );
     }
 
