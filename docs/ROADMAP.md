@@ -9,7 +9,7 @@ It complements [`FUTURE_DEVELOPMENT.md`](FUTURE_DEVELOPMENT.md):
 
 The roadmap is intentionally conservative about public API changes. Existing application-facing APIs should remain stable where practical, and future APIs shown here are conceptual unless explicitly documented as implemented.
 
-The current sequencing incorporates the completed semantic/style architecture and the post-RESEARCH-01 version-1.0 reassessment recorded in [`architecture/RESEARCH-01_1_0_REASSESSMENT_DECISION.md`](architecture/RESEARCH-01_1_0_REASSESSMENT_DECISION.md).
+The current sequencing incorporates the completed semantic/style architecture, the post-RESEARCH-01 version-1.0 reassessment recorded in [`architecture/RESEARCH-01_1_0_REASSESSMENT_DECISION.md`](architecture/RESEARCH-01_1_0_REASSESSMENT_DECISION.md), and the completed PAGE-FLOW-01 milestone.
 
 ## Current baseline
 
@@ -38,6 +38,10 @@ Established capabilities include:
 - public document-style authoring through `DocumentStyles`, currently with `defineParagraph()`;
 - stateless style-option mapping through `StyleMapper`;
 - a narrow `StyleWriter` serialization boundary;
+- native paragraph-flow authoring for keep/break/widow/orphan semantics through the existing style architecture;
+- preservation of authored master-page succession, page-layout references, and paragraph-to-master-page references;
+- page/master-style-owned header/footer content participating in normal template processing and supported structured insertion;
+- Section flow preservation without engine-side pagination ownership;
 - a complete CV showcase proving the structured-section model against a realistic LibreOffice-authored document.
 
 The rendering-sensitive validation workflow remains:
@@ -112,6 +116,25 @@ STYLE-API-02 aligned the public and compatibility style surfaces with the docume
 
 The completed series established application authoring through element options/fluent APIs, explicit document-style authoring through `$template->styles()`, `DocumentStyles::defineParagraph()`, semantic structured-element extension hooks, stateless `StyleMapper`, a narrow `StyleWriter`, and removal of obsolete process-global paragraph/text style registry behavior.
 
+### PAGE-FLOW-01 — COMPLETE / FINAL GO
+
+PAGE-FLOW-01 established the native page/flow semantic boundary required for the 1.0 path.
+
+Completed outcomes include:
+
+- explicit paragraph-flow mappings for keep-with-next, keep-together, widows, orphans, break-before, and break-after;
+- preservation of authored paragraph-to-master-page references, master-page succession, and page-layout references;
+- preservation and processing of master-page-owned header/footer content through the existing cross-document-part model;
+- supported page-owned image insertion through the established `setImage()` path;
+- Section/repeated/nested content remaining structural while Writer owns physical pagination;
+- empirical LibreOffice validation of first-page/following-page behavior and multi-page Section flow;
+- an explicit boundary between page-style identity/content and page-layout geometry;
+- no PHP pagination engine and no premature broad page-style authoring API.
+
+Programmatic page-style definition/mutation/assignment remains the required future capability `PAGE-STYLE-AUTHORING-01`. The bounded `ImageElement` header discrepancy remains tracked as `GRAPHIC-PART-COMPAT-01`.
+
+The accepted contract and completion evidence are recorded in [`architecture/PAGE_FLOW_01_CHANGE_CONTRACT.md`](architecture/PAGE_FLOW_01_CHANGE_CONTRACT.md) and the accompanying PAGE-FLOW-01 research/evidence documents.
+
 ## RESEARCH-01 — Native ODF Authoring Capabilities — STRATEGIC RESEARCH COMPLETE
 
 RESEARCH-01 established enough empirical Writer/ODF evidence to reassess the path to version 1.0 without requiring a survey of the entire native ODF surface.
@@ -141,12 +164,12 @@ A professional multi-page CV remains the primary practical architecture benchmar
 
 ## Mandatory path to version 1.0
 
-The post-RESEARCH-01 sequence is:
+The post-RESEARCH-01 sequence remains:
 
 ```text
-PAGE-FLOW-01
+PAGE-FLOW-01                 COMPLETE
     ↓
-TABLE-LAYOUT-01
+TABLE-LAYOUT-01              NEXT / ACTIVE
     ↓
 FRAME-LAYOUT-01
     ↓
@@ -161,31 +184,15 @@ RELEASE-1.0 INTEGRATION PRE-FLIGHT
 
 The sequence is intentionally bounded. High-value but non-foundational features must not indefinitely delay 1.0.
 
-### PAGE-FLOW-01 — Page styles, paragraph flow, and Section flow — 1.0 BLOCKER
+### PAGE-FLOW-01 — Page styles, paragraph flow, and Section flow — COMPLETE / FINAL GO
 
-PAGE-FLOW-01 is the next major architecture milestone.
+PAGE-FLOW-01 is complete. Its accepted baseline is summarized above and defined in the PAGE-FLOW architecture/evidence documents. Future work must preserve its governing rule:
 
-It replaces the earlier planning split in which page/master styles, headers/footers, and page-flow semantics were treated as later independent document-structure blocks.
+> **The engine describes or preserves native ODF flow semantics; LibreOffice/Writer computes actual pagination.**
 
-Research and implementation must be based on actual Writer/ODF structures and cover the 1.0-relevant semantics of:
+The existing `PageLayoutManager` remains a valid narrow service for mutating selected properties of an existing master-page/page-layout relationship. It is not a complete page-style system.
 
-- page/master styles and referenced page layouts;
-- first-page versus following-page behavior;
-- page size, orientation, and margins in the broader page-style model;
-- explicit page breaks and page-style transitions;
-- paragraph `keep-with-next`;
-- paragraph keep-together semantics where native ODF provides them;
-- widow/orphan handling;
-- Section behavior across page boundaries;
-- repeated and nested Sections interacting with pagination;
-- interaction with tables and lists where it affects page flow;
-- headers and footers as page/master-style-owned content.
-
-The existing `PageLayoutManager` remains a valid narrow service for mutating selected properties of an existing master-page/page-layout relationship. It must not be mistaken for a complete page-style system.
-
-The engine must express or preserve native flow semantics and leave actual pagination to LibreOffice/Writer. PAGE-FLOW-01 must not become a PHP page-height or pagination engine.
-
-### TABLE-LAYOUT-01 — Professional table geometry — 1.0 BLOCKER
+### TABLE-LAYOUT-01 — Professional table geometry — 1.0 BLOCKER / NEXT ACTIVE MILESTONE
 
 Treat the previously separate table-layout backlog items as one coherent 1.0 capability block:
 
@@ -251,7 +258,7 @@ User Fields, Set/Get Variables, Conditional Text, Hidden Text, Hidden Paragraphs
 
 ### Document defaults
 
-`DOCUMENT-DEFAULTS-01` remains useful research/design work, but it is no longer ahead of the mandatory page-flow/table/frame/finalization path. Resume it earlier only if a mandatory milestone exposes a concrete dependency.
+`DOCUMENT-DEFAULTS-01` remains useful research/design work, but it is no longer ahead of the mandatory table/frame/finalization path. Resume it earlier only if a mandatory milestone exposes a concrete dependency.
 
 ### Named object operations and dynamic content
 
