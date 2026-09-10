@@ -51,6 +51,15 @@ class StyleMapper
                 case 'keep-with-next':
                     $mapped['fo:keep-with-next'] = $value;
                     break;
+                case 'keep-together':
+                    $mapped['fo:keep-together'] = $value;
+                    break;
+                case 'widows':
+                    $mapped['fo:widows'] = $value;
+                    break;
+                case 'orphans':
+                    $mapped['fo:orphans'] = $value;
+                    break;
                 case 'break-before':
                     $mapped['fo:break-before'] = $value;
                     break;
