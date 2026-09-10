@@ -35,23 +35,53 @@ SR-06 established semantic graphic-style requirements and dependency boundaries 
 
 ## PAGE-FLOW-01 — Page styles, paragraph flow, and Section flow
 
-**Priority:** 1.0 BLOCKER / next major architecture milestone
+**Priority:** 1.0 BLOCKER / active architecture milestone
 
 This milestone supersedes the earlier planning split of `DOC-STRUCTURE-01`, `DOC-STRUCTURE-02`, and `DOC-STRUCTURE-03` as independent later blocks. Those concerns now belong to one evidence-driven page/flow architecture milestone because their native ODF semantics interact.
 
 ### Page style / page template semantics
 
-Characterize and design around:
+PAGE-FLOW-01 establishes the native semantic model around:
 
 - native master/page styles;
 - referenced page layouts;
 - page size, orientation, and margins;
 - first-page versus following-page behavior;
-- next/following page-style relationships where applicable;
+- next/following page-style relationships;
 - content-triggered page-style transitions;
 - authored page styles that remain template-owned.
 
-The current `PageLayoutManager` is a narrow mutator of selected properties in an existing master-page/page-layout relationship. It is not a complete page-style system.
+The current `PageLayoutManager` is a narrow mutator of selected properties in an existing master-page/page-layout relationship. It is not a complete page-style system and must not silently become one.
+
+### PAGE-STYLE-AUTHORING-01 — Programmatic page-style authoring — REQUIRED FUTURE CAPABILITY
+
+**Priority:** Confirmed future architecture requirement; sequencing after PAGE-FLOW-01 / not part of the current PAGE-FLOW-01 implementation scope
+
+PAGE-FLOW-01 research confirms that page styles are not merely template-owned implementation detail. The engine should eventually support semantically explicit programmatic page-style work while preserving the native distinction between `style:master-page` identity/content and referenced `style:page-layout` geometry.
+
+The future capability must investigate and design at least:
+
+- referencing an existing page/master style;
+- modifying an existing page/master style where semantically valid;
+- defining page/master styles where justified;
+- assigning a page/master style to document flow;
+- editing native succession such as `First Page -> Standard`;
+- coordinating page-style identity with page-layout geometry without merging their ownership;
+- interaction with master-page-owned headers/footers without creating a separate header/footer processing engine.
+
+`style:master-page-name` requires particular care. PAGE-FLOW-01 established that Writer places this page-style reference on the paragraph `style:style` element, not inside `style:paragraph-properties`. A raw paragraph-property escape hatch must therefore not be documented as generated page-style assignment if it serializes the attribute at the wrong structural level.
+
+This future work should follow the style-architecture distinction already established elsewhere:
+
+```text
+reference != definition != mutation
+```
+
+The exact public API is not approved yet. Do not infer symmetric methods such as `definePageStyle()` merely from the existence of paragraph-style APIs. The capability must be designed from actual ODF ownership and concrete application needs.
+
+A practical motivation is document-wide/template-wide authoring: applications should be able to modify meaningful base/page styles and rely on native Writer inheritance and references instead of repeating equivalent formatting or rebuilding Writer layout in PHP.
+
+Deferral from PAGE-FLOW-01 is a sequencing decision, not rejection of page-style authoring.
 
 ### Paragraph flow semantics
 
@@ -62,38 +92,38 @@ The 1.0 behavior target includes:
 - widow handling;
 - orphan handling;
 - break before;
-- break after;
-- page-style transitions associated with paragraph/document flow.
+- break after.
 
-Current paragraph style mapping already supports some of these properties, including `keep-with-next`, `break-before`, and `break-after`. PAGE-FLOW-01 must characterize the complete Writer/ODF behavior rather than assuming the existing option names constitute a finished capability.
+Current paragraph style mapping already supports some of these properties, including `keep-with-next`, `break-before`, and `break-after`. PAGE-FLOW-01 completes the missing paragraph-flow mappings while preserving native values rather than interpreting pagination.
 
 The engine should express or preserve native flow semantics. LibreOffice/Writer remains responsible for actual pagination.
 
+Programmatic page-style transitions are retained as part of `PAGE-STYLE-AUTHORING-01`; PAGE-FLOW-01 must preserve authored transitions and establish their correct semantic location.
+
 ### Section flow semantics
 
-Characterize:
+Characterize and preserve:
 
 - Sections spanning page boundaries;
 - nested Sections;
 - repeated Section instances;
 - paragraph keep/break behavior inside Sections;
 - tables and lists inside Sections;
-- any actual Section-level native pagination semantics;
-- save/reopen and headless rendering behavior.
+- save/reopen behavior.
 
-Do not assume a generic Section-level "keep whole section together" property without evidence.
+Research found no generic Section-level native pagination ownership corresponding to paragraph keep/break semantics. Do not invent a generic Section-level "keep whole section together" property.
 
 ### Explicit page breaks and transitions
 
-Support the native semantics required for intentional page breaks, page-style changes at breaks, first-page/following-page transitions, and interaction with structured/generated content.
+PAGE-FLOW-01 supports/preserves native paragraph break semantics and authored page-style relationships. Programmatic page-style assignment/transition authoring is explicitly retained for `PAGE-STYLE-AUTHORING-01` rather than being approximated through the wrong ODF property level.
 
 ### Headers and footers
 
-Headers and footers must be researched with the page-style model because they are page/master-style-owned content. The full public authoring API may be bounded by the evidence, but PAGE-FLOW-01 must not design a page-style architecture that precludes or mis-models them.
+Headers and footers are page/master-style-owned structured content. PAGE-FLOW-01 established that existing cross-document-part processing can reach this content, so no separate header/footer processing subsystem is planned. Future page-owned addressing may be designed when a concrete requirement justifies it.
 
 ### Non-goals
 
-PAGE-FLOW-01 must not implement a PHP pagination engine, calculate page heights, introduce CV-specific helpers, invent universal page-style APIs before characterization, or absorb unrelated Writer-field semantics.
+PAGE-FLOW-01 must not implement a PHP pagination engine, calculate page heights, introduce CV-specific helpers, opportunistically invent the future page-style authoring API, or absorb unrelated Writer-field semantics.
 
 ## TABLE-LAYOUT-01 — Professional table geometry
 
@@ -171,7 +201,7 @@ A universal engine-side evaluator for every Writer field/condition is not requir
 
 ### DOCUMENT-DEFAULTS-01 — Document-level defaults — DEFERRED UNLESS DEPENDENCY EMERGES
 
-**Priority:** Post-1.0/high-value research unless PAGE-FLOW-01 exposes a concrete dependency
+**Priority:** Post-1.0/high-value research unless a concrete dependency emerges
 
 The user-facing goal remains useful: applications should eventually be able to express appropriate document-wide defaults without repeating the same options on every element.
 
@@ -182,6 +212,8 @@ However, ODF/LibreOffice research shows that "defaults" may refer to distinct me
 - authored named base styles;
 - application-level LibreOffice basic-font defaults;
 - page-layout defaults.
+
+This topic overlaps with, but is not identical to, `PAGE-STYLE-AUTHORING-01`. A future design should determine when modifying an authored base style is preferable to introducing a separate default-setting abstraction. Native inheritance should be used where it provides the intended semantics.
 
 Do not invent one `setDefault...` API until these mechanisms and their precedence semantics are established. No public `setDefaultFont()` API is currently approved.
 
@@ -367,6 +399,8 @@ FINALIZATION-01
     ↓
 RELEASE-1.0
 ```
+
+`PAGE-STYLE-AUTHORING-01` is a confirmed future capability established by PAGE-FLOW-01. Its exact sequencing is intentionally not inserted into the mandatory 1.0 path by this decision; it must not be lost merely because PAGE-FLOW-01 implements only preservation and paragraph-flow completion.
 
 Smaller independent list, lifecycle, sample-infrastructure, asset, or reference-fixture slices may be inserted where useful, but they must not obscure the 1.0 blockers.
 
