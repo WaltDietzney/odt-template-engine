@@ -244,18 +244,20 @@ The final PAGE-FLOW-01 preflight completed successfully with:
 
 The full PHPUnit run reported seven deprecation events caused by pre-existing PHPUnit doc-comment metadata in legacy tests. No PAGE-FLOW-01 test is the source of those deprecations; they are non-blocking for this milestone and were not opportunistically repaired here.
 
-## 12. Manual LibreOffice regression — completed
+## 12. Manual LibreOffice regression — completed with accepted split evidence
 
-Rendering-sensitive behavior was manually verified in LibreOffice Writer during PAGE-FLOW-01C and PAGE-FLOW-01D research/regression work.
+The original manual regression contract requested at least one processed multi-page Writer document containing the relevant PAGE-FLOW behaviors together. During execution, the required rendering-sensitive behavior was instead validated across the dedicated PAGE-FLOW-01C and PAGE-FLOW-01D Writer regressions.
 
-The combined evidence covers:
+This is an explicit closeout deviation from the original single-document wording, not a retroactive redefinition of that requirement. The final review accepts the split evidence as sufficient because the two focused regressions cover the relevant native interactions, Writer remains responsible for physical pagination, and no uncovered interaction was found that requires an additional combined fixture.
 
-- First Page -> Standard transition;
-- distinct first/following page-owned content;
-- native page-number field;
-- paragraph flow semantics under Writer pagination;
-- repeated/nested Section content participating in Writer-computed multi-page flow;
-- page-owned image insertion through the established `setImage()` path.
+The accepted split evidence covers:
+
+- PAGE-FLOW-01D: First Page -> Standard transition;
+- PAGE-FLOW-01D: distinct first/following page-owned content;
+- PAGE-FLOW-01D: native page-number field;
+- PAGE-FLOW-01D: page-owned image insertion through the established `setImage()` path;
+- PAGE-FLOW-01C: paragraph flow semantics under Writer pagination;
+- PAGE-FLOW-01C: repeated/nested Section content participating in Writer-computed multi-page flow.
 
 The manual comparison also exposed and bounded the `ImageElement` header discrepancy documented above. Writer remains the source of the final pagination result.
 
@@ -297,7 +299,7 @@ Deferral of page-style authoring is a sequencing decision, not rejection of the 
 
 ## 15. Completion decision
 
-All accepted completion criteria are met:
+All accepted completion criteria are met, with the explicit manual-regression closeout deviation documented in section 12:
 
 - required paragraph flow semantics are expressible through the existing style architecture;
 - authored page/master relationships survive supported document operations;
@@ -307,8 +309,8 @@ All accepted completion criteria are met:
 - no incorrect claim of generated page-style assignment support was introduced;
 - required future page-style authoring remains explicitly retained in project planning;
 - focused and full automated tests pass;
-- manual LibreOffice regression is clean;
+- manual LibreOffice regression evidence is accepted as the split PAGE-FLOW-01C/PAGE-FLOW-01D evidence described above;
 - the bounded `ImageElement` header discrepancy remains documented;
 - documentation reflects actual behavior and deferrals.
 
-**PAGE-FLOW-01 is COMPLETE / FINAL GO and is ready for final branch diff review and merge to `develop`.**
+**PAGE-FLOW-01 is COMPLETE / FINAL GO and is ready for merge to `develop`.**
