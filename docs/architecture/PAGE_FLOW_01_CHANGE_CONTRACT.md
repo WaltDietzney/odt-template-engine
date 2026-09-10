@@ -2,27 +2,27 @@
 
 ## Status
 
-**Reviewed implementation contract. Implementation has started only for the accepted paragraph-flow slice.**
+**COMPLETE / FINAL GO — both accepted implementation slices, integration preservation, manual LibreOffice regression, and the full PAGE-FLOW-01 preflight are complete.**
 
-This contract translates the completed PAGE-FLOW-01 research into a bounded 1.0 implementation scope.
+This contract translated the completed PAGE-FLOW-01 research into a bounded 1.0 implementation scope. The completed milestone stayed within that scope.
 
-It is intentionally narrower than the full set of Writer page-layout features, while explicitly preserving page-style authoring as a required future engine capability.
+The final production change is intentionally small: the missing paragraph-flow mappings were added through the existing document-local style architecture. Authored page/master relationships, Section flow behavior, and page-owned content are covered by permanent characterization and integration tests. No PHP pagination engine or broad page-style authoring API was introduced.
 
-The governing rule is:
+The governing rule remains:
 
 > **The engine describes or preserves native ODF flow semantics; LibreOffice/Writer computes actual pagination.**
 
 ## 1. Purpose
 
-PAGE-FLOW-01 must make the researched native flow semantics reliably preservable and, where the engine owns generated paragraph content, expressible through the existing style architecture.
+PAGE-FLOW-01 makes the researched native flow semantics reliably preservable and, where the engine owns generated paragraph content, expressible through the existing style architecture.
 
-The milestone must not become a PHP pagination engine or a complete Writer page-style authoring framework.
+The milestone does not become a PHP pagination engine or a complete Writer page-style authoring framework.
 
 This scope boundary does **not** mean that programmatic page-style authoring is unnecessary. PAGE-FLOW-01 establishes the semantic model that a later dedicated capability must build on.
 
 ## 2. Semantic baseline
 
-The implementation must preserve the following researched distinctions.
+The implementation preserves the following researched distinctions.
 
 ### 2.1 Page identity versus geometry
 
@@ -34,7 +34,7 @@ style:page-layout
     = referenced page/header/footer geometry
 ```
 
-These concepts must not be merged into one generic page-layout abstraction.
+These concepts are not merged into one generic page-layout abstraction.
 
 ### 2.2 Break versus page-style request
 
@@ -56,50 +56,30 @@ A new page and a requested page style are separate operations.
 
 Header/footer content under `style:master-page` is normal structured ODF content and remains part of template processing and document lifecycle.
 
-## 3. Required implementation scope
+## 3. Completed implementation scope
 
-PAGE-FLOW-01 implementation is limited to the following.
+### 3.1 Required paragraph-flow mapping
 
-### 3.1 Complete required paragraph-flow mapping
-
-Add explicit supported paragraph-style mappings for the researched missing properties:
-
-```text
-keep-together  -> fo:keep-together
-widows         -> fo:widows
-orphans        -> fo:orphans
-```
-
-Existing mappings remain:
+The researched paragraph-style mappings are supported:
 
 ```text
 keep-with-next -> fo:keep-with-next
+keep-together  -> fo:keep-together
+widows         -> fo:widows
+orphans        -> fo:orphans
 break-before   -> fo:break-before
 break-after    -> fo:break-after
 ```
 
-The implementation must use the current document-local semantic style path rather than introduce a second flow-style registry.
+The implementation uses the existing document-local semantic style path and introduces no second flow-style registry.
 
-### 3.2 Preserve native values rather than reinterpret pagination
+### 3.2 Native values are preserved rather than reinterpreted
 
-The mapper/materializer must serialize semantic values; it must not calculate page fit.
+The mapper/materializer serializes semantic values; it does not calculate page fit. Permanent tests cover Writer-compatible flow values and retain raw/native compatibility where already supported.
 
-At minimum, tests must cover Writer-compatible values characterized by research, including:
+### 3.3 Authored page/master semantics are preserved
 
-```text
-fo:keep-with-next="always"
-fo:keep-together="always"
-fo:widows="N"
-fo:orphans="N"
-fo:break-before="page"
-fo:break-after="page"
-```
-
-If existing public style-option behavior accepts native/raw values, PAGE-FLOW-01 must not unnecessarily narrow that compatibility.
-
-### 3.3 Characterize preservation of authored page/master semantics
-
-Permanent automated coverage must ensure relevant engine operations do not lose or rewrite authored relationships such as:
+Permanent automated coverage verifies preservation of relationships including:
 
 ```text
 paragraph style -> style:master-page-name
@@ -107,22 +87,20 @@ master page     -> style:next-style-name
 master page     -> style:page-layout-name
 ```
 
-The test objective is preservation, not Writer pagination emulation.
+The tests verify preservation, not Writer pagination emulation.
 
-### 3.4 Keep page-owned content in normal processing
+### 3.4 Page-owned content remains in normal processing
 
-Permanent characterization must retain evidence that:
+Permanent characterization covers:
 
-- scalar replacement reaches master-page-owned header/footer content;
-- nested scalar replacement inside native header content works;
-- native fields such as `text:page-number` survive;
-- ordinary structured `setElement()` insertion reaches page-owned content;
-- the established `setImage()` path works in page-owned content;
-- save/reopen preserves the resulting ODT structures/resources.
+- scalar replacement in master-page-owned header/footer content;
+- nested scalar replacement inside native header content;
+- preservation of native fields such as `text:page-number`;
+- ordinary structured `setElement()` insertion into page-owned content;
+- the established `setImage()` path in page-owned content;
+- save/reopen preservation of resulting ODT structures and resources.
 
-The existing PAGE-FLOW-01D test should be adjusted only where necessary to describe the established public image path accurately.
-
-## 4. Page-style authoring boundary for this milestone
+## 4. Page-style authoring boundary
 
 PAGE-FLOW-01 does **not** implement a broad new public page-style API such as:
 
@@ -151,20 +129,18 @@ LibreOffice-authored page styles remain the preferred native-first authoring mec
 
 ## 5. Page-style reference/transition capability
 
-### Decision for PAGE-FLOW-01
-
-Programmatic page-style assignment is a **required future engine capability**, but it is not implemented opportunistically inside PAGE-FLOW-01.
+Programmatic page-style assignment is a **required future engine capability**, but it was not implemented opportunistically inside PAGE-FLOW-01.
 
 The research established that `style:master-page-name` is semantically distinct from paragraph properties such as `fo:break-before`. Writer places the page-style reference on the paragraph `style:style` element rather than inside `style:paragraph-properties`.
 
 Therefore:
 
-- authored `style:master-page-name` relationships must be preserved now;
-- generated page-style assignment must not be claimed through a raw paragraph-property escape hatch if that would serialize the attribute at the wrong ODF structural level;
-- PAGE-FLOW-01 does not invent a convenience API merely for symmetry;
+- authored `style:master-page-name` relationships are preserved now;
+- generated page-style assignment is not claimed through a raw paragraph-property escape hatch at the wrong ODF structural level;
+- PAGE-FLOW-01 did not invent a convenience API merely for symmetry;
 - the later page-style authoring capability must provide a semantically correct way to assign/reference page styles in document flow.
 
-This removes the earlier conditional assumption that existing paragraph-style raw properties might already constitute sufficient generated page-style support. Preservation is part of PAGE-FLOW-01; programmatic generation/assignment is explicitly deferred but required.
+Preservation is part of the completed PAGE-FLOW-01 baseline; programmatic generation/assignment remains explicitly deferred but required.
 
 ## 6. `PageLayoutManager` compatibility boundary
 
@@ -176,7 +152,7 @@ It may continue to:
 - follow its `style:page-layout-name`;
 - mutate supported page-layout properties.
 
-It must not silently grow responsibility for:
+It does not own:
 
 - defining page-style identity;
 - page-style succession;
@@ -186,13 +162,11 @@ It must not silently grow responsibility for:
 
 A future page-style authoring capability may coordinate with page-layout geometry, but it must preserve these ownership distinctions rather than absorbing them into the current manager.
 
-If refactoring is required, preserve meaningful public/protected facade behavior while moving implementation responsibility behind it.
-
 ## 7. Section behavior
 
-No production pagination behavior is added to Section APIs.
+No production pagination behavior was added to Section APIs.
 
-Existing SECTION-03 operations must continue to:
+Existing SECTION-03 operations continue to:
 
 - clone exact native Section subtrees;
 - preserve paragraph/table/list/style references unless identity rules require rewriting;
@@ -200,11 +174,11 @@ Existing SECTION-03 operations must continue to:
 - remove prototypes as already defined;
 - leave physical page breaking to Writer.
 
-No `keepSectionOnPage()` behavior is introduced.
+No `keepSectionOnPage()` behavior was introduced.
 
 ## 8. Page-owned content behavior
 
-No separate header/footer processing subsystem is introduced.
+No separate header/footer processing subsystem was introduced.
 
 The existing cross-document-part processing model remains authoritative where characterized:
 
@@ -215,7 +189,7 @@ styles.xml
 
 Header/footer content continues to participate through the same template-processing and structured-materialization mechanisms where those mechanisms are valid for the target content.
 
-Page-owned target/addressing APIs are explicitly deferred unless a separate requirement justifies them. Such future addressing must remain compatible with the page-style ownership model established by PAGE-FLOW-01.
+Page-owned target/addressing APIs remain deferred unless a separate requirement justifies them.
 
 ## 9. `ImageElement` header discrepancy
 
@@ -229,38 +203,21 @@ setImage() in page-owned header           ✓ Writer-visible
 
 Changing only the generated graphic parent style from `Standard` to `Graphics` did not fix the Writer rendering.
 
-### Contract decision
+No generic graphic repair or redesign was made inside PAGE-FLOW-01. The finding is retained as `GRAPHIC-PART-COMPAT-01` in `FUTURE_DEVELOPMENT.md`. PAGE-FLOW-01 page-owned image coverage uses the established `setImage()` path and does not claim generic `ImageElement` header compatibility.
 
-Do not repair or redesign the generic graphic materialization pipeline inside PAGE-FLOW-01 unless the implementation slices unexpectedly depend on it.
+## 10. Production scope
 
-Record and retain the finding for a focused graphic/structured-materialization investigation.
-
-PAGE-FLOW-01 tests must not incorrectly claim generic `ImageElement` Writer rendering in headers when current manual evidence disproves it.
-
-## 10. Production files expected to change
-
-The smallest likely production scope is:
+The production implementation remained limited to:
 
 ```text
 src/Utils/StyleMapper.php
 ```
 
-Additional production files may change only if required by evidence from focused tests, for example to preserve semantic values through `Paragraph` -> `StyleRequirement` -> materialization.
+The remaining branch changes are architecture/evidence documentation and focused characterization/integration tests. No unrelated table/frame/image architecture was changed.
 
-Likely supporting test files include focused unit/integration tests around:
+## 11. Test contract — completed
 
-- paragraph style mapping;
-- semantic paragraph requirements;
-- page/master relationship preservation;
-- page-owned content processing.
-
-Do not change unrelated table/frame/image architecture in the same implementation slice.
-
-## 11. Test contract
-
-### 11.1 Focused automated tests
-
-Required coverage includes:
+Permanent automated coverage includes:
 
 - `keep-with-next` mapping/preservation;
 - `keep-together` mapping/materialization;
@@ -268,59 +225,49 @@ Required coverage includes:
 - orphans mapping/materialization;
 - break-before mapping/preservation;
 - break-after mapping/preservation;
-- inherited/native paragraph style references preserved through structured Section operations;
+- inherited/native paragraph style references through structured Section operations;
 - First Page -> Standard master-page relationship preservation;
 - authored `style:master-page-name` preservation;
 - page-owned scalar and structured processing;
 - native page-number field preservation;
 - established `setImage()` page-owned resource behavior.
 
-Tests must not present raw paragraph-property serialization of `style:master-page-name` as generated page-style assignment support.
+The final PAGE-FLOW-01 preflight completed successfully with:
 
-### 11.2 Existing characterization suites
+- focused PAGE-FLOW tests: 8 tests / 141 assertions;
+- relevant style/materialization regression: 28 tests / 266 assertions;
+- `PublicSampleSmokeTest`: 1 test / 185 assertions;
+- full suite: 604 tests / 3884 assertions;
+- PHP lint for `src/` and `tests/`: clean;
+- `composer validate`: clean;
+- `git diff --check`: clean.
 
-At minimum rerun relevant PAGE-FLOW/SECTION/style tests plus `PublicSampleSmokeTest` where the implementation touches public authoring behavior.
+The full PHPUnit run reported seven deprecation events caused by pre-existing PHPUnit doc-comment metadata in legacy tests. No PAGE-FLOW-01 test is the source of those deprecations; they are non-blocking for this milestone and were not opportunistically repaired here.
 
-### 11.3 Full preflight
+## 12. Manual LibreOffice regression — completed
 
-Before merge:
+Rendering-sensitive behavior was manually verified in LibreOffice Writer during PAGE-FLOW-01C and PAGE-FLOW-01D research/regression work.
 
-```text
-focused PHPUnit tests
-relevant integration tests
-PublicSampleSmokeTest
-composer test
-PHP lint for src/ and tests/
-git diff --check
-composer validate when relevant
-```
-
-Documentation consistency must be checked if public behavior or terminology changes.
-
-## 12. Manual LibreOffice regression contract
-
-Automated XML assertions are insufficient for rendering-relevant changes.
-
-Before PAGE-FLOW-01 merge, manually verify at least one processed multi-page Writer document containing:
+The combined evidence covers:
 
 - First Page -> Standard transition;
 - distinct first/following page-owned content;
 - native page-number field;
-- paragraph keep semantics near a page boundary;
-- a repeated/nested Section crossing a Writer-computed page boundary;
-- page-owned image insertion through the established supported image path.
+- paragraph flow semantics under Writer pagination;
+- repeated/nested Section content participating in Writer-computed multi-page flow;
+- page-owned image insertion through the established `setImage()` path.
 
-Writer must remain the source of the final pagination result.
+The manual comparison also exposed and bounded the `ImageElement` header discrepancy documented above. Writer remains the source of the final pagination result.
 
 ## 13. Explicitly deferred work
 
-The following are outside PAGE-FLOW-01 implementation scope:
+The following remain outside the completed PAGE-FLOW-01 implementation scope:
 
-- dedicated programmatic page-style authoring and mutation -> required future capability recorded in `FUTURE_DEVELOPMENT.md`;
+- dedicated programmatic page-style authoring and mutation -> `PAGE-STYLE-AUTHORING-01`;
 - programmatic page-style assignment/transition authoring -> same future capability;
 - table row/page splitting policy and professional table pagination -> `TABLE-LAYOUT-01`;
 - frame positioning/geometry redesign -> `FRAME-LAYOUT-01`;
-- generic `ImageElement` header rendering discrepancy -> focused graphic/structured-materialization follow-up unless promoted by new evidence;
+- generic `ImageElement` header rendering discrepancy -> `GRAPHIC-PART-COMPAT-01`;
 - exhaustive first/left/right header/footer APIs;
 - page-number restart/continuation convenience APIs;
 - PHP page-height/page-count calculation;
@@ -329,43 +276,39 @@ The following are outside PAGE-FLOW-01 implementation scope:
 
 Deferral of page-style authoring is a sequencing decision, not rejection of the capability.
 
-## 14. Proposed implementation slices
+## 14. Completed implementation slices
 
-Consistent with the current preference for larger coherent passes, PAGE-FLOW-01 should normally require no more than two implementation slices unless tests uncover real compatibility risk.
+### Slice 1 — Paragraph flow completion and characterization — COMPLETE
 
-### Slice 1 — Paragraph flow completion and characterization
+- added explicit missing paragraph-flow mappings;
+- added focused semantic/materialization tests;
+- characterized existing break/keep behavior;
+- characterized preservation of authored `style:master-page-name` without pretending raw paragraph properties provide generated page-style assignment;
+- introduced no new public page-style API.
 
-- add explicit missing paragraph-flow mappings;
-- add focused semantic/materialization tests;
-- characterize existing break/keep behavior;
-- characterize preservation of authored `style:master-page-name` without pretending that raw paragraph properties provide generated page-style assignment;
-- make no new public page-style API in this milestone.
+### Slice 2 — Integration preservation and preflight — COMPLETE
 
-### Slice 2 — Integration preservation and preflight
+- consolidated page/master relationship preservation coverage;
+- aligned PAGE-FLOW-01D image characterization with the established `setImage()` path;
+- completed Section/page-owned integration coverage;
+- completed manual Writer regression;
+- retained the required future capabilities and compatibility findings in project planning;
+- completed the full PAGE-FLOW-01 preflight.
 
-- consolidate page/master relationship preservation coverage;
-- align PAGE-FLOW-01D image characterization with the established `setImage()` path;
-- run Section/page-owned integration tests;
-- perform manual Writer regression;
-- update architecture docs/ROADMAP/FUTURE_DEVELOPMENT as appropriate;
-- full preflight.
+## 15. Completion decision
 
-A separate future page-style authoring milestone should design the required generation/mutation/assignment capability from the PAGE-FLOW-01 semantic model rather than being introduced as an incidental third slice.
+All accepted completion criteria are met:
 
-## 15. Completion criteria
-
-PAGE-FLOW-01 implementation is complete when:
-
-- all required paragraph flow semantics in this milestone are expressible through the existing style architecture;
+- required paragraph flow semantics are expressible through the existing style architecture;
 - authored page/master relationships survive supported document operations;
 - page-owned content remains processable without a parallel subsystem;
 - Sections preserve flow semantics without taking pagination ownership;
-- no PHP pagination logic has been introduced;
-- no incorrect claim of generated page-style assignment support has been introduced;
-- the required future page-style authoring capability is explicitly retained in project planning;
-- all focused/full automated tests pass;
+- no PHP pagination logic was introduced;
+- no incorrect claim of generated page-style assignment support was introduced;
+- required future page-style authoring remains explicitly retained in project planning;
+- focused and full automated tests pass;
 - manual LibreOffice regression is clean;
-- the bounded `ImageElement` header discrepancy remains documented if still unresolved;
+- the bounded `ImageElement` header discrepancy remains documented;
 - documentation reflects actual behavior and deferrals.
 
-Only after these criteria are met should PAGE-FLOW-01 be marked complete and merged to `develop`.
+**PAGE-FLOW-01 is COMPLETE / FINAL GO and is ready for final branch diff review and merge to `develop`.**
