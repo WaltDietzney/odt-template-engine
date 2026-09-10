@@ -4,14 +4,14 @@ This document is the issue-oriented backlog for known limitations, architectural
 
 It complements [`ROADMAP.md`](ROADMAP.md). The roadmap defines strategic sequencing; this file records individual topics without implying that every item is approved for immediate implementation.
 
-The current planning baseline incorporates the completed semantic style architecture and the RESEARCH-01 version-1.0 reassessment recorded in [`architecture/RESEARCH-01_1_0_REASSESSMENT_DECISION.md`](architecture/RESEARCH-01_1_0_REASSESSMENT_DECISION.md).
+The current planning baseline incorporates the completed semantic style architecture, the RESEARCH-01 version-1.0 reassessment recorded in [`architecture/RESEARCH-01_1_0_REASSESSMENT_DECISION.md`](architecture/RESEARCH-01_1_0_REASSESSMENT_DECISION.md), and the completed PAGE-FLOW-01 milestone.
 
 ## Version 1.0 mandatory sequence
 
-The following blocks are now the explicit path to 1.0:
+The explicit path to 1.0 is now:
 
-1. `PAGE-FLOW-01` — page styles/page templates, paragraph flow, Section flow, page transitions, and page-style relationship to headers/footers;
-2. `TABLE-LAYOUT-01` — professional table geometry;
+1. `PAGE-FLOW-01` — **COMPLETE / FINAL GO**;
+2. `TABLE-LAYOUT-01` — professional table geometry — **NEXT ACTIVE MILESTONE**;
 3. `FRAME-LAYOUT-01` — bounded reliable frame geometry core;
 4. `TEMPLATE-RELIABILITY-01` — focused remaining template-format/control audit and only evidence-based fixes;
 5. `FINALIZATION-01` — final document/export lifecycle contract;
@@ -33,29 +33,25 @@ STYLE-API-02 is no longer active backlog debt. Application element options/fluen
 
 SR-06 established semantic graphic-style requirements and dependency boundaries without redesigning frame positioning. SR-07 established semantic table-family ownership without completing table geometry. D5F/D5G established lifecycle/materialization integration and compatibility closeout that FINALIZATION-01 must build on rather than replace.
 
-## PAGE-FLOW-01 — Page styles, paragraph flow, and Section flow
+## PAGE-FLOW-01 — Page styles, paragraph flow, and Section flow — COMPLETE / FINAL GO
 
-**Priority:** 1.0 BLOCKER / active architecture milestone
+PAGE-FLOW-01 superseded the earlier planning split of `DOC-STRUCTURE-01`, `DOC-STRUCTURE-02`, and `DOC-STRUCTURE-03` as independent later blocks. The milestone is complete and its semantic decisions are now architecture baseline.
 
-This milestone supersedes the earlier planning split of `DOC-STRUCTURE-01`, `DOC-STRUCTURE-02`, and `DOC-STRUCTURE-03` as independent later blocks. Those concerns now belong to one evidence-driven page/flow architecture milestone because their native ODF semantics interact.
+The completed milestone established:
 
-### Page style / page template semantics
+- native page/master style identity as distinct from referenced page-layout geometry;
+- preservation of authored master-page succession and paragraph-to-master-page references;
+- paragraph keep/break/widow/orphan semantics through the existing document-local style architecture;
+- Section flow as structural preservation rather than engine-side pagination;
+- page/master-style-owned headers and footers as normal structured content domains;
+- Writer/LibreOffice as the authority for physical pagination;
+- no PHP pagination engine and no broad opportunistic page-style authoring API.
 
-PAGE-FLOW-01 establishes the native semantic model around:
-
-- native master/page styles;
-- referenced page layouts;
-- page size, orientation, and margins;
-- first-page versus following-page behavior;
-- next/following page-style relationships;
-- content-triggered page-style transitions;
-- authored page styles that remain template-owned.
-
-The current `PageLayoutManager` is a narrow mutator of selected properties in an existing master-page/page-layout relationship. It is not a complete page-style system and must not silently become one.
+The accepted completion contract is recorded in [`architecture/PAGE_FLOW_01_CHANGE_CONTRACT.md`](architecture/PAGE_FLOW_01_CHANGE_CONTRACT.md).
 
 ### PAGE-STYLE-AUTHORING-01 — Programmatic page-style authoring — REQUIRED FUTURE CAPABILITY
 
-**Priority:** Confirmed future architecture requirement; sequencing after PAGE-FLOW-01 / not part of the current PAGE-FLOW-01 implementation scope
+**Priority:** Confirmed future architecture requirement; sequencing after PAGE-FLOW-01 / not part of the completed PAGE-FLOW-01 implementation scope
 
 PAGE-FLOW-01 research confirms that page styles are not merely template-owned implementation detail. The engine should eventually support semantically explicit programmatic page-style work while preserving the native distinction between `style:master-page` identity/content and referenced `style:page-layout` geometry.
 
@@ -83,51 +79,44 @@ A practical motivation is document-wide/template-wide authoring: applications sh
 
 Deferral from PAGE-FLOW-01 is a sequencing decision, not rejection of page-style authoring.
 
-### Paragraph flow semantics
+### Paragraph flow semantics — completed baseline
 
-The 1.0 behavior target includes:
+The 1.0 baseline includes:
 
 - keep with next;
-- keep paragraph/content together where native semantics provide it;
+- keep paragraph/content together;
 - widow handling;
 - orphan handling;
 - break before;
 - break after.
 
-Current paragraph style mapping already supports some of these properties, including `keep-with-next`, `break-before`, and `break-after`. PAGE-FLOW-01 completes the missing paragraph-flow mappings while preserving native values rather than interpreting pagination.
+The current paragraph style mapping supports `keep-with-next`, `keep-together`, `widows`, `orphans`, `break-before`, and `break-after`, while preserving native values rather than interpreting pagination.
 
-The engine should express or preserve native flow semantics. LibreOffice/Writer remains responsible for actual pagination.
+The engine expresses or preserves native flow semantics. LibreOffice/Writer remains responsible for actual pagination.
 
-Programmatic page-style transitions are retained as part of `PAGE-STYLE-AUTHORING-01`; PAGE-FLOW-01 must preserve authored transitions and establish their correct semantic location.
+Programmatic page-style transitions remain part of `PAGE-STYLE-AUTHORING-01`; PAGE-FLOW-01 preserves authored transitions and established their correct semantic location.
 
-### Section flow semantics
+### Section flow semantics — completed baseline
 
-Characterize and preserve:
+PAGE-FLOW-01 characterized and preserved Sections spanning page boundaries, nested Sections, repeated Section instances, paragraph flow inside Sections, native tables/lists inside Sections, and save/reopen behavior.
 
-- Sections spanning page boundaries;
-- nested Sections;
-- repeated Section instances;
-- paragraph keep/break behavior inside Sections;
-- tables and lists inside Sections;
-- save/reopen behavior.
+There is no evidenced generic Section-level native pagination ownership corresponding to paragraph keep/break semantics. Do not invent a generic Section-level "keep whole section together" property.
 
-Research found no generic Section-level native pagination ownership corresponding to paragraph keep/break semantics. Do not invent a generic Section-level "keep whole section together" property.
+### Explicit page breaks and transitions — completed baseline
 
-### Explicit page breaks and transitions
+PAGE-FLOW-01 supports/preserves native paragraph break semantics and authored page-style relationships. Programmatic page-style assignment/transition authoring remains explicitly retained for `PAGE-STYLE-AUTHORING-01` rather than being approximated through the wrong ODF property level.
 
-PAGE-FLOW-01 supports/preserves native paragraph break semantics and authored page-style relationships. Programmatic page-style assignment/transition authoring is explicitly retained for `PAGE-STYLE-AUTHORING-01` rather than being approximated through the wrong ODF property level.
+### Headers and footers — completed baseline
 
-### Headers and footers
+Headers and footers are page/master-style-owned structured content. Existing cross-document-part processing reaches this content, so no separate header/footer processing subsystem is planned. Future page-owned addressing may be designed when a concrete requirement justifies it.
 
-Headers and footers are page/master-style-owned structured content. PAGE-FLOW-01 established that existing cross-document-part processing can reach this content, so no separate header/footer processing subsystem is planned. Future page-owned addressing may be designed when a concrete requirement justifies it.
+### PAGE-FLOW non-goals retained as architecture boundaries
 
-### Non-goals
-
-PAGE-FLOW-01 must not implement a PHP pagination engine, calculate page heights, introduce CV-specific helpers, opportunistically invent the future page-style authoring API, or absorb unrelated Writer-field semantics.
+Do not introduce a PHP pagination engine, page-height calculations, CV-specific pagination helpers, opportunistic page-style authoring APIs, or unrelated Writer-field semantics under the PAGE-FLOW baseline.
 
 ## TABLE-LAYOUT-01 — Professional table geometry
 
-**Priority:** 1.0 BLOCKER
+**Priority:** 1.0 BLOCKER / NEXT ACTIVE MILESTONE
 
 The previously separate table-layout backlog topics are consolidated for 1.0 planning into one coherent capability block:
 
@@ -407,9 +396,9 @@ The current strategic order is no longer the pre-RESEARCH-01 list of defaults, f
 The mandatory path is now:
 
 ```text
-PAGE-FLOW-01
+PAGE-FLOW-01                 COMPLETE
     ↓
-TABLE-LAYOUT-01
+TABLE-LAYOUT-01              NEXT / ACTIVE
     ↓
 FRAME-LAYOUT-01
     ↓
