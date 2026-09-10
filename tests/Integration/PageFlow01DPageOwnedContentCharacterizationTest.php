@@ -82,10 +82,26 @@ final class PageFlow01DPageOwnedContentCharacterizationTest extends TestCase
                 'Scalar replacement must preserve the native page-number field.'
             );
 
-            self::assertSame(
-                0,
-                $xpath->query('//style:header//*[contains(text(), "{{")] | //style:footer//*[contains(text(), "{{")]')->length,
-                'All scalar placeholders handled by render() should be resolved in page-owned content.'
+            foreach (['person_name', 'role', 'document_title'] as $scalarPlaceholder) {
+                self::assertStringNotContainsString(
+                    '{{' . $scalarPlaceholder . '}}',
+                    $stylesDom->textContent,
+                    sprintf(
+                        'The assigned scalar placeholder %s must be resolved in page-owned content.',
+                        $scalarPlaceholder
+                    )
+                );
+            }
+
+            self::assertStringContainsString(
+                '{{header_block}}',
+                $standardHeader->textContent,
+                'An unassigned structured placeholder must remain untouched by the isolated scalar render path.'
+            );
+            self::assertStringContainsString(
+                '{{header_logo}}',
+                $standardHeader->textContent,
+                'An unassigned resource-bearing placeholder must remain untouched by the isolated scalar render path.'
             );
 
             $standardMaster = $xpath->query(
