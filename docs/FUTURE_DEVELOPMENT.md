@@ -162,6 +162,26 @@ The 1.0 core should cover:
 
 1.0 does not require every Writer drawing or positioning option.
 
+### GRAPHIC-PART-COMPAT-01 — Structured graphic materialization across document parts
+
+**Priority:** Focused compatibility investigation; not part of PAGE-FLOW-01 unless later evidence makes it a dependency
+
+PAGE-FLOW-01D exposed a bounded Writer-visibility discrepancy across document parts:
+
+```text
+ImageElement via setElement() / content.xml body      -> Writer-visible
+ImageElement via setElement() / styles.xml header     -> not Writer-visible
+setImage() / styles.xml header                         -> Writer-visible
+```
+
+The image resource, manifest entry, `draw:frame`, and `draw:image` reference were present in the failing structured-header result. Changing only the generated graphic parent style from `Standard` to `Graphics` did not make the image visible. Existing body samples confirm that the semantic `ImageElement` path is not generally broken.
+
+The investigation must therefore compare the actual body and page-owned materialization contexts before changing graphic-style or frame semantics. It should determine whether the discrepancy is caused by document-part-specific ODF structure, insertion context, automatic-style placement/scope, frame anchoring constraints, or another Writer interoperability rule.
+
+Do not fold this finding into PAGE-FLOW pagination logic, and do not assume it is merely a frame-positioning defect. Coordinate with `FRAME-LAYOUT-01` only if evidence shows that the root cause belongs to the shared frame model.
+
+Until resolved, page-owned image insertion characterized for PAGE-FLOW-01 uses the established public `setImage()` path.
+
 ## TEMPLATE-RELIABILITY-01 — Remaining template-format/control audit
 
 **Priority:** 1.0 BLOCKER AS AUDIT
@@ -399,8 +419,6 @@ FINALIZATION-01
     ↓
 RELEASE-1.0
 ```
-
-`PAGE-STYLE-AUTHORING-01` is a confirmed future capability established by PAGE-FLOW-01. Its exact sequencing is intentionally not inserted into the mandatory 1.0 path by this decision; it must not be lost merely because PAGE-FLOW-01 implements only preservation and paragraph-flow completion.
 
 Smaller independent list, lifecycle, sample-infrastructure, asset, or reference-fixture slices may be inserted where useful, but they must not obscure the 1.0 blockers.
 
