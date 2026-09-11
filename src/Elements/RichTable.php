@@ -167,15 +167,163 @@ class RichTable extends OdtElement
      */
     public function setStyle(array $style): self
     {
-        if ($style === []) {
+        return $this->replaceElementOwnedTableStyle($style);
+    }
+
+    /**
+     * Assigns a friendly element-owned table style.
+     *
+     * This is the semantic master API for table-level style/layout authoring.
+     * It replaces the complete current local table style and explicitly
+     * switches away from a named-style reference when necessary.
+     *
+     * @param array<string, mixed> $options
+     * @return self
+     */
+    public function setTableStyle(array $options): self
+    {
+        if ($options === []) {
+            return $this->replaceElementOwnedTableStyle([]);
+        }
+
+        if (array_key_exists('width', $options) && array_key_exists('relative-width', $options)) {
+            throw new \InvalidArgumentException(
+                'Table style cannot define both width and relative-width.'
+            );
+        }
+
+        $this->validateFriendlyTableStyleOptions($options);
+
+        return $this->replaceElementOwnedTableStyle(
+            StyleMapper::mapTableStyleOptions($options)
+        );
+    }
+
+    /**
+     * Sets the absolute width of the table.
+     */
+    public function setTableWidth(string $width): self
+    {
+        $this->assertElementOwnedTableStyleMutationAllowed();
+        $this->assertOdfLength($width, 'Table width');
+
+        $options = $this->tableStyleOptions;
+        unset($options['style:rel-width']);
+        $options['style:width'] = $width;
+
+        return $this->replaceElementOwnedTableStyle($options);
+    }
+
+    /**
+     * Sets the relative width of the table.
+     */
+    public function setTableRelativeWidth(string $width): self
+    {
+        $this->assertElementOwnedTableStyleMutationAllowed();
+
+        if (!preg_match('/^(?:\d+(?:\.\d+)?|\.\d+)%$/', trim($width))) {
+            throw new \InvalidArgumentException(
+                'Relative table width must be a percentage string such as "60%".'
+            );
+        }
+
+        $options = $this->tableStyleOptions;
+        unset($options['style:width']);
+        $options['style:rel-width'] = trim($width);
+
+        return $this->replaceElementOwnedTableStyle($options);
+    }
+
+    /**
+     * Sets the horizontal alignment of the table as a whole.
+     */
+    public function setTableAlignment(string $alignment): self
+    {
+        $this->assertElementOwnedTableStyleMutationAllowed();
+
+        $alignment = strtolower(trim($alignment));
+        if (!in_array($alignment, ['left', 'center', 'right', 'margins'], true)) {
+            throw new \InvalidArgumentException(
+                'Table alignment must be one of: left, center, right, margins.'
+            );
+        }
+
+        $options = $this->tableStyleOptions;
+        $options['table:align'] = $alignment;
+
+        return $this->replaceElementOwnedTableStyle($options);
+    }
+
+    /**
+     * Replaces the complete element-owned normalized table property state.
+     *
+     * @param array<string, mixed> $properties
+     */
+    private function replaceElementOwnedTableStyle(array $properties): self
+    {
+        if ($properties === []) {
             $this->tableStyleOptions = [];
             $this->tableStyleName = null;
             return $this;
         }
 
-        $this->tableStyleOptions = $style;
-        $this->tableStyleName = StyleMapper::generateStyleName($style);
+        $this->tableStyleOptions = $properties;
+        $this->tableStyleName = StyleMapper::generateStyleName($properties);
+
         return $this;
+    }
+
+    private function assertElementOwnedTableStyleMutationAllowed(): void
+    {
+        if ($this->tableStyleName !== null && $this->tableStyleOptions === []) {
+            throw new \LogicException(
+                'Cannot mutate table style properties while a named table style reference is active.'
+            );
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     */
+    private function validateFriendlyTableStyleOptions(array $options): void
+    {
+        if (array_key_exists('width', $options)) {
+            if (!is_string($options['width'])) {
+                throw new \InvalidArgumentException('Table width must be a length string.');
+            }
+            $this->assertOdfLength($options['width'], 'Table width');
+        }
+
+        if (array_key_exists('relative-width', $options)) {
+            if (!is_string($options['relative-width'])
+                || !preg_match('/^(?:\d+(?:\.\d+)?|\.\d+)%$/', trim($options['relative-width']))) {
+                throw new \InvalidArgumentException(
+                    'Relative table width must be a percentage string such as "60%".'
+                );
+            }
+        }
+
+        if (array_key_exists('alignment', $options)) {
+            if (!is_string($options['alignment'])
+                || !in_array(strtolower(trim($options['alignment'])), ['left', 'center', 'right', 'margins'], true)) {
+                throw new \InvalidArgumentException(
+                    'Table alignment must be one of: left, center, right, margins.'
+                );
+            }
+
+            $options['alignment'] = strtolower(trim($options['alignment']));
+        }
+    }
+
+    private function assertOdfLength(string $value, string $label): void
+    {
+        $value = trim($value);
+
+        if (!preg_match('/^(?:\d+(?:\.\d+)?|\.\d+)(?:cm|mm|in|pt|pc|px)$/', $value)) {
+            throw new \InvalidArgumentException(
+                sprintf('%s must be a non-empty ODF-compatible length string.', $label)
+            );
+        }
     }
 
     /**
