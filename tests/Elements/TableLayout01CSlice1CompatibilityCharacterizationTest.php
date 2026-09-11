@@ -9,11 +9,8 @@ use OdtTemplateEngine\Elements\RichTable;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Freezes pre-Slice-1 RichTable table-style call-order behavior.
- *
- * These tests characterize the existing compatibility surface only. They do
- * not approve the current common/styles.xml scope for element-owned table
- * definitions as target architecture.
+ * Protects the characterized RichTable call-order compatibility surface while
+ * asserting the TABLE-LAYOUT-01C ownership correction for local definitions.
  */
 final class TableLayout01CSlice1CompatibilityCharacterizationTest extends TestCase
 {
@@ -50,8 +47,8 @@ final class TableLayout01CSlice1CompatibilityCharacterizationTest extends TestCa
 
         self::assertCount(1, $requirements);
         self::assertSame(StyleRequirement::KIND_DEFINITION, $requirements[0]->kind());
-        self::assertSame(StyleRequirement::SCOPE_COMMON, $requirements[0]->scope());
-        self::assertSame(StyleRequirement::PART_STYLES, $requirements[0]->documentPart());
+        self::assertSame(StyleRequirement::SCOPE_AUTOMATIC, $requirements[0]->scope());
+        self::assertSame(StyleRequirement::PART_CONTENT, $requirements[0]->documentPart());
         self::assertNotSame('NamedTableStyle', $requirements[0]->name());
         self::assertSame($table->getTableStyleName(), $requirements[0]->name());
         self::assertSame([
@@ -96,7 +93,7 @@ final class TableLayout01CSlice1CompatibilityCharacterizationTest extends TestCa
         ], $requirements[0]->propertyGroups());
     }
 
-    public function testCurrentElementOwnedDefinitionIsCommonAndStylesXmlOwned(): void
+    public function testElementOwnedDefinitionIsAutomaticAndContentXmlOwned(): void
     {
         $table = (new RichTable())->setStyle([
             'style:width' => '15cm',
@@ -107,8 +104,8 @@ final class TableLayout01CSlice1CompatibilityCharacterizationTest extends TestCa
 
         self::assertCount(1, $requirements);
         self::assertSame(StyleRequirement::KIND_DEFINITION, $requirements[0]->kind());
-        self::assertSame(StyleRequirement::SCOPE_COMMON, $requirements[0]->scope());
-        self::assertSame(StyleRequirement::PART_STYLES, $requirements[0]->documentPart());
+        self::assertSame(StyleRequirement::SCOPE_AUTOMATIC, $requirements[0]->scope());
+        self::assertSame(StyleRequirement::PART_CONTENT, $requirements[0]->documentPart());
         self::assertSame('table', $requirements[0]->family());
     }
 }
