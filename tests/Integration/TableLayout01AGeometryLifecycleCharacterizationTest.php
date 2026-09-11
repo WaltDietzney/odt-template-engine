@@ -191,21 +191,21 @@ final class TableLayout01AGeometryLifecycleCharacterizationTest extends TestCase
     }
 
     #[RunInSeparateProcess]
-    public function testUnsupportedExactRowHeightDoesNotMaterializeRowStyleOrReference(): void
+    public function testExactRowHeightMaterializesRowStyleAndReference(): void
     {
         $table = new RichTable();
-        $table->setTableName('TL01ExactIgnored');
+        $table->setTableName('TL01ExactHeight');
         $table->addRow(['Exact'], ['row-height' => '2cm']);
 
         $template = new OdtTemplate($this->templatePath());
         $template->setElement('tableblock', $table);
-        $output = $this->outputPath('exact-ignored');
+        $output = $this->outputPath('exact-height');
         $template->save($output);
 
         $contentXml = $this->entry($output, 'content.xml');
-        self::assertSame(0, $this->styleCount($contentXml, 'TL01ExactIgnored_ro0', 'table-row'));
-        self::assertStringNotContainsString('table:style-name="TL01ExactIgnored_ro0"', $contentXml);
-        self::assertStringNotContainsString('style:row-height="2cm"', $contentXml);
+        self::assertSame(1, $this->styleCount($contentXml, 'TL01ExactHeight_ro0', 'table-row'));
+        self::assertStringContainsString('table:style-name="TL01ExactHeight_ro0"', $contentXml);
+        self::assertStringContainsString('style:row-height="2cm"', $contentXml);
     }
 
     private const STYLE_NS = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
