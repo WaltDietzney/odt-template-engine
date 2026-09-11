@@ -194,6 +194,16 @@ class RichTable extends OdtElement
 
         $this->validateFriendlyTableStyleOptions($options);
 
+        if (isset($options['width']) && is_string($options['width'])) {
+            $options['width'] = trim($options['width']);
+        }
+        if (isset($options['relative-width']) && is_string($options['relative-width'])) {
+            $options['relative-width'] = trim($options['relative-width']);
+        }
+        if (isset($options['alignment']) && is_string($options['alignment'])) {
+            $options['alignment'] = strtolower(trim($options['alignment']));
+        }
+
         return $this->replaceElementOwnedTableStyle(
             StyleMapper::mapTableStyleOptions($options)
         );
