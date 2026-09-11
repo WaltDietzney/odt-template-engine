@@ -36,7 +36,7 @@ final class FrameLayout01CSlice6VisualStructureRegressionTest extends TestCase
     public function testParagraphAnchoredImageElementRemainsInsideParagraphCarrier(): void
     {
         $template = new OdtTemplate(
-            dirname(__DIR__, 2) . '/samples/templates/template_17_textfield.odt'
+            dirname(__DIR__, 2) . '/samples/templates/sample_textfeld.odt'
         );
         $this->templates[] = $template;
 
