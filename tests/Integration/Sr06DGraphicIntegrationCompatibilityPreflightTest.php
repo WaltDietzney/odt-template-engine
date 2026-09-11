@@ -65,14 +65,14 @@ final class Sr06DGraphicIntegrationCompatibilityPreflightTest extends TestCase
         self::assertArrayHasKey($legacyName, $template->frameStylesForTest());
     }
 
-    public function testSavedDrawTextBoxRetainsLegacyCarrierWhenUnmigratedLayoutPropertyIsRequired(): void
+    public function testSavedDrawTextBoxRetainsLegacyCarrierWhenUnmigratedPropertyIsRequired(): void
     {
         $template = $this->template();
         $box = new DrawTextBox('CompatibilityCarrierBox', [
             'width' => '6cm',
             'height' => '2cm',
             'background-color' => '#123456',
-            'allow-overlap' => 'true',
+            'rx' => '0.2cm',
         ]);
         $semantic = iterator_to_array($box->getOwnStyleRequirements(), false)[0];
         $legacyName = (string) array_key_first($box->getOwnFrameStyleRequirements());
@@ -89,7 +89,7 @@ final class Sr06DGraphicIntegrationCompatibilityPreflightTest extends TestCase
         self::assertStringNotContainsString('draw:style-name="' . $semantic->name() . '"', $content);
         self::assertSame(1, substr_count($styles, 'style:name="' . $semantic->name() . '"'));
         self::assertSame(1, substr_count($styles, 'style:name="' . $legacyName . '"'));
-        self::assertStringContainsString('loext:allow-overlap="true"', $styles);
+        self::assertStringContainsString('draw:corner-radius="0.2cm"', $styles);
         self::assertArrayHasKey($this->semanticIdentity($semantic), $template->semanticDefinitionsForTest());
         self::assertArrayHasKey($legacyName, $template->frameStylesForTest());
     }
