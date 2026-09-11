@@ -13,6 +13,9 @@ use PHPUnit\Framework\TestCase;
 
 final class FrameLayout01CSlice2DrawTextBoxTest extends TestCase
 {
+    /** @var list<DOMDocument> */
+    private array $domDocuments = [];
+
     public function testMasterFrameLayoutUsesNativeCarrierOwnership(): void
     {
         $box = (new DrawTextBox('FriendlyBox', [
@@ -193,6 +196,7 @@ final class FrameLayout01CSlice2DrawTextBoxTest extends TestCase
     private function frame(DrawTextBox $box): DOMElement
     {
         $dom = new DOMDocument('1.0', 'UTF-8');
+        $this->domDocuments[] = $dom;
         $node = $box->toDomNode($dom);
 
         if ($node instanceof DOMElement && $node->nodeName === 'draw:frame') {
