@@ -89,7 +89,7 @@ final class Sr06DGraphicIntegrationCompatibilityPreflightTest extends TestCase
         self::assertStringNotContainsString('draw:style-name="' . $semantic->name() . '"', $content);
         self::assertSame(1, substr_count($styles, 'style:name="' . $semantic->name() . '"'));
         self::assertSame(1, substr_count($styles, 'style:name="' . $legacyName . '"'));
-        self::assertStringContainsString('draw:corner-radius="0.2cm"', $styles);
+        self::assertStringContainsString('svg:rx="0.2cm"', $styles);
         self::assertArrayHasKey($this->semanticIdentity($semantic), $template->semanticDefinitionsForTest());
         self::assertArrayHasKey($legacyName, $template->frameStylesForTest());
     }
