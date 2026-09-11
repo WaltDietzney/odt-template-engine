@@ -6,6 +6,7 @@ use DOMDocument;
 use DOMElement;
 use DOMNode;
 use OdtTemplateEngine\Document\StyleRequirement;
+use OdtTemplateEngine\Document\StructuredInsertionMode;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Utils\StyleMapper;
 
@@ -361,6 +362,16 @@ class ImageElement extends OdtElement
 
         return (string) ($this->imageOptions['style-name']
             ?? StyleMapper::generateStyleName($this->imageOptions));
+    }
+
+    public function structuredInsertionMode(): StructuredInsertionMode
+    {
+        $anchor = $this->drawingLayout?->anchor()
+            ?? ($this->imageOptions['text:anchor-type'] ?? $this->anchor ?? 'paragraph');
+
+        return $anchor === 'as-char'
+            ? StructuredInsertionMode::INLINE_TEXT_FLOW
+            : StructuredInsertionMode::BLOCK;
     }
 
     /**
