@@ -77,7 +77,10 @@ final class StructuredElementMaterializer
             }
 
             if (
-                $insertionMode === StructuredInsertionMode::INLINE_TEXT_FLOW
+                in_array($insertionMode, [
+                    StructuredInsertionMode::INLINE_TEXT_FLOW,
+                    StructuredInsertionMode::PRESERVE_TEXT_CONTAINER,
+                ], true)
                 || in_array($replacement->nodeName, ['text:span', 'text:s', 'text:line-break'], true)
             ) {
                 $parts = explode('{{' . $key . '}}', $textNode->nodeValue);
