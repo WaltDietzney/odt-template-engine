@@ -11,7 +11,7 @@ The current planning baseline incorporates the completed semantic style architec
 The explicit path to 1.0 is now:
 
 1. `PAGE-FLOW-01` — **COMPLETE / FINAL GO**;
-2. `TABLE-LAYOUT-01` — professional table geometry — **IMPLEMENTATION COMPLETE / FINAL CLOSEOUT PENDING**;
+2. `TABLE-LAYOUT-01` — professional table geometry — **COMPLETE / FINAL GO**;
 3. `FRAME-LAYOUT-01` — bounded reliable frame geometry core;
 4. `TEMPLATE-RELIABILITY-01` — focused remaining template-format/control audit and only evidence-based fixes;
 5. `FINALIZATION-01` — final document/export lifecycle contract;
@@ -116,7 +116,7 @@ Do not introduce a PHP pagination engine, page-height calculations, CV-specific 
 
 ## TABLE-LAYOUT-01 — Professional table geometry
 
-**Priority:** 1.0 BLOCKER / IMPLEMENTATION COMPLETE / FINAL CLOSEOUT PENDING
+**Priority:** COMPLETE / FINAL GO
 
 The previously separate table-layout backlog topics are consolidated for 1.0 planning into one coherent capability block:
 
