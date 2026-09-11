@@ -439,6 +439,22 @@ class StyleMapper
                 case 'border-bottom':
                     $mapped['fo:border-bottom'] = $value;
                     break;
+                case 'vertical-align':
+                    if (!is_string($value)) {
+                        throw new \InvalidArgumentException(
+                            'Cell vertical alignment must be a string.'
+                        );
+                    }
+
+                    $alignment = strtolower(trim($value));
+                    if (!in_array($alignment, ['top', 'middle', 'bottom', 'automatic'], true)) {
+                        throw new \InvalidArgumentException(
+                            'Cell vertical alignment must be one of: top, middle, bottom, automatic.'
+                        );
+                    }
+
+                    $mapped['style:vertical-align'] = $alignment;
+                    break;
                 case 'align':
                 case 'text-align':
                     // Achtung: wird bei Absatzstilen später nochmal extra behandelt!
