@@ -12,6 +12,9 @@ use PHPUnit\Framework\TestCase;
 
 final class FrameLayout01CSlice5CompatibilityPolicyTest extends TestCase
 {
+    /** @var list<DOMDocument> */
+    private array $domDocuments = [];
+
     public function testCompatibilityPoliciesShareOneSemanticGraphicRequirement(): void
     {
         $box = (new DrawTextBox('PolicyBox', [
@@ -106,6 +109,8 @@ final class FrameLayout01CSlice5CompatibilityPolicyTest extends TestCase
 
         $firstDom = new DOMDocument('1.0', 'UTF-8');
         $secondDom = new DOMDocument('1.0', 'UTF-8');
+        $this->domDocuments[] = $firstDom;
+        $this->domDocuments[] = $secondDom;
 
         $firstFrame = $this->frame($first, $firstDom);
         $secondFrame = $this->frame($second, $secondDom);
@@ -118,15 +123,22 @@ final class FrameLayout01CSlice5CompatibilityPolicyTest extends TestCase
 
     private function frame(DrawTextBox $box, DOMDocument $dom): DOMElement
     {
+        $this->domDocuments[] = $dom;
         $node = $box->toDomNode($dom);
+        $dom->appendChild($node);
 
         if ($node instanceof DOMElement && $node->nodeName === 'draw:frame') {
             return $node;
         }
 
         self::assertInstanceOf(DOMElement::class, $node);
-        self::assertInstanceOf(DOMElement::class, $node->firstChild);
 
-        return $node->firstChild;
+        $frames = $dom->getElementsByTagName('draw:frame');
+        self::assertSame(1, $frames->length);
+
+        $frame = $frames->item(0);
+        self::assertInstanceOf(DOMElement::class, $frame);
+
+        return $frame;
     }
 }
