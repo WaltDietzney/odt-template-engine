@@ -6,6 +6,7 @@ use DOMDocument;
 use DOMElement;
 use DOMNode;
 use OdtTemplateEngine\Document\StyleRequirement;
+use OdtTemplateEngine\Document\StructuredInsertionMode;
 use OdtTemplateEngine\Utils\StyleMapper;
 
 /**
@@ -136,6 +137,13 @@ class DrawTextBox extends OdtElement
         $p = $dom->createElement('text:p');
         $p->appendChild($frame);
         return $p;
+    }
+
+    public function structuredInsertionMode(): StructuredInsertionMode
+    {
+        return $this->effectiveAnchor() === 'as-char'
+            ? StructuredInsertionMode::INLINE_TEXT_FLOW
+            : StructuredInsertionMode::BLOCK;
     }
 
     public function toStyleDomNode(DOMDocument $dom): ?DOMElement
