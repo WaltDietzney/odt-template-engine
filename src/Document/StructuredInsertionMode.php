@@ -11,4 +11,5 @@ enum StructuredInsertionMode: string
 {
     case BLOCK = 'block';
     case INLINE_TEXT_FLOW = 'inline-text-flow';
+    case PRESERVE_TEXT_CONTAINER = 'preserve-text-container';
 }
