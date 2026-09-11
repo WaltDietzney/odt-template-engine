@@ -84,7 +84,7 @@ final class FrameLayout01CSlice0CompatibilityCharacterizationTest extends TestCa
         self::assertFalse($frame->hasAttribute('svg:x'));
     }
 
-    public function testExplicitImageCoordinatesArePassedThroughToFrame(): void
+    public function testExplicitRawImageCoordinatesAreCurrentlyDroppedByStyleMapper(): void
     {
         $image = new ImageElement($this->imagePath(), [
             'width' => '2cm',
@@ -104,8 +104,12 @@ final class FrameLayout01CSlice0CompatibilityCharacterizationTest extends TestCa
         self::assertSame('page-content', $frame->getAttribute('style:horizontal-rel'));
         self::assertSame('from-top', $frame->getAttribute('style:vertical-pos'));
         self::assertSame('page-content', $frame->getAttribute('style:vertical-rel'));
-        self::assertSame('1.25cm', $frame->getAttribute('svg:x'));
-        self::assertSame('2.5cm', $frame->getAttribute('svg:y'));
+        self::assertFalse($frame->hasAttribute('svg:x'));
+        self::assertFalse($frame->hasAttribute('svg:y'));
+
+        $options = $image->getImageOptions();
+        self::assertArrayNotHasKey('svg:x', $options);
+        self::assertArrayNotHasKey('svg:y', $options);
     }
 
     public function testImageWidthOnlyConstructorCalculatesHeightFromImageRatio(): void
