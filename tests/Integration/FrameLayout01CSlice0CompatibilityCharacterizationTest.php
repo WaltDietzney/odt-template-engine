@@ -12,6 +12,9 @@ use PHPUnit\Framework\TestCase;
 
 final class FrameLayout01CSlice0CompatibilityCharacterizationTest extends TestCase
 {
+    /** @var list<DOMDocument> */
+    private array $domDocuments = [];
+
     public function testLegacyCoordinateModeSettersDoNotInventCoordinates(): void
     {
         $box = (new DrawTextBox('LegacyCoordinateModes'))
@@ -174,6 +177,7 @@ final class FrameLayout01CSlice0CompatibilityCharacterizationTest extends TestCa
     private function frame(DrawTextBox $box): DOMElement
     {
         $dom = new DOMDocument('1.0', 'UTF-8');
+        $this->domDocuments[] = $dom;
         $node = $box->toDomNode($dom);
 
         if ($node instanceof DOMElement && $node->nodeName === 'draw:frame') {
