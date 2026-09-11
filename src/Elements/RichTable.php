@@ -215,6 +215,8 @@ class RichTable extends OdtElement
     public function setTableWidth(string $width): self
     {
         $this->assertElementOwnedTableStyleMutationAllowed();
+
+        $width = trim($width);
         $this->assertOdfLength($width, 'Table width');
 
         $options = $this->tableStyleOptions;
