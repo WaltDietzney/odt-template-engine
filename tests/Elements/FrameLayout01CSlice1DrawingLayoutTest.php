@@ -183,4 +183,42 @@ final class FrameLayout01CSlice1DrawingLayoutTest extends TestCase
 
         self::assertSame('page', $layout->horizontalRelation());
     }
+
+    public function testFriendlySizeRejectsNegativeLength(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        DrawingLayout::fromArray([
+            'width' => '-2cm',
+        ]);
+    }
+
+    public function testFriendlyOffsetAllowsSignedLength(): void
+    {
+        $layout = DrawingLayout::fromArray([
+            'anchor' => 'paragraph',
+            'vertical' => [
+                'offset' => '-0.3cm',
+                'relative-to' => 'paragraph',
+            ],
+        ]);
+
+        self::assertSame('-0.3cm', $layout->verticalOffset());
+    }
+
+    public function testChangingAnchorRejectsIncompatibleRetainedAxisState(): void
+    {
+        $layout = DrawingLayout::fromArray([
+            'anchor' => 'paragraph',
+            'horizontal' => [
+                'alignment' => 'center',
+                'relative-to' => 'paragraph',
+            ],
+        ]);
+
+        $this->expectException(InvalidArgumentException::class);
+
+        $layout->withAnchor('page');
+    }
+
 }
