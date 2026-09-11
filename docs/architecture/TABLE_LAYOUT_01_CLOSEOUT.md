@@ -1,6 +1,6 @@
 # TABLE-LAYOUT-01 — Closeout Checkpoint
 
-Status: IMPLEMENTATION COMPLETE / FINAL LOCAL PREFLIGHT + TEMPLATE COMMIT PENDING
+Status: COMPLETE / FINAL GO
 
 Branch: `architecture/table-layout-01`
 
@@ -159,9 +159,19 @@ The first repository-wide `composer test` after Slice 4 exposed exactly two stal
 1. `StyleApi02FADocumentOwnershipTest` still expected generated `RichTable` definitions in common/`styles.xml`;
 2. `TableLayout01AGeometryLifecycleCharacterizationTest` still expected exact row height to remain unsupported.
 
-Both tests have now been aligned with the approved TABLE-LAYOUT-01C contract.
+Both tests were aligned with the approved TABLE-LAYOUT-01C contract.
 
-A final repository-wide rerun is still required before declaring FINAL GO because that rerun cannot be performed through the GitHub editing channel.
+The final repository-wide rerun passed:
+
+```text
+662 tests
+4370 assertions
+0 failures
+0 errors
+7 PHPUnit deprecations
+```
+
+The deprecations are existing PHPUnit metadata deprecations and are not TABLE-LAYOUT-01 failures.
 
 ## 8. LibreOffice manual regression
 
@@ -224,16 +234,18 @@ It is a bounded future architecture topic, not a reason to weaken semantic confl
 
 ## 10. Sample 26 repository state
 
-The PHP showcase script is committed.
-
-The ODT template was created locally during manual regression and must be added from the local worktree before the sample is made part of the public sample smoke range.
-
-Do not regenerate or replace unrelated sample output files while doing this.
-
-Required local commit scope:
+The public showcase is complete in the branch:
 
 ```text
+samples/sample_26_tableLayout.php
 samples/templates/template_26_tableLayout.odt
+```
+
+`PublicSampleSmokeTest` now includes Sample 26 and passed with:
+
+```text
+1 test
+192 assertions
 ```
 
 The generated output:
@@ -242,21 +254,19 @@ The generated output:
 samples/output/output_26_tableLayout.odt
 ```
 
-remains a local regression artifact and must not be committed.
+remains a local regression artifact and is intentionally not committed.
 
-## 11. Remaining closeout steps
+## 11. Final preflight
 
-Before TABLE-LAYOUT-01 can be marked COMPLETE / FINAL GO and merged to `develop`, perform exactly these final actions:
+Final local validation completed successfully:
 
-1. add and commit only `samples/templates/template_26_tableLayout.odt`;
-2. optionally extend `PublicSampleSmokeTest` from 25 to 26 only after the template is present in the branch;
-3. rerun full `composer test`;
-4. rerun PHP lint for `src/` and `tests/`;
-5. rerun `composer validate`;
-6. rerun `git diff --check`;
-7. confirm no local sample outputs, unrelated template experiments, `research/`, `tmp/`, or LibreOffice lock files enter the commit;
-8. final diff review;
-9. PR `architecture/table-layout-01 -> develop`.
+- `PublicSampleSmokeTest`: passed, including Sample 26;
+- full `composer test`: 662 tests, 4370 assertions, no failures/errors;
+- PHP lint for `src/` and `tests/`: passed;
+- `composer validate`: passed;
+- `git diff --check`: passed;
+- manual LibreOffice regression: passed;
+- branch-local generated sample outputs, LibreOffice lock files, `research/`, and `tmp/` remain uncommitted local artifacts.
 
 ## 12. Current verdict
 
@@ -264,10 +274,10 @@ TABLE-LAYOUT-01 implementation is complete and the intended ODF/Writer behavior 
 
 No unresolved production-code defect is currently known.
 
-The milestone is deliberately left at:
+The milestone satisfies the TABLE-LAYOUT-01C completion criteria and is accepted as:
 
 ```text
-IMPLEMENTATION COMPLETE / FINAL LOCAL PREFLIGHT + TEMPLATE COMMIT PENDING
+COMPLETE / FINAL GO
 ```
 
-rather than being falsely marked FINAL GO before the locally created binary template and final repository-wide rerun are recorded.
+The branch is ready for final PR review and merge into `develop`.
