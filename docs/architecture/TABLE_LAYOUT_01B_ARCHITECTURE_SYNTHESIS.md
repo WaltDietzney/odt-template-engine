@@ -43,7 +43,7 @@ APPLICATION / AUTHORING SEMANTICS
     row height
     minimum row height
     vertical cell alignment
-    potentially whole-table placement where justified
+    whole-table alignment / placement
 
             ↓
 
@@ -327,6 +327,7 @@ This is restoration of the already-approved SR-07 ownership rule, not a new styl
 The mandatory 1.0 milestone scope is:
 
 - explicit table width;
+- whole-table alignment / placement;
 - absolute column widths;
 - relative column widths;
 - row/minimum height;
@@ -394,7 +395,7 @@ This belongs to `table-cell`, not paragraph alignment.
 
 Existing native `style:vertical-align` compatibility behavior remains available.
 
-## 9. Whole-table placement/alignment
+## 9. Whole-table placement/alignment — mandatory 1.0 capability
 
 Writer evidence shows:
 
@@ -404,18 +405,18 @@ table width
 table placement/alignment
 ```
 
-Native placement includes `table:align`, but the mandatory TABLE-LAYOUT-01 backlog does not independently list a broad table-alignment feature.
+Whole-table alignment was omitted from the earlier 1.0 backlog summary by oversight. It is now explicitly part of TABLE-LAYOUT-01 and is a **must-have for 1.0**.
 
-The public authoring form for whole-table placement is therefore **not automatically approved** merely because the native property exists.
+The native property is `table:align`. Writer/ODF evidence already establishes at least the relevant table-level values `left`, `center`, `right`, and `margins`.
 
-Two constraints are already clear:
+The public authoring form must remain engine-level and table-specific:
 
-1. normal application code should not be required to use `table:align`;
-2. a generic method name such as `setAlignment()` would be semantically ambiguous because table/cell/paragraph alignment are different owners.
+1. normal application code must not be required to use the native QName `table:align`;
+2. a generic method name such as `setAlignment()` is too ambiguous because table placement, cell vertical alignment, and paragraph horizontal alignment are different semantic owners;
+3. the accepted API must make it explicit that this is alignment of the **table as a whole**;
+4. alignment must share the same element-owned table semantic state and materialization path as table width rather than creating a parallel subsystem.
 
-Whether TABLE-LAYOUT-01 must add a friendly whole-table placement semantic to make explicit width professionally useful belongs to the next API-design step. If it is included, the name and mapping must be table-specific and must share the same table semantic state rather than create a parallel subsystem.
-
-Until then, existing raw/native alignment remains a compatibility escape hatch.
+The exact method/option names are deliberately left to the API-design step, but inclusion of whole-table alignment itself is no longer open.
 
 ## 10. Array API versus dedicated geometry methods
 
@@ -578,13 +579,14 @@ The bounded element-owned table-style scope correction described above is not co
 
 The Change Contract should authorize only small slices after public semantics are accepted.
 
-### Slice 1 — Element-owned table-style scope correction + explicit table-width semantics
+### Slice 1 — Element-owned table-style scope correction + table width/alignment semantics
 
 Potential responsibilities:
 
 - characterize current common/`styles.xml` behavior before changing it;
 - move element-owned generated table definitions to automatic/`content.xml` if approved by contract;
 - add the accepted friendly absolute/relative table-width semantics;
+- add the accepted friendly whole-table alignment semantics;
 - preserve named/common style semantics;
 - verify coexistence with absolute and relative column APIs;
 - verify repeated save/reopen stability.
@@ -624,7 +626,7 @@ The evidence/architecture layer is now substantially resolved.
 The remaining work is primarily public API design and compatibility contract shaping:
 
 1. What is the preferred engine-level public representation of absolute and relative overall table width?
-2. Does TABLE-LAYOUT-01 require friendly whole-table placement/alignment for 1.0, and if so what unambiguous table-specific semantic name/options should it use?
+2. What unambiguous engine-level public name/options should express mandatory whole-table alignment?
 3. Should table-level authoring expose both a friendly option-array form and dedicated convenience methods, or only the minimum surface required for 1.0?
 4. How do those friendly forms interact with existing raw/native `RichTable::setStyle()` without converting it into the recommended API?
 5. How is named-style reference state protected from accidental mutation?
@@ -638,7 +640,7 @@ These questions should now be answered from API consistency, current code behavi
 TABLE-LAYOUT-01B is ready to close when:
 
 1. the friendly public table-layout surface is accepted;
-2. whole-table placement/alignment is explicitly included or deferred;
+2. whole-table placement/alignment has an accepted table-specific public semantic surface;
 3. compatibility behavior for the element-owned table-style scope correction is defined;
 4. named/reference/common style semantics remain protected;
 5. exact row height and vertical cell alignment semantics are accepted;
