@@ -98,7 +98,7 @@ final class TableLayout01ACurrentBehaviorCharacterizationTest extends TestCase
         );
     }
 
-    public function testCurrentRowConveniencePathRecognizesMinimumHeightButIgnoresExactHeight(): void
+    public function testRowConveniencePathRecognizesMinimumAndExactHeightAsDistinctSemantics(): void
     {
         $table = new RichTable();
         $table->addRow(['minimum'], ['min-row-height' => '2cm']);
@@ -106,11 +106,16 @@ final class TableLayout01ACurrentBehaviorCharacterizationTest extends TestCase
 
         $requirements = iterator_to_array($table->getOwnStyleRequirements());
 
-        self::assertCount(1, $requirements);
+        self::assertCount(2, $requirements);
         self::assertSame('table-row', $requirements[0]->family());
         self::assertSame(
             ['style:table-row-properties' => ['style:min-row-height' => '2cm']],
             $requirements[0]->propertyGroups()
+        );
+        self::assertSame('table-row', $requirements[1]->family());
+        self::assertSame(
+            ['style:table-row-properties' => ['style:row-height' => '2cm']],
+            $requirements[1]->propertyGroups()
         );
     }
 
