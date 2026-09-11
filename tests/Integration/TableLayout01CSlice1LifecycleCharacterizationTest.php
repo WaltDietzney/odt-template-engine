@@ -218,6 +218,103 @@ final class TableLayout01CSlice1LifecycleCharacterizationTest extends TestCase
         ));
     }
 
+    #[RunInSeparateProcess]
+    public function testFriendlyAbsoluteTableStyleMaterializesInContentXml(): void
+    {
+        $table = (new RichTable())
+            ->setTableStyle([
+                'width' => '15cm',
+                'alignment' => 'center',
+            ])
+            ->addRow(['A', 'B']);
+
+        $output = $this->saveTable($table, 'friendly-absolute');
+        $stylesXml = $this->entry($output, 'styles.xml');
+        $contentXml = $this->entry($output, 'content.xml');
+        $styleName = $table->getTableStyleName();
+
+        self::assertNotNull($styleName);
+        self::assertSame(0, $this->styleCountInContainer($stylesXml, $styleName, 'table', 'styles'));
+        self::assertSame(1, $this->styleCountInContainer($contentXml, $styleName, 'table', 'automatic-styles'));
+        self::assertSame('15cm', $this->styleProperty(
+            $contentXml,
+            $styleName,
+            'table',
+            'table-properties',
+            self::STYLE_NS,
+            'width'
+        ));
+        self::assertSame('center', $this->styleProperty(
+            $contentXml,
+            $styleName,
+            'table',
+            'table-properties',
+            self::TABLE_NS,
+            'align'
+        ));
+    }
+
+    #[RunInSeparateProcess]
+    public function testFriendlyRelativeTableStyleMaterializesInContentXml(): void
+    {
+        $table = (new RichTable())
+            ->setTableStyle([
+                'relative-width' => '60%',
+                'alignment' => 'right',
+            ])
+            ->setColumnWidthRatios([2, 1, 1]);
+        $table->addRow(['A', 'B', 'C']);
+
+        $output = $this->saveTable($table, 'friendly-relative');
+        $stylesXml = $this->entry($output, 'styles.xml');
+        $contentXml = $this->entry($output, 'content.xml');
+        $styleName = $table->getTableStyleName();
+
+        self::assertNotNull($styleName);
+        self::assertSame(0, $this->styleCountInContainer($stylesXml, $styleName, 'table', 'styles'));
+        self::assertSame(1, $this->styleCountInContainer($contentXml, $styleName, 'table', 'automatic-styles'));
+        self::assertSame('60%', $this->styleProperty(
+            $contentXml,
+            $styleName,
+            'table',
+            'table-properties',
+            self::STYLE_NS,
+            'rel-width'
+        ));
+        self::assertSame('right', $this->styleProperty(
+            $contentXml,
+            $styleName,
+            'table',
+            'table-properties',
+            self::TABLE_NS,
+            'align'
+        ));
+        self::assertSame('32766*', $this->styleProperty(
+            $contentXml,
+            'co0',
+            'table-column',
+            'table-column-properties',
+            self::STYLE_NS,
+            'rel-column-width'
+        ));
+        self::assertSame('16383*', $this->styleProperty(
+            $contentXml,
+            'co1',
+            'table-column',
+            'table-column-properties',
+            self::STYLE_NS,
+            'rel-column-width'
+        ));
+        self::assertSame('16386*', $this->styleProperty(
+            $contentXml,
+            'co2',
+            'table-column',
+            'table-column-properties',
+            self::STYLE_NS,
+            'rel-column-width'
+        ));
+    }
+
     private function saveTable(RichTable $table, string $name): string
     {
         $template = new OdtTemplate($this->templatePath());
