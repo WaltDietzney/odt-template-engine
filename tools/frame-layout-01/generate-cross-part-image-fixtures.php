@@ -130,8 +130,38 @@ $template->setElement('header_logo', new ImageElement($imagePath, [
 ]));
 $template->save($h7);
 
+$h8 = $outputDir . '/H8-friendly-imageElement-body-as-char.odt';
+$template = new OdtTemplate($base);
+$image = (new ImageElement($imagePath, [
+    'width' => '1cm',
+]))->setFrameLayout([
+    'anchor' => 'as-char',
+    'vertical' => [
+        'alignment' => 'top',
+        'relative-to' => 'baseline',
+    ],
+]);
+$template->setElement('body_logo', $image);
+$template->save($h8);
+
+$h9 = $outputDir . '/H9-friendly-imageElement-header-as-char.odt';
+$template = new OdtTemplate($base);
+$image = (new ImageElement($imagePath, [
+    'width' => '1cm',
+]))->setFrameLayout([
+    'anchor' => 'as-char',
+    'vertical' => [
+        'alignment' => 'top',
+        'relative-to' => 'baseline',
+    ],
+]);
+$template->setElement('header_logo', $image);
+$template->save($h9);
+
 $h6Frame = frameXml($h6, 'content.xml', false);
 $h7Frame = frameXml($h7, 'styles.xml', true);
+$h8Frame = frameXml($h8, 'content.xml', false);
+$h9Frame = frameXml($h9, 'styles.xml', true);
 
 $summary = [
     'FRAME-LAYOUT-01 cross-part image fixture matrix',
@@ -144,17 +174,24 @@ $summary = [
     'H5  setImage paragraph/frame structure + ImageElement generated style-name',
     'H6  ImageElement subtree in body',
     'H7  ImageElement subtree in header',
+    'H8  Friendly ImageElement, as-char, body (Slice 3 semantic carrier)',
+    'H9  Friendly ImageElement, as-char, header (Slice 3 semantic carrier)',
     '',
     'H1 body placeholder remains: ' . (str_contains(entry($h1, 'content.xml'), '{{body_logo}}') ? 'YES' : 'NO'),
     'H6 body placeholder remains: ' . (str_contains(entry($h6, 'content.xml'), '{{body_logo}}') ? 'YES' : 'NO'),
     'H6 body draw:image count: ' . drawImageCount($h6, 'content.xml'),
     'H7 header draw:image count: ' . headerDrawImageCount($h7),
+    'H8 body draw:image count: ' . drawImageCount($h8, 'content.xml'),
+    'H9 header draw:image count: ' . headerDrawImageCount($h9),
     '',
     'H6/H7 canonical frame subtree equal: ' . (($h6Frame === $h7Frame) ? 'YES' : 'NO'),
+    'H8/H9 canonical frame subtree equal: ' . (($h8Frame === $h9Frame) ? 'YES' : 'NO'),
     'H6 frame SHA-256: ' . hash('sha256', $h6Frame),
     'H7 frame SHA-256: ' . hash('sha256', $h7Frame),
+    'H8 frame SHA-256: ' . hash('sha256', $h8Frame),
+    'H9 frame SHA-256: ' . hash('sha256', $h9Frame),
     '',
-    'Open every H1-H7 file in LibreOffice Writer and record image visibility.',
+    'Open every H1-H9 file in LibreOffice Writer and record image visibility.',
     'Do not commit generated tmp/ artifacts.',
 ];
 
