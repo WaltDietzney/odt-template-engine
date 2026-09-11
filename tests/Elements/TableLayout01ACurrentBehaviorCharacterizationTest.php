@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class TableLayout01ACurrentBehaviorCharacterizationTest extends TestCase
 {
-    public function testTableStylePassesNativeGeometryPropertiesThroughAsCommonTableRequirement(): void
+    public function testTableStylePassesNativeGeometryPropertiesThroughAsAutomaticTableRequirement(): void
     {
         $table = (new RichTable())->setStyle([
             'style:width' => '10cm',
@@ -27,9 +27,9 @@ final class TableLayout01ACurrentBehaviorCharacterizationTest extends TestCase
         self::assertCount(1, $requirements);
         $requirement = $requirements[0];
         self::assertSame(StyleRequirement::KIND_DEFINITION, $requirement->kind());
-        self::assertSame(StyleRequirement::SCOPE_COMMON, $requirement->scope());
+        self::assertSame(StyleRequirement::SCOPE_AUTOMATIC, $requirement->scope());
         self::assertSame('table', $requirement->family());
-        self::assertSame(StyleRequirement::PART_STYLES, $requirement->documentPart());
+        self::assertSame(StyleRequirement::PART_CONTENT, $requirement->documentPart());
         self::assertSame([
             'style:table-properties' => [
                 'style:width' => '10cm',
