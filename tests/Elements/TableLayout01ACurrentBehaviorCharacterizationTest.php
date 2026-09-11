@@ -134,11 +134,18 @@ final class TableLayout01ACurrentBehaviorCharacterizationTest extends TestCase
         );
     }
 
-    public function testUnprefixedVerticalAlignIsCurrentlyNotMappedByCellConvenienceStylePath(): void
+    public function testFriendlyVerticalAlignMapsToCellOwnedNativeProperty(): void
     {
         $cell = new RichTableCell('middle', ['vertical-align' => 'middle']);
 
-        self::assertSame([], $cell->getStyle());
-        self::assertSame([], iterator_to_array($cell->getOwnStyleRequirements()));
+        self::assertSame(['style:vertical-align' => 'middle'], $cell->getStyle());
+
+        $requirements = iterator_to_array($cell->getOwnStyleRequirements());
+        self::assertCount(1, $requirements);
+        self::assertSame('table-cell', $requirements[0]->family());
+        self::assertSame(
+            ['style:table-cell-properties' => ['style:vertical-align' => 'middle']],
+            $requirements[0]->propertyGroups()
+        );
     }
 }
