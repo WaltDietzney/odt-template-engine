@@ -120,7 +120,7 @@ final class FrameLayout01A0CurrentApiCharacterizationTest extends TestCase
         self::assertSame('0.5cm', $legacyProperties['svg:ry']);
     }
 
-    public function testFlowWithTextAndAllowOverlapRemainLegacyCarrierProperties(): void
+    public function testFlowWithTextAndAllowOverlapRemainLegacyCompatibleAndNowHaveSemanticCarrier(): void
     {
         $box = (new DrawTextBox('LegacyLayout'))
             ->flowWithText()
@@ -131,7 +131,14 @@ final class FrameLayout01A0CurrentApiCharacterizationTest extends TestCase
         self::assertSame('true', $legacyProperties['style:flow-with-text']);
         self::assertSame('true', $legacyProperties['loext:allow-overlap']);
 
-        self::assertSame([], iterator_to_array($box->getOwnStyleRequirements(), false));
+        $semanticRequirements = iterator_to_array($box->getOwnStyleRequirements(), false);
+        self::assertCount(1, $semanticRequirements);
+        self::assertSame([
+            'style:graphic-properties' => [
+                'loext:allow-overlap' => 'true',
+                'style:flow-with-text' => 'true',
+            ],
+        ], $semanticRequirements[0]->propertyGroups());
     }
 
     private function frame(DrawTextBox $box): DOMElement
