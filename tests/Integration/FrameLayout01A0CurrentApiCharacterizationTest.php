@@ -12,6 +12,9 @@ use PHPUnit\Framework\TestCase;
 
 final class FrameLayout01A0CurrentApiCharacterizationTest extends TestCase
 {
+    /** @var list<DOMDocument> */
+    private array $domDocuments = [];
+
     public function testHorizontalSetterFamiliesShareImplementationButHaveDifferentDefaultRelations(): void
     {
         $short = (new DrawTextBox('Short'))->setHorizontalPos('right');
@@ -144,6 +147,7 @@ final class FrameLayout01A0CurrentApiCharacterizationTest extends TestCase
     private function frame(DrawTextBox $box): DOMElement
     {
         $dom = new DOMDocument('1.0', 'UTF-8');
+        $this->domDocuments[] = $dom;
         $node = $box->toDomNode($dom);
 
         if ($node instanceof DOMElement && $node->nodeName === 'draw:frame') {
