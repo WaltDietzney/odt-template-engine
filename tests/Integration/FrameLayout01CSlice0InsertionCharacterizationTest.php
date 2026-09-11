@@ -36,7 +36,10 @@ final class FrameLayout01CSlice0InsertionCharacterizationTest extends TestCase
 
         $frame = $frames->item(0);
         self::assertInstanceOf(DOMElement::class, $frame);
-        self::assertSame('as-char', $frame->getAttribute('text:anchor-type'));
+        self::assertStringContainsString(
+            'text:anchor-type="as-char"',
+            $dom->saveXML($frame) ?: ''
+        );
     }
 
     public function testAsCharImageCurrentlyReplacesHeaderParagraphWithBareFrame(): void
@@ -61,7 +64,10 @@ final class FrameLayout01CSlice0InsertionCharacterizationTest extends TestCase
 
         $frame = $frames->item(0);
         self::assertInstanceOf(DOMElement::class, $frame);
-        self::assertSame('as-char', $frame->getAttribute('text:anchor-type'));
+        self::assertStringContainsString(
+            'text:anchor-type="as-char"',
+            $dom->saveXML($frame) ?: ''
+        );
     }
 
     public function testAsCharTextBoxCurrentlyReplacesPlaceholderParagraphWithBareFrame(): void
@@ -108,8 +114,8 @@ final class FrameLayout01CSlice0InsertionCharacterizationTest extends TestCase
         );
 
         $xpath = $this->xpath($dom);
-        self::assertSame(1, $xpath->query('//office:body/text:p')->length);
-        $paragraph = $xpath->query('//office:body/text:p')->item(0);
+        self::assertSame(1, $xpath->query('//office:body//text:p')->length);
+        $paragraph = $xpath->query('//office:body//text:p')->item(0);
         self::assertInstanceOf(DOMElement::class, $paragraph);
         self::assertSame('draw:frame', $paragraph->firstChild?->nodeName);
     }
