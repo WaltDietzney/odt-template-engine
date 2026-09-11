@@ -263,3 +263,192 @@ The first Writer fixture is sufficient to freeze paragraph-relative left/center/
 The second exploratory fixture already contains useful additional evidence for wrap, relation areas, overlap, and coordinate-oriented positioning. It should be mined rather than recreated.
 
 No production change is authorized by this document.
+
+
+## 8. Fixture 2 XML evidence pass
+
+The exploratory fixture was inspected at the concrete `draw:frame` + referenced graphic-style level.
+
+### 8.1 Confirmed Writer coordinate-mode pair
+
+Writer produced a paragraph-anchored frame with:
+
+```xml
+<draw:frame
+    text:anchor-type="paragraph"
+    svg:y="0.302cm"
+    .../>
+```
+
+whose graphic style contains:
+
+```xml
+<style:graphic-properties
+    style:vertical-pos="from-top"
+    style:vertical-rel="paragraph"
+    .../>
+```
+
+This is the concrete Writer-authored pair FRAME-LAYOUT-01 needed:
+
+```text
+vertical orientation mode = from-top
+vertical reference area   = paragraph
+vertical coordinate       = svg:y = 0.302cm
+```
+
+It matches the ODF rule established in A0.2: when `style:vertical-pos="from-top"`, the associated `svg:y` value carries the concrete offset.
+
+### 8.2 Writer may serialize coordinates even when the alignment mode does not use them
+
+Other Writer-authored text frames in the same fixture contain `svg:y` values while their graphic styles use semantic alignment modes:
+
+```text
+middle + paragraph
+    svg:y = -3.032cm
+
+bottom + paragraph
+    svg:y = 0.699cm
+```
+
+ODF defines `svg:y` as layout-significant for text-document frame positioning when the vertical mode is `from-top`; otherwise Writer/ODF alignment semantics are governed by the position enum.
+
+Therefore FRAME-LAYOUT must not infer "absolute vertical positioning" merely from the presence of `svg:y`.
+
+The semantic mode controls whether the coordinate is operative.
+
+The same principle applies horizontally: `svg:x` is only layout-significant for the coordinate-oriented horizontal modes such as `from-left` / `from-inside`.
+
+### 8.3 No Writer-authored horizontal from-left case was captured
+
+Fixture 2 contains no graphic style with:
+
+```text
+style:horizontal-pos="from-left"
+```
+
+Therefore the horizontal coordinate path remains supported by ODF/Writer source evidence, but this fixture does not add a Writer-authored concrete `from-left + svg:x` example.
+
+This is not a blocker for A0 synthesis. A dedicated horizontal free-position fixture can be added later if API design requires exact Writer round-trip evidence.
+
+### 8.4 Wrap matrix confirmed at concrete frame/style level
+
+Fixture 2 contains Writer-generated graphic styles using:
+
+```text
+style:wrap="none"
+style:wrap="dynamic"
+style:wrap="parallel"
+style:wrap="left"
+style:wrap="right"
+style:wrap="run-through"
+```
+
+Some combinations additionally emit:
+
+```text
+style:run-through="foreground"
+style:wrap-contour="true|false"
+style:wrap-contour-mode="full|outside"
+style:number-wrapped-paragraphs="no-limit"
+```
+
+This confirms that wrap mode, run-through behavior, contour wrapping, and paragraph-count behavior are distinct native dimensions.
+
+FRAME-LAYOUT-01 should not flatten them into one generic wrap flag.
+
+### 8.5 Wrap influence and overlap confirmed
+
+Several Writer-authored image styles contain:
+
+```text
+draw:wrap-influence-on-position="once-concurrent"
+loext:allow-overlap="true|false"
+```
+
+This confirms:
+
+- wrap influence is independent of `style:wrap`;
+- overlap is serialized separately;
+- `loext:allow-overlap` is a LibreOffice extension and should remain explicitly identified as such.
+
+### 8.6 Relation areas confirmed
+
+Writer uses both:
+
+```text
+paragraph
+paragraph-content
+```
+
+in the same fixture.
+
+For example, outer Writer frames use paragraph-relative positioning, while image frames commonly use paragraph-content-relative positioning.
+
+This further confirms that "align left/center/right" is incomplete semantics without the corresponding reference area.
+
+### 8.7 Anchor-specific evidence
+
+The fixture contains:
+
+```text
+text:anchor-type="char"
+text:anchor-type="as-char"
+```
+
+The `as-char` image uses:
+
+```text
+style:vertical-pos="top"
+style:vertical-rel="baseline"
+```
+
+while the char-anchored case uses paragraph-content relations.
+
+Together with A0.3, this reinforces that anchor type affects both valid relation semantics and insertion/container semantics.
+
+### 8.8 flow-with-text status
+
+The fixture does contain:
+
+```text
+style:flow-with-text="false"
+```
+
+but only in Writer's common/default graphic-style configuration, not as a clearly isolated object-level experimental toggle tied to one of the fixture objects.
+
+Therefore Fixture 2 does **not** yet establish a useful round-trip characterization of per-object `flow-with-text` behavior.
+
+This property remains supported by ODF/Writer source evidence and by current engine characterization, but a dedicated Writer UI fixture would be needed if FRAME-LAYOUT-01 intends to expose it as a first-class 1.0 friendly option.
+
+## 9. A0.4 conclusion
+
+The Writer evidence is now sufficient to confirm the central placement model:
+
+```text
+anchor
++
+orientation mode
++
+reference area
++
+optional coordinate active only in coordinate-oriented modes
++
+wrap policy
++
+related layout policy
+```
+
+Most importantly, Writer itself demonstrated the concrete vertical coordinate form:
+
+```text
+style:vertical-pos="from-top"
+style:vertical-rel="paragraph"
+svg:y="0.302cm"
+```
+
+The fixture also shows why the engine must not treat the mere presence of `svg:x/y` as proof that a frame is using absolute/free positioning: Writer can retain coordinate values on objects whose active mode is `middle`, `bottom`, or another semantic alignment.
+
+A0.4 is therefore complete enough for architecture synthesis.
+
+Remaining evidence gaps such as a Writer-authored horizontal `from-left + svg:x` example or a dedicated per-object `flow-with-text` toggle should only be pursued if the synthesis identifies them as required for the bounded 1.0 API.
