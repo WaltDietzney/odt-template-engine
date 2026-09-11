@@ -43,29 +43,20 @@ final class TableRowSemanticsCharacterizationTest extends TestCase
         self::assertSame(0, $xpath->query('//*[contains(name(), "table-row-properties")]')->length);
     }
 
-    public function testStyledAndUnstyledRowsHaveEquivalentRowLevelStructure(): void
+    public function testExactRowHeightNowCreatesStructuralStyleReference(): void
     {
-        $styledDom = $this->contentDom();
-        $styled = (new RichTable())->addRow(['A'], ['row-height' => '2cm']);
-        $styledDom->documentElement->appendChild($styled->toDomNode($styledDom));
+        $dom = $this->contentDom();
+        $table = (new RichTable())
+            ->setTableName('ExactHeightTable')
+            ->addRow(['A'], ['row-height' => '2cm']);
+        $dom->documentElement->appendChild($table->toDomNode($dom));
 
-        $plainDom = $this->contentDom();
-        $plain = (new RichTable())->addRow(['A']);
-        $plainDom->documentElement->appendChild($plain->toDomNode($plainDom));
-
-        $styledXpath = new \DOMXPath($styledDom);
-        $plainXpath = new \DOMXPath($plainDom);
-        $styledXpath->registerNamespace('table', self::TABLE_NS);
-        $plainXpath->registerNamespace('table', self::TABLE_NS);
-        $styledRow = $styledXpath->query('//*[contains(name(), "table:table-row")]')->item(0);
-        $plainRow = $plainXpath->query('//*[contains(name(), "table:table-row")]')->item(0);
-        self::assertNotNull($styledRow);
-        self::assertNotNull($plainRow);
-        self::assertSame($plainRow->attributes?->length, $styledRow->attributes?->length);
-        self::assertSame(
-            $plainRow->firstChild?->nodeName,
-            $styledRow->firstChild?->nodeName
+        $xml = $dom->saveXML() ?: '';
+        self::assertStringContainsString(
+            'table:table-row table:style-name="ExactHeightTable_ro0"',
+            $xml
         );
+        self::assertStringNotContainsString('table-row-properties', $xml);
     }
 
     private const STYLE_NS = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';

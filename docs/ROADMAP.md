@@ -169,7 +169,7 @@ The post-RESEARCH-01 sequence remains:
 ```text
 PAGE-FLOW-01                 COMPLETE
     ↓
-TABLE-LAYOUT-01              NEXT / ACTIVE
+TABLE-LAYOUT-01              COMPLETE
     ↓
 FRAME-LAYOUT-01
     ↓
@@ -192,11 +192,12 @@ PAGE-FLOW-01 is complete. Its accepted baseline is summarized above and defined 
 
 The existing `PageLayoutManager` remains a valid narrow service for mutating selected properties of an existing master-page/page-layout relationship. It is not a complete page-style system.
 
-### TABLE-LAYOUT-01 — Professional table geometry — 1.0 BLOCKER / NEXT ACTIVE MILESTONE
+### TABLE-LAYOUT-01 — Professional table geometry — COMPLETE / FINAL GO
 
 Treat the previously separate table-layout backlog items as one coherent 1.0 capability block:
 
 - explicit table width;
+- whole-table alignment / placement;
 - absolute column widths;
 - relative column widths;
 - row/minimum height;

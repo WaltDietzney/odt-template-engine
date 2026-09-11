@@ -43,8 +43,8 @@ final class StyleApi02FADocumentOwnershipTest extends TestCase
         self::assertCount(1, $requirements);
         self::assertSame('table', $requirements[0]->family());
         self::assertSame('definition', $requirements[0]->kind());
-        self::assertSame('common', $requirements[0]->scope());
-        self::assertSame(StyleRequirement::PART_STYLES, $requirements[0]->documentPart());
+        self::assertSame(StyleRequirement::SCOPE_AUTOMATIC, $requirements[0]->scope());
+        self::assertSame(StyleRequirement::PART_CONTENT, $requirements[0]->documentPart());
         self::assertSame(
             ['style:table-properties' => $properties],
             $requirements[0]->propertyGroups()
@@ -59,11 +59,12 @@ final class StyleApi02FADocumentOwnershipTest extends TestCase
         $styles = $this->entry($output, 'styles.xml');
         $name = $requirements[0]->name();
         self::assertStringContainsString('table:style-name="' . $name . '"', $content);
-        self::assertStringContainsString('style:name="' . $name . '"', $styles);
-        self::assertStringContainsString('style:family="table"', $styles);
-        self::assertStringContainsString('table:width="15cm"', $styles);
-        self::assertStringContainsString('table:align="left"', $styles);
-        self::assertStringContainsString('style:rel-width="100%"', $styles);
+        self::assertStringNotContainsString('style:name="' . $name . '"', $styles);
+        self::assertStringContainsString('style:name="' . $name . '"', $content);
+        self::assertStringContainsString('style:family="table"', $content);
+        self::assertStringContainsString('table:width="15cm"', $content);
+        self::assertStringContainsString('table:align="left"', $content);
+        self::assertStringContainsString('style:rel-width="100%"', $content);
     }
 
     #[RunInSeparateProcess]

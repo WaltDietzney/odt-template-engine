@@ -343,6 +343,49 @@ class StyleMapper
 
 
     /**
+     * Maps friendly table-level style options to native ODF table properties.
+     *
+     * Native-prefixed properties remain available as an advanced compatibility
+     * escape hatch. Unknown friendly keys are rejected rather than silently
+     * becoming accidental public API.
+     *
+     * @param array<string, mixed> $options
+     * @return array<string, mixed>
+     */
+    public static function mapTableStyleOptions(array $options): array
+    {
+        $mapped = [];
+
+        foreach ($options as $key => $value) {
+            $key = (string) $key;
+
+            if (preg_match('/^(fo:|style:|table:)/', $key)) {
+                $mapped[$key] = $value;
+                continue;
+            }
+
+            switch ($key) {
+                case 'width':
+                    $mapped['style:width'] = $value;
+                    break;
+                case 'relative-width':
+                    $mapped['style:rel-width'] = $value;
+                    break;
+                case 'alignment':
+                    $mapped['table:align'] = $value;
+                    break;
+                default:
+                    throw new \InvalidArgumentException(
+                        sprintf('Unsupported table style option: %s', $key)
+                    );
+            }
+        }
+
+        return $mapped;
+    }
+
+
+    /**
      * Maps additional table-cell style options to their corresponding ODF attributes.
      * 
      * This mapper covers the supported table-cell options, including
@@ -395,6 +438,22 @@ class StyleMapper
                     break;
                 case 'border-bottom':
                     $mapped['fo:border-bottom'] = $value;
+                    break;
+                case 'vertical-align':
+                    if (!is_string($value)) {
+                        throw new \InvalidArgumentException(
+                            'Cell vertical alignment must be a string.'
+                        );
+                    }
+
+                    $alignment = strtolower(trim($value));
+                    if (!in_array($alignment, ['top', 'middle', 'bottom', 'automatic'], true)) {
+                        throw new \InvalidArgumentException(
+                            'Cell vertical alignment must be one of: top, middle, bottom, automatic.'
+                        );
+                    }
+
+                    $mapped['style:vertical-align'] = $alignment;
                     break;
                 case 'align':
                 case 'text-align':
