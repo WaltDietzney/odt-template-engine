@@ -12,6 +12,9 @@ use PHPUnit\Framework\TestCase;
 
 final class FrameLayout01CSlice5CompatibilityPolicyTest extends TestCase
 {
+    /** @var list<DOMDocument> */
+    private array $domDocuments = [];
+
     public function testCompatibilityPoliciesShareOneSemanticGraphicRequirement(): void
     {
         $box = (new DrawTextBox('PolicyBox', [
@@ -106,6 +109,8 @@ final class FrameLayout01CSlice5CompatibilityPolicyTest extends TestCase
 
         $firstDom = new DOMDocument('1.0', 'UTF-8');
         $secondDom = new DOMDocument('1.0', 'UTF-8');
+        $this->domDocuments[] = $firstDom;
+        $this->domDocuments[] = $secondDom;
 
         $firstFrame = $this->frame($first, $firstDom);
         $secondFrame = $this->frame($second, $secondDom);
