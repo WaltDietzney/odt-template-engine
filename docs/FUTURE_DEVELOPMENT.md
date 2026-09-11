@@ -11,7 +11,7 @@ The current planning baseline incorporates the completed semantic style architec
 The explicit path to 1.0 is now:
 
 1. `PAGE-FLOW-01` — **COMPLETE / FINAL GO**;
-2. `TABLE-LAYOUT-01` — professional table geometry — **NEXT ACTIVE MILESTONE**;
+2. `TABLE-LAYOUT-01` — professional table geometry — **IMPLEMENTATION COMPLETE / FINAL CLOSEOUT PENDING**;
 3. `FRAME-LAYOUT-01` — bounded reliable frame geometry core;
 4. `TEMPLATE-RELIABILITY-01` — focused remaining template-format/control audit and only evidence-based fixes;
 5. `FINALIZATION-01` — final document/export lifecycle contract;
@@ -116,7 +116,7 @@ Do not introduce a PHP pagination engine, page-height calculations, CV-specific 
 
 ## TABLE-LAYOUT-01 — Professional table geometry
 
-**Priority:** 1.0 BLOCKER / NEXT ACTIVE MILESTONE
+**Priority:** 1.0 BLOCKER / IMPLEMENTATION COMPLETE / FINAL CLOSEOUT PENDING
 
 The previously separate table-layout backlog topics are consolidated for 1.0 planning into one coherent capability block:
 
@@ -130,6 +130,41 @@ The previously separate table-layout backlog topics are consolidated for 1.0 pla
 SR-07 already established semantic ownership for `table`, `table-column`, `table-row`, and `table-cell`. This milestone must focus on actual ODF/Writer geometry semantics, public behavior, and rendering reliability rather than reopening style ownership.
 
 Historical identifiers `TABLE-LAYOUT-02`, `TABLE-LAYOUT-03`, `TABLE-LAYOUT-04`, and `TABLE-CELL-01` remain useful provenance for existing discussions/tests, but they are no longer separate strategic 1.0 milestones.
+
+
+### TABLE-COLUMN-IDENTITY-01 — Generated column-style identity across multiple tables
+
+**Priority:** Post-TABLE-LAYOUT compatibility/architecture follow-up; not part of TABLE-LAYOUT-01
+
+TABLE-LAYOUT-01 manual showcase work exposed an existing naming limitation in generated `table-column` automatic styles. Column definitions currently use positional names such as:
+
+```text
+co0
+co1
+co2
+```
+
+These names are document-global semantic identities in `StyleContext`, not table-local identities. Two generated tables in one document can therefore conflict when the same positional name carries different definitions, for example:
+
+```text
+table A: co0 -> style:column-width="5cm"
+table B: co0 -> style:rel-column-width="32766*"
+```
+
+`StyleContext` correctly rejects such conflicting same-identity definitions instead of silently overwriting one of them.
+
+SR-07 already classified positional `coN` names as legacy behavior and explicitly did not authorize a new collision-renaming strategy. TABLE-LAYOUT-01 therefore does not solve this by opportunistically introducing hashes, table-prefixed names, or automatic renaming.
+
+A future design should determine a stable document-local identity/allocation strategy for generated table-column styles that:
+
+- supports multiple independently generated tables with different column geometry in the same document;
+- preserves repeated-save stability;
+- does not silently mutate authored automatic styles;
+- remains compatible with existing table-column references where feasible;
+- avoids process-global counters or hidden cross-document state;
+- keeps semantic de-duplication and true conflicts distinguishable.
+
+Until that work is explicitly designed, tests/samples that combine multiple generated column geometries in one document should avoid conflicting `coN` definitions or use separate regression documents.
 
 ## FRAME-LAYOUT-01 — Reliable frame geometry core
 
