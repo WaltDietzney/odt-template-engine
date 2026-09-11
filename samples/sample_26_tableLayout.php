@@ -6,7 +6,7 @@
  * Demonstrates the TABLE-LAYOUT-01 API:
  * - absolute and relative table width;
  * - whole-table alignment;
- * - absolute and relative column geometry;
+ * - relative column geometry;
  * - exact and minimum row height;
  * - vertical cell alignment;
  * - independent horizontal paragraph alignment.
@@ -28,7 +28,9 @@ $template = new OdtTemplate(__DIR__ . '/templates/template_26_tableLayout.odt');
  * Table 1: Absolute geometry
  * -------------------------------------------------------------------------
  *
- * A centered 15 cm table with fixed 5 cm / 10 cm columns.
+ * A centered 15 cm table. Column sizing is left to Writer in this table so
+ * that this document can also contain the independent ratio-based table below
+ * without reusing the legacy positional column style names (co0, co1, ...).
  *
  * The first three content rows deliberately use the same exact row height
  * while their cells use top, middle, and bottom vertical alignment. This
@@ -45,7 +47,6 @@ $absoluteTable = (new RichTable())
         'alignment' => 'center',
     ]);
 
-$absoluteTable->setColumnWidths(['5cm', '10cm']);
 
 $absoluteTable->addRow([
     (new RichTableCell('ABSOLUTE TABLE'))
