@@ -121,6 +121,7 @@ Do not introduce a PHP pagination engine, page-height calculations, CV-specific 
 The previously separate table-layout backlog topics are consolidated for 1.0 planning into one coherent capability block:
 
 - explicit table width;
+- whole-table alignment / placement;
 - absolute column widths;
 - relative column widths;
 - row/minimum height;
