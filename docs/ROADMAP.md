@@ -131,7 +131,7 @@ Completed outcomes include:
 - an explicit boundary between page-style identity/content and page-layout geometry;
 - no PHP pagination engine and no premature broad page-style authoring API.
 
-Programmatic page-style definition/mutation/assignment remains the required future capability `PAGE-STYLE-AUTHORING-01`. The bounded `ImageElement` header discrepancy remains tracked as `GRAPHIC-PART-COMPAT-01`.
+Programmatic page-style definition/mutation/assignment remains the required future capability `PAGE-STYLE-AUTHORING-01`. The former `GRAPHIC-PART-COMPAT-01` ImageElement header discrepancy was resolved by FRAME-LAYOUT-01 through correct frame carrier and insertion semantics.
 
 The accepted contract and completion evidence are recorded in [`architecture/PAGE_FLOW_01_CHANGE_CONTRACT.md`](architecture/PAGE_FLOW_01_CHANGE_CONTRACT.md) and the accompanying PAGE-FLOW-01 research/evidence documents.
 
@@ -171,7 +171,7 @@ PAGE-FLOW-01                 COMPLETE
     ↓
 TABLE-LAYOUT-01              COMPLETE
     ↓
-FRAME-LAYOUT-01
+FRAME-LAYOUT-01              COMPLETE
     ↓
 TEMPLATE-RELIABILITY-01
     ↓
@@ -205,19 +205,30 @@ Treat the previously separate table-layout backlog items as one coherent 1.0 cap
 
 SR-07 already established semantic ownership for the relevant table style families. This milestone should focus on ODF behavior, API semantics, and rendering reliability rather than reopening style ownership.
 
-### FRAME-LAYOUT-01 — Reliable frame geometry core — 1.0 BLOCKER, BOUNDED SCOPE
+### FRAME-LAYOUT-01 — Reliable frame geometry core — COMPLETE / FINAL GO
 
-Establish a coherent shared model for supported `draw:frame` content:
+FRAME-LAYOUT-01 is complete.
 
-- anchor semantics;
-- size;
-- horizontal/vertical position;
-- relation/reference area;
-- fundamental wrap behavior;
-- consistent semantics across images and text boxes;
-- preservation/mutation of relevant LibreOffice-authored existing frames.
+The accepted baseline establishes:
 
-1.0 does not require every Writer drawing or positioning option.
+- one immutable `DrawingLayout` semantic authority shared by `DrawTextBox` and `ImageElement`;
+- explicit separation of object geometry from graphic-layout style semantics;
+- native `draw:frame` ownership for anchor, width/height, and explicit x/y coordinates;
+- semantic graphic-style ownership for alignment, relation, wrap, flow-with-text, wrap influence, overlap, and appearance;
+- a public `setFrameLayout()` master API plus approved convenience methods on both frame-backed element types;
+- compatibility-preserving legacy setters and ImageElement autoscaling;
+- anchor-sensitive structured insertion with preserved paragraph/text-flow carriers;
+- cross-part body/header parity for structured `ImageElement` insertion;
+- semantic style deduplication and repeated-save stability;
+- LibreOffice-validated floating, offset, as-character, body, and header frame behavior.
+
+The previously tracked `GRAPHIC-PART-COMPAT-01` discrepancy is resolved by this milestone: the root cause was structural insertion/carrier semantics, not a header prohibition or image-resource failure.
+
+The accepted contract and completion evidence are recorded in
+[`architecture/FRAME_LAYOUT_01C_CHANGE_CONTRACT.md`](architecture/FRAME_LAYOUT_01C_CHANGE_CONTRACT.md) and
+[`architecture/FRAME_LAYOUT_01_CLOSEOUT.md`](architecture/FRAME_LAYOUT_01_CLOSEOUT.md).
+
+Broader Writer drawing features, CustomShape architecture, and exhaustive positioning options remain outside the bounded 1.0 frame core.
 
 ### TEMPLATE-RELIABILITY-01 — Remaining template-format/control audit — 1.0 BLOCKER AS AUDIT
 
