@@ -9,6 +9,7 @@ use DOMElement;
 use DOMXPath;
 use InvalidArgumentException;
 use OdtTemplateEngine\Document\StyleRequirement;
+use OdtTemplateEngine\Document\StyleRequirementCollector;
 use OdtTemplateEngine\Elements\RichTable;
 use OdtTemplateEngine\Elements\RichTableCell;
 use OdtTemplateEngine\OdtTemplate;
@@ -104,7 +105,10 @@ final class TableLayout01CSlice3VerticalCellAlignmentTest extends TestCase
             $cell->getStyle()
         );
 
-        $requirements = iterator_to_array($cell->getStyleRequirements());
+        $requirements = iterator_to_array(
+            (new StyleRequirementCollector())->collectSemantic($cell),
+            false
+        );
 
         $cellRequirements = array_values(array_filter(
             $requirements,
