@@ -1,72 +1,149 @@
 # TABLE-LAYOUT-01B — Architecture Synthesis / Change-Contract Preparation
 
-Status: PROPOSED ARCHITECTURE SYNTHESIS / PRE-CONTRACT
+Status: REVISED ARCHITECTURE SYNTHESIS / PRE-CONTRACT
 
 Parent milestone: `TABLE-LAYOUT-01`
 
 Predecessor: `TABLE_LAYOUT_01A_CLOSEOUT.md`
 
+Supporting evidence:
+
+- `TABLE_LAYOUT_01A_EVIDENCE_FINDINGS.md`
+- `TABLE_LAYOUT_01B_CURRENT_TABLE_API_INVENTORY.md`
+- `TABLE_LAYOUT_01B_PUBLIC_STYLE_SEMANTICS_CORRECTION.md`
+- `TABLE_LAYOUT_01B_TABLE_STYLE_SCOPE_EVIDENCE.md`
+- `SR-07_SEMANTIC_TABLE_STYLE_REQUIREMENTS_CHANGE_CONTRACT.md`
+- `STYLE_API_02F_MAPPER_REGISTRY_CLEANUP_CHANGE_CONTRACT.md`
+
 ## 1. Purpose
 
-TABLE-LAYOUT-01B translates the completed TABLE-LAYOUT-01A evidence and characterization into the smallest compatible semantic design that can be turned into a Change Contract.
+TABLE-LAYOUT-01B translates the completed TABLE-LAYOUT-01A evidence, recovered STYLE-API/SR-07 architecture decisions, current table API inventory, and focused Writer regressions into the smallest coherent design space that can later be frozen in a Change Contract.
 
-This phase does **not** authorize production implementation. Its purpose is to decide what TABLE-LAYOUT-01 should mean at the public/semantic level, what existing behavior must remain untouched, which small additions are justified, and which tempting expansions remain out of scope.
+This phase does **not** authorize production implementation.
 
-The synthesis is intentionally cumulative. It builds on:
+The purpose of this revised synthesis is specifically to avoid two mistakes:
 
-- the completed SR-07 semantic ownership model for `table`, `table-column`, `table-row`, and `table-cell`;
-- the SR-07H LibreOffice Writer interoperability rule for relative column widths;
-- the ODF/Writer evidence collected in TABLE-LAYOUT-01A;
-- the element-level and lifecycle characterization tests added in TABLE-LAYOUT-01A;
-- the version-1.0 milestone scope in `docs/FUTURE_DEVELOPMENT.md`.
+1. treating historical raw ODF QName input as the intended public table-layout API;
+2. treating the current common-style placement of element-owned `RichTable` styles as target architecture merely because existing samples still open successfully.
+
+TABLE-LAYOUT-01 must finish deliberately deferred table-layout authoring semantics on top of the architecture already built. It must not rebuild the style system.
 
 ## 2. Governing principle
 
-TABLE-LAYOUT-01 adopts the following architecture rule:
+TABLE-LAYOUT-01 follows this rule:
 
-> The engine expresses native ODF table geometry semantics and preserves compatible authored geometry; LibreOffice/Writer resolves, normalizes, and renders the final physical layout.
+> The public engine API expresses table-layout intent in engine vocabulary. The semantic style layer owns native ODF family/property semantics. LibreOffice/Writer resolves and may normalize final physical geometry.
 
-The engine therefore does not attempt to reproduce Writer's table layout algorithm or to precompute all Writer-generated helper geometry.
+This yields three separate layers:
 
-This has three immediate consequences:
+```text
+APPLICATION / AUTHORING SEMANTICS
+    table width
+    relative width
+    row height
+    minimum row height
+    vertical cell alignment
+    potentially whole-table placement where justified
 
-1. semantic authoring intent is more important than byte-identical Writer serialization;
-2. Writer-generated calculated values are evidence of interoperability behavior, not automatically requirements for engine generation;
-3. table, column, row, and cell geometry remain separate semantic concerns even when Writer physically coordinates them.
+            ↓
 
-## 3. Existing architecture that remains authoritative
+SEMANTIC OWNERSHIP / MAPPING
+    table
+    table-column
+    table-row
+    table-cell
 
-TABLE-LAYOUT-01 must not redesign the following completed behavior.
+            ↓
 
-### 3.1 Table-family ownership
-
-Table-level geometry belongs to the `table` style family and materializes under:
-
-```xml
-<style:table-properties .../>
+NATIVE ODF
+    style:width
+    style:rel-width
+    table:align
+    style:column-width
+    style:rel-column-width
+    style:row-height
+    style:min-row-height
+    style:vertical-align
 ```
 
-The existing `RichTable::setStyle()` native pass-through remains a compatibility escape hatch.
+ODF QNames are implementation/materialization vocabulary. Existing prefixed input remains compatibility/advanced escape-hatch behavior where already supported; it is not the preferred public language.
 
-### 3.2 Absolute column width
+## 3. Architecture already established and not reopened
 
-`RichTable::setColumnWidths()` remains the established semantic path for:
+TABLE-LAYOUT-01 starts from completed architecture.
+
+### 3.1 Semantic table families
+
+SR-07 established semantic ownership for:
+
+```text
+table
+table-column
+table-row
+table-cell
+```
+
+TABLE-LAYOUT-01 does not invent new style families or a table-specific style context.
+
+### 3.2 Document-local semantic pipeline
+
+The target path remains:
+
+```text
+application intent
+    -> structured element local state
+    -> StyleRequirement
+    -> StyleContext
+    -> StyleRequirementMaterializer
+    -> ODF
+```
+
+New table-layout behavior must not expand the remaining direct `StyleWriter` compatibility path.
+
+### 3.3 Named style reference semantics
+
+`RichTable::setTableStyleName()` remains reference semantics.
+
+The governing distinction remains:
+
+```text
+reference != definition != mutation
+```
+
+A named style reference must not silently become an element-owned generated definition merely because a later convenience call wants geometry.
+
+### 3.4 Cell / paragraph / text responsibility split
+
+The current `RichTableCell` path is architecture baseline:
+
+- cell-owned properties remain on the `table-cell` family;
+- paragraph concerns remain paragraph semantics;
+- text concerns remain text semantics;
+- `StyleOptionSplitter` and `StyleMapper` preserve friendly application-facing options while projecting them to the correct owner.
+
+TABLE-LAYOUT-01 must extend this model rather than bypass it.
+
+## 4. Existing table geometry that remains authoritative
+
+### 4.1 Absolute column widths
+
+`RichTable::setColumnWidths()` remains the established semantic surface for native:
 
 ```xml
 <style:table-column-properties style:column-width="..."/>
 ```
 
-No new competing absolute-column model is required.
+Its current public return type and compatibility side effects are not cleanup targets in this milestone.
 
-### 3.3 Relative column width
+### 4.2 Relative column widths
 
-`RichTable::setColumnWidthRatios()` remains the established semantic path for:
+`RichTable::setColumnWidthRatios()` remains the established semantic surface for:
 
 ```xml
 <style:table-column-properties style:rel-column-width="...*"/>
 ```
 
-For positive integer ratios, the current Writer-compatible normalization remains authoritative:
+The existing LibreOffice interoperability rule remains authoritative:
 
 ```text
 USHRT_MAX = 65535 = 2^16 - 1
@@ -80,183 +157,299 @@ Example:
 32766* / 16383* / 16386*
 ```
 
-This is an interoperability rule derived from LibreOffice Writer behavior/source investigation, not an ODF normative constant.
+This is a Writer interoperability rule established during SR-07H, not an ODF normative constant.
 
-### 3.4 Minimum row height
+### 4.3 Minimum row height
 
-The established row-style option:
+The existing engine-level row option:
 
 ```php
 $table->addRow($cells, ['min-row-height' => '2cm']);
 ```
 
-continues to mean:
+continues to map to:
 
 ```xml
 <style:table-row-properties style:min-row-height="2cm"/>
 ```
 
-This behavior is already characterized and must remain backward-compatible.
+### 4.4 Raw/native compatibility paths
 
-### 3.5 Native cell-style escape hatch
+Existing prefixed table and cell properties that currently pass through must be treated as compatibility/advanced surfaces.
 
-The existing cell style path continues to accept native cell properties such as:
+Characterization of those paths freezes current behavior for compatibility review; it does **not** promote them to recommended authoring syntax.
 
-```php
-new RichTableCell('value', ['style:vertical-align' => 'middle']);
-```
+## 5. Writer/ODF geometry evidence
 
-This compatibility path must remain valid even if a convenience mapping is added.
-
-## 4. Semantic gaps to close for TABLE-LAYOUT-01
-
-The evidence identifies three genuine missing semantic capabilities and one bounded table-width design question.
-
-### 4.1 Explicit table width
-
-ODF owns absolute table width through:
-
-```xml
-<style:table-properties style:width="10cm"/>
-```
-
-Although `RichTable::setStyle()` can already pass this native property through, TABLE-LAYOUT-01 should provide an explicit semantic authoring surface for absolute table width.
-
-Proposed public intent:
-
-```php
-$table->setWidth('10cm');
-```
-
-Proposed semantics:
+TABLE-LAYOUT-01A established the native model:
 
 ```text
-setWidth('10cm')
-    -> table-family semantic style requirement
-    -> style:table-properties
-    -> style:width="10cm"
+Table
+├── absolute width        -> style:width
+├── relative width        -> style:rel-width
+├── placement/alignment   -> table:align / relevant margins
+└── logical columns
+    ├── absolute width    -> style:column-width
+    └── relative weight   -> style:rel-column-width
+
+Row
+├── exact/fixed height    -> style:row-height
+└── minimum/growable      -> style:min-row-height
+
+Cell
+└── vertical alignment    -> style:vertical-align
 ```
 
-The method should return `self` and behave as an element convenience API rather than as a second style subsystem.
+Writer evidence also establishes that semantic intent and Writer serialization are not identical:
 
-`setWidth()` should not calculate or alter column widths. Table width and column widths remain independent authoring concerns.
+- Writer may normalize entered physical dimensions;
+- Writer may retain a relative table width while also writing a calculated absolute `style:width`;
+- Writer may represent visibly proportional columns through absolute geometry in some authoring cases;
+- fixed and minimum row height are distinct semantics;
+- Writer's UI/default serialization must not be mistaken for the engine's public vocabulary.
 
-### 4.2 Relative table width
+The engine should author native intent and leave physical layout resolution to Writer.
 
-ODF owns percentage table width through:
+## 6. Recovered table API architecture
 
-```xml
-<style:table-properties style:rel-width="60%"/>
-```
+The current API inventory shows that the table subsystem is intentionally mixed because previous architecture milestones solved ownership before finishing table-layout authoring semantics.
 
-Writer may save a relative table together with a calculated absolute `style:width`, but TABLE-LAYOUT-01A found no evidence that the engine must generate that calculated absolute value itself.
+### 6.1 Structure is already mature
 
-Proposed public intent:
+Authoritative existing structural surfaces include:
 
-```php
-$table->setRelativeWidth('60%');
-```
+- `setTableName()`;
+- `setHeaderRowCount()`;
+- row/cell construction;
+- colspan/rowspan;
+- nested structured content.
 
-Proposed semantics:
+These are outside TABLE-LAYOUT redesign.
+
+### 6.2 Table-level style ownership is modern, authoring syntax is not finished
+
+Current `RichTable::setStyle([...])` stores an element-owned table definition locally.
+
+That ownership direction is correct.
+
+However, the current option array is effectively a raw/native table-property path; there is no table-level friendly mapper comparable to `mapTableCellStyleOptions()`.
+
+Therefore:
 
 ```text
-setRelativeWidth('60%')
-    -> table-family semantic style requirement
-    -> style:table-properties
-    -> style:rel-width="60%"
+RichTable element ownership
+    = architecture baseline
+
+current raw setStyle() vocabulary
+    = compatibility/provisional authoring surface
 ```
 
-The engine should **not** calculate a companion `style:width` in the first implementation slice. Writer remains responsible for resolving the physical width from the containing area.
+TABLE-LAYOUT-01 must not confuse these two facts.
 
-Absolute and relative table-width intent should be mutually exclusive at the convenience-API level. Calling `setWidth()` after `setRelativeWidth()`, or vice versa, should replace the previous convenience width intent rather than authoring two contradictory requests.
+### 6.3 Cell authoring is the stronger API precedent
 
-This replacement rule applies only to the convenience API. Existing raw/native `setStyle()` behavior is not retroactively normalized or rewritten.
-
-### 4.3 Exact/fixed row height
-
-TABLE-LAYOUT-01A established the Writer/ODF distinction:
+`RichTableCell::setStyle()` already demonstrates the intended pattern:
 
 ```text
-fixed height      -> style:row-height
-minimum height    -> style:min-row-height
+friendly options
+    -> splitter / mapper
+    -> semantic owner
+    -> StyleRequirement
+    -> materialization
 ```
 
-The existing row style array is already the semantic location for minimum row height. The smallest compatible extension is therefore to accept:
+Any new table-level friendly option array, if approved later, should follow this pattern rather than expose ODF QNames directly.
 
-```php
-$table->addRow($cells, ['row-height' => '2cm']);
-```
+## 7. Element-owned table-style scope mismatch
 
-with native output:
+A focused Writer regression uncovered a concrete mismatch in the current implementation.
 
-```xml
-<style:table-row-properties style:row-height="2cm"/>
-```
+### 7.1 Writer concrete-table behavior
 
-No separate row object or row-layout service is justified for this milestone.
-
-`row-height` and `min-row-height` express different semantics and should not be silently translated into each other.
-
-For the first implementation contract, a row should not author both convenience properties simultaneously. If both are supplied, the implementation should reject the ambiguous request rather than invent precedence.
-
-The milestone should not introduce `style:use-optimal-row-height` without separate evidence.
-
-### 4.4 Vertical cell alignment
-
-The native property is:
-
-```xml
-<style:table-cell-properties style:vertical-align="middle"/>
-```
-
-The existing raw/native form already works. The smallest public consistency addition is to extend `StyleMapper::mapTableCellStyleOptions()` so that:
-
-```php
-new RichTableCell('value', ['vertical-align' => 'middle']);
-```
-
-maps to:
+Writer-authored concrete table geometry is observed as:
 
 ```text
+family:        table
+scope:         automatic
+document part: content.xml
+property group: style:table-properties
+```
+
+Examples include absolute width, relative width, and placement.
+
+### 7.2 Current `RichTable::setStyle()` behavior
+
+The current element-owned table definition is emitted as:
+
+```text
+family:        table
+scope:         common
+document part: styles.xml
+property group: style:table-properties
+```
+
+The properties themselves are transported correctly. The mismatch is scope/document-part.
+
+### 7.3 Historical contract already decided the ownership rule
+
+SR-07 already approved:
+
+```text
+element-owned / generated style
+    -> automatic style in the owning document part
+
+authored / explicitly reusable style
+    -> common style where the authored API carries common-style semantics
+
+reference only
+    -> no fabricated definition
+```
+
+STYLE-API-02F likewise distinguished a named reference from an element-owned generated table definition and deliberately deferred only the exact public authoring syntax.
+
+Therefore the current common/`styles.xml` placement of an element-owned generated `RichTable` definition is best classified as a compatibility/implementation residue, not as target architecture.
+
+### 7.4 This is a bounded correction, not a style-ownership redesign
+
+TABLE-LAYOUT-01 may need to correct the element-owned table definition to automatic/`content.xml`, but only under an explicit Change Contract with compatibility tests.
+
+It must not alter the semantics of:
+
+- authored reusable common table styles;
+- named style references;
+- common style precedence;
+- unrelated style families.
+
+This is restoration of the already-approved SR-07 ownership rule, not a new style architecture.
+
+## 8. Genuine TABLE-LAYOUT-01 capability gaps
+
+The mandatory 1.0 milestone scope is:
+
+- explicit table width;
+- absolute column widths;
+- relative column widths;
+- row/minimum height;
+- vertical cell alignment.
+
+Absolute and relative column semantics are already implemented and remain regression baseline.
+
+The actual missing or unfinished capabilities are therefore:
+
+### 8.1 Explicit overall table width
+
+The engine needs a friendly authoring semantic for absolute table width that ultimately owns:
+
+```xml
+style:width="..."
+```
+
+The exact public method/array syntax is **not frozen in 01B yet**.
+
+### 8.2 Relative overall table width
+
+The engine needs a friendly authoring semantic for relative table width that ultimately owns:
+
+```xml
+style:rel-width="..."
+```
+
+Writer may later calculate and persist a companion absolute width. The engine should not reproduce Writer's layout calculation unless later evidence requires it.
+
+The exact public syntax is not frozen yet.
+
+### 8.3 Exact/fixed row height
+
+The existing row option surface should be extended semantically so that:
+
+```php
+['row-height' => '2cm']
+```
+
+means:
+
+```xml
+style:row-height="2cm"
+```
+
+This is distinct from the existing `min-row-height` semantic.
+
+No row object or new row subsystem is justified.
+
+### 8.4 Vertical cell alignment
+
+The cell layer needs friendly semantic mapping for:
+
+```php
+['vertical-align' => 'middle']
+```
+
+to:
+
+```xml
 style:vertical-align="middle"
 ```
 
-Supported semantic values should follow ODF values relevant to text-table cells:
+This belongs to `table-cell`, not paragraph alignment.
+
+Existing native `style:vertical-align` compatibility behavior remains available.
+
+## 9. Whole-table placement/alignment
+
+Writer evidence shows:
 
 ```text
-top
-middle
-bottom
-automatic
-```
-
-Writer's observed empty serialization for the top/default UI state should **not** become a public semantic value. The API should express `top` when the caller explicitly requests top alignment; omission remains the way to request no explicit override.
-
-No separate fluent methods such as `alignTop()`, `alignMiddle()`, and `alignBottom()` are required for the 1.0 blocker. They may be considered later if API ergonomics justify them.
-
-## 5. Table width and alignment remain separate
-
-Writer evidence shows that width and placement are distinct:
-
-```text
-style:width / style:rel-width
+table width
     !=
-table:align
+table placement/alignment
 ```
 
-TABLE-LAYOUT-01 should not make `setWidth()` implicitly left-align, center, or margin-align a table.
+Native placement includes `table:align`, but the mandatory TABLE-LAYOUT-01 backlog does not independently list a broad table-alignment feature.
 
-Likewise `setRelativeWidth()` should not silently choose placement.
+The public authoring form for whole-table placement is therefore **not automatically approved** merely because the native property exists.
 
-The milestone scope in `FUTURE_DEVELOPMENT.md` requires explicit table width, not a broad table-placement API redesign. Existing native style access remains available for alignment where needed.
+Two constraints are already clear:
 
-A future convenience alignment API can be considered separately if a concrete user-facing requirement justifies it.
+1. normal application code should not be required to use `table:align`;
+2. a generic method name such as `setAlignment()` would be semantically ambiguous because table/cell/paragraph alignment are different owners.
 
-## 6. Interaction rules
+Whether TABLE-LAYOUT-01 must add a friendly whole-table placement semantic to make explicit width professionally useful belongs to the next API-design step. If it is included, the name and mapping must be table-specific and must share the same table semantic state rather than create a parallel subsystem.
 
-The Change Contract should encode the following interaction semantics.
+Until then, existing raw/native alignment remains a compatibility escape hatch.
 
-### 6.1 Table width versus column width
+## 10. Array API versus dedicated geometry methods
+
+The inventory shows two plausible public forms:
+
+```text
+A. dedicated intent-bearing methods
+B. a friendly table-level option array mapped through a table mapper
+```
+
+These are not mutually exclusive, but they must not create separate authorities.
+
+If both are approved later, the architectural rule must be:
+
+```text
+friendly table option array
+dedicated table convenience methods
+            ↓
+      one table semantic state
+            ↓
+      one mapping/projection path
+            ↓
+      StyleRequirement
+```
+
+The exact method names and whether a new friendly table option array is required for 1.0 remain deliberately open until the API-design step.
+
+This synthesis therefore supersedes earlier 01B examples that prematurely proposed `setWidth()` / `setRelativeWidth()` as final names.
+
+## 11. Interaction semantics already constrained
+
+Even before final API naming, several semantic rules are established.
+
+### 11.1 Table width versus column geometry
 
 ```text
 TABLE WIDTH
@@ -268,203 +461,187 @@ RELATIVE COLUMN WIDTH
 
 Therefore:
 
-- `setWidth()` must not rewrite `setColumnWidths()` values;
-- `setRelativeWidth()` must not rewrite `setColumnWidthRatios()` values;
-- column APIs must not synthesize table width;
-- the engine need not validate that absolute column widths sum exactly to an explicitly authored table width in this milestone.
+- overall table width must not silently rewrite column widths;
+- column APIs must not synthesize overall table width;
+- TABLE-LAYOUT-01 need not validate that absolute column totals exactly equal an explicit table width;
+- Writer remains responsible for physical reconciliation/normalization.
 
-Writer may normalize or coordinate physical geometry during save/reopen.
+### 11.2 Absolute versus relative table-width intent
 
-### 6.2 Absolute versus relative column APIs
+At the friendly semantic level, absolute and relative overall width are competing authoring intents.
 
-Existing behavior remains authoritative: relative ratios take the established relative-column path and absolute widths take the absolute-column path. TABLE-LAYOUT-01 should not add a third mixed column-geometry model.
+The final API should define deterministic replacement/rejection behavior rather than silently author contradictory friendly intent.
 
-### 6.3 Convenience table width versus raw native style
+This rule does not retroactively normalize arbitrary raw/native compatibility input.
 
-A dedicated width method should integrate with `RichTable`'s existing element-owned style state rather than create a parallel style store.
+### 11.3 Exact versus minimum row height
 
-The implementation must preserve unrelated table style properties already present on the element.
+These are distinct semantics.
 
-For example, adding an absolute width must not discard an existing native alignment property:
+The friendly row path should support one or the other for a row. Simultaneous friendly `row-height` and `min-row-height` should be rejected rather than given invented precedence.
 
-```php
-$table->setStyle(['table:align' => 'center']);
-$table->setWidth('10cm');
-```
-
-should preserve the alignment while adding/replacing the convenience width property.
-
-Conversely, existing `setStyle()` replacement semantics are compatibility behavior and should not be silently changed merely to make all call orders commutative. The Change Contract must state the supported interaction/order explicitly after implementation-level inspection.
-
-### 6.4 Exact versus minimum row height
-
-These are mutually distinct semantic requests.
-
-The convenience row path should support one or the other per row. Ambiguous simultaneous authoring should fail early rather than depend on Writer precedence.
-
-### 6.5 Vertical alignment versus paragraph alignment
-
-Cell vertical alignment and paragraph horizontal alignment remain independent:
+### 11.4 Vertical versus horizontal alignment
 
 ```text
-vertical-align
-    -> table-cell style family
+cell vertical alignment
+    -> table-cell family
 
-text-align
-    -> paragraph semantics
+paragraph horizontal alignment
+    -> paragraph family
+
+whole-table placement
+    -> table family
 ```
 
-Adding vertical alignment must not change the existing paragraph/text splitting behavior of `RichTableCell`.
+The public API must keep those concepts visibly distinct.
 
-## 7. Validation philosophy
+## 12. Compatibility boundaries
 
-TABLE-LAYOUT-01 should validate semantic API inputs narrowly without becoming a general CSS/ODF validator.
+TABLE-LAYOUT-01 must preserve established behavior unless the Change Contract explicitly authorizes a bounded correction.
 
-The Change Contract should require:
-
-- non-empty absolute table-width values for `setWidth()`;
-- percentage-shaped input for `setRelativeWidth()`;
-- non-empty row-height values for row-height convenience options;
-- only `top`, `middle`, `bottom`, or `automatic` for unprefixed convenience `vertical-align`;
-- preservation of the existing raw/native escape hatches for advanced callers.
-
-Length-unit normalization or conversion is not required. The engine may preserve valid caller-supplied ODF-compatible length strings rather than converting all dimensions into a canonical unit.
-
-## 8. Compatibility contract direction
-
-The implementation must preserve all behavior characterized in TABLE-LAYOUT-01A except where the Change Contract explicitly introduces a new previously unsupported convenience form.
-
-Specifically:
+### Preserve
 
 ```text
-PRESERVE
-    setColumnWidths()
-    setColumnWidthRatios()
-    65535 Writer normalization
-    min-row-height
-    raw/native table geometry
-    raw/native style:vertical-align
-    repeated save/materialization stability
-
-ADD
-    explicit absolute table-width convenience
-    explicit relative table-width convenience
-    exact row-height convenience
-    unprefixed vertical-align convenience
+setColumnWidths()
+setColumnWidthRatios()
+65535 Writer normalization
+min-row-height
+cell/paragraph/text responsibility split
+native prefixed escape hatches
+setTableStyleName() reference semantics
+repeated save/materialization stability
+sample-visible structure/span behavior
 ```
 
-No existing public method needs to be removed or renamed.
+### Characterize before changing
 
-## 9. Explicit non-goals
+```text
+RichTable::setStyle() common/styles.xml output
+setStyle() replacement/clearing behavior
+setStyle() <-> setTableStyleName() call order
+Sample 11 table-level raw/native properties
+first-row __column-width compatibility side effect
+StyleWriter::writeColumnStyles() fallback
+unsupported row-style keys being ignored
+```
+
+### Bounded correction candidate
+
+```text
+element-owned generated RichTable definition
+    common/styles.xml
+        ->
+    automatic/content.xml
+```
+
+This candidate exists because Writer evidence and the already-approved SR-07 ownership rule agree. It still requires an explicit TABLE-LAYOUT-01 Change Contract and focused compatibility tests before production code changes.
+
+## 13. Validation philosophy
+
+TABLE-LAYOUT-01 should validate engine-level semantic input narrowly without becoming a general CSS/ODF validator.
+
+Likely contract rules include:
+
+- non-empty ODF-compatible length strings for absolute widths/heights;
+- percentage-shaped strings for relative table width unless API review approves another convention;
+- explicit allowed values for friendly cell vertical alignment;
+- no silent coercion between exact and minimum row height;
+- no automatic unit conversion layer;
+- continued advanced/raw escape hatches where already supported.
+
+Exact public signatures and exception conventions belong to the next API-design/contract step.
+
+## 14. Non-goals
 
 TABLE-LAYOUT-01 must not expand into:
 
 - a PHP table layout engine;
-- automatic column measurement from text content;
-- page-width or page-margin computation;
+- automatic measurement of text content;
+- page-width/page-margin calculation;
+- generic auto-fit algorithms;
 - automatic distribution of unspecified columns;
-- automatic reconciliation of mismatched table width and absolute column totals;
-- generic table auto-fit algorithms;
+- automatic reconciliation of table width with column totals;
 - row pagination rules;
 - merged-cell redesign;
-- table-style ownership redesign;
-- a new style context or global style registry;
-- broad table alignment/placement redesign;
+- a new style context;
+- a new global table registry;
+- reopening the completed cell/paragraph/text ownership architecture;
+- broad reusable table-style authoring APIs not required by the milestone;
 - frame positioning;
-- template authoring UX;
 - page-style authoring;
-- `STYLE-API-02` or `STYLE-CONTEXT-01` reopening.
+- template authoring UX;
+- speculative cleanup of compatibility paths.
 
-## 10. Proposed implementation slices
+The bounded element-owned table-style scope correction described above is not considered a broad ownership redesign because it restores the already-approved SR-07 ownership rule.
 
-The eventual Change Contract should allow small, independently reviewable slices.
+## 15. Revised implementation-slice direction
 
-### Slice B1 — Table-width semantic convenience
+The Change Contract should authorize only small slices after public semantics are accepted.
 
-- introduce absolute table-width convenience;
-- introduce relative table-width convenience;
-- preserve unrelated table-style properties;
-- make absolute/relative convenience intent mutually exclusive;
-- add element and materialization tests;
-- verify coexistence with existing absolute/relative column APIs.
+### Slice 1 — Element-owned table-style scope correction + explicit table-width semantics
 
-### Slice B2 — Exact row height
+Potential responsibilities:
 
-- extend the existing row option path with `row-height`;
-- preserve `min-row-height` unchanged;
-- reject simultaneous convenience `row-height` + `min-row-height`;
-- add element/materialization tests;
-- perform Writer visual regression with content that exceeds the requested fixed height.
+- characterize current common/`styles.xml` behavior before changing it;
+- move element-owned generated table definitions to automatic/`content.xml` if approved by contract;
+- add the accepted friendly absolute/relative table-width semantics;
+- preserve named/common style semantics;
+- verify coexistence with absolute and relative column APIs;
+- verify repeated save/reopen stability.
 
-### Slice B3 — Vertical cell alignment
+The scope correction and width feature belong together only if the contract confirms that reliable table width depends on the corrected element-owned definition channel. They should not be split in a way that temporarily creates a second parallel table-style authority.
 
-- add unprefixed `vertical-align` mapping;
-- retain native `style:vertical-align` pass-through;
-- keep paragraph horizontal alignment separate;
-- test top/middle/bottom/automatic mapping;
-- perform Writer visual regression on a visibly tall row.
+### Slice 2 — Row height
 
-### Slice B4 — Integration/preflight
+- add exact/fixed row-height mapping to the existing row semantic layer;
+- preserve minimum row height;
+- reject contradictory friendly height intent;
+- add materialization and visual Writer regression.
 
-- combined table width + column width/ratio cases;
-- repeated save lifecycle;
-- save/reopen inspection;
-- focused existing table integration tests;
-- PublicSampleSmokeTest;
-- full `composer test`;
-- PHP lint for `src/` and `tests/`;
-- `git diff --check`;
+### Slice 3 — Vertical cell alignment
+
+- add friendly vertical-alignment mapping;
+- preserve raw/native compatibility;
+- keep paragraph horizontal alignment independent;
+- add mapping/materialization/visual regression.
+
+### Slice 4 — Integration/preflight
+
+- explicit table width + column width/ratio combinations;
+- public samples;
+- repeated save/reopen;
+- focused SR-07/STYLE-API compatibility tests;
+- full test suite;
+- lint/diff checks;
 - manual LibreOffice regression.
 
-## 11. Open points before freezing the Change Contract
+The number and exact grouping of implementation slices are not frozen until the Change Contract.
 
-The architecture is sufficiently constrained that only a few implementation-level questions remain before TABLE-LAYOUT-01C can freeze the contract:
+## 16. Remaining decisions before TABLE-LAYOUT-01C
 
-1. How should dedicated table-width setters update `RichTable::$tableStyleOptions` while preserving the current documented/reachable `setStyle()` and `setTableStyleName()` lifecycle?
-2. Should convenience width setters clear only the competing width key (`style:width` versus `style:rel-width`) or also reject a conflicting raw/native width already present?
-3. What exception type/message convention should be used for ambiguous simultaneous `row-height` and `min-row-height` input, based on existing element validation conventions?
-4. Should percentage validation for relative table width accept only strings such as `"60%"`, or also integer/float convenience inputs that are normalized to percentages?
+The evidence/architecture layer is now substantially resolved.
 
-These are bounded contract-shaping questions. They do not require further Writer/ODF research unless implementation inspection reveals a contradiction.
+The remaining work is primarily public API design and compatibility contract shaping:
 
-## 12. Proposed contract direction
+1. What is the preferred engine-level public representation of absolute and relative overall table width?
+2. Does TABLE-LAYOUT-01 require friendly whole-table placement/alignment for 1.0, and if so what unambiguous table-specific semantic name/options should it use?
+3. Should table-level authoring expose both a friendly option-array form and dedicated convenience methods, or only the minimum surface required for 1.0?
+4. How do those friendly forms interact with existing raw/native `RichTable::setStyle()` without converting it into the recommended API?
+5. How is named-style reference state protected from accidental mutation?
+6. What exact compatibility behavior is promised when element-owned generated table definitions move from common/`styles.xml` to automatic/`content.xml`?
+7. What exact validation/exception conventions are used for conflicting row-height intent and invalid alignment/percentage values?
 
-Subject to resolving the bounded points above, TABLE-LAYOUT-01C should freeze the following public behavior:
+These questions should now be answered from API consistency, current code behavior, and 1.0 scope—not by inventing new ODF semantics.
 
-```php
-$table->setWidth('10cm');
-$table->setRelativeWidth('60%');
-
-$table->setColumnWidths(['4cm', '8cm']);
-$table->setColumnWidthRatios([2, 1, 1]);
-
-$table->addRow($cells, ['row-height' => '2cm']);
-$table->addRow($cells, ['min-row-height' => '2cm']);
-
-$cell->setStyle(['vertical-align' => 'middle']);
-```
-
-with the native ownership model:
-
-```text
-Table absolute width       -> style:width
-Table relative width       -> style:rel-width
-Column absolute width      -> style:column-width
-Column relative weight     -> style:rel-column-width
-Row exact height           -> style:row-height
-Row minimum height         -> style:min-row-height
-Cell vertical alignment    -> style:vertical-align
-```
-
-The 65535 relative-column normalization remains untouched.
-
-## 13. Exit criterion for TABLE-LAYOUT-01B
+## 17. Exit criterion for TABLE-LAYOUT-01B
 
 TABLE-LAYOUT-01B is ready to close when:
 
-1. the proposed semantic additions are accepted or adjusted;
-2. the four bounded implementation-level questions are resolved from current code/API conventions;
-3. no conflict with existing SR-07 or TABLE-LAYOUT-01A characterization remains;
-4. the result can be expressed as a precise TABLE-LAYOUT-01C Change Contract without further architectural invention.
+1. the friendly public table-layout surface is accepted;
+2. whole-table placement/alignment is explicitly included or deferred;
+3. compatibility behavior for the element-owned table-style scope correction is defined;
+4. named/reference/common style semantics remain protected;
+5. exact row height and vertical cell alignment semantics are accepted;
+6. the result can be written as a precise Change Contract without further architecture invention.
 
 No production implementation is authorized by this document.
