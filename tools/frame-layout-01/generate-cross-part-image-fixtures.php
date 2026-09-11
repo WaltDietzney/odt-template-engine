@@ -74,10 +74,10 @@ $h2Style = imageElementStyleDefinition($h2);
 if ($h2Style === null) {
     throw new RuntimeException('H5: could not locate ImageElement graphic style definition in H2.');
 }
-[$h2StyleName, $h2StyleXml, $h2Container] = $h2Style;
+[$h2StyleName, $h2StylesXml, $h2Container] = $h2Style;
 mutateEntry($h5, 'styles.xml', static function (DOMDocument $dom) use (
     $h2StyleName,
-    $h2StyleXml,
+    $h2StylesXml,
     $h2Container
 ): void {
     $frame = headerFrame($dom);
@@ -87,8 +87,15 @@ mutateEntry($h5, 'styles.xml', static function (DOMDocument $dom) use (
     $frame->setAttributeNS(DRAW_NS, 'draw:style-name', $h2StyleName);
 
     $sourceDom = new DOMDocument();
-    if (!$sourceDom->loadXML($h2StyleXml)) {
-        throw new RuntimeException('H5: unable to parse copied ImageElement style.');
+    if (!$sourceDom->loadXML($h2StylesXml)) {
+        throw new RuntimeException('H5: unable to parse H2 styles.xml.');
+    }
+    $sourceXPath = xpath($sourceDom);
+    $sourceStyle = $sourceXPath->query(
+        '//style:style[@style:name="' . $h2StyleName . '" and @style:family="graphic"]'
+    )->item(0);
+    if (!$sourceStyle instanceof DOMElement) {
+        throw new RuntimeException('H5: copied ImageElement style not found in H2.');
     }
 
     $xpath = xpath($dom);
@@ -97,7 +104,7 @@ mutateEntry($h5, 'styles.xml', static function (DOMDocument $dom) use (
         throw new RuntimeException('H5: target style container not found: ' . $h2Container);
     }
 
-    $container->appendChild($dom->importNode($sourceDom->documentElement, true));
+    $container->appendChild($dom->importNode($sourceStyle, true));
 });
 
 $h6 = $outputDir . '/H6-imageElement-body-as-char.odt';
@@ -296,7 +303,7 @@ function imageElementStyleDefinition(string $odtPath): ?array
 
     return [
         $name,
-        $dom->saveXML($style) ?: '',
+        $styles,
         $style->parentNode->localName,
     ];
 }
