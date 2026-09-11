@@ -371,7 +371,7 @@ class ImageElement extends OdtElement
 
         return $anchor === 'as-char'
             ? StructuredInsertionMode::INLINE_TEXT_FLOW
-            : StructuredInsertionMode::BLOCK;
+            : StructuredInsertionMode::PRESERVE_TEXT_CONTAINER;
     }
 
     /**
