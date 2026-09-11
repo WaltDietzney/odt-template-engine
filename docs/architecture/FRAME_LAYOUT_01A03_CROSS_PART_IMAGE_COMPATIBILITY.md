@@ -219,3 +219,115 @@ future named-template-object targets
 The engine should not have one frame geometry model for body content and another accidental one for page-owned content.
 
 The PAGE-FLOW discrepancy is therefore an excellent stress test for the durability of the FRAME-LAYOUT design.
+
+
+## 9. First H1-H7 manual run — provisional result
+
+The first generated matrix produced this LibreOffice visibility result:
+
+```text
+H1  setImage(), as-char                       visible
+H2  ImageElement, as-char                     not visible
+H3  ImageElement without draw:style-name      not visible
+H4  ImageElement with Graphics style          not visible
+H5  setImage structure + ImageElement style   visible
+H6  ImageElement in body                      not visible
+H7  ImageElement in header                    not visible
+```
+
+However, every generated research document, including the synthetic baseline, opened with a LibreOffice repair/error prompt.
+
+Therefore this run is **diagnostically useful but not final interoperability evidence**. The matrix must be repeated on a clean Writer-authored base document before a production change is authorized.
+
+### 9.1 Strong structural signal
+
+Despite the invalid synthetic baseline, the visibility split is highly informative:
+
+```text
+visible:
+    H1
+    H5
+
+not visible:
+    H2
+    H3
+    H4
+    H6
+    H7
+```
+
+H1 and H5 share one structural property that the other cases do not:
+
+```text
+text:p
+└── draw:frame
+    └── draw:image
+```
+
+The direct `ImageElement` cases are materialized by `StructuredElementMaterializer` as a bare replacement for the placeholder paragraph:
+
+```text
+draw:frame
+└── draw:image
+```
+
+For `text:anchor-type="as-char"`, this is a particularly strong suspect because an as-character frame is inline content and naturally belongs inside a text paragraph.
+
+### 9.2 Style-name hypotheses weakened
+
+H3 remained invisible after removing `draw:style-name`.
+
+H4 remained invisible when referencing the Writer-authored `Graphics` style.
+
+H5 remained visible while attaching the generated ImageElement style to the successful `setImage()` structural form.
+
+Therefore the first matrix substantially weakens these hypotheses:
+
+- generated `draw:style-name` alone causes invisibility;
+- the `Graphics` parent/reference alone fixes visibility;
+- the generated ImageElement style definition is intrinsically invalid for Writer.
+
+The leading hypothesis becomes **insertion/container structure**, not graphic style identity.
+
+### 9.3 Header-only hypothesis weakened
+
+H6 was also invisible in body content.
+
+On this synthetic fixture, the failure therefore follows the direct `setElement(..., ImageElement)` insertion shape rather than the header document part.
+
+This conflicts with earlier PAGE-FLOW evidence that an existing body sample was Writer-visible. That contradiction must be resolved with a clean Writer-authored fixture and a freshly generated body sample before revising the historical conclusion.
+
+### 9.4 Current leading hypothesis
+
+`StructuredElementMaterializer::replacePlaceholder()` currently considers only these generated node types inline-compatible:
+
+```text
+text:span
+text:s
+text:line-break
+```
+
+A structured `ImageElement` returns `draw:frame`, so the materializer replaces the containing `text:p` entirely.
+
+By contrast, `setImage()` explicitly creates a replacement paragraph and inserts the frame inside it.
+
+For `as-char` images, the direct structured path may therefore destroy the required inline paragraph context.
+
+This is a characterization hypothesis, not yet an approved fix.
+
+## 10. Required clean rerun
+
+Because the first synthetic baseline itself requires LibreOffice repair, do not use it for final Writer conclusions.
+
+Repeat H1-H7 using a **Writer-authored ODT base** that already contains:
+
+```text
+header: {{header_logo}}
+body:   {{body_logo}}
+```
+
+and otherwise retains Writer-generated package/XML structure.
+
+The clean rerun should preserve the same mutation matrix while changing only the insertion method/style-reference variable under investigation.
+
+If the same H1/H5 versus H2/H3/H4/H6/H7 split reproduces without a Writer repair prompt, the paragraph/insertion-context hypothesis becomes strong enough for a dedicated Change-Contract candidate.
