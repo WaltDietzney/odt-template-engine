@@ -20,6 +20,13 @@ const XLINK_NS = 'http://www.w3.org/1999/xlink';
 $root = dirname(__DIR__, 2);
 $outputDir = $root . '/tmp/frame-layout-01-cross-part';
 $imagePath = $root . '/assets/Logo.png';
+$base = $argv[1] ?? ($root . '/research/frame-layout-01-cross-part-base.odt');
+
+if (!is_file($base)) {
+    throw new RuntimeException(
+        'Writer-authored base fixture not found. Pass it as the first argument or create: ' . $base
+    );
+}
 
 if (!is_file($imagePath)) {
     throw new RuntimeException('Expected image asset not found: ' . $imagePath);
@@ -29,7 +36,7 @@ if (!is_dir($outputDir) && !mkdir($outputDir, 0777, true) && !is_dir($outputDir)
     throw new RuntimeException('Unable to create output directory: ' . $outputDir);
 }
 
-$base = createBaseFixture($root, $outputDir);
+assertBaseFixture($base);
 
 $h1 = $outputDir . '/H1-setImage-header-as-char.odt';
 $template = new OdtTemplate($base);
@@ -128,6 +135,7 @@ $h7Frame = frameXml($h7, 'styles.xml', true);
 
 $summary = [
     'FRAME-LAYOUT-01 cross-part image fixture matrix',
+    'Writer-authored base: ' . $base,
     '',
     'H1  setImage(), as-char                       known visible baseline',
     'H2  ImageElement, as-char                     known invisible baseline',
@@ -136,6 +144,11 @@ $summary = [
     'H5  setImage paragraph/frame structure + ImageElement generated style-name',
     'H6  ImageElement subtree in body',
     'H7  ImageElement subtree in header',
+    '',
+    'H1 body placeholder remains: ' . (str_contains(entry($h1, 'content.xml'), '{{body_logo}}') ? 'YES' : 'NO'),
+    'H6 body placeholder remains: ' . (str_contains(entry($h6, 'content.xml'), '{{body_logo}}') ? 'YES' : 'NO'),
+    'H6 body draw:image count: ' . drawImageCount($h6, 'content.xml'),
+    'H7 header draw:image count: ' . headerDrawImageCount($h7),
     '',
     'H6/H7 canonical frame subtree equal: ' . (($h6Frame === $h7Frame) ? 'YES' : 'NO'),
     'H6 frame SHA-256: ' . hash('sha256', $h6Frame),
@@ -150,90 +163,34 @@ file_put_contents($outputDir . '/RESULTS.txt', implode(PHP_EOL, $summary) . PHP_
 echo implode(PHP_EOL, $summary) . PHP_EOL;
 echo PHP_EOL . 'Generated in: ' . $outputDir . PHP_EOL;
 
-function createBaseFixture(string $root, string $outputDir): string
+function assertBaseFixture(string $odtPath): void
 {
-    $source = $root . '/samples/templates/template_01_simple_variables.odt';
-    if (!is_file($source)) {
-        throw new RuntimeException('Base ODT template not found: ' . $source);
+    $content = entry($odtPath, 'content.xml');
+    $styles = entry($odtPath, 'styles.xml');
+
+    if (!str_contains($content, '{{body_logo}}')) {
+        throw new RuntimeException(
+            'Writer-authored base fixture must contain {{body_logo}} in content.xml.'
+        );
     }
 
-    $target = $outputDir . '/_base-cross-part-image-fixture.odt';
-    if (!copy($source, $target)) {
-        throw new RuntimeException('Unable to copy base ODT fixture.');
+    if (!str_contains($styles, '{{header_logo}}')) {
+        throw new RuntimeException(
+            'Writer-authored base fixture must contain {{header_logo}} in styles.xml header content.'
+        );
     }
 
-    $zip = new ZipArchive();
-    if ($zip->open($target) !== true) {
-        throw new RuntimeException('Unable to open base fixture.');
+    $stylesDom = new DOMDocument();
+    if (!$stylesDom->loadXML($styles)) {
+        throw new RuntimeException('Writer-authored base styles.xml is not well-formed XML.');
     }
 
-    $zip->addFromString('content.xml', contentXml());
-    $zip->addFromString('styles.xml', stylesXml());
-    $zip->close();
-
-    return $target;
-}
-
-function contentXml(): string
-{
-    return <<<'XML'
-<?xml version="1.0" encoding="UTF-8"?>
-<office:document-content
-    xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
-    xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
-    xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"
-    xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0"
-    xmlns:xlink="http://www.w3.org/1999/xlink"
-    xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0"
-    xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"
-    office:version="1.2">
-    <office:automatic-styles/>
-    <office:body>
-        <office:text>
-            <text:p text:style-name="Standard">FRAME-LAYOUT-01 H1-H7 body</text:p>
-            <text:p text:style-name="Standard">{{body_logo}}</text:p>
-        </office:text>
-    </office:body>
-</office:document-content>
-XML;
-}
-
-function stylesXml(): string
-{
-    return <<<'XML'
-<?xml version="1.0" encoding="UTF-8"?>
-<office:document-styles
-    xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
-    xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
-    xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"
-    xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0"
-    xmlns:xlink="http://www.w3.org/1999/xlink"
-    xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0"
-    xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"
-    office:version="1.2">
-    <office:styles>
-        <style:style style:name="Standard" style:family="paragraph"/>
-        <style:style style:name="Header" style:family="paragraph" style:parent-style-name="Standard"/>
-        <style:style style:name="Graphics" style:family="graphic"/>
-    </office:styles>
-    <office:automatic-styles>
-        <style:page-layout style:name="Mpm1">
-            <style:page-layout-properties
-                fo:page-width="21cm"
-                fo:page-height="29.7cm"
-                fo:margin="2cm"/>
-            <style:header-style/>
-        </style:page-layout>
-    </office:automatic-styles>
-    <office:master-styles>
-        <style:master-page style:name="Standard" style:page-layout-name="Mpm1">
-            <style:header>
-                <text:p text:style-name="Header">HEADER IMAGE: {{header_logo}}</text:p>
-            </style:header>
-        </style:master-page>
-    </office:master-styles>
-</office:document-styles>
-XML;
+    $xpath = xpath($stylesDom);
+    if ($xpath->query('//style:master-page/style:header')->length === 0) {
+        throw new RuntimeException(
+            'Writer-authored base fixture must contain a real style:header in a master page.'
+        );
+    }
 }
 
 function mutateEntry(string $odtPath, string $entry, callable $mutator): void
@@ -346,6 +303,32 @@ function entry(string $odtPath, string $entryName): string
     } finally {
         $zip->close();
     }
+}
+
+function drawImageCount(string $odtPath, string $entryName): int
+{
+    $xml = entry($odtPath, $entryName);
+    $dom = new DOMDocument();
+    if (!$dom->loadXML($xml)) {
+        throw new RuntimeException('Unable to parse ' . $entryName);
+    }
+
+    $xpath = xpath($dom);
+
+    return $xpath->query('//draw:image')->length;
+}
+
+function headerDrawImageCount(string $odtPath): int
+{
+    $xml = entry($odtPath, 'styles.xml');
+    $dom = new DOMDocument();
+    if (!$dom->loadXML($xml)) {
+        throw new RuntimeException('Unable to parse styles.xml');
+    }
+
+    $xpath = xpath($dom);
+
+    return $xpath->query('//style:master-page/style:header//draw:image')->length;
 }
 
 function xpath(DOMDocument $dom): DOMXPath
