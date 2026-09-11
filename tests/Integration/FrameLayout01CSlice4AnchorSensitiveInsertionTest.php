@@ -130,6 +130,58 @@ final class FrameLayout01CSlice4AnchorSensitiveInsertionTest extends TestCase
         self::assertSame('text:p', $frame?->parentNode?->nodeName);
     }
 
+
+    public function testInlineFrameIsPromotedOutOfSpanButParagraphAndFollowingTextRemain(): void
+    {
+        $dom = $this->bodyDom(
+            '<text:span text:style-name="Emphasis">{{logo}} after</text:span>'
+        );
+        $replacement = $dom->createElement('draw:frame');
+        $replacement->setAttribute('text:anchor-type', 'as-char');
+
+        (new StructuredElementMaterializer())->replacePlaceholder(
+            $dom,
+            'logo',
+            $replacement,
+            StructuredInsertionMode::INLINE_TEXT_FLOW
+        );
+
+        $xpath = $this->xpath($dom);
+        $paragraph = $xpath->query('//office:body//text:p')->item(0);
+        self::assertInstanceOf(DOMElement::class, $paragraph);
+
+        $frame = $dom->getElementsByTagName('draw:frame')->item(0);
+        self::assertSame('text:p', $frame?->parentNode?->nodeName);
+        self::assertSame(' after', $paragraph->textContent);
+        self::assertSame(
+            1,
+            $xpath->query('//office:body//text:p/text:span[@text:style-name="Emphasis"]')->length
+        );
+    }
+
+    public function testFloatingFrameIsPromotedOutOfSpanButParagraphCarrierRemains(): void
+    {
+        $dom = $this->bodyDom(
+            '<text:span text:style-name="Emphasis">{{logo}}</text:span>'
+        );
+        $replacement = $dom->createElement('draw:frame');
+        $replacement->setAttribute('text:anchor-type', 'paragraph');
+
+        (new StructuredElementMaterializer())->replacePlaceholder(
+            $dom,
+            'logo',
+            $replacement,
+            StructuredInsertionMode::PRESERVE_TEXT_CONTAINER
+        );
+
+        $xpath = $this->xpath($dom);
+        self::assertSame(1, $xpath->query('//office:body//text:p')->length);
+
+        $frame = $dom->getElementsByTagName('draw:frame')->item(0);
+        self::assertSame('text:p', $frame?->parentNode?->nodeName);
+        self::assertSame(0, $xpath->query('//office:body//text:p/text:span')->length);
+    }
+
     public function testBlockInsertionStillReplacesContainingParagraph(): void
     {
         $dom = $this->bodyDom('{{box}}');
