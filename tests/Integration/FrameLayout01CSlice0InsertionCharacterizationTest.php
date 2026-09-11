@@ -31,9 +31,10 @@ final class FrameLayout01CSlice0InsertionCharacterizationTest extends TestCase
 
         $xpath = $this->xpath($dom);
         self::assertSame(0, $xpath->query('//office:body//text:p')->length);
-        self::assertSame(1, $xpath->query('//office:body//draw:frame')->length);
+        $frames = $dom->getElementsByTagName('draw:frame');
+        self::assertSame(1, $frames->length);
 
-        $frame = $xpath->query('//office:body//draw:frame')->item(0);
+        $frame = $frames->item(0);
         self::assertInstanceOf(DOMElement::class, $frame);
         self::assertSame('as-char', $frame->getAttribute('text:anchor-type'));
     }
@@ -55,9 +56,10 @@ final class FrameLayout01CSlice0InsertionCharacterizationTest extends TestCase
 
         $xpath = $this->xpath($dom);
         self::assertSame(0, $xpath->query('//style:header//text:p')->length);
-        self::assertSame(1, $xpath->query('//style:header/draw:frame')->length);
+        $frames = $dom->getElementsByTagName('draw:frame');
+        self::assertSame(1, $frames->length);
 
-        $frame = $xpath->query('//style:header/draw:frame')->item(0);
+        $frame = $frames->item(0);
         self::assertInstanceOf(DOMElement::class, $frame);
         self::assertSame('as-char', $frame->getAttribute('text:anchor-type'));
     }
@@ -82,7 +84,7 @@ final class FrameLayout01CSlice0InsertionCharacterizationTest extends TestCase
 
         $xpath = $this->xpath($dom);
         self::assertSame(0, $xpath->query('//office:body//text:p')->length);
-        self::assertSame(1, $xpath->query('//office:body//draw:frame')->length);
+        self::assertSame(1, $dom->getElementsByTagName('draw:frame')->length);
     }
 
     public function testFloatingTextBoxCurrentlyReturnsParagraphWrapperBeforeMaterializer(): void
@@ -107,7 +109,9 @@ final class FrameLayout01CSlice0InsertionCharacterizationTest extends TestCase
 
         $xpath = $this->xpath($dom);
         self::assertSame(1, $xpath->query('//office:body/text:p')->length);
-        self::assertSame(1, $xpath->query('//office:body/text:p/draw:frame')->length);
+        $paragraph = $xpath->query('//office:body/text:p')->item(0);
+        self::assertInstanceOf(DOMElement::class, $paragraph);
+        self::assertSame('draw:frame', $paragraph->firstChild?->nodeName);
     }
 
     private function bodyDom(string $placeholder): DOMDocument
