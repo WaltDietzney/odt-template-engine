@@ -1,6 +1,6 @@
 # FRAME-LAYOUT-01C Slice 1 — DrawingLayout Core Review
 
-Status: REVIEWED / MINOR CORRECTIONS REQUIRED BEFORE CLOSEOUT
+Status: CLOSED / GATE GREEN
 
 Reviewed:
 
@@ -141,3 +141,20 @@ Before closing Slice 1:
 4. retain the as-char top/middle/bottom evidence requirement for later producer/insertion acceptance.
 
 After these focused corrections, Slice 1 can close and Slice 2 may begin.
+
+
+## 8. Closeout
+
+The final Slice 1 gate passed locally:
+
+```text
+34 tests
+148 assertions
+0 failures
+0 errors
+1 pre-existing PHPUnit deprecation
+```
+
+`git diff --check` was clean.
+
+Slice 1 is therefore closed. FRAME-LAYOUT-01C may proceed to Slice 2 — DrawTextBox migration.
