@@ -67,8 +67,8 @@ final class DrawingLayout
             throw new InvalidArgumentException(sprintf('Unsupported frame anchor "%s".', $anchor));
         }
 
-        $width = self::nullableLength($layout['width'] ?? null, 'width');
-        $height = self::nullableLength($layout['height'] ?? null, 'height');
+        $width = self::nullableLength($layout['width'] ?? null, 'width', false);
+        $height = self::nullableLength($layout['height'] ?? null, 'height', false);
 
         [$horizontalMode, $horizontalAlignment, $horizontalRelation, $horizontalOffset]
             = self::parseHorizontal($layout['horizontal'] ?? null, $anchor);
@@ -301,7 +301,7 @@ final class DrawingLayout
             return ['alignment', $alignment, $relation, null];
         }
 
-        $offset = self::nullableLength($group['offset'], 'horizontal offset');
+        $offset = self::nullableLength($group['offset'], 'horizontal offset', true);
         if ($offset === null) {
             throw new InvalidArgumentException('Horizontal frame offset must not be empty.');
         }
@@ -346,7 +346,7 @@ final class DrawingLayout
             return ['alignment', $alignment, $relation, null];
         }
 
-        $offset = self::nullableLength($group['offset'], 'vertical offset');
+        $offset = self::nullableLength($group['offset'], 'vertical offset', true);
         if ($offset === null) {
             throw new InvalidArgumentException('Vertical frame offset must not be empty.');
         }
