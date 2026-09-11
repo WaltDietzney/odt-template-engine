@@ -108,7 +108,7 @@ final class TableLayout01CSlice1LifecycleCharacterizationTest extends TestCase
             self::assertSame(0, $this->styleCountInContainer($stylesXml, $styleName, 'table', 'styles'));
             self::assertSame(1, $this->styleCountInContainer($contentXml, $styleName, 'table', 'automatic-styles'));
             self::assertSame('15cm', $this->styleProperty(
-                $stylesXml,
+                $contentXml,
                 $styleName,
                 'table',
                 'table-properties',
@@ -116,7 +116,7 @@ final class TableLayout01CSlice1LifecycleCharacterizationTest extends TestCase
                 'width'
             ));
             self::assertSame('center', $this->styleProperty(
-                $stylesXml,
+                $contentXml,
                 $styleName,
                 'table',
                 'table-properties',
