@@ -33,7 +33,7 @@ final class FrameLayout01CSlice4AnchorSensitiveInsertionTest extends TestCase
         );
     }
 
-    public function testFloatingImageReportsBlockInsertion(): void
+    public function testFloatingImageReportsTextContainerPreservation(): void
     {
         $image = (new ImageElement($this->imagePath(), [
             'width' => '1cm',
@@ -42,7 +42,7 @@ final class FrameLayout01CSlice4AnchorSensitiveInsertionTest extends TestCase
         ]);
 
         self::assertSame(
-            StructuredInsertionMode::BLOCK,
+            StructuredInsertionMode::PRESERVE_TEXT_CONTAINER,
             $image->structuredInsertionMode()
         );
     }
@@ -102,6 +102,28 @@ final class FrameLayout01CSlice4AnchorSensitiveInsertionTest extends TestCase
 
         $xpath = $this->xpath($dom);
         self::assertSame(1, $xpath->query('//style:header//text:p')->length);
+        self::assertSame(1, $dom->getElementsByTagName('draw:frame')->length);
+
+        $frame = $dom->getElementsByTagName('draw:frame')->item(0);
+        self::assertSame('text:p', $frame?->parentNode?->nodeName);
+    }
+
+
+    public function testTextContainerPreservationKeepsParagraphForParagraphAnchoredFrame(): void
+    {
+        $dom = $this->bodyDom('{{logo}}');
+        $replacement = $dom->createElement('draw:frame');
+        $replacement->setAttribute('text:anchor-type', 'paragraph');
+
+        (new StructuredElementMaterializer())->replacePlaceholder(
+            $dom,
+            'logo',
+            $replacement,
+            StructuredInsertionMode::PRESERVE_TEXT_CONTAINER
+        );
+
+        $xpath = $this->xpath($dom);
+        self::assertSame(1, $xpath->query('//office:body//text:p')->length);
         self::assertSame(1, $dom->getElementsByTagName('draw:frame')->length);
 
         $frame = $dom->getElementsByTagName('draw:frame')->item(0);
