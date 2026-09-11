@@ -71,19 +71,31 @@ final class FrameLayout01CSlice5CompatibilityPolicyIntegrationTest extends TestC
             self::assertNotNull($properties);
             self::assertSame(
                 'true',
-                $properties->attributes?->getNamedItem('style:flow-with-text')?->nodeValue
+                $properties->getAttributeNS(
+                    'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+                    'flow-with-text'
+                )
             );
             self::assertSame(
                 'once-concurrent',
-                $properties->attributes?->getNamedItem('draw:wrap-influence-on-position')?->nodeValue
+                $properties->getAttributeNS(
+                    'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0',
+                    'wrap-influence-on-position'
+                )
             );
             self::assertSame(
                 'false',
-                $properties->attributes?->getNamedItem('loext:allow-overlap')?->nodeValue
+                $properties->getAttributeNS(
+                    'urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0',
+                    'allow-overlap'
+                )
             );
             self::assertSame(
                 'parallel',
-                $properties->attributes?->getNamedItem('style:wrap')?->nodeValue
+                $properties->getAttributeNS(
+                    'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+                    'wrap'
+                )
             );
 
             $content = $this->dom($this->entry($output, 'content.xml'));
