@@ -14,10 +14,8 @@ use PHPUnit\Framework\TestCase;
 use ZipArchive;
 
 /**
- * Freezes the pre-Slice-1 table-level materialization/lifecycle boundary.
- *
- * The common/styles.xml placement asserted here is current behavior evidence,
- * not the TABLE-LAYOUT-01C target.
+ * Protects the characterized table-level lifecycle while asserting the
+ * TABLE-LAYOUT-01C automatic/content.xml ownership target.
  */
 final class TableLayout01CSlice1LifecycleCharacterizationTest extends TestCase
 {
@@ -37,7 +35,7 @@ final class TableLayout01CSlice1LifecycleCharacterizationTest extends TestCase
     }
 
     #[RunInSeparateProcess]
-    public function testCurrentSample11TableStyleMaterializesAsCommonStyleInStylesXml(): void
+    public function testSample11TableStyleMaterializesAsAutomaticStyleInContentXml(): void
     {
         $table = (new RichTable())->setStyle([
             'table:width' => '15cm',
@@ -54,11 +52,11 @@ final class TableLayout01CSlice1LifecycleCharacterizationTest extends TestCase
         $styleName = $table->getTableStyleName();
 
         self::assertNotNull($styleName);
-        self::assertSame(1, $this->styleCountInContainer($stylesXml, $styleName, 'table', 'styles'));
-        self::assertSame(0, $this->styleCountInContainer($contentXml, $styleName, 'table', 'automatic-styles'));
+        self::assertSame(0, $this->styleCountInContainer($stylesXml, $styleName, 'table', 'styles'));
+        self::assertSame(1, $this->styleCountInContainer($contentXml, $styleName, 'table', 'automatic-styles'));
 
         self::assertSame('15cm', $this->styleProperty(
-            $stylesXml,
+            $contentXml,
             $styleName,
             'table',
             'table-properties',
@@ -66,7 +64,7 @@ final class TableLayout01CSlice1LifecycleCharacterizationTest extends TestCase
             'width'
         ));
         self::assertSame('left', $this->styleProperty(
-            $stylesXml,
+            $contentXml,
             $styleName,
             'table',
             'table-properties',
@@ -74,7 +72,7 @@ final class TableLayout01CSlice1LifecycleCharacterizationTest extends TestCase
             'align'
         ));
         self::assertSame('100%', $this->styleProperty(
-            $stylesXml,
+            $contentXml,
             $styleName,
             'table',
             'table-properties',
@@ -84,7 +82,7 @@ final class TableLayout01CSlice1LifecycleCharacterizationTest extends TestCase
     }
 
     #[RunInSeparateProcess]
-    public function testCurrentElementOwnedTableDefinitionRemainsSingleAcrossRepeatedSave(): void
+    public function testElementOwnedAutomaticTableDefinitionRemainsSingleAcrossRepeatedSave(): void
     {
         $table = (new RichTable())->setStyle([
             'style:width' => '15cm',
@@ -107,8 +105,8 @@ final class TableLayout01CSlice1LifecycleCharacterizationTest extends TestCase
             $stylesXml = $this->entry($output, 'styles.xml');
             $contentXml = $this->entry($output, 'content.xml');
 
-            self::assertSame(1, $this->styleCountInContainer($stylesXml, $styleName, 'table', 'styles'));
-            self::assertSame(0, $this->styleCountInContainer($contentXml, $styleName, 'table', 'automatic-styles'));
+            self::assertSame(0, $this->styleCountInContainer($stylesXml, $styleName, 'table', 'styles'));
+            self::assertSame(1, $this->styleCountInContainer($contentXml, $styleName, 'table', 'automatic-styles'));
             self::assertSame('15cm', $this->styleProperty(
                 $stylesXml,
                 $styleName,
@@ -145,7 +143,7 @@ final class TableLayout01CSlice1LifecycleCharacterizationTest extends TestCase
 
         self::assertNotNull($styleName);
         self::assertSame('12cm', $this->styleProperty(
-            $stylesXml,
+            $contentXml,
             $styleName,
             'table',
             'table-properties',
@@ -187,7 +185,7 @@ final class TableLayout01CSlice1LifecycleCharacterizationTest extends TestCase
 
         self::assertNotNull($styleName);
         self::assertSame('60%', $this->styleProperty(
-            $stylesXml,
+            $contentXml,
             $styleName,
             'table',
             'table-properties',
