@@ -20,6 +20,7 @@ use OdtTemplateEngine\Document\FrameTarget;
 use OdtTemplateEngine\Document\MetadataManager;
 use OdtTemplateEngine\Document\SectionTarget;
 use OdtTemplateEngine\Document\StructuredElementMaterializer;
+use OdtTemplateEngine\Document\StructuredInsertionMode;
 use OdtTemplateEngine\Document\StructuredResourceCollector;
 use OdtTemplateEngine\Document\StyleRequirementCollector;
 use OdtTemplateEngine\Document\StyleRequirementMaterializer;
@@ -49,6 +50,7 @@ use OdtTemplateEngine\Utils\StyleMapper;
 class OdtTemplate
 {
     private OdtPackage $package;
+    private StructuredInsertionMode $activeStructuredInsertionMode = StructuredInsertionMode::BLOCK;
 
     /**
      * All placeholder values to be replaced, set via setValues().
@@ -365,8 +367,8 @@ class OdtTemplate
             function (DOMDocument $dom) use ($placeholder): void {
                 $this->normalizeStructuredPlaceholder($dom, $placeholder);
             },
-            function (DOMDocument $dom, string $key, DOMNode $replacement): void {
-                $this->replacePlaceholderWithDom($dom, $key, $replacement);
+            function (DOMDocument $dom, string $key, DOMNode $replacement) use ($element): void {
+                $this->replacePlaceholderWithElementSemantics($dom, $key, $replacement, $element);
             },
             fn (DOMDocument $dom, string $key): bool => $this->hasPlaceholder($dom, $key)
         );
@@ -430,7 +432,12 @@ class OdtTemplate
                 $this->legacyStructuredValuesMaterialized = true;
                 $replacement = $value->toDomNode($dom);
                 $this->registerLegacyGraphicRequirements($value);
-                $this->replacePlaceholderWithDom($dom, (string) $key, $replacement);
+                $this->replacePlaceholderWithElementSemantics(
+                    $dom,
+                    (string) $key,
+                    $replacement,
+                    $value
+                );
             } else {
                 $scalarValues[(string) $key] = $value;
             }
@@ -486,7 +493,32 @@ class OdtTemplate
         string $key,
         DOMNode $replacement
     ): void {
-        (new StructuredElementMaterializer())->replacePlaceholder($dom, $key, $replacement);
+        (new StructuredElementMaterializer())->replacePlaceholder(
+            $dom,
+            $key,
+            $replacement,
+            $this->activeStructuredInsertionMode
+        );
+    }
+
+    /**
+     * Preserve the protected replacement facade while supplying semantic
+     * insertion state out-of-band for the duration of this replacement.
+     */
+    private function replacePlaceholderWithElementSemantics(
+        DOMDocument $dom,
+        string $key,
+        DOMNode $replacement,
+        OdtElement $element
+    ): void {
+        $previousMode = $this->activeStructuredInsertionMode;
+        $this->activeStructuredInsertionMode = $element->structuredInsertionMode();
+
+        try {
+            $this->replacePlaceholderWithDom($dom, $key, $replacement);
+        } finally {
+            $this->activeStructuredInsertionMode = $previousMode;
+        }
     }
 
     /**
