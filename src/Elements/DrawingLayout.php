@@ -399,15 +399,30 @@ final class DrawingLayout
         return $value;
     }
 
-    private static function nullableLength(mixed $value, string $label): ?string
-    {
+    private static function nullableLength(
+        mixed $value,
+        string $label,
+        bool $allowSigned
+    ): ?string {
         $value = self::nullableString($value, $label);
         if ($value === null) {
             return null;
         }
-        if (!preg_match('/^[+-]?(?:\d+(?:\.\d+)?|\.\d+)(?:cm|mm|in|pt|pc)$/', $value)) {
+
+        $pattern = $allowSigned
+            ? '/^[+-]?(?:\d+(?:\.\d+)?|\.\d+)(?:cm|mm|in|pt|pc)$/'
+            : '/^(?:\d+(?:\.\d+)?|\.\d+)(?:cm|mm|in|pt|pc)$/';
+
+        if (!preg_match($pattern, $value)) {
             throw new InvalidArgumentException(sprintf(
                 'Frame %s must be an absolute ODF length.',
+                $label
+            ));
+        }
+
+        if (!$allowSigned && (float) $value <= 0.0) {
+            throw new InvalidArgumentException(sprintf(
+                'Frame %s must be greater than zero.',
                 $label
             ));
         }
