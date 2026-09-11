@@ -12,7 +12,7 @@ The explicit path to 1.0 is now:
 
 1. `PAGE-FLOW-01` — **COMPLETE / FINAL GO**;
 2. `TABLE-LAYOUT-01` — professional table geometry — **COMPLETE / FINAL GO**;
-3. `FRAME-LAYOUT-01` — bounded reliable frame geometry core;
+3. `FRAME-LAYOUT-01` — bounded reliable frame geometry core — **COMPLETE / FINAL GO**;
 4. `TEMPLATE-RELIABILITY-01` — focused remaining template-format/control audit and only evidence-based fixes;
 5. `FINALIZATION-01` — final document/export lifecycle contract;
 6. `RELEASE-1.0` integration preflight.
@@ -166,46 +166,44 @@ A future design should determine a stable document-local identity/allocation str
 
 Until that work is explicitly designed, tests/samples that combine multiple generated column geometries in one document should avoid conflicting `coN` definitions or use separate regression documents.
 
-## FRAME-LAYOUT-01 — Reliable frame geometry core
+## FRAME-LAYOUT-01 — Reliable frame geometry core — COMPLETE / FINAL GO
 
-**Priority:** 1.0 BLOCKER / bounded scope
+FRAME-LAYOUT-01 is completed architecture baseline.
 
-Define a shared frame-positioning model for supported drawing content instead of allowing images and text boxes to evolve separate positioning semantics.
+It established a shared `DrawingLayout` model for frame-backed elements, native carrier ownership for geometry, semantic graphic-style ownership for layout policies, compatible public authoring APIs, and anchor-sensitive structured insertion.
 
-The 1.0 core should cover:
+The bounded 1.0 frame core now covers:
 
-- `draw:frame` structural semantics;
 - anchor type;
 - size;
-- horizontal/vertical position;
-- relation/reference area;
+- horizontal/vertical alignment and relation;
+- explicit x/y offset positioning;
 - fundamental wrap behavior;
-- consistent semantics across images and text boxes;
-- relevant preservation/mutation of LibreOffice-authored existing frames.
+- retained compatibility policies such as flow-with-text, wrap influence, and overlap;
+- consistent semantics across `DrawTextBox` and `ImageElement`;
+- body/header structured insertion parity;
+- paragraph/text-flow carrier preservation for frame insertion;
+- semantic style deduplication and repeated-save stability.
 
-`FRAME-LAYOUT-02` and `IMAGE-LAYOUT-01` should be resolved through or consistently with this shared model rather than through independent incompatible APIs.
+`FRAME-LAYOUT-02`, `IMAGE-LAYOUT-01`, broader Writer drawing options, and future specialized draw elements must build on this shared model rather than introduce incompatible positioning semantics.
 
-1.0 does not require every Writer drawing or positioning option.
+### GRAPHIC-PART-COMPAT-01 — RESOLVED BY FRAME-LAYOUT-01
 
-### GRAPHIC-PART-COMPAT-01 — Structured graphic materialization across document parts
+The PAGE-FLOW-01D discrepancy was investigated and closed during FRAME-LAYOUT-01.
 
-**Priority:** Focused compatibility investigation; not part of PAGE-FLOW-01 unless later evidence makes it a dependency
-
-PAGE-FLOW-01D exposed a bounded Writer-visibility discrepancy across document parts:
+The decisive finding was structural:
 
 ```text
-ImageElement via setElement() / content.xml body      -> Writer-visible
-ImageElement via setElement() / styles.xml header     -> not Writer-visible
-setImage() / styles.xml header                         -> Writer-visible
+structured draw:frame
++ removal or invalid nesting of the required text paragraph carrier
+= Writer-invisible result
 ```
 
-The image resource, manifest entry, `draw:frame`, and `draw:image` reference were present in the failing structured-header result. Changing only the generated graphic parent style from `Standard` to `Graphics` did not make the image visible. Existing body samples confirm that the semantic `ImageElement` path is not generally broken.
+The failure was not caused by image packaging, manifest registration, a general header prohibition, or a need for a separate header image engine.
 
-The investigation must therefore compare the actual body and page-owned materialization contexts before changing graphic-style or frame semantics. It should determine whether the discrepancy is caused by document-part-specific ODF structure, insertion context, automatic-style placement/scope, frame anchoring constraints, or another Writer interoperability rule.
+FRAME-LAYOUT-01 introduced anchor-sensitive insertion and paragraph/text-container preservation, including promotion of generated frames out of inline `text:span` wrappers when necessary. LibreOffice regression confirmed structured `ImageElement` visibility in both body and header contexts.
 
-Do not fold this finding into PAGE-FLOW pagination logic, and do not assume it is merely a frame-positioning defect. Coordinate with `FRAME-LAYOUT-01` only if evidence shows that the root cause belongs to the shared frame model.
-
-Until resolved, page-owned image insertion characterized for PAGE-FLOW-01 uses the established public `setImage()` path.
+No separate `GRAPHIC-PART-COMPAT-01` implementation remains open.
 
 ## TEMPLATE-RELIABILITY-01 — Remaining template-format/control audit
 
