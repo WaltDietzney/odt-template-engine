@@ -32,7 +32,7 @@ FrameLayout01CSlice0CompatibilityCharacterizationTest adds:
 1. legacy from-left/from-top setters without x/y do not invent coordinates;
 2. ImageElement align=left/right/center/absolute mapping;
 3. align=absolute does not invent svg:x;
-4. explicit ImageElement svg:x/y pass-through;
+4. explicit raw ImageElement svg:x/y constructor keys are currently dropped by StyleMapper;
 5. ImageElement width-only autoscaling;
 6. ImageElement height-only autoscaling;
 7. observable ImageElement materialization mutation remains stable.
@@ -82,3 +82,12 @@ Slice 0 is complete when:
 4. unexpected failures are resolved by correcting characterization or documenting a repository contradiction, not by changing production code.
 
 Only then may FRAME-LAYOUT-01C proceed to Slice 1 — DrawingLayout semantic core.
+
+## 8. First local gate correction
+
+The first local run exposed two mistaken test assumptions, not production defects introduced by Slice 0:
+
+- `StyleMapper::mapImageStyleOptions()` currently does not preserve raw `svg:x` / `svg:y` constructor keys. The characterization now freezes that loss instead of falsely expecting pass-through.
+- generated prefixed nodes created through `DOMDocument::createElement('draw:frame')` are currently inspected reliably by `nodeName` / `getElementsByTagName('draw:frame')`; namespace-aware XPath does not match those generated nodes in the in-memory DOM because their current DOM namespace identity is not equivalent to Writer-loaded namespaced nodes.
+
+No production code was changed. These observations are compatibility evidence for later slices, not target semantics.
