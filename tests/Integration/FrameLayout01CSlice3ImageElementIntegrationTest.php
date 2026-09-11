@@ -67,7 +67,9 @@ final class FrameLayout01CSlice3ImageElementIntegrationTest extends TestCase
         $styles = $this->dom($this->entry($output, 'styles.xml'));
 
         $contentXPath = $this->xpath($content);
-        $frame = $contentXPath->query('//draw:frame')->item(0);
+        $frame = $contentXPath->query(
+            '//draw:frame[draw:image[contains(@xlink:href, "' . basename($this->imagePath()) . '")]]'
+        )->item(0);
         self::assertInstanceOf(DOMElement::class, $frame);
 
         self::assertSame('paragraph', $frame->getAttributeNS($this->textNs(), 'anchor-type'));
@@ -149,6 +151,7 @@ final class FrameLayout01CSlice3ImageElementIntegrationTest extends TestCase
         $xpath = new DOMXPath($dom);
         $xpath->registerNamespace('draw', $this->drawNs());
         $xpath->registerNamespace('style', $this->styleNs());
+        $xpath->registerNamespace('xlink', 'http://www.w3.org/1999/xlink');
 
         return $xpath;
     }
