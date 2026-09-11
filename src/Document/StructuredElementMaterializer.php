@@ -61,7 +61,8 @@ final class StructuredElementMaterializer
     public function replacePlaceholder(
         DOMDocument $dom,
         string $key,
-        DOMNode $replacement
+        DOMNode $replacement,
+        StructuredInsertionMode $insertionMode = StructuredInsertionMode::BLOCK
     ): void {
         $xpath = new DOMXPath($dom);
 
@@ -75,7 +76,10 @@ final class StructuredElementMaterializer
                 continue;
             }
 
-            if (in_array($replacement->nodeName, ['text:span', 'text:s', 'text:line-break'], true)) {
+            if (
+                $insertionMode === StructuredInsertionMode::INLINE_TEXT_FLOW
+                || in_array($replacement->nodeName, ['text:span', 'text:s', 'text:line-break'], true)
+            ) {
                 $parts = explode('{{' . $key . '}}', $textNode->nodeValue);
                 $referenceNode = $textNode;
 
