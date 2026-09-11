@@ -380,6 +380,10 @@ class DrawTextBox extends OdtElement
             'draw:fill-image-width',
             'draw:fill-image-height',
             'style:repeat',
+            'style:wrap',
+            'style:flow-with-text',
+            'draw:wrap-influence-on-position',
+            'loext:allow-overlap',
         ], true)) {
             return true;
         }
