@@ -331,3 +331,160 @@ and otherwise retains Writer-generated package/XML structure.
 The clean rerun should preserve the same mutation matrix while changing only the insertion method/style-reference variable under investigation.
 
 If the same H1/H5 versus H2/H3/H4/H6/H7 split reproduces without a Writer repair prompt, the paragraph/insertion-context hypothesis becomes strong enough for a dedicated Change-Contract candidate.
+
+
+## 11. Confirmed A0 finding — frame container semantics are anchor-sensitive
+
+The clean H1-H7 rerun used a Writer-authored ODT base document and no longer triggered a LibreOffice repair/error prompt. The original visibility split reproduced unchanged.
+
+The decisive cases were inspected directly:
+
+```text
+H1  setImage(), header, as-char
+    visible
+    style:header
+    └── text:p
+        └── draw:frame
+            └── draw:image
+
+H2  ImageElement, header, as-char
+    not visible
+    style:header
+    └── draw:frame
+        └── draw:image
+
+H5  setImage structure + ImageElement style, header
+    visible
+    style:header
+    └── text:p
+        └── draw:frame
+            └── draw:image
+
+H6  ImageElement, body, as-char
+    not visible
+    office:text
+    └── draw:frame
+        └── draw:image
+```
+
+This clean reproduction substantially closes the earlier uncertainty caused by the synthetic fixture.
+
+### 11.1 ODF structure explains the header result
+
+ODF permits image content through `draw:image` inside `draw:frame`. Header content is text/document content and a frame used as an inline character belongs in the paragraph/text flow.
+
+The working header form is therefore:
+
+```xml
+<style:header>
+    <text:p>
+        <draw:frame text:anchor-type="as-char">
+            <draw:image .../>
+        </draw:frame>
+    </text:p>
+</style:header>
+```
+
+The failing structured-element path instead produces:
+
+```xml
+<style:header>
+    <draw:frame text:anchor-type="as-char">
+        <draw:image .../>
+    </draw:frame>
+</style:header>
+```
+
+The paragraph emitted by the legacy `setImage()` path is therefore not merely an arbitrary historical workaround. For an `as-char` frame it preserves the required text-flow/container semantics.
+
+### 11.2 Style hypotheses are now strongly rejected
+
+H3, H4 and H5 isolate graphic style identity from container structure.
+
+- removing `draw:style-name` does not make the direct ImageElement visible;
+- referencing Writer's `Graphics` style does not make it visible;
+- using the ImageElement-generated style on the paragraph-wrapped `setImage()` structure remains visible.
+
+Therefore graphic style identity is not the primary cause of this defect.
+
+### 11.3 The defect is not header-specific
+
+H6 reproduces the same invisibility in `content.xml`.
+
+The common failing property is not the document part. It is the combination:
+
+```text
+ImageElement
++ text:anchor-type="as-char"
++ StructuredElementMaterializer block replacement
++ loss of surrounding text:p
+```
+
+This supersedes the provisional hypothesis that the incompatibility was primarily caused by cross-part/header style materialization.
+
+### 11.4 Concrete architecture cause
+
+`StructuredElementMaterializer::replacePlaceholder()` currently recognizes only a small fixed set of generated node types as inline-compatible:
+
+```text
+text:span
+text:s
+text:line-break
+```
+
+`ImageElement` materializes to `draw:frame`. The materializer therefore follows its block replacement path and replaces the containing `text:p`.
+
+That decision is too coarse for draw frames because the correct container behavior depends on frame anchoring semantics.
+
+A `draw:frame` is not intrinsically "block" or "inline" for replacement purposes.
+
+For at least:
+
+```text
+text:anchor-type="as-char"
+```
+
+the frame must remain in the paragraph/text flow.
+
+### 11.5 Architectural consequence for FRAME-LAYOUT-01
+
+FRAME-LAYOUT must not model frame insertion semantics solely from the generated XML element name.
+
+The insertion/materialization boundary must be able to distinguish at least:
+
+```text
+as-character frame
+    -> inline/text-flow insertion semantics
+
+floating / paragraph / character / page anchored frame
+    -> separate positioning/container semantics to be characterized
+```
+
+No API or production implementation for the second category is decided by this finding.
+
+### 11.6 Master-page drawing is a separate semantic path
+
+ODF also supports drawing objects associated with master-page/page layout structures. Such page-level/master-page drawing semantics must not be conflated with an image placed in the text flow of a header.
+
+FRAME-LAYOUT must therefore keep separate concepts for:
+
+1. a frame contained in header/footer text flow;
+2. a floating frame anchored relative to text/paragraph/page;
+3. a drawing object belonging to page/master-page layout.
+
+This distinction is especially relevant for future Draw elements.
+
+### 11.7 Status
+
+**A0 evidence: confirmed.**
+
+Confirmed facts:
+
+- images can be used in Writer header content;
+- the clean Writer-authored fixture reproduces the H1-H7 split;
+- paragraph-wrapped `as-char` frames are Writer-visible in the tested header path;
+- direct structured `as-char` frames are not Writer-visible in either tested header or body path;
+- the generated ImageElement graphic style is not the primary cause;
+- the current StructuredElementMaterializer removes the paragraph because it classifies `draw:frame` by node name rather than anchor semantics.
+
+This finding is characterization evidence. It authorizes a dedicated semantic design/change-contract discussion, **not an immediate production fix**.
