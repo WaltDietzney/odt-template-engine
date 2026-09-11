@@ -257,12 +257,11 @@ final class TableLayout01CSlice1LifecycleCharacterizationTest extends TestCase
     #[RunInSeparateProcess]
     public function testFriendlyRelativeTableStyleMaterializesInContentXml(): void
     {
-        $table = (new RichTable())
-            ->setTableStyle([
-                'relative-width' => '60%',
-                'alignment' => 'right',
-            ])
-            ->setColumnWidthRatios([2, 1, 1]);
+        $table = (new RichTable())->setTableStyle([
+            'relative-width' => '60%',
+            'alignment' => 'right',
+        ]);
+        $table->setColumnWidthRatios([2, 1, 1]);
         $table->addRow(['A', 'B', 'C']);
 
         $output = $this->saveTable($table, 'friendly-relative');
