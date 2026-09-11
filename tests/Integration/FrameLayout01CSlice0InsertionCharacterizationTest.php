@@ -113,9 +113,9 @@ final class FrameLayout01CSlice0InsertionCharacterizationTest extends TestCase
             $replacement
         );
 
-        $xpath = $this->xpath($dom);
-        self::assertSame(1, $xpath->query('//office:body//text:p')->length);
-        $paragraph = $xpath->query('//office:body//text:p')->item(0);
+        $paragraphs = $dom->getElementsByTagName('text:p');
+        self::assertSame(1, $paragraphs->length);
+        $paragraph = $paragraphs->item(0);
         self::assertInstanceOf(DOMElement::class, $paragraph);
         self::assertSame('draw:frame', $paragraph->firstChild?->nodeName);
     }
