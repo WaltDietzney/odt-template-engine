@@ -108,6 +108,8 @@ class RichTable extends OdtElement
      */
     public function addRow(array $cells, array $style = []): self
     {
+        $style = $this->normalizeRowStyle($style);
+
         foreach ($cells as &$cell) {
             if (!$cell instanceof RichTableCell) {
                 $cell = new RichTableCell($cell);
@@ -590,6 +592,13 @@ class RichTable extends OdtElement
                 continue;
             }
 
+            $rowProperties = [];
+            if (array_key_exists('row-height', $row['style'])) {
+                $rowProperties['style:row-height'] = $row['style']['row-height'];
+            } elseif (array_key_exists('min-row-height', $row['style'])) {
+                $rowProperties['style:min-row-height'] = $row['style']['min-row-height'];
+            }
+
             yield new StyleRequirement(
                 StyleRequirement::KIND_DEFINITION,
                 StyleRequirement::SCOPE_AUTOMATIC,
@@ -597,11 +606,7 @@ class RichTable extends OdtElement
                 StyleRequirement::PART_CONTENT,
                 $this->rowStyleName($index),
                 null,
-                [
-                    'style:table-row-properties' => [
-                        'style:min-row-height' => $row['style']['min-row-height'],
-                    ],
-                ]
+                ['style:table-row-properties' => $rowProperties]
             );
         }
 
@@ -634,7 +639,42 @@ class RichTable extends OdtElement
 
     private function hasSupportedRowStyle(array $style): bool
     {
-        return array_key_exists('min-row-height', $style);
+        return array_key_exists('row-height', $style)
+            || array_key_exists('min-row-height', $style);
+    }
+
+    /**
+     * Normalizes supported friendly row-height options while leaving unrelated
+     * row-style keys untouched for compatibility.
+     *
+     * @param array<string, mixed> $style
+     * @return array<string, mixed>
+     */
+    private function normalizeRowStyle(array $style): array
+    {
+        if (array_key_exists('row-height', $style) && array_key_exists('min-row-height', $style)) {
+            throw new \InvalidArgumentException(
+                'Row style cannot define both row-height and min-row-height.'
+            );
+        }
+
+        foreach (['row-height' => 'Row height', 'min-row-height' => 'Minimum row height'] as $key => $label) {
+            if (!array_key_exists($key, $style)) {
+                continue;
+            }
+
+            if (!is_string($style[$key])) {
+                throw new \InvalidArgumentException(
+                    sprintf('%s must be a length string.', $label)
+                );
+            }
+
+            $value = trim($style[$key]);
+            $this->assertOdfLength($value, $label);
+            $style[$key] = $value;
+        }
+
+        return $style;
     }
 
     private function rowStyleName(int $rowIndex): string
