@@ -201,7 +201,6 @@ class RichTable extends OdtElement
             $options['relative-width'] = trim($options['relative-width']);
         }
         if (isset($options['alignment']) && is_string($options['alignment'])) {
-            $options['alignment'] = strtolower(trim($options['alignment']));
         }
 
         return $this->replaceElementOwnedTableStyle(
