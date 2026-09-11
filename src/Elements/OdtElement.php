@@ -6,6 +6,7 @@ use DOMDocument;
 use DOMNode;
 use OdtTemplateEngine\Document\FillImageRequirement;
 use OdtTemplateEngine\Document\StyleRequirement;
+use OdtTemplateEngine\Document\StructuredInsertionMode;
 use OdtTemplateEngine\Elements\DOMElement;
 
 
@@ -58,6 +59,14 @@ abstract class OdtElement
      * @return DOMNode The generated DOM node to be inserted into the document.
      */
     abstract public function toDomNode(DOMDocument $dom): DOMNode;
+
+    /**
+     * Returns how this element participates in structured placeholder insertion.
+     */
+    public function structuredInsertionMode(): StructuredInsertionMode
+    {
+        return StructuredInsertionMode::BLOCK;
+    }
 
     /**
      * Optional: Returns a style DOM element (e.g., for image frames).
