@@ -197,6 +197,7 @@ The existing `PageLayoutManager` remains a valid narrow service for mutating sel
 Treat the previously separate table-layout backlog items as one coherent 1.0 capability block:
 
 - explicit table width;
+- whole-table alignment / placement;
 - absolute column widths;
 - relative column widths;
 - row/minimum height;
