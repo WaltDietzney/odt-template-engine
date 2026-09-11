@@ -612,9 +612,9 @@ class RichTable extends OdtElement
         if ($this->tableStyleOptions !== []) {
             yield new StyleRequirement(
                 StyleRequirement::KIND_DEFINITION,
-                StyleRequirement::SCOPE_COMMON,
+                StyleRequirement::SCOPE_AUTOMATIC,
                 'table',
-                StyleRequirement::PART_STYLES,
+                StyleRequirement::PART_CONTENT,
                 $this->tableStyleName,
                 null,
                 ['style:table-properties' => $this->tableStyleOptions]
