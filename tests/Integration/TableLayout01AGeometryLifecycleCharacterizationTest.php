@@ -54,9 +54,10 @@ final class TableLayout01AGeometryLifecycleCharacterizationTest extends TestCase
 
         $tableStyleName = $table->getTableStyleName();
         self::assertNotNull($tableStyleName);
-        self::assertSame(1, $this->styleCount($stylesXml, $tableStyleName, 'table'));
+        self::assertSame(0, $this->styleCount($stylesXml, $tableStyleName, 'table'));
+        self::assertSame(1, $this->styleCount($contentXml, $tableStyleName, 'table'));
         self::assertSame('12cm', $this->styleProperty(
-            $stylesXml,
+            $contentXml,
             $tableStyleName,
             'table',
             'table-properties',
@@ -64,7 +65,7 @@ final class TableLayout01AGeometryLifecycleCharacterizationTest extends TestCase
             'width'
         ));
         self::assertSame('left', $this->styleProperty(
-            $stylesXml,
+            $contentXml,
             $tableStyleName,
             'table',
             'table-properties',
@@ -111,8 +112,10 @@ final class TableLayout01AGeometryLifecycleCharacterizationTest extends TestCase
 
         $tableStyleName = $table->getTableStyleName();
         self::assertNotNull($tableStyleName);
+        self::assertSame(0, $this->styleCount($stylesXml, $tableStyleName, 'table'));
+        self::assertSame(1, $this->styleCount($contentXml, $tableStyleName, 'table'));
         self::assertSame('60%', $this->styleProperty(
-            $stylesXml,
+            $contentXml,
             $tableStyleName,
             'table',
             'table-properties',
