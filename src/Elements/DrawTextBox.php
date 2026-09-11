@@ -6,6 +6,7 @@ use DOMDocument;
 use DOMElement;
 use DOMNode;
 use OdtTemplateEngine\Document\StyleRequirement;
+use OdtTemplateEngine\Document\StructuredInsertionMode;
 use OdtTemplateEngine\Utils\StyleMapper;
 
 /**
@@ -17,11 +18,14 @@ class DrawTextBox extends OdtElement
     protected array $frameOptions = [];
     protected array $paragraphs = [];
     protected string $frameStyleName = '';
+    private ?DrawingLayout $drawingLayout = null;
+    private DrawingLayoutProjector $drawingLayoutProjector;
 
     public function __construct(string $name, array $options = [])
     {
         $this->name = $name;
         $this->frameOptions = $options;
+        $this->drawingLayoutProjector = new DrawingLayoutProjector();
         $this->registerFrameStyle();
     }
 
@@ -79,7 +83,7 @@ class DrawTextBox extends OdtElement
     {
         $this->registerFrameStyle();
 
-        $anchor = $this->frameOptions['anchor'] ?? 'paragraph';
+        $anchor = $this->effectiveAnchor();
         $styleName = $this->resolvedRenderedStyleName();
 
         $frame = $dom->createElement('draw:frame');
@@ -88,23 +92,29 @@ class DrawTextBox extends OdtElement
         $frame->setAttribute('draw:z-index', '0');
         $frame->setAttribute('draw:style-name', $styleName);
 
-        if (!empty($this->frameOptions['width'])) {
-            $frame->setAttribute('svg:width', $this->frameOptions['width']);
-        }
-        if (!empty($this->frameOptions['height'])) {
-            $frame->setAttribute('svg:height', $this->frameOptions['height']);
-        }
-        if (!empty($this->frameOptions['horizontal-pos'])) {
-            $frame->setAttribute('style:horizontal-pos', $this->frameOptions['horizontal-pos']);
-        }
-        if (!empty($this->frameOptions['horizontal-rel'])) {
-            $frame->setAttribute('style:horizontal-rel', $this->frameOptions['horizontal-rel']);
-        }
-        if (!empty($this->frameOptions['vertical-pos'])) {
-            $frame->setAttribute('style:vertical-pos', $this->frameOptions['vertical-pos']);
-        }
-        if (!empty($this->frameOptions['vertical-rel'])) {
-            $frame->setAttribute('style:vertical-rel', $this->frameOptions['vertical-rel']);
+        if ($this->drawingLayout !== null) {
+            foreach ($this->effectiveObjectAttributes() as $attribute => $value) {
+                $frame->setAttribute($attribute, $value);
+            }
+        } else {
+            if (!empty($this->frameOptions['width'])) {
+                $frame->setAttribute('svg:width', $this->frameOptions['width']);
+            }
+            if (!empty($this->frameOptions['height'])) {
+                $frame->setAttribute('svg:height', $this->frameOptions['height']);
+            }
+            if (!empty($this->frameOptions['horizontal-pos'])) {
+                $frame->setAttribute('style:horizontal-pos', $this->frameOptions['horizontal-pos']);
+            }
+            if (!empty($this->frameOptions['horizontal-rel'])) {
+                $frame->setAttribute('style:horizontal-rel', $this->frameOptions['horizontal-rel']);
+            }
+            if (!empty($this->frameOptions['vertical-pos'])) {
+                $frame->setAttribute('style:vertical-pos', $this->frameOptions['vertical-pos']);
+            }
+            if (!empty($this->frameOptions['vertical-rel'])) {
+                $frame->setAttribute('style:vertical-rel', $this->frameOptions['vertical-rel']);
+            }
         }
 
         $textBox = $dom->createElement('draw:text-box');
@@ -129,6 +139,13 @@ class DrawTextBox extends OdtElement
         return $p;
     }
 
+    public function structuredInsertionMode(): StructuredInsertionMode
+    {
+        return $this->effectiveAnchor() === 'as-char'
+            ? StructuredInsertionMode::INLINE_TEXT_FLOW
+            : StructuredInsertionMode::BLOCK;
+    }
+
     public function toStyleDomNode(DOMDocument $dom): ?DOMElement
     {
         $styleNode = $dom->createElement('style:style');
@@ -142,6 +159,66 @@ class DrawTextBox extends OdtElement
         }
         $styleNode->appendChild($props);
         return $styleNode;
+    }
+
+    /**
+     * Replaces the friendly semantic frame-layout state.
+     *
+     * @param array<string, mixed> $layout
+     */
+    public function setFrameLayout(array $layout): self
+    {
+        $this->drawingLayout = $layout === [] ? null : DrawingLayout::fromArray($layout);
+
+        return $this;
+    }
+
+    public function setFrameAnchor(string $anchor): self
+    {
+        $this->drawingLayout = ($this->drawingLayout ?? DrawingLayout::empty())
+            ->withAnchor($anchor);
+
+        return $this;
+    }
+
+    public function setFrameHorizontalAlignment(string $alignment, ?string $relativeTo = null): self
+    {
+        $this->drawingLayout = ($this->drawingLayout ?? DrawingLayout::empty())
+            ->withHorizontalAlignment($alignment, $relativeTo);
+
+        return $this;
+    }
+
+    public function setFrameVerticalAlignment(string $alignment, ?string $relativeTo = null): self
+    {
+        $this->drawingLayout = ($this->drawingLayout ?? DrawingLayout::empty())
+            ->withVerticalAlignment($alignment, $relativeTo);
+
+        return $this;
+    }
+
+    public function setFrameHorizontalOffset(string $offset, ?string $relativeTo = null): self
+    {
+        $this->drawingLayout = ($this->drawingLayout ?? DrawingLayout::empty())
+            ->withHorizontalOffset($offset, $relativeTo);
+
+        return $this;
+    }
+
+    public function setFrameVerticalOffset(string $offset, ?string $relativeTo = null): self
+    {
+        $this->drawingLayout = ($this->drawingLayout ?? DrawingLayout::empty())
+            ->withVerticalOffset($offset, $relativeTo);
+
+        return $this;
+    }
+
+    public function setFrameWrap(string $wrap): self
+    {
+        $this->drawingLayout = ($this->drawingLayout ?? DrawingLayout::empty())
+            ->withWrap($wrap);
+
+        return $this;
     }
 
     public function setBackground(string $color): self
@@ -214,9 +291,45 @@ class DrawTextBox extends OdtElement
                 $semantic[(string) $key] = $value;
             }
         }
+
+        if ($this->drawingLayout !== null) {
+            $semantic = array_merge(
+                $semantic,
+                $this->drawingLayoutProjector->graphicLayoutProperties($this->drawingLayout)
+            );
+        }
+
         ksort($semantic);
 
         return $semantic;
+    }
+
+    private function effectiveAnchor(): string
+    {
+        return $this->drawingLayout?->anchor()
+            ?? ($this->frameOptions['anchor'] ?? 'paragraph');
+    }
+
+    /** @return array<string, string> */
+    private function effectiveObjectAttributes(): array
+    {
+        if ($this->drawingLayout === null) {
+            return [];
+        }
+
+        $attributes = [];
+
+        if (!empty($this->frameOptions['width'])) {
+            $attributes['svg:width'] = (string) $this->frameOptions['width'];
+        }
+        if (!empty($this->frameOptions['height'])) {
+            $attributes['svg:height'] = (string) $this->frameOptions['height'];
+        }
+
+        return array_merge(
+            $attributes,
+            $this->drawingLayoutProjector->objectAttributes($this->drawingLayout)
+        );
     }
 
     private function resolvedRenderedStyleName(): string
@@ -267,6 +380,10 @@ class DrawTextBox extends OdtElement
             'draw:fill-image-width',
             'draw:fill-image-height',
             'style:repeat',
+            'style:wrap',
+            'style:flow-with-text',
+            'draw:wrap-influence-on-position',
+            'loext:allow-overlap',
         ], true)) {
             return true;
         }

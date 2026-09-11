@@ -22,7 +22,7 @@ final class DrawTextBoxSemanticGraphicProducerTest extends TestCase
         }
     }
 
-    public function testProducerEmitsOnlyApprovedGraphicAppearanceProperties(): void
+    public function testProducerEmitsApprovedGraphicAppearanceAndMigratedPolicyProperties(): void
     {
         $box = new DrawTextBox('SemanticBox', [
             'width' => '6cm',
@@ -56,6 +56,7 @@ final class DrawTextBoxSemanticGraphicProducerTest extends TestCase
                 'fo:background-color' => '#123456',
                 'fo:border-bottom' => '0.05cm solid #abcdef',
                 'fo:padding' => '0.1cm',
+                'loext:allow-overlap' => 'true',
             ],
         ], $requirement->propertyGroups());
     }
@@ -150,7 +151,7 @@ final class DrawTextBoxSemanticGraphicProducerTest extends TestCase
             'width' => '6cm',
             'height' => '2cm',
             'background-color' => '#123456',
-            'allow-overlap' => 'true',
+            'rx' => '0.2cm',
         ]);
         $semantic = iterator_to_array($box->getOwnStyleRequirements(), false)[0];
         $legacyName = (string) array_key_first($box->getOwnFrameStyleRequirements());

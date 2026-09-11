@@ -61,7 +61,8 @@ final class StructuredElementMaterializer
     public function replacePlaceholder(
         DOMDocument $dom,
         string $key,
-        DOMNode $replacement
+        DOMNode $replacement,
+        StructuredInsertionMode $insertionMode = StructuredInsertionMode::BLOCK
     ): void {
         $xpath = new DOMXPath($dom);
 
@@ -72,6 +73,19 @@ final class StructuredElementMaterializer
 
             $parent = $textNode->parentNode;
             if (!$parent) {
+                continue;
+            }
+
+            if (in_array($insertionMode, [
+                StructuredInsertionMode::INLINE_TEXT_FLOW,
+                StructuredInsertionMode::PRESERVE_TEXT_CONTAINER,
+            ], true)) {
+                $this->replaceInsideTextContainer(
+                    $dom,
+                    $textNode,
+                    '{{' . $key . '}}',
+                    $replacement
+                );
                 continue;
             }
 
@@ -123,4 +137,133 @@ final class StructuredElementMaterializer
             }
         }
     }
+
+    private function replaceInsideTextContainer(
+        DOMDocument $dom,
+        DOMNode $textNode,
+        string $placeholder,
+        DOMNode $replacement
+    ): void {
+        $paragraph = $textNode->parentNode;
+        while ($paragraph
+            && !in_array($paragraph->nodeName, ['text:p', 'text:h'], true)
+        ) {
+            $paragraph = $paragraph->parentNode;
+        }
+
+        if (!$paragraph) {
+            return;
+        }
+
+        $directChild = $textNode;
+        while ($directChild->parentNode && $directChild->parentNode !== $paragraph) {
+            $directChild = $directChild->parentNode;
+        }
+
+        $parts = explode($placeholder, (string) $textNode->nodeValue, 2);
+        if (count($parts) !== 2) {
+            return;
+        }
+
+        [$before, $after] = $parts;
+
+        if ($directChild === $textNode) {
+            if ($before !== '') {
+                $paragraph->insertBefore(
+                    $dom->createTextNode($before),
+                    $directChild
+                );
+            }
+
+            $paragraph->insertBefore(
+                $replacement->cloneNode(true),
+                $directChild
+            );
+
+            if ($after !== '') {
+                $paragraph->insertBefore(
+                    $dom->createTextNode($after),
+                    $directChild
+                );
+            }
+
+            $paragraph->removeChild($directChild);
+            return;
+        }
+
+        if ($before === '' && $after !== '') {
+            $textNode->nodeValue = $after;
+            $paragraph->insertBefore(
+                $replacement->cloneNode(true),
+                $directChild
+            );
+            return;
+        }
+
+        if ($before !== '' && $after === '') {
+            $textNode->nodeValue = $before;
+            $paragraph->insertBefore(
+                $replacement->cloneNode(true),
+                $directChild->nextSibling
+            );
+            return;
+        }
+
+        if ($before === '' && $after === '') {
+            $paragraph->insertBefore(
+                $replacement->cloneNode(true),
+                $directChild
+            );
+            $paragraph->removeChild($directChild);
+            return;
+        }
+
+        // For a placeholder embedded between text in an inline wrapper, split
+        // the top-level wrapper so the frame remains a direct text:p/text:h
+        // child while preserving wrapper formatting on both text fragments.
+        $beforeWrapper = $directChild->cloneNode(true);
+        $afterWrapper = $directChild->cloneNode(true);
+
+        $this->replaceDescendantText($beforeWrapper, $textNode, $before);
+        $this->replaceDescendantText($afterWrapper, $textNode, $after);
+
+        $paragraph->insertBefore($beforeWrapper, $directChild);
+        $paragraph->insertBefore(
+            $replacement->cloneNode(true),
+            $directChild
+        );
+        $paragraph->insertBefore($afterWrapper, $directChild);
+        $paragraph->removeChild($directChild);
+    }
+
+    private function replaceDescendantText(
+        DOMNode $clonedRoot,
+        DOMNode $originalTextNode,
+        string $value
+    ): void {
+        $path = [];
+        $node = $originalTextNode;
+
+        while ($node->parentNode && $node->parentNode->nodeName !== 'text:p'
+            && $node->parentNode->nodeName !== 'text:h'
+        ) {
+            $index = 0;
+            for ($sibling = $node->previousSibling; $sibling; $sibling = $sibling->previousSibling) {
+                ++$index;
+            }
+            array_unshift($path, $index);
+            $node = $node->parentNode;
+        }
+
+        $target = $clonedRoot;
+        foreach ($path as $index) {
+            $target = $target->childNodes->item($index);
+            if (!$target) {
+                return;
+            }
+        }
+
+        $target->nodeValue = $value;
+    }
+
 }
