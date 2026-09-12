@@ -130,7 +130,7 @@ final class TemplateAuthoring01A12FullRenderCharacterizationTest extends TestCas
         }
     }
 
-    public function testFullRenderConditionInsideForeachDoesNotUseRowLocalConditionValues(): void
+    public function testFullRenderForeachConsumesNestedConditionMarkersBeforeConditionalPass(): void
     {
         $templatePath = $this->createTemplate(
             '<text:p>{{#foreach:items}}</text:p>'
@@ -155,12 +155,21 @@ final class TemplateAuthoring01A12FullRenderCharacterizationTest extends TestCas
 
         $xpath = $this->contentXPath($output);
 
-        self::assertSame(0, $xpath->query('//text:p[@text:style-name="Active"]')->length);
-
+        $active = $xpath->query('//text:p[@text:style-name="Active"]');
         $inactive = $xpath->query('//text:p[@text:style-name="Inactive"]');
+
+        self::assertSame(2, $active->length);
         self::assertSame(2, $inactive->length);
+
+        self::assertSame('active Alpha', trim($active->item(0)?->textContent ?? ''));
+        self::assertSame('active Beta', trim($active->item(1)?->textContent ?? ''));
         self::assertSame('inactive Alpha', trim($inactive->item(0)?->textContent ?? ''));
         self::assertSame('inactive Beta', trim($inactive->item(1)?->textContent ?? ''));
+
+        self::assertSame(
+            0,
+            $xpath->query('//text:p[contains(., "{{#if:") or contains(., "{{#else}}") or contains(., "{{#endif}}")]')->length
+        );
     }
 
     public function testRenderedOutputCanBeReopenedWithoutChangingCharacterizedStructure(): void
