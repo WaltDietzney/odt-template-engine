@@ -1,6 +1,6 @@
 # TEMPLATE-AUTHORING-01A1.4 — LibreOffice Regression Fixtures
 
-Status: ACTIVE MANUAL CHARACTERIZATION / NO PRODUCTION CHANGE
+Status: CHARACTERIZED / NO PRODUCTION CHANGE
 
 ## Purpose
 
@@ -247,3 +247,241 @@ The XML characterization so far suggests B and C may be more important than A.
 No production repair belongs in A1.4.
 
 After Writer evidence is recorded, A1 should close with a synthesis separating behavior safe to preserve, compatibility behavior that should not define the new high-level path, evidenced defect candidates, and architecture requirements for TEMPLATE-AUTHORING-01B/C/D/E.
+
+
+## Characterization results
+
+The Writer-authored fixture and generated output were reviewed visually and at the native `content.xml` level.
+
+### A14.1 — Styled IF
+
+Observed output:
+
+```text
+PROFILE HEADING
+[selected profile paragraphs]
+FALLBACK HEADING
+```
+
+The selected profile paragraph and inline formatting remain visually intact. However, the fallback heading survives even though `show_profile = true`.
+
+Classification:
+
+```text
+VISIBLE_DEFECT
+```
+
+Interpretation:
+
+- this is not primarily style loss;
+- selected Writer formatting is preserved;
+- paragraph-based control does not reliably correspond to the intended structural branch when heterogeneous Writer paragraph/style structure is present.
+
+### A14.2 — IF around table
+
+Expected with `show_table = false`:
+
+```text
+Table hidden fallback.
+```
+
+Observed output:
+
+```text
+[fully rendered Writer table]
+SHOULD NOT APPEAR
+Table hidden fallback.
+```
+
+The table remains visually complete and the scalar inside the table is rendered before the conditional phase.
+
+Classification:
+
+```text
+VISIBLE_DEFECT
+UNSUPPORTED_BOUNDARY
+```
+
+Interpretation:
+
+The classic conditional engine operates on `text:p` control/branch paragraphs. A sibling `table:table` is not semantically owned by that paragraph control block, so the visible Smarty-style markers cannot safely express "this native table belongs to the IF branch".
+
+This is direct evidence for native structural controls such as Section-based declarations.
+
+### A14.3 — Styled FOREACH
+
+Observed:
+
+- all three rows render;
+- name/role paragraph formatting remains;
+- visible indentation and spacing remain;
+- no obvious style degradation is visible.
+
+Classification:
+
+```text
+PRESERVED
+```
+
+Interpretation:
+
+Classic foreach cloning can preserve ordinary Writer paragraph and inline formatting surprisingly well because it clones native nodes rather than rebuilding their styles.
+
+The historic phrase "foreach loses formatting" is therefore too broad.
+
+### A14.4 — FOREACH named table
+
+Observed visually:
+
+- both Writer tables render correctly;
+- cell colors, borders, widths, and text formatting remain;
+- row-local values are inserted correctly.
+
+Native XML observation:
+
+The source has one native table identity:
+
+```xml
+table:name="OrderTable"
+```
+
+The generated document contains two table instances carrying the same native name.
+
+Classification:
+
+```text
+VISUALLY_OK_BUT_STRUCTURALLY_UNSAFE
+```
+
+Interpretation:
+
+The clone operation preserves the table structure and styling, but classic foreach does not understand document-global/native identity. This contrasts with the completed SECTION-03 instantiation model, which owns identity rewriting explicitly.
+
+### A14.5 — FOREACH native identities
+
+Observed visually:
+
+- both repeated blocks render;
+- both row values are present;
+- visible content remains intact.
+
+Native XML observation:
+
+The authored template contains one:
+
+```text
+text:section text:name="RepeatedSection"
+text:bookmark-start/end text:name="RepeatedBookmark"
+```
+
+The generated output contains two copies with the same Section and Bookmark names.
+
+Classification:
+
+```text
+VISUALLY_OK_BUT_STRUCTURALLY_UNSAFE
+```
+
+Interpretation:
+
+This confirms that classic foreach clones native identities verbatim. Visual correctness is therefore insufficient evidence for structural correctness.
+
+Any future structured/declarative repeat path must reuse identity-aware Section/document mechanics rather than raw clone semantics.
+
+### A14.6 — IF inside FOREACH
+
+Observed for every row:
+
+```text
+<name>
+ACTIVE
+INACTIVE
+```
+
+The result matches the A1.2 automated characterization exactly.
+
+Classification:
+
+```text
+VISIBLE_DEFECT
+```
+
+Interpretation:
+
+Classic foreach row binding consumes nested conditional markers before the later conditional pass. Writer therefore receives both branches as ordinary surviving content.
+
+The finding is now supported on three levels:
+
+```text
+automated characterization
+    +
+native XML inspection
+    +
+actual LibreOffice rendering
+```
+
+## Revised A1.4 conclusion
+
+The manual Writer evidence changes the emphasis of the original problem statement.
+
+The broad historic statement:
+
+> classic conditions/foreach lose formatting
+
+is not accurate enough.
+
+The better characterization is:
+
+```text
+1. ordinary paragraph/text styling can be preserved well;
+2. classic controls do not reliably own heterogeneous native ODF structures;
+3. raw foreach cloning duplicates native identities;
+4. nested classic controls have broken lifecycle/data-scope behavior.
+```
+
+The principal defect classes are therefore:
+
+### A — Structural-boundary failure
+
+Visible control markers expressed as paragraphs cannot reliably define ownership of sibling native structures such as tables, Sections, frames, or other block objects.
+
+### B — Native-identity failure
+
+Raw cloning preserves native names verbatim and therefore produces visually plausible but structurally ambiguous documents.
+
+### C — Nested-control lifecycle failure
+
+Classic foreach row binding consumes nested template-control tokens before the conditional phase can evaluate them.
+
+### D — Actual style loss
+
+Not established as the dominant failure class by this fixture. Ordinary paragraph and table styling survived the tested foreach cases well.
+
+This distinction is important for TEMPLATE-AUTHORING-01: the new structured/native template philosophy should not replace working style-preserving clone behavior unnecessarily. It should solve the missing structural ownership, identity, inspection, and control semantics around it.
+
+## Architecture consequence
+
+A1.4 provides concrete evidence for the planned dual template philosophy:
+
+```text
+Simple Template Processing
+    visible {{...}} syntax
+    best for scalar values and lightweight paragraph-local logic
+
+Structured / Native Template Processing
+    named Writer objects
+    declarative Section controls
+    identity-aware instantiation
+    unified inspection
+```
+
+A native declaration such as:
+
+```text
+#if:show_table
+#foreach:orders
+```
+
+on an actual Writer Section gives the engine a real native subtree to retain/remove/instantiate. It removes the need to infer structural ownership from two visible text-marker paragraphs.
+
+This is now an evidence-based architecture direction rather than only an authoring-UX preference.
