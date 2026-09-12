@@ -92,12 +92,14 @@ final class TemplateAuthoring01A1ClassicControlFormatPreservationCharacterizatio
                 ['name' => 'Alpha'],
                 ['name' => 'Beta'],
             ],
-            fn (DOMNode $node, array $row): mixed => $processor->replaceScalarTextInSubtree(
-                $node,
-                $row,
-                fn (string $filter, mixed $value, ?string $option): string =>
-                    $processor->applyFilter($filter, (string) $value, $option)
-            )
+            function (DOMNode $node, array $row) use ($processor): void {
+                $processor->replaceScalarTextInSubtree(
+                    $node,
+                    $row,
+                    fn (string $filter, mixed $value, ?string $option): string =>
+                        $processor->applyFilter($filter, (string) $value, $option)
+                );
+            }
         );
 
         $xpath = $this->xpath($dom);
@@ -133,12 +135,14 @@ final class TemplateAuthoring01A1ClassicControlFormatPreservationCharacterizatio
                 ['name' => 'Alpha'],
                 ['name' => 'Beta'],
             ],
-            fn (DOMNode $node, array $row): mixed => $processor->replaceScalarTextInSubtree(
-                $node,
-                $row,
-                fn (string $filter, mixed $value, ?string $option): string =>
-                    $processor->applyFilter($filter, (string) $value, $option)
-            )
+            function (DOMNode $node, array $row) use ($processor): void {
+                $processor->replaceScalarTextInSubtree(
+                    $node,
+                    $row,
+                    fn (string $filter, mixed $value, ?string $option): string =>
+                        $processor->applyFilter($filter, (string) $value, $option)
+                );
+            }
         );
 
         $xpath = $this->xpath($dom);
@@ -175,12 +179,14 @@ final class TemplateAuthoring01A1ClassicControlFormatPreservationCharacterizatio
                 ['name' => 'Alpha'],
                 ['name' => 'Beta'],
             ],
-            fn (DOMNode $node, array $row): mixed => $processor->replaceScalarTextInSubtree(
-                $node,
-                $row,
-                fn (string $filter, mixed $value, ?string $option): string =>
-                    $processor->applyFilter($filter, (string) $value, $option)
-            )
+            function (DOMNode $node, array $row) use ($processor): void {
+                $processor->replaceScalarTextInSubtree(
+                    $node,
+                    $row,
+                    fn (string $filter, mixed $value, ?string $option): string =>
+                        $processor->applyFilter($filter, (string) $value, $option)
+                );
+            }
         );
 
         $xpath = $this->xpath($dom);
@@ -213,12 +219,14 @@ final class TemplateAuthoring01A1ClassicControlFormatPreservationCharacterizatio
                 ['name' => 'Alpha'],
                 ['name' => 'Beta'],
             ],
-            fn (DOMNode $node, array $row): mixed => $processor->replaceScalarTextInSubtree(
-                $node,
-                $row,
-                fn (string $filter, mixed $value, ?string $option): string =>
-                    $processor->applyFilter($filter, (string) $value, $option)
-            )
+            function (DOMNode $node, array $row) use ($processor): void {
+                $processor->replaceScalarTextInSubtree(
+                    $node,
+                    $row,
+                    fn (string $filter, mixed $value, ?string $option): string =>
+                        $processor->applyFilter($filter, (string) $value, $option)
+                );
+            }
         );
 
         $xpath = $this->xpath($dom);
@@ -249,12 +257,14 @@ final class TemplateAuthoring01A1ClassicControlFormatPreservationCharacterizatio
                 ['name' => 'Alpha', 'active' => 'true'],
                 ['name' => 'Beta', 'active' => 'false'],
             ],
-            fn (DOMNode $node, array $row): mixed => $processor->replaceScalarTextInSubtree(
-                $node,
-                $row,
-                fn (string $filter, mixed $value, ?string $option): string =>
-                    $processor->applyFilter($filter, (string) $value, $option)
-            )
+            function (DOMNode $node, array $row) use ($processor): void {
+                $processor->replaceScalarTextInSubtree(
+                    $node,
+                    $row,
+                    fn (string $filter, mixed $value, ?string $option): string =>
+                        $processor->applyFilter($filter, (string) $value, $option)
+                );
+            }
         );
 
         $processor->applyConditionalsInDom(
