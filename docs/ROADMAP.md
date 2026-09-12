@@ -9,7 +9,7 @@ It complements [`FUTURE_DEVELOPMENT.md`](FUTURE_DEVELOPMENT.md):
 
 The roadmap is intentionally conservative about public API changes. Existing application-facing APIs should remain stable where practical, and future APIs shown here are conceptual unless explicitly documented as implemented.
 
-The current sequencing incorporates the completed semantic/style architecture, the post-RESEARCH-01 version-1.0 reassessment recorded in [`architecture/RESEARCH-01_1_0_REASSESSMENT_DECISION.md`](architecture/RESEARCH-01_1_0_REASSESSMENT_DECISION.md), and the completed PAGE-FLOW-01 milestone.
+The current sequencing incorporates the completed semantic/style architecture, the post-RESEARCH-01 version-1.0 reassessment recorded in [`architecture/RESEARCH-01_1_0_REASSESSMENT_DECISION.md`](architecture/RESEARCH-01_1_0_REASSESSMENT_DECISION.md), the completed PAGE-FLOW-01, TABLE-LAYOUT-01, and FRAME-LAYOUT-01 milestones, and the subsequent decision to make template-driven authoring a mandatory part of the 1.0 product contract.
 
 ## Current baseline
 
@@ -173,7 +173,13 @@ TABLE-LAYOUT-01              COMPLETE
     ↓
 FRAME-LAYOUT-01              COMPLETE
     ↓
-TEMPLATE-RELIABILITY-01
+TEMPLATE-AUTHORING-01
+    ├── A — Existing Template Reliability & Format Preservation
+    ├── B — Unified Template Inspection
+    ├── C — Native Field Binding
+    ├── D — Declarative Structural Controls
+    ├── E — High-Level Render Pipeline
+    └── F — Authoring Documentation & Samples
     ↓
 FINALIZATION-01
     ↓
@@ -230,17 +236,95 @@ The accepted contract and completion evidence are recorded in
 
 Broader Writer drawing features, CustomShape architecture, and exhaustive positioning options remain outside the bounded 1.0 frame core.
 
-### TEMPLATE-RELIABILITY-01 — Remaining template-format/control audit — 1.0 BLOCKER AS AUDIT
+### TEMPLATE-AUTHORING-01 — Template-driven authoring and rendering — 1.0 BLOCKER
 
-Re-audit the remaining paths after the completed structure-preserving scalar work:
+Version 1.0 must support a coherent template philosophy in which a LibreOffice-authored ODT can carry not only layout and scalar placeholders, but also discoverable native structure and bounded declarative control. The existing imperative APIs remain supported; this milestone complements them with a higher-level template-driven path rather than replacing them.
 
-- conditions;
+The target application-facing workflow is conceptually:
+
+```php
+$schema = $template->inspect();
+$template->render($mappedData);
+$template->save('result.odt');
+```
+
+The exact public API remains subject to evidence, compatibility review, and a Change Contract. The product goal is nevertheless fixed: a generic application should be able to inspect a well-authored template, map application data to its declared inputs, and let the engine orchestrate supported rendering without rebuilding the document layout in PHP.
+
+The milestone is divided into six bounded phases:
+
+#### A — Existing Template Reliability & Format Preservation
+
+Characterize the remaining classic template-language paths before changing them:
+
+- conditions and elseif/else behavior;
 - foreach/control structures;
 - `nl2br`;
 - `ul` / `ol` structural placeholders;
-- complex ODF boundary interactions.
+- paragraph, span, style, whitespace, bookmark, list, table, frame, and Section preservation at relevant ODF boundaries.
 
-Do not reopen solved scalar behavior without evidence. If characterization finds no relevant defect, no implementation is required. Proven defects should receive characterization tests before bounded fixes.
+Previously solved scalar-expression preservation must not be reopened without evidence. Proven defects receive characterization tests before bounded fixes. This phase absorbs the former standalone `TEMPLATE-RELIABILITY-01` 1.0 blocker.
+
+#### B — Unified Template Inspection
+
+Design one read-only template inspection result that composes existing template-language inspection with native document inspection. It should be able to describe, where supported:
+
+- scalar variables and filters;
+- data dependencies of conditions;
+- collection dependencies of repetitions;
+- Sections;
+- bookmarks;
+- tables;
+- frames;
+- supported native fields;
+- declarative controls;
+- diagnostics, malformed declarations, duplicate identities, and unsupported constructs.
+
+Existing `TemplateStructureInspector` and `DocumentInspector` are architectural inputs; do not create competing inspection models without evidence.
+
+#### C — Native Field Binding
+
+Define a bounded 1.0 native-field capability based on actual Writer/ODF semantics and RESEARCH-01 evidence. User Fields are a primary candidate; Set/Get Variable support and other field families require explicit justification.
+
+Native fields complement `{{...}}` rather than replace the portable scalar placeholder path. Scope, identity, repeated rendering, finalization, and interoperability semantics must be understood before public API approval.
+
+#### D — Declarative Structural Controls
+
+Design native template structures as a declarative frontend over existing structural mechanics rather than as a second renderer. Writer Section names such as:
+
+```text
+#foreach:experience
+#if:photo
+#ifnot:photo
+```
+
+are the principal design direction already supported by RESEARCH-01A mechanical evidence.
+
+Where condition expressions are supported, visible template syntax and native declarations should share one condition semantics instead of developing independent evaluators. Likewise, declarative repetition should orchestrate the established Section instantiation model.
+
+Nesting, lifecycle order, missing-data behavior, diagnostics, prototype removal, identity rewriting, and compatibility must be specified before implementation.
+
+#### E — High-Level Render Pipeline
+
+Design a high-level render orchestration path over the existing lower-level APIs. It should coordinate supported structural controls, native binding, classic scalar/filter processing, structured insertion, and finalization boundaries in a deterministic order.
+
+The existing imperative methods remain first-class APIs. A high-level `render($mappedData)` path is additive and intended to enable generic integrations such as CMS plugins, form-driven document generation, and other applications that can map their data to an inspected template contract.
+
+#### F — Authoring Documentation & Samples
+
+Version 1.0 requires first-class authoring guidance, not merely API reference. Documentation should explain:
+
+- the template philosophy;
+- simple template processing versus structured template processing;
+- how to create inspectable LibreOffice templates;
+- naming conventions for native objects and declarative controls;
+- when to use `{{...}}`, native fields, Sections, bookmarks, tables, and frames;
+- how generic data mapping and high-level rendering fit together;
+- formatting-preservation and nesting constraints;
+- diagnostics and validation;
+- realistic complete examples.
+
+The public samples should be reviewed before 1.0 and should demonstrate attractive, professionally authored templates rather than only technical feature fixtures.
+
 
 ### FINALIZATION-01 — Final document/export semantics — 1.0 BLOCKER AS ARCHITECTURE DECISION
 
@@ -260,13 +344,9 @@ Automated tests do not replace manual LibreOffice visual regression for renderin
 
 The following remain valuable but do not block 1.0 by themselves:
 
-### Declarative Section authoring
+### Broader declarative and native Writer semantics
 
-A future Writer Section such as `#foreach:experience` may act as a template-owned declarative frontend over the existing SECTION-03 `instantiateMany()` mechanics. Mechanical feasibility is proven; automatic discovery, lifecycle ordering, diagnostics, and syntax remain undecided.
-
-### Native Writer fields and conditional content
-
-User Fields, Set/Get Variables, Conditional Text, Hidden Text, Hidden Paragraphs, and Conditional Sections remain useful native capabilities. Broad public support is deferred until concrete authoring value and finalization/export semantics justify it.
+The bounded declarative Section and native-field capabilities required by `TEMPLATE-AUTHORING-01` are now part of the mandatory 1.0 path. Broader operators, additional Writer field families, Conditional Text, Hidden Text, Hidden Paragraphs, Conditional Sections, and other native semantics remain later directions unless the milestone's evidence establishes a concrete 1.0 dependency.
 
 ### Document defaults
 
