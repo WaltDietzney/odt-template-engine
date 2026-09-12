@@ -1,6 +1,6 @@
 # TEMPLATE-AUTHORING-01B0 — Existing Inspection Inventory & Semantic Boundaries
 
-Status: ACTIVE CHARACTERIZATION / NO API DECISION
+Status: COMPLETE / CHARACTERIZATION CLOSED / NO API DECISION
 
 ## Purpose
 
