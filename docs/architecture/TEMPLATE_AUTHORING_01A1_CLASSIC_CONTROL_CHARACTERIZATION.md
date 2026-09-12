@@ -192,3 +192,42 @@ legacy OdtTemplate foreach row-binding semantics
 ```
 
 This is a defect candidate, but A1 remains characterization-only. No production change is authorized yet.
+
+
+## A1.4 Writer evidence — revised problem statement
+
+The LibreOffice-authored A1.4 fixture materially refines the original concern about classic template controls.
+
+The key findings are:
+
+- styled foreach paragraphs preserve their Writer formatting in the tested case;
+- a fully styled Writer table can be cloned visually intact by classic foreach;
+- the same clone duplicates native table identity verbatim;
+- repeated Sections and Bookmarks likewise duplicate their native names;
+- a paragraph-delimited IF cannot reliably control a sibling Writer table;
+- nested IF inside foreach is visibly broken because foreach row binding removes the condition markers before the conditional phase.
+
+Therefore the dominant problem is **not generic formatting destruction**.
+
+The stronger architecture statement is:
+
+> Classic control processing is weak at native structural ownership, native identity, and nested lifecycle semantics even when visual formatting itself survives.
+
+This distinction matters for later design.
+
+We should preserve proven strengths:
+
+- native node cloning;
+- Writer-authored paragraph/table styles;
+- row-local scalar binding where semantics are unambiguous.
+
+We should not carry the following behaviors into the new high-level template path:
+
+- inferring heterogeneous block ownership solely from paragraph marker positions;
+- raw cloning of named native objects without identity rewriting;
+- consuming nested control tokens as ordinary row placeholders;
+- lifecycle behavior that makes control semantics depend on accidental processing order.
+
+The Writer findings support a structured authoring model in which declarative controls are attached to native objects, especially Sections, and reuse existing identity-aware Section mechanics.
+
+No production change is authorized by A1.4. These findings feed the A1 synthesis and the later TEMPLATE-AUTHORING-01B/C/D/E design passes.
