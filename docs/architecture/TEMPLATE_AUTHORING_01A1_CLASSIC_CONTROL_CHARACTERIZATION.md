@@ -129,3 +129,66 @@ Compare `render()` repeater behavior with `setRepeatingData()` and document any 
 Create deliberately styled Writer templates for the high-value cases and compare native XML findings with actual Writer rendering.
 
 Production fixes begin only after these characterization passes establish the failure classes and compatibility boundaries.
+
+
+## A1.2 finding — nested condition markers are consumed by facade foreach binding
+
+The first full-render gate exposed an important difference between the isolated `TemplateProcessor` characterization and the actual `OdtTemplate::render()` facade path.
+
+The extracted `TemplateProcessor::applyRepeatingInDom()` accepts a row-replacement callback. In the isolated A1 test, that callback used structure-aware scalar replacement and therefore left control tokens such as:
+
+```text
+{{#if:active}}
+{{#else}}
+{{#endif}}
+```
+
+intact for the later conditional pass.
+
+The production facade does **not** use that replacement service for classic foreach row binding. It supplies `OdtTemplate::replacePlaceholdersInNode()`, which delegates each text node to the legacy regex:
+
+```php
+/{{(.*?)}}/
+```
+
+and treats the entire body of every template token as a data key.
+
+Therefore, inside a repeated block:
+
+```text
+{{#if:active}}
+```
+
+is interpreted as the row key:
+
+```text
+#if:active
+```
+
+Because such a key is normally absent, the marker is replaced with an empty string during foreach expansion. The same happens to `{{#else}}` and `{{#endif}}`.
+
+The later conditional pass therefore sees no control markers at all and leaves **both branches** in each repeated instance.
+
+The full-render behavior is thus:
+
+```text
+foreach clone
+    ↓
+legacy row-local replacement consumes nested control markers
+    ↓
+conditional pass has nothing left to evaluate
+    ↓
+both conditional branches survive
+```
+
+This is stronger than the initial hypothesis that nested conditions merely resolve against the outer/global value map.
+
+It also establishes an architecture distinction that must be preserved during later design work:
+
+```text
+TemplateProcessor structural/scalar replacement semantics
+    !=
+legacy OdtTemplate foreach row-binding semantics
+```
+
+This is a defect candidate, but A1 remains characterization-only. No production change is authorized yet.
