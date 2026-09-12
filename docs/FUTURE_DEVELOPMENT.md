@@ -13,7 +13,7 @@ The explicit path to 1.0 is now:
 1. `PAGE-FLOW-01` — **COMPLETE / FINAL GO**;
 2. `TABLE-LAYOUT-01` — professional table geometry — **COMPLETE / FINAL GO**;
 3. `FRAME-LAYOUT-01` — bounded reliable frame geometry core — **COMPLETE / FINAL GO**;
-4. `TEMPLATE-RELIABILITY-01` — focused remaining template-format/control audit and only evidence-based fixes;
+4. `TEMPLATE-AUTHORING-01` — **1.0 BLOCKER** — template-driven authoring and rendering, comprising reliability/format preservation, unified inspection, bounded native-field binding, declarative structural controls, high-level render orchestration, and authoring documentation/samples;
 5. `FINALIZATION-01` — final document/export lifecycle contract;
 6. `RELEASE-1.0` integration preflight.
 
@@ -205,23 +205,55 @@ FRAME-LAYOUT-01 introduced anchor-sensitive insertion and paragraph/text-contain
 
 No separate `GRAPHIC-PART-COMPAT-01` implementation remains open.
 
-## TEMPLATE-RELIABILITY-01 — Remaining template-format/control audit
+## TEMPLATE-AUTHORING-01 — Template-driven authoring and rendering
 
-**Priority:** 1.0 BLOCKER AS AUDIT
+**Priority:** 1.0 BLOCKER
 
-This replaces the older interpretation of `TEMPLATE-FORMAT-PRESERVATION-01` as a broad unsolved formatting project.
+The earlier `TEMPLATE-RELIABILITY-01`, `TEMPLATE-AUTHORING-UX-01`, `DECLARATIVE-SECTION-01`, and the bounded 1.0 subset of `NATIVE-FIELDS-01` are now coordinated through one strategic milestone. Their historical identifiers remain useful provenance; they must not evolve as competing architectures.
 
-Supported scalar expressions already have logical projection across transparent inline structure, non-mutating inspection, safe normalization, structure-preserving replacement, bookmark preservation, and ODF whitespace preservation.
+The approved product direction is additive:
 
-The remaining 1.0 task is to re-audit:
+- existing imperative APIs remain supported;
+- classic visible `{{...}}` syntax remains the portable/simple template path;
+- native ODT structures may carry discoverable structural template meaning;
+- one unified inspection model should expose the supported template contract;
+- a high-level render path should be able to orchestrate a mapped data set against that contract;
+- LibreOffice remains the visual template designer rather than having PHP reconstruct authored layout.
 
-- conditions;
-- foreach/control structures;
-- `nl2br`;
-- `ul` / `ol` structural placeholders;
-- complex boundary interactions not covered by scalar replacement.
+The milestone phases are:
 
-Unexpected legacy behavior should first be characterized. If no relevant defect is found, no implementation is required. Do not reopen solved scalar behavior without evidence.
+1. **A — Existing Template Reliability & Format Preservation:** characterize conditions, foreach, `nl2br`, lists, and relevant ODF/style boundaries; fix only evidenced defects.
+2. **B — Unified Template Inspection:** compose template-language expressions with Sections, bookmarks, tables, frames, supported fields, declarative controls, dependencies, and diagnostics.
+3. **C — Native Field Binding:** design a bounded field-binding capability from Writer/ODF evidence; User Fields are a primary candidate, while broader field families require justification.
+4. **D — Declarative Structural Controls:** design Section declarations such as `#foreach:experience`, `#if:photo`, and `#ifnot:photo` as orchestration over existing Section mechanics and shared condition semantics.
+5. **E — High-Level Render Pipeline:** define deterministic orchestration for mapped data while preserving the lower-level APIs and lifecycle compatibility.
+6. **F — Authoring Documentation & Samples:** provide first-class guidance for creating inspectable, reusable LibreOffice templates and polished examples before 1.0.
+
+The conceptual target is:
+
+```php
+$schema = $template->inspect();
+$template->render($mappedData);
+```
+
+This is a product/architecture target, not yet an approved method signature. Semantics, lifecycle ordering, compatibility, nesting, diagnostics, and repeated render/save behavior require characterization and a Change Contract before implementation.
+
+### TEMPLATE-RELIABILITY-01 — absorbed provenance
+
+The former 1.0 reliability audit is Phase A of `TEMPLATE-AUTHORING-01`. Existing scalar-expression preservation remains established baseline and must not be reopened without evidence.
+
+### TEMPLATE-AUTHORING-UX-01 — absorbed provenance
+
+Authoring UX is no longer merely non-blocking research. The bounded 1.0 authoring contract and documentation are Phases B/F of `TEMPLATE-AUTHORING-01`. Broader designer tooling, visual assistants, template kits, and authoring automation remain future product-layer work.
+
+### DECLARATIVE-SECTION-01 — absorbed provenance
+
+RESEARCH-01A already proved that Writer preserves names such as `#foreach:experience` and that existing Section mechanics can address such names. Phase D decides and implements the bounded 1.0 declarative semantics after compatibility/design review. Do not fuzzy-correct malformed declaration names.
+
+### NATIVE-FIELDS-01 — split between 1.0 and later work
+
+A bounded native-field binding capability is Phase C of `TEMPLATE-AUTHORING-01`. Broad support for every Writer field/conditional construct remains post-1.0 unless concrete evidence makes it necessary. `{{variable}}` remains the preferred general/portable scalar-binding mechanism where native semantics provide no concrete advantage.
+
 
 ## FINALIZATION-01 — Final document/export semantics
 
@@ -286,38 +318,9 @@ Continue documenting and, where justified, simplifying lifecycle semantics aroun
 
 ## Template authoring and native semantics
 
-### TEMPLATE-AUTHORING-UX-01 — Template authoring experience
+### TEMPLATE-AUTHORING-01 provenance
 
-**Priority:** High-value, non-blocking
-
-LibreOffice should remain the visual template designer where practical. Research topics include naming conventions, validation and diagnostics, inspection tooling, discoverability of structured capabilities, flow versus fixed-layout guidance, realistic maximum-content tests, and clearer separation between simple syntax and structured object operations.
-
-### DECLARATIVE-SECTION-01 — Native Section declarations such as `#foreach:collection`
-
-**Priority:** High-value, non-blocking / research-design candidate
-
-RESEARCH-01A established that Writer can author and serialize `#foreach:experience` unchanged and that the existing Section resolver plus `instantiateMany()` machinery can already process that exact native Section name mechanically.
-
-A future declarative layer should therefore be treated as discovery/orchestration over SECTION-03 rather than a second foreach renderer.
-
-Still undecided:
-
-- whether `#foreach:...` becomes approved syntax;
-- automatic discovery timing;
-- missing-data diagnostics;
-- render/save lifecycle ordering;
-- interaction with nested declarations;
-- whether any operators beyond collection repetition are justified.
-
-Do not silently fuzzy-correct declaration names such as the characterized `#foreach:expiriene` typo.
-
-### NATIVE-FIELDS-01 — Writer fields and conditional content
-
-**Priority:** Post-1.0/selective earlier use only when justified
-
-User Fields, Set/Get Variables, Conditional Text, Hidden Text, Hidden Paragraphs, and Conditional Sections remain valuable native mechanisms. Broad public support is deferred because field scope, authoritative branch content, lifecycle evaluation, and DOCX interoperability differ from the existing placeholder model.
-
-`{{variable}}` remains the preferred general/portable scalar-binding mechanism unless a native field provides a concrete semantic or authoring advantage.
+The former TEMPLATE-AUTHORING-UX-01, DECLARATIVE-SECTION-01, and bounded NATIVE-FIELDS-01 topics are coordinated by the mandatory TEMPLATE-AUTHORING-01 milestone above. Broader native Writer semantics remain future work after the bounded 1.0 contract is established.
 
 ### HTML-IMPORT-01 — Extended HTML import
 
@@ -405,7 +408,7 @@ Fundamental ODF correctness and core document semantics belong in the engine rat
 
 ## Release 1.0 integration preflight
 
-After PAGE-FLOW-01, TABLE-LAYOUT-01, FRAME-LAYOUT-01, TEMPLATE-RELIABILITY-01, and FINALIZATION-01, stop adding unrelated features and perform a dedicated release preflight.
+After PAGE-FLOW-01, TABLE-LAYOUT-01, FRAME-LAYOUT-01, TEMPLATE-AUTHORING-01, and FINALIZATION-01, stop adding unrelated features and perform a dedicated release preflight.
 
 It should include, as applicable:
 
@@ -432,11 +435,11 @@ The mandatory path is now:
 ```text
 PAGE-FLOW-01                 COMPLETE
     ↓
-TABLE-LAYOUT-01              NEXT / ACTIVE
+TABLE-LAYOUT-01              COMPLETE
     ↓
-FRAME-LAYOUT-01
+FRAME-LAYOUT-01              COMPLETE
     ↓
-TEMPLATE-RELIABILITY-01
+TEMPLATE-AUTHORING-01
     ↓
 FINALIZATION-01
     ↓
