@@ -236,7 +236,9 @@ final class TemplateAuthoring01A12FullRenderCharacterizationTest extends TestCas
             . ' xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"'
             . ' xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"'
             . ' xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"'
-            . ' xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0">'
+            . ' xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"'
+            . ' xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"'
+            . ' xmlns:loext="urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0">'
             . '<office:automatic-styles/>'
             . '<office:body><office:text>'
             . $body
