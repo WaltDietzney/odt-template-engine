@@ -1,6 +1,6 @@
 # TEMPLATE-AUTHORING-01A1 — Classic Control Format-Preservation Characterization
 
-Status: ACTIVE CHARACTERIZATION / NO PRODUCTION CHANGE
+Status: COMPLETE / CHARACTERIZATION CLOSED / NO PRODUCTION CHANGE
 
 ## Goal
 
@@ -231,3 +231,317 @@ We should not carry the following behaviors into the new high-level template pat
 The Writer findings support a structured authoring model in which declarative controls are attached to native objects, especially Sections, and reuse existing identity-aware Section mechanics.
 
 No production change is authorized by A1.4. These findings feed the A1 synthesis and the later TEMPLATE-AUTHORING-01B/C/D/E design passes.
+
+
+# A1 Synthesis / Closeout
+
+## Decision
+
+TEMPLATE-AUTHORING-01A1 is complete.
+
+A1.1 through A1.4 established the current semantics of classic visible template controls across isolated DOM processing, the real facade/render lifecycle, the direct repeating compatibility path, save/reopen behavior, native XML structure, and actual LibreOffice rendering.
+
+The closeout does **not** authorize production repairs. Its purpose is to freeze the evidence and define the requirements that later TEMPLATE-AUTHORING phases must satisfy.
+
+## What A1 disproved
+
+The investigation began partly from the practical observation that templates containing classic Smarty-like control syntax can differ substantially from the intended output and that formatting appeared to be lost around control blocks.
+
+The evidence does not support the broad statement:
+
+> classic IF/FOREACH generally destroys Writer formatting.
+
+In the characterized cases, ordinary Writer paragraph, inline, and table formatting can survive classic foreach cloning well.
+
+The deeper problems are structural and semantic.
+
+## Established behavior safe to preserve
+
+The following current behavior is valuable and should not be discarded merely because a new high-level authoring path is introduced.
+
+### Native Writer structure and styling can survive cloning
+
+Classic foreach cloning preserves native nodes rather than reconstructing their visual formatting. In the tested Writer fixtures this preserved:
+
+- paragraph styles;
+- inline text formatting;
+- paragraph spacing/indentation;
+- table geometry;
+- cell backgrounds/borders;
+- table text formatting.
+
+This is a genuine strength.
+
+### Simple visible placeholders remain appropriate
+
+Classic `{{variable}}`-style binding remains a useful portable authoring mechanism for scalar content where no native Writer semantic object provides a concrete advantage.
+
+The new template philosophy is additive, not a replacement for simple template syntax.
+
+### Row-local scalar replacement is useful
+
+Within an otherwise unambiguous repeated subtree, row-local scalar data binding is useful behavior and should remain available in future orchestration.
+
+### Existing imperative APIs remain valid
+
+A future inspectable/declarative render path must complement rather than replace the lower-level imperative APIs.
+
+## Compatibility behavior that must remain isolated
+
+A1 also identified behavior that may need to remain available for backward compatibility but must **not** define the semantics of the new high-level path.
+
+### Paragraph-marker structural inference
+
+Classic conditions infer a branch from visible control-marker paragraphs and intervening paragraph positions.
+
+That model cannot reliably own heterogeneous native siblings such as:
+
+- tables;
+- Sections;
+- frames;
+- other block-level Writer structures.
+
+Compatibility may require preserving classic behavior, but new structured controls must not use this as their semantic foundation.
+
+### Raw clone identity semantics
+
+Classic foreach can duplicate native identities verbatim, including characterized cases for:
+
+- `table:name`;
+- Section `text:name`;
+- bookmark names.
+
+The output may look correct while being structurally ambiguous.
+
+Future structured repetition must use identity-aware document mechanics.
+
+### Legacy row placeholder matching
+
+The facade foreach path treats every `{{...}}` token inside a repeated block as a possible row key. This includes nested control tokens.
+
+That compatibility behavior must not become the parser/binding contract of the new orchestration path.
+
+### Processing-order dependence
+
+Current classic semantics depend materially on render ordering. That ordering is observable compatibility behavior, but it is not a suitable semantic definition for future nested declarative controls.
+
+## Evidenced defect candidates
+
+A1 establishes the following defect candidates without repairing them.
+
+### DC-1 — Conditional structural ownership
+
+A classic IF around a real Writer table can leave/render the table even when the intended branch is false.
+
+The visible marker syntax does not provide a reliable native subtree boundary.
+
+### DC-2 — Duplicate native identities during repetition
+
+Classic foreach clones named Writer structures without identity rewriting.
+
+This is visually plausible but structurally unsafe.
+
+### DC-3 — Nested IF inside FOREACH
+
+In the full render path, foreach row replacement consumes `{{#if:...}}`, `{{#else}}`, and `{{#endif}}` before the later conditional pass.
+
+Both branches therefore survive.
+
+This is a visible functional defect, not merely an internal architecture concern.
+
+### DC-4 — Classic branch leakage across Writer structure
+
+The Writer fixture demonstrated surviving content from a branch that the author intended to remove. This reinforces that paragraph-delimited branch ownership is not equivalent to native structural ownership.
+
+## Compatibility-path conclusion
+
+The direct repeating compatibility path and the main render path are not permission to consolidate implementation opportunistically.
+
+Where paths differ, the divergence must remain explicit until a later change has:
+
+1. a defined semantic target;
+2. characterization coverage;
+3. a compatibility decision;
+4. a migration or facade strategy where required.
+
+A1 therefore closes with **no compatibility-path consolidation**.
+
+## Architecture requirements derived from A1
+
+The following requirements now constrain TEMPLATE-AUTHORING-01B through 01F.
+
+### R1 — Inspection must describe both simple and native template semantics
+
+Unified inspection must be able to discover supported template meaning across at least the relevant categories established in the roadmap:
+
+- classic variables/filter expressions;
+- classic controls where supported;
+- Sections;
+- bookmarks;
+- named tables;
+- named frames/structured objects where supported;
+- bounded native fields;
+- declarative structural controls;
+- diagnostics and dependencies.
+
+Inspection must expose what the template actually declares. It must not silently invent or fuzzy-correct semantics.
+
+### R2 — Structural controls require real native ownership boundaries
+
+A future declarative structural control must operate on a native subtree rather than infer ownership from visually adjacent marker paragraphs.
+
+Writer Sections are the primary evidenced candidate because they already provide:
+
+- a native named object;
+- a bounded subtree;
+- existing engine addressing;
+- existing Section instantiation mechanics;
+- identity-aware architecture from SECTION-03.
+
+A name such as:
+
+```text
+#foreach:experience
+#if:photo
+#ifnot:photo
+```
+
+can therefore carry template meaning while LibreOffice remains the visual designer.
+
+The exact public syntax/API still requires its dedicated design contract.
+
+### R3 — Repetition must be identity-aware
+
+Structured repetition must not use raw `cloneNode(true)` semantics as its complete contract when the subtree contains named native objects.
+
+It should build on the established Section/document identity-rewriting mechanics rather than create a competing identity system.
+
+### R4 — Nested controls need explicit data scope and evaluation semantics
+
+Future nesting must define, before implementation:
+
+- global data scope;
+- foreach row-local scope;
+- lookup precedence;
+- nested foreach scope;
+- condition evaluation inside repetition;
+- behavior for missing values;
+- deterministic evaluation order.
+
+The A1.6 behavior is explicitly **not** an acceptable model for the new path.
+
+### R5 — Scalar binding and control parsing must be semantically distinct
+
+A token representing template control syntax must not accidentally be consumed as an ordinary scalar row key.
+
+Future orchestration needs a semantic distinction between:
+
+```text
+data binding
+control declarations
+native object declarations
+```
+
+even if classic compatibility syntax continues to share visible braces.
+
+### R6 — Preserve authored ODF instead of rebuilding presentation
+
+The new path should preserve the successful property of current cloning: Writer-authored formatting remains native.
+
+The engine should orchestrate existing ODF structure rather than reconstruct Writer layout in PHP.
+
+### R7 — High-level render must orchestrate, not replace lower-level APIs
+
+The conceptual target remains:
+
+```php
+$schema = $template->inspect();
+$template->render($mappedData);
+```
+
+but A1 does not approve those exact signatures.
+
+The future render pipeline should coordinate existing capabilities and new declarative semantics while preserving compatible imperative entry points.
+
+### R8 — Diagnostics are part of template semantics
+
+Because visually plausible output can be structurally unsafe, inspection/rendering should eventually be able to report unsupported or ambiguous declarations rather than silently producing misleading output.
+
+Examples include malformed declarative names, unsupported nesting, ambiguous native identities, or declarations on unsupported native object types.
+
+### R9 — Repeated render/save lifecycle must remain explicit
+
+Future orchestration must define and test repeated render/save and save/reopen behavior. A declarative template contract is incomplete if it works only for a single transient DOM pass.
+
+## Implications for the remaining milestone
+
+A1 provides the evidence base for the remaining TEMPLATE-AUTHORING-01 sequence.
+
+### Phase B — Unified Template Inspection
+
+Next.
+
+B should first define the inspection model and discovery semantics. It should not begin by implementing a broad public API from assumptions.
+
+The primary question becomes:
+
+> What template contract can be discovered reliably from the actual ODF document before rendering?
+
+### Phase C — Native Field Binding
+
+C should investigate bounded Writer field semantics where they improve authoring compared with visible placeholders. A1 does not justify replacing `{{variable}}` for ordinary scalar values.
+
+### Phase D — Declarative Structural Controls
+
+D should define native structural declarations over real Writer objects, with Sections as the primary candidate. It must specify nesting, data scope, identity handling, and diagnostics before implementation.
+
+### Phase E — High-Level Render Pipeline
+
+E should compose the established simple and structured mechanisms into deterministic orchestration. It must not merely call the current classic passes in an accidental order and label that a new architecture.
+
+### Phase F — Authoring Documentation & Samples
+
+F is part of the 1.0 deliverable, not cosmetic cleanup.
+
+The documentation must teach developers how to create templates whose layout remains Writer-authored while their data/control contract is machine-discoverable. This is essential to the intended application pattern:
+
+```text
+form/application data
+    -> mapping
+    -> inspectable ODT template contract
+    -> high-level render
+    -> native ODT
+```
+
+The polished 1.0 samples should demonstrate this philosophy rather than only individual low-level API calls.
+
+## A1 final architecture statement
+
+TEMPLATE-AUTHORING-01A1 closes with the following architecture conclusion:
+
+> The classic template language remains valuable as a simple, portable text-binding layer, and its ability to preserve native Writer formatting should be retained. It is not, however, a sufficient structural document model. Complex template logic must be anchored to real ODF ownership boundaries, repeated native objects must be identity-aware, and nested control/data scope must be explicit. TEMPLATE-AUTHORING-01 should therefore evolve the engine toward an additive, inspectable template model in which simple visible syntax and native structured declarations cooperate rather than compete.
+
+## Closeout gate
+
+A1 is **COMPLETE** when the repository records:
+
+- isolated classic-control characterization;
+- full-render/facade characterization;
+- compatibility-path comparison;
+- LibreOffice/native XML evidence;
+- the safe-to-preserve behavior;
+- compatibility-only behavior;
+- evidenced defect candidates;
+- architecture requirements for B/C/D/E/F.
+
+Those conditions are now satisfied.
+
+No production behavior was changed as part of A1.
+
+**TEMPLATE-AUTHORING-01A1: COMPLETE / CHARACTERIZATION CLOSED.**
+
+Next architecture slice:
+
+```text
+TEMPLATE-AUTHORING-01B — Unified Template Inspection
+```
