@@ -27,6 +27,10 @@ final class TemplateContractInspector
         $diagnostics = [];
         $coverageRegions = [];
         $dependencyStates = [];
+        $capabilityReadiness = [
+            'inspection' => TemplateContractCapabilities::READY,
+            'dependency_mapping' => TemplateContractCapabilities::READY,
+        ];
 
         foreach ($regions as $region) {
             $coverageRegions[] = [
@@ -41,7 +45,8 @@ final class TemplateContractInspector
                 $bindings,
                 $controlStates,
                 $dependencyStates,
-                $diagnostics
+                $diagnostics,
+                $capabilityReadiness
             );
 
             [$regionNativeObjects, $nativeNodeIds] = $this->nativeObjectEvidence($region);
@@ -54,7 +59,8 @@ final class TemplateContractInspector
                 $nativeNodeIds,
                 $controlStates,
                 $dependencyStates,
-                $diagnostics
+                $diagnostics,
+                $capabilityReadiness
             );
         }
 
@@ -62,7 +68,7 @@ final class TemplateContractInspector
 
         $dependencies = $this->materializeDependencies($dependencyStates);
         $controls = $this->materializeControls($controlStates);
-        $capabilities = $this->composeCapabilities($diagnostics);
+        $capabilities = $this->composeCapabilities($capabilityReadiness);
 
         return new TemplateContract(
             $bindings,
@@ -79,32 +85,11 @@ final class TemplateContractInspector
     }
 
     /**
-     * @param list<TemplateContractDiagnostic> $diagnostics
+     * @param array<string, string> $readiness
      */
-    private function composeCapabilities(array $diagnostics): TemplateContractCapabilities
+    private function composeCapabilities(array $readiness): TemplateContractCapabilities
     {
-        $dependencyMapping = TemplateContractCapabilities::READY;
-
-        foreach ($diagnostics as $diagnostic) {
-            if (in_array(
-                $diagnostic->code(),
-                [
-                    'unsupported_template_expression',
-                    'malformed_template_expression',
-                    'expression_crosses_text_flow_boundary',
-                    'malformed_native_section_declaration',
-                ],
-                true
-            )) {
-                $dependencyMapping = TemplateContractCapabilities::LIMITED;
-                break;
-            }
-        }
-
-        return new TemplateContractCapabilities([
-            'inspection' => TemplateContractCapabilities::READY,
-            'dependency_mapping' => $dependencyMapping,
-        ]);
+        return new TemplateContractCapabilities($readiness);
     }
 
     /**
@@ -183,11 +168,16 @@ final class TemplateContractInspector
         array &$bindings,
         array &$controlStates,
         array &$dependencyStates,
-        array &$diagnostics
+        array &$diagnostics,
+        array &$capabilityReadiness
     ): void {
         $inspection = (new TemplateStructureInspector())->inspect(
             $this->regionDocument($region['carrier'])
         );
+        if ($inspection->unsafe() !== []) {
+            $capabilityReadiness['dependency_mapping'] = TemplateContractCapabilities::LIMITED;
+        }
+
         $this->appendStructureDiagnostics($inspection, $region, $diagnostics);
 
         $root = DataScopeDescriptor::root();
@@ -688,7 +678,8 @@ final class TemplateContractInspector
         array $nativeNodeIds,
         array &$controlStates,
         array &$dependencyStates,
-        array &$diagnostics
+        array &$diagnostics,
+        array &$capabilityReadiness
     ): void {
         $xpath = $this->xpath($region['carrier']->ownerDocument);
         $sourceOrder = 0;
@@ -718,6 +709,7 @@ final class TemplateContractInspector
             $parsed = $this->declarativeSectionCandidate($name);
             if ($parsed === null) {
                 if ($this->resemblesDeclarativeSectionCandidate($name)) {
+                    $capabilityReadiness['dependency_mapping'] = TemplateContractCapabilities::LIMITED;
                     $diagnostics[] = new TemplateContractDiagnostic(
                         'malformed_native_section_declaration',
                         'warning',
