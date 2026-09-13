@@ -29,8 +29,8 @@ final class TemplateAuthoring01BSlice4NativeOwnershipDeclarativeCandidatesTest e
         $contract = $template->inspectTemplate();
 
         $objects = $contract->nativeObjects();
-        self::assertCount(12, $objects);
-        self::assertCount(12, array_unique(array_map(
+        self::assertCount(13, $objects);
+        self::assertCount(13, array_unique(array_map(
             static fn ($object): string => $object->id(),
             $objects
         )));
@@ -105,7 +105,7 @@ final class TemplateAuthoring01BSlice4NativeOwnershipDeclarativeCandidatesTest e
         ));
 
         self::assertSame(
-            ['FOREACH', 'IF', 'FOREACH', 'IF'],
+            ['FOREACH', 'IF', 'FOREACH', 'IFNOT', 'IF'],
             array_map(static fn ($control): string => $control->kind(), $nativeControls)
         );
 
@@ -142,6 +142,20 @@ final class TemplateAuthoring01BSlice4NativeOwnershipDeclarativeCandidatesTest e
             $projects->createdScope()?->kind()
         );
 
+        $archived = $nativeControls[3];
+        self::assertSame('IFNOT', $archived->kind());
+        self::assertSame(
+            $experience->createdScope()?->id(),
+            $archived->scope()->id()
+        );
+
+        $header = $nativeControls[4];
+        $headerEvidence = $header->markerEvidence()[0];
+        self::assertSame('styles.xml', $headerEvidence->sourcePart());
+        self::assertSame('MASTER_PAGE_CONTENT', $headerEvidence->regionKind());
+        self::assertSame('Standard', $headerEvidence->regionOwner());
+        self::assertSame('style:header', $headerEvidence->carrierKind());
+
         $paths = array_map(
             static fn ($dependency): string => $dependency->path(),
             $contract->dependencies()
@@ -151,6 +165,7 @@ final class TemplateAuthoring01BSlice4NativeOwnershipDeclarativeCandidatesTest e
         self::assertContains('experience[].current', $paths);
         self::assertContains('experience[].projects[]', $paths);
         self::assertContains('experience[].projects[].project_name', $paths);
+        self::assertContains('experience[].archived', $paths);
         self::assertContains('show_header', $paths);
 
         self::assertSame(
@@ -242,6 +257,7 @@ final class TemplateAuthoring01BSlice4NativeOwnershipDeclarativeCandidatesTest e
             . '<text:section text:name="#foreach:projects">'
             . '<text:p>{{project_name}}</text:p>'
             . '</text:section>'
+            . '<text:section text:name="#ifnot:archived"><text:p>Visible</text:p></text:section>'
             . '</text:section>'
             . '<text:section text:name="#notes"><text:p>Ordinary</text:p></text:section>'
             . '<text:section text:name="#foreach experience"><text:p>Malformed</text:p></text:section>'
