@@ -9,12 +9,7 @@ use DOMElement;
 use DOMNode;
 use DOMXPath;
 
-/**
- * Builds the bounded Slice-1 source contract from original template DOMs.
- *
- * Advanced dependency/control semantics are intentionally deferred to later
- * Phase-B slices.
- */
+/** Builds the bounded source-oriented template contract from original template DOMs. */
 final class TemplateContractInspector
 {
     private const DRAW_NAMESPACE = 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0';
@@ -27,9 +22,11 @@ final class TemplateContractInspector
     {
         $regions = $this->sourceRegions($contentDom, $stylesDom);
         $bindings = [];
-        $repetitionScopedEvidenceIds = [];
+        $controlStates = [];
         $nativeObjects = [];
+        $diagnostics = [];
         $coverageRegions = [];
+        $dependencyStates = [];
 
         foreach ($regions as $region) {
             $coverageRegions[] = [
@@ -39,39 +36,35 @@ final class TemplateContractInspector
                 'carrier_kind' => $region['carrier']->nodeName,
             ];
 
-            [$regionBindings, $regionRepetitionScopedEvidenceIds] = $this->bindingEvidence($region);
-            foreach ($regionBindings as $binding) {
-                $bindings[] = $binding;
-            }
-            foreach ($regionRepetitionScopedEvidenceIds as $evidenceId) {
-                $repetitionScopedEvidenceIds[$evidenceId] = true;
-            }
+            $this->projectRegionSemantics(
+                $region,
+                $bindings,
+                $controlStates,
+                $dependencyStates,
+                $diagnostics
+            );
 
             foreach ($this->nativeObjectEvidence($region) as $nativeObject) {
                 $nativeObjects[] = $nativeObject;
             }
         }
 
-        [$bindings, $dependencies] = $this->projectRootDependencies(
-            $bindings,
-            $repetitionScopedEvidenceIds
-        );
+        $dependencies = $this->materializeDependencies($dependencyStates);
+        $controls = $this->materializeControls($controlStates);
 
         return new TemplateContract(
             $bindings,
-            [],
+            $controls,
             $nativeObjects,
             $dependencies,
-            [],
+            $diagnostics,
             new TemplateContractCoverage(
                 $coverageRegions,
                 ['meta.xml', 'settings.xml', 'META-INF/manifest.xml', 'embedded_objects']
             ),
             new TemplateContractCapabilities([
                 'inspection' => TemplateContractCapabilities::READY,
-                'dependency_mapping' => $repetitionScopedEvidenceIds === []
-                    ? TemplateContractCapabilities::READY
-                    : TemplateContractCapabilities::LIMITED,
+                'dependency_mapping' => TemplateContractCapabilities::READY,
             ])
         );
     }
@@ -110,11 +103,7 @@ final class TemplateContractInspector
 
             $owner = $masterPage->getAttribute('style:name') ?: null;
             foreach ($masterPage->childNodes as $child) {
-                if (!$child instanceof DOMElement) {
-                    continue;
-                }
-
-                if ($child->namespaceURI !== self::STYLE_NAMESPACE) {
+                if (!$child instanceof DOMElement || $child->namespaceURI !== self::STYLE_NAMESPACE) {
                     continue;
                 }
 
@@ -146,28 +135,158 @@ final class TemplateContractInspector
      *     carrier:DOMElement,
      *     region_index:int
      * } $region
-     * @return array{0:list<BindingDescriptor>,1:list<string>}
+     * @param list<BindingDescriptor> $bindings
+     * @param list<array<string, mixed>> $controlStates
+     * @param array<string, array<string, mixed>> $dependencyStates
+     * @param list<TemplateContractDiagnostic> $diagnostics
      */
-    private function bindingEvidence(array $region): array
-    {
+    private function projectRegionSemantics(
+        array $region,
+        array &$bindings,
+        array &$controlStates,
+        array &$dependencyStates,
+        array &$diagnostics
+    ): void {
         $inspection = (new TemplateStructureInspector())->inspect(
             $this->regionDocument($region['carrier'])
         );
 
-        $bindings = [];
-        $repetitionScopedEvidenceIds = [];
-        $sourceOrder = 0;
-        $foreachDepth = 0;
+        $root = DataScopeDescriptor::root();
+        $scopeStack = [$root];
+        $controlStack = [];
 
-        foreach ($inspection->expressions() as $expression) {
-            if ($expression->kind() === 'FOREACH_OPEN') {
-                ++$foreachDepth;
-                continue;
-            }
+        foreach ($inspection->expressions() as $sourceOrder => $expression) {
+            $marker = $this->classicControlMarker($expression);
 
-            if ($expression->kind() === 'FOREACH_END') {
-                $foreachDepth = max(0, $foreachDepth - 1);
-                continue;
+            if ($marker !== null) {
+                $provenance = $this->provenance(
+                    $region,
+                    'classic_control_marker',
+                    $sourceOrder,
+                    $expression->rawText(),
+                    $expression->scope()
+                );
+
+                if ($marker['kind'] === 'FOREACH_OPEN') {
+                    $scope = $scopeStack[array_key_last($scopeStack)];
+                    $dependencyId = $this->ensureDependency(
+                        $dependencyStates,
+                        $scope,
+                        'COLLECTION',
+                        $marker['name'],
+                        $provenance->evidenceId()
+                    );
+                    $collectionPath = $scope->dependencyPath($marker['name'], true);
+                    $itemScope = DataScopeDescriptor::collectionItem(
+                        $scope,
+                        $dependencyId,
+                        $collectionPath
+                    );
+                    $controlId = $this->controlId($provenance, 'FOREACH');
+
+                    $controlStates[] = [
+                        'id' => $controlId,
+                        'kind' => 'FOREACH',
+                        'scope' => $scope,
+                        'marker_evidence' => [$provenance],
+                        'dependency_ids' => [$dependencyId],
+                        'created_scope' => $itemScope,
+                    ];
+                    $controlIndex = array_key_last($controlStates);
+
+                    if ($controlStack !== []) {
+                        $diagnostics[] = $this->nestedControlCompatibilityFinding(
+                            $controlId,
+                            $provenance
+                        );
+                    }
+
+                    $controlStack[] = ['type' => 'FOREACH', 'index' => $controlIndex];
+                    $scopeStack[] = $itemScope;
+                    continue;
+                }
+
+                if ($marker['kind'] === 'FOREACH_END') {
+                    $index = $this->topControlIndex($controlStack, 'FOREACH');
+                    if ($index !== null) {
+                        $controlStates[$index]['marker_evidence'][] = $provenance;
+                        array_pop($controlStack);
+                        if (count($scopeStack) > 1) {
+                            array_pop($scopeStack);
+                        }
+                    }
+                    continue;
+                }
+
+                if (in_array($marker['kind'], ['IF_OPEN', 'IFNOT_OPEN'], true)) {
+                    $scope = $scopeStack[array_key_last($scopeStack)];
+                    $condition = ConditionExpression::parse($marker['expression']);
+                    $dependencyId = $this->ensureDependency(
+                        $dependencyStates,
+                        $scope,
+                        'VALUE',
+                        $condition->referenceName(),
+                        $provenance->evidenceId()
+                    );
+                    $kind = $marker['kind'] === 'IFNOT_OPEN' ? 'IFNOT' : 'IF';
+                    $controlId = $this->controlId($provenance, $kind);
+
+                    $controlStates[] = [
+                        'id' => $controlId,
+                        'kind' => $kind,
+                        'scope' => $scope,
+                        'marker_evidence' => [$provenance],
+                        'dependency_ids' => [$dependencyId],
+                        'created_scope' => null,
+                    ];
+                    $controlIndex = array_key_last($controlStates);
+
+                    if ($controlStack !== []) {
+                        $diagnostics[] = $this->nestedControlCompatibilityFinding(
+                            $controlId,
+                            $provenance
+                        );
+                    }
+
+                    $controlStack[] = ['type' => 'CONDITION', 'index' => $controlIndex];
+                    continue;
+                }
+
+                if ($marker['kind'] === 'ELSEIF') {
+                    $index = $this->topControlIndex($controlStack, 'CONDITION');
+                    if ($index !== null) {
+                        $controlStates[$index]['marker_evidence'][] = $provenance;
+                        $condition = ConditionExpression::parse($marker['expression']);
+                        $dependencyId = $this->ensureDependency(
+                            $dependencyStates,
+                            $scopeStack[array_key_last($scopeStack)],
+                            'VALUE',
+                            $condition->referenceName(),
+                            $provenance->evidenceId()
+                        );
+                        if (!in_array($dependencyId, $controlStates[$index]['dependency_ids'], true)) {
+                            $controlStates[$index]['dependency_ids'][] = $dependencyId;
+                        }
+                    }
+                    continue;
+                }
+
+                if ($marker['kind'] === 'ELSE') {
+                    $index = $this->topControlIndex($controlStack, 'CONDITION');
+                    if ($index !== null) {
+                        $controlStates[$index]['marker_evidence'][] = $provenance;
+                    }
+                    continue;
+                }
+
+                if ($marker['kind'] === 'ENDIF') {
+                    $index = $this->topControlIndex($controlStack, 'CONDITION');
+                    if ($index !== null) {
+                        $controlStates[$index]['marker_evidence'][] = $provenance;
+                        array_pop($controlStack);
+                    }
+                    continue;
+                }
             }
 
             if (!in_array(
@@ -178,12 +297,20 @@ final class TemplateContractInspector
                 continue;
             }
 
+            $scope = $scopeStack[array_key_last($scopeStack)];
             $provenance = $this->provenance(
                 $region,
                 'visible_expression',
                 $sourceOrder,
                 $expression->rawText(),
                 $expression->scope()
+            );
+            $dependencyId = $this->ensureDependency(
+                $dependencyStates,
+                $scope,
+                'VALUE',
+                (string) $expression->variableName(),
+                $provenance->evidenceId()
             );
 
             $bindings[] = new BindingDescriptor(
@@ -193,75 +320,149 @@ final class TemplateContractInspector
                 $expression->filterName(),
                 $expression->filterOption(),
                 'SUPPORTED',
-                $provenance
+                $provenance,
+                $dependencyId
             );
-
-            if ($foreachDepth > 0) {
-                $repetitionScopedEvidenceIds[] = $provenance->evidenceId();
-            }
-
-            ++$sourceOrder;
         }
-
-        return [$bindings, $repetitionScopedEvidenceIds];
     }
 
     /**
-     * @param list<BindingDescriptor> $bindings
-     * @param array<string, true> $repetitionScopedEvidenceIds
-     * @return array{0:list<BindingDescriptor>,1:list<DependencyDescriptor>}
+     * @return array{kind:string,name?:string,expression?:string}|null
      */
-    private function projectRootDependencies(
-        array $bindings,
-        array $repetitionScopedEvidenceIds
-    ): array
+    private function classicControlMarker(TemplateExpressionDescriptor $expression): ?array
     {
-        $root = DataScopeDescriptor::root();
-        $evidenceByName = [];
-
-        foreach ($bindings as $binding) {
-            $name = $binding->variableName();
-            $evidenceId = $binding->provenance()->evidenceId();
-            if ($name === null || $name === '' || isset($repetitionScopedEvidenceIds[$evidenceId])) {
-                continue;
-            }
-
-            $evidenceByName[$name][] = $evidenceId;
+        if ($expression->kind() === 'FOREACH_OPEN' && $expression->variableName() !== null) {
+            return ['kind' => 'FOREACH_OPEN', 'name' => $expression->variableName()];
         }
 
-        $dependenciesByName = [];
-        foreach ($evidenceByName as $name => $evidenceIds) {
-            $dependenciesByName[$name] = new DependencyDescriptor(
-                $this->dependencyId($root, 'VALUE', $name),
-                'VALUE',
-                $name,
-                $root,
-                $name,
-                $evidenceIds
+        if ($expression->kind() === 'FOREACH_END') {
+            return ['kind' => 'FOREACH_END'];
+        }
+
+        $body = substr($expression->rawText(), 2, -2);
+        if (preg_match('/^#(if|ifnot|elseif):(.+)$/', $body, $match) === 1) {
+            return [
+                'kind' => match ($match[1]) {
+                    'if' => 'IF_OPEN',
+                    'ifnot' => 'IFNOT_OPEN',
+                    'elseif' => 'ELSEIF',
+                },
+                'expression' => trim($match[2]),
+            ];
+        }
+
+        return match ($body) {
+            '#else' => ['kind' => 'ELSE'],
+            '#endif' => ['kind' => 'ENDIF'],
+            default => null,
+        };
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $states
+     */
+    private function ensureDependency(
+        array &$states,
+        DataScopeDescriptor $scope,
+        string $kind,
+        string $name,
+        string $evidenceId
+    ): string {
+        $key = implode('|', [$scope->id(), $kind, $name]);
+
+        if (!isset($states[$key])) {
+            $states[$key] = [
+                'id' => $this->dependencyId($scope, $kind, $name),
+                'kind' => $kind,
+                'name' => $name,
+                'scope' => $scope,
+                'path' => $scope->dependencyPath($name, $kind === 'COLLECTION'),
+                'evidence_ids' => [],
+            ];
+        }
+
+        if (!in_array($evidenceId, $states[$key]['evidence_ids'], true)) {
+            $states[$key]['evidence_ids'][] = $evidenceId;
+        }
+
+        return $states[$key]['id'];
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $states
+     * @return list<DependencyDescriptor>
+     */
+    private function materializeDependencies(array $states): array
+    {
+        $dependencies = [];
+        foreach ($states as $state) {
+            $dependencies[] = new DependencyDescriptor(
+                $state['id'],
+                $state['kind'],
+                $state['name'],
+                $state['scope'],
+                $state['path'],
+                $state['evidence_ids']
             );
         }
 
-        $linkedBindings = [];
-        foreach ($bindings as $binding) {
-            $name = $binding->variableName();
-            $evidenceId = $binding->provenance()->evidenceId();
-            $dependency = $name !== null && !isset($repetitionScopedEvidenceIds[$evidenceId])
-                ? ($dependenciesByName[$name] ?? null)
-                : null;
+        return $dependencies;
+    }
 
-            $linkedBindings[] = new BindingDescriptor(
-                $binding->kind(),
-                $binding->rawText(),
-                $binding->variableName(),
-                $binding->filterName(),
-                $binding->filterOption(),
-                $binding->supportState(),
-                $binding->provenance(),
-                $dependency?->id()
-            );
+    /**
+     * @param list<array<string, mixed>> $states
+     * @return list<ControlDescriptor>
+     */
+    private function materializeControls(array $states): array
+    {
+        return array_map(
+            static fn (array $state): ControlDescriptor => new ControlDescriptor(
+                $state['id'],
+                $state['kind'],
+                'CLASSIC',
+                'SUPPORTED',
+                $state['scope'],
+                $state['marker_evidence'],
+                $state['dependency_ids'],
+                $state['created_scope']
+            ),
+            $states
+        );
+    }
+
+    /**
+     * @param list<array{type:string,index:int}> $stack
+     */
+    private function topControlIndex(array $stack, string $type): ?int
+    {
+        $top = $stack[array_key_last($stack)] ?? null;
+        if ($top === null || $top['type'] !== $type) {
+            return null;
         }
 
-        return [$linkedBindings, array_values($dependenciesByName)];
+        return $top['index'];
+    }
+
+    private function nestedControlCompatibilityFinding(
+        string $controlId,
+        SourceProvenance $provenance
+    ): TemplateContractDiagnostic {
+        return new TemplateContractDiagnostic(
+            'classic_nested_control_runtime_limitation',
+            'warning',
+            'Intended nested control scope is inspectable, but current classic runtime has known nested-control limitations.',
+            $controlId,
+            $provenance
+        );
+    }
+
+    private function controlId(SourceProvenance $provenance, string $kind): string
+    {
+        return 'c_' . substr(
+            hash('sha256', $kind . '|' . $provenance->evidenceId()),
+            0,
+            16
+        );
     }
 
     private function dependencyId(
