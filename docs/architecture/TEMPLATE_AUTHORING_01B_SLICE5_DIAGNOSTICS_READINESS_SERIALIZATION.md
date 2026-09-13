@@ -1,6 +1,6 @@
 # TEMPLATE-AUTHORING-01B Slice 5 — Diagnostics, Readiness & Serialization Stabilization
 
-Status: READY FOR FINAL VERIFICATION
+Status: COMPLETE / GATE GREEN
 
 ## Scope
 
@@ -186,16 +186,12 @@ Before the final Slice-5 readiness/documentation refinement, the complete Phase-
 
 The Writer-authored fixture integration test and manual LibreOffice visual regression were also reported green.
 
-The final verification must re-run the affected Slice-5/fixture gates and the standard preflight after the readiness-composition and public-documentation changes.
+The final verification was completed successfully after the readiness-composition and public-documentation changes. The affected Slice-5 and LibreOffice-fixture integration tests, full `composer test`, PHP lint for `src/` and `tests/`, `composer validate`, and `git diff --check develop...HEAD` were reported green.
 
 ## Exit criterion
 
-Implementation work for Slice 5 is complete.
+Slice 5 is complete and its gate is green.
 
-After the final verification remains green, update this status to:
+The implementation, compatibility, serialization, public-documentation, Writer-authored fixture, executable inspection sample, automated preflight, and manual LibreOffice regression requirements for this slice are satisfied.
 
-```text
-COMPLETE / GATE GREEN
-```
-
-Then proceed to the separate overall TEMPLATE-AUTHORING-01B phase review.
+The next step is the separate overall TEMPLATE-AUTHORING-01B phase review against the complete Change Contract and B1 design set.
