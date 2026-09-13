@@ -29,6 +29,8 @@ use OdtTemplateEngine\Document\TemplateTargetResolver;
 use OdtTemplateEngine\Document\TypedTargetResolver;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Style\DocumentStyles;
+use OdtTemplateEngine\Template\TemplateContract;
+use OdtTemplateEngine\Template\TemplateContractInspector;
 use OdtTemplateEngine\Template\TemplateProcessor;
 use OdtTemplateEngine\Template\TemplateStructureInspection;
 use OdtTemplateEngine\Template\TemplateStructureInspector;
@@ -173,6 +175,20 @@ class OdtTemplate
     public function inspectTemplateStructure(): TemplateStructureInspection
     {
         return (new TemplateStructureInspector())->inspect($this->package->sourceDom('content.xml'));
+    }
+
+    /**
+     * Inspect the original authored ODT source as a unified template contract.
+     *
+     * This source-oriented view is independent of current working-document
+     * mutations and does not expose mutable DOM nodes.
+     */
+    public function inspectTemplate(): TemplateContract
+    {
+        return (new TemplateContractInspector())->inspect(
+            $this->package->sourceDom('content.xml'),
+            $this->package->sourceDom('styles.xml')
+        );
     }
 
     /**
