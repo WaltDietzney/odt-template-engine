@@ -243,7 +243,7 @@ Version 1.0 must support a coherent template philosophy in which a LibreOffice-a
 The target application-facing workflow is conceptually:
 
 ```php
-$schema = $template->inspect();
+$contract = $template->inspectTemplate();
 $template->render($mappedData);
 $template->save('result.odt');
 ```
@@ -252,7 +252,7 @@ The exact public API remains subject to evidence, compatibility review, and a Ch
 
 The milestone is divided into six bounded phases:
 
-#### A — Existing Template Reliability & Format Preservation
+#### A — Existing Template Reliability & Format Preservation — COMPLETE
 
 Characterize the remaining classic template-language paths before changing them:
 
@@ -264,7 +264,7 @@ Characterize the remaining classic template-language paths before changing them:
 
 Previously solved scalar-expression preservation must not be reopened without evidence. Proven defects receive characterization tests before bounded fixes. This phase absorbs the former standalone `TEMPLATE-RELIABILITY-01` 1.0 blocker.
 
-#### B — Unified Template Inspection
+#### B — Unified Template Inspection — COMPLETE
 
 Design one read-only template inspection result that composes existing template-language inspection with native document inspection. It should be able to describe, where supported:
 
