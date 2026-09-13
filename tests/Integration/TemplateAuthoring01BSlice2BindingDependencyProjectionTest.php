@@ -118,6 +118,16 @@ final class TemplateAuthoring01BSlice2BindingDependencyProjectionTest extends Te
         self::assertCount(1, $companyBindings);
         self::assertNull($companyBindings[0]->dependencyId());
 
+        $nameBindings = array_values(array_filter(
+            $contract->bindings(),
+            static fn ($binding): bool => $binding->variableName() === 'name'
+        ));
+        self::assertCount(5, $nameBindings);
+        self::assertNotNull($nameBindings[0]->dependencyId());
+        self::assertNull($nameBindings[2]->dependencyId());
+        self::assertSame($nameBindings[0]->dependencyId(), $nameBindings[3]->dependencyId());
+        self::assertSame($nameBindings[0]->dependencyId(), $nameBindings[4]->dependencyId());
+
         $afterBindings = array_values(array_filter(
             $contract->bindings(),
             static fn ($binding): bool => $binding->variableName() === 'after'
@@ -144,6 +154,7 @@ final class TemplateAuthoring01BSlice2BindingDependencyProjectionTest extends Te
         $foreach = $withForeach
             ? '<text:p>{{#foreach:experience}}</text:p>'
                 . '<text:p>{{company}}</text:p>'
+                . '<text:p>{{name}}</text:p>'
                 . '<text:p>{{#endforeach}}</text:p>'
                 . '<text:p>{{after}}</text:p>'
             : '';
