@@ -96,24 +96,41 @@ final class TemplateAuthoring01BSlice2BindingDependencyProjectionTest extends Te
         );
     }
 
-    public function testSlice2DoesNotClaimForeachScopeSemantics(): void
+    public function testSlice2DefersRepetitionScopedDependenciesWithoutInventingRootSemantics(): void
     {
         $contract = (new OdtTemplate($this->createTemplate(true)))->inspectTemplate();
 
         self::assertSame([], $contract->controls());
+        self::assertSame(
+            TemplateContractCapabilities::LIMITED,
+            $contract->capabilities()->readiness('dependency_mapping')
+        );
 
         self::assertSame(
-            ['name', 'email', 'bio', 'items', 'company'],
+            ['name', 'email', 'bio', 'items', 'after'],
             array_map(static fn ($dependency): string => $dependency->name(), $contract->dependencies())
         );
 
-        $company = array_values(array_filter(
-            $contract->dependencies(),
-            static fn ($dependency): bool => $dependency->name() === 'company'
-        ))[0];
+        $companyBindings = array_values(array_filter(
+            $contract->bindings(),
+            static fn ($binding): bool => $binding->variableName() === 'company'
+        ));
+        self::assertCount(1, $companyBindings);
+        self::assertNull($companyBindings[0]->dependencyId());
 
-        self::assertSame(DataScopeDescriptor::ROOT, $company->scope()->kind());
-        self::assertSame('company', $company->path());
+        $afterBindings = array_values(array_filter(
+            $contract->bindings(),
+            static fn ($binding): bool => $binding->variableName() === 'after'
+        ));
+        self::assertCount(1, $afterBindings);
+        self::assertNotNull($afterBindings[0]->dependencyId());
+
+        $after = array_values(array_filter(
+            $contract->dependencies(),
+            static fn ($dependency): bool => $dependency->name() === 'after'
+        ))[0];
+        self::assertSame(DataScopeDescriptor::ROOT, $after->scope()->kind());
+        self::assertSame('after', $after->path());
     }
 
     private function createTemplate(bool $withForeach = false): string
@@ -128,6 +145,7 @@ final class TemplateAuthoring01BSlice2BindingDependencyProjectionTest extends Te
             ? '<text:p>{{#foreach:experience}}</text:p>'
                 . '<text:p>{{company}}</text:p>'
                 . '<text:p>{{#endforeach}}</text:p>'
+                . '<text:p>{{after}}</text:p>'
             : '';
 
         $zip = new ZipArchive();
