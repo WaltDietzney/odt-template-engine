@@ -39,6 +39,16 @@ final readonly class BindingDescriptor
         return $this->variableName;
     }
 
+    public function filterName(): ?string
+    {
+        return $this->filterName;
+    }
+
+    public function filterOption(): ?string
+    {
+        return $this->filterOption;
+    }
+
     public function supportState(): string
     {
         return $this->supportState;
