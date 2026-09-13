@@ -136,7 +136,7 @@ final class TemplateAuthoring01BSlice0CompatibilityGateTest extends TestCase
         self::assertNotNull($inspection->frame('HeaderFrame'));
     }
 
-    public function testRuntimeAndFocusedInspectionConditionGrammarDivergenceIsFrozen(): void
+    public function testRuntimeAndFocusedInspectionConditionGrammarAreAlignedAfterSlice5Gate(): void
     {
         $processor = new TemplateProcessor();
 
@@ -163,22 +163,24 @@ final class TemplateAuthoring01BSlice0CompatibilityGateTest extends TestCase
         $inspection = (new TemplateStructureInspector())->inspect($dom);
 
         self::assertCount(1, $inspection->expressions());
-        self::assertSame('UNSUPPORTED', $inspection->expressions()[0]->kind());
-        self::assertSame('UNSAFE', $inspection->expressions()[0]->classification());
+        self::assertSame('CONDITION_OPEN', $inspection->expressions()[0]->kind());
+        self::assertNotSame('UNSAFE', $inspection->expressions()[0]->classification());
+        self::assertSame([], $inspection->diagnostics());
     }
 
     public function testCurrentDiagnosticSerializationShapesAreFrozen(): void
     {
         $templateDom = $this->dom(
             '<root xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">'
-            . '<text:p>{{#if:gender=="female"}}</text:p>'
+            . '<text:p>{{foo bar}}</text:p>'
             . '</root>'
         );
 
-        $templateDiagnostic = (new TemplateStructureInspector())
+        $templateDiagnostics = (new TemplateStructureInspector())
             ->inspect($templateDom)
-            ->diagnostics()[0]
-            ->toArray();
+            ->diagnostics();
+        self::assertNotEmpty($templateDiagnostics);
+        $templateDiagnostic = $templateDiagnostics[0]->toArray();
 
         self::assertSame(
             [
