@@ -96,51 +96,45 @@ final class TemplateAuthoring01BSlice2BindingDependencyProjectionTest extends Te
         );
     }
 
-    public function testSlice2DefersRepetitionScopedDependenciesWithoutInventingRootSemantics(): void
+    public function testLaterControlProjectionPreservesSlice2RootDeduplication(): void
     {
         $contract = (new OdtTemplate($this->createTemplate(true)))->inspectTemplate();
 
-        self::assertSame([], $contract->controls());
         self::assertSame(
-            TemplateContractCapabilities::LIMITED,
+            TemplateContractCapabilities::READY,
             $contract->capabilities()->readiness('dependency_mapping')
         );
 
-        self::assertSame(
-            ['name', 'email', 'bio', 'items', 'after'],
-            array_map(static fn ($dependency): string => $dependency->name(), $contract->dependencies())
+        $paths = array_map(
+            static fn ($dependency): string => $dependency->path(),
+            $contract->dependencies()
         );
 
-        $companyBindings = array_values(array_filter(
-            $contract->bindings(),
-            static fn ($binding): bool => $binding->variableName() === 'company'
-        ));
-        self::assertCount(1, $companyBindings);
-        self::assertNull($companyBindings[0]->dependencyId());
+        self::assertSame(
+            ['name', 'email', 'bio', 'items', 'experience[]', 'experience[].company', 'experience[].name', 'after'],
+            $paths
+        );
 
-        $nameBindings = array_values(array_filter(
+        $rootNameBindings = array_values(array_filter(
             $contract->bindings(),
-            static fn ($binding): bool => $binding->variableName() === 'name'
+            static fn ($binding): bool =>
+                $binding->variableName() === 'name'
+                && $binding->dependencyId() === $contract->dependencies()[0]->id()
         ));
-        self::assertCount(5, $nameBindings);
-        self::assertNotNull($nameBindings[0]->dependencyId());
-        self::assertNull($nameBindings[2]->dependencyId());
-        self::assertSame($nameBindings[0]->dependencyId(), $nameBindings[3]->dependencyId());
-        self::assertSame($nameBindings[0]->dependencyId(), $nameBindings[4]->dependencyId());
+        self::assertCount(4, $rootNameBindings);
 
-        $afterBindings = array_values(array_filter(
+        $rowNameBindings = array_values(array_filter(
             $contract->bindings(),
-            static fn ($binding): bool => $binding->variableName() === 'after'
+            static fn ($binding): bool =>
+                $binding->variableName() === 'name'
+                && $binding->dependencyId() !== $contract->dependencies()[0]->id()
         ));
-        self::assertCount(1, $afterBindings);
-        self::assertNotNull($afterBindings[0]->dependencyId());
+        self::assertCount(1, $rowNameBindings);
 
-        $after = array_values(array_filter(
+        self::assertSame('experience[].name', array_values(array_filter(
             $contract->dependencies(),
-            static fn ($dependency): bool => $dependency->name() === 'after'
-        ))[0];
-        self::assertSame(DataScopeDescriptor::ROOT, $after->scope()->kind());
-        self::assertSame('after', $after->path());
+            static fn ($dependency): bool => $dependency->id() === $rowNameBindings[0]->dependencyId()
+        ))[0]->path());
     }
 
     private function createTemplate(bool $withForeach = false): string
