@@ -145,13 +145,29 @@ final class TemplateExpressionProjector
                 : ['FILTERED_SCALAR', $m[2], $m[1], $m[3] ?? null];
         }
         return match (true) {
-            preg_match('/^#(?:if|ifnot|elseif):\w+$/', $body) === 1 => ['CONDITION_OPEN', substr($body, 1), null, null],
+            $this->isClassicConditionMarker($body) => ['CONDITION_OPEN', substr($body, 1), null, null],
             $body === '#else' => ['CONDITION_ELSE', null, null, null],
             $body === '#endif' => ['CONDITION_END', null, null, null],
             preg_match('/^#foreach:\w+$/', $body) === 1 => ['FOREACH_OPEN', substr($body, 9), null, null],
             $body === '#endforeach' => ['FOREACH_END', null, null, null],
             default => ['UNSUPPORTED', null, null, null],
         };
+    }
+
+    private function isClassicConditionMarker(string $body): bool
+    {
+        if (preg_match('/^#(?:if|ifnot|elseif):(.+)$/', $body, $match) !== 1) {
+            return false;
+        }
+
+        $expression = trim($match[1]);
+        if ($expression === '') {
+            return false;
+        }
+
+        $condition = ConditionExpression::parse($expression);
+
+        return preg_match('/^\\w+$/', $condition->referenceName()) === 1;
     }
 
     private function unbalancedDiagnostics(string $text, DOMNode $scope, array &$diagnostics): void
