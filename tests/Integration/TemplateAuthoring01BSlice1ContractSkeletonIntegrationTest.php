@@ -186,6 +186,54 @@ final class TemplateAuthoring01BSlice1ContractSkeletonIntegrationTest extends Te
         self::assertSame($before, $after);
     }
 
+    public function testInspectTemplateIgnoresDirectWorkingDomMutationWhileExistingInspectionViewsKeepTheirSemantics(): void
+    {
+        $templatePath = $this->createTemplate();
+
+        $template = new class ($templatePath) extends OdtTemplate {
+            public function addWorkingOnlySection(): void
+            {
+                $dom = $this->documentContext()->contentDom();
+                $officeText = $dom->getElementsByTagNameNS(
+                    'urn:oasis:names:tc:opendocument:xmlns:office:1.0',
+                    'text'
+                )->item(0);
+
+                if (!$officeText instanceof \DOMElement) {
+                    throw new \RuntimeException('Missing office:text in working document.');
+                }
+
+                $section = $dom->createElementNS(
+                    'urn:oasis:names:tc:opendocument:xmlns:text:1.0',
+                    'text:section'
+                );
+                $section->setAttributeNS(
+                    'urn:oasis:names:tc:opendocument:xmlns:text:1.0',
+                    'text:name',
+                    'WorkingOnly'
+                );
+
+                $paragraph = $dom->createElementNS(
+                    'urn:oasis:names:tc:opendocument:xmlns:text:1.0',
+                    'text:p',
+                    'Working document mutation'
+                );
+                $section->appendChild($paragraph);
+                $officeText->appendChild($section);
+            }
+        };
+
+        $sourceContractBefore = $template->inspectTemplate()->toArray();
+        $focusedSourceBefore = $template->inspectTemplateStructure()->toArray();
+        $liveInspectionBefore = $template->inspect()->toArray();
+
+        $template->addWorkingOnlySection();
+
+        self::assertNotSame($liveInspectionBefore, $template->inspect()->toArray());
+        self::assertSame($sourceContractBefore, $template->inspectTemplate()->toArray());
+        self::assertSame($focusedSourceBefore, $template->inspectTemplateStructure()->toArray());
+    }
+
     private function createTemplate(): string
     {
         $path = tempnam(sys_get_temp_dir(), 'odt-template-authoring-b-slice1-');
