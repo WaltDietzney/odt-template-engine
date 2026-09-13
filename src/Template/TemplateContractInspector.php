@@ -27,6 +27,7 @@ final class TemplateContractInspector
     {
         $regions = $this->sourceRegions($contentDom, $stylesDom);
         $bindings = [];
+        $repetitionScopedEvidenceIds = [];
         $nativeObjects = [];
         $coverageRegions = [];
 
@@ -38,8 +39,12 @@ final class TemplateContractInspector
                 'carrier_kind' => $region['carrier']->nodeName,
             ];
 
-            foreach ($this->bindingEvidence($region) as $binding) {
+            [$regionBindings, $regionRepetitionScopedEvidenceIds] = $this->bindingEvidence($region);
+            foreach ($regionBindings as $binding) {
                 $bindings[] = $binding;
+            }
+            foreach ($regionRepetitionScopedEvidenceIds as $evidenceId) {
+                $repetitionScopedEvidenceIds[$evidenceId] = true;
             }
 
             foreach ($this->nativeObjectEvidence($region) as $nativeObject) {
@@ -47,7 +52,10 @@ final class TemplateContractInspector
             }
         }
 
-        [$bindings, $dependencies] = $this->projectRootDependencies($bindings);
+        [$bindings, $dependencies] = $this->projectRootDependencies(
+            $bindings,
+            $repetitionScopedEvidenceIds
+        );
 
         return new TemplateContract(
             $bindings,
@@ -61,7 +69,9 @@ final class TemplateContractInspector
             ),
             new TemplateContractCapabilities([
                 'inspection' => TemplateContractCapabilities::READY,
-                'dependency_mapping' => TemplateContractCapabilities::READY,
+                'dependency_mapping' => $repetitionScopedEvidenceIds === []
+                    ? TemplateContractCapabilities::READY
+                    : TemplateContractCapabilities::LIMITED,
             ])
         );
     }
@@ -136,7 +146,7 @@ final class TemplateContractInspector
      *     carrier:DOMElement,
      *     region_index:int
      * } $region
-     * @return list<BindingDescriptor>
+     * @return array{0:list<BindingDescriptor>,1:list<string>}
      */
     private function bindingEvidence(array $region): array
     {
@@ -145,8 +155,21 @@ final class TemplateContractInspector
         );
 
         $bindings = [];
+        $repetitionScopedEvidenceIds = [];
         $sourceOrder = 0;
+        $foreachDepth = 0;
+
         foreach ($inspection->expressions() as $expression) {
+            if ($expression->kind() === 'FOREACH_OPEN') {
+                ++$foreachDepth;
+                continue;
+            }
+
+            if ($expression->kind() === 'FOREACH_END') {
+                $foreachDepth = max(0, $foreachDepth - 1);
+                continue;
+            }
+
             if (!in_array(
                 $expression->kind(),
                 ['SCALAR', 'FILTERED_SCALAR', 'SPECIAL'],
@@ -173,28 +196,37 @@ final class TemplateContractInspector
                 $provenance
             );
 
+            if ($foreachDepth > 0) {
+                $repetitionScopedEvidenceIds[] = $provenance->evidenceId();
+            }
+
             ++$sourceOrder;
         }
 
-        return $bindings;
+        return [$bindings, $repetitionScopedEvidenceIds];
     }
 
     /**
      * @param list<BindingDescriptor> $bindings
+     * @param array<string, true> $repetitionScopedEvidenceIds
      * @return array{0:list<BindingDescriptor>,1:list<DependencyDescriptor>}
      */
-    private function projectRootDependencies(array $bindings): array
+    private function projectRootDependencies(
+        array $bindings,
+        array $repetitionScopedEvidenceIds
+    ): array
     {
         $root = DataScopeDescriptor::root();
         $evidenceByName = [];
 
         foreach ($bindings as $binding) {
             $name = $binding->variableName();
-            if ($name === null || $name === '') {
+            $evidenceId = $binding->provenance()->evidenceId();
+            if ($name === null || $name === '' || isset($repetitionScopedEvidenceIds[$evidenceId])) {
                 continue;
             }
 
-            $evidenceByName[$name][] = $binding->provenance()->evidenceId();
+            $evidenceByName[$name][] = $evidenceId;
         }
 
         $dependenciesByName = [];
