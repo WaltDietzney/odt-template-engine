@@ -244,7 +244,10 @@ final class TemplateContractInspector
         $linkedBindings = [];
         foreach ($bindings as $binding) {
             $name = $binding->variableName();
-            $dependency = $name !== null ? ($dependenciesByName[$name] ?? null) : null;
+            $evidenceId = $binding->provenance()->evidenceId();
+            $dependency = $name !== null && !isset($repetitionScopedEvidenceIds[$evidenceId])
+                ? ($dependenciesByName[$name] ?? null)
+                : null;
 
             $linkedBindings[] = new BindingDescriptor(
                 $binding->kind(),
