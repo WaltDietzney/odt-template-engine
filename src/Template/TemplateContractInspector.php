@@ -524,6 +524,7 @@ final class TemplateContractInspector
         }
 
         $nodeIds = [];
+        $sectionOrdinal = 0;
         foreach ($nodes as $sourceOrder => $node) {
             [$kind, $attribute] = $this->nativeObjectKindAndNameAttribute($node);
             if ($kind === null || $attribute === null) {
@@ -540,11 +541,15 @@ final class TemplateContractInspector
                 $node->nodeName,
                 $this->nativeOwnerChain($node, $region['carrier'])
             );
-            $nodeIds[spl_object_id($node)] = 'n_' . substr(
+            $nativeId = 'n_' . substr(
                 hash('sha256', $kind . '|' . $provenance->evidenceId()),
                 0,
                 16
             );
+            $nodeIds[spl_object_id($node)] = $nativeId;
+            if ($kind === 'section') {
+                $nodeIds['section:' . $sectionOrdinal++] = $nativeId;
+            }
         }
 
         $objects = [];
@@ -655,7 +660,7 @@ final class TemplateContractInspector
                         'malformed_native_section_declaration',
                         'warning',
                         'Section name resembles a declarative control but does not match the recognized Phase-B candidate grammar.',
-                        $nativeNodeIds[spl_object_id($section)] ?? null,
+                        $nativeNodeIds['section:' . ($sourceOrder - 1)] ?? null,
                         $provenance
                     );
                 }
@@ -705,7 +710,7 @@ final class TemplateContractInspector
                 'marker_evidence' => [$provenance],
                 'dependency_ids' => [$dependencyId],
                 'created_scope' => $createdScope,
-                'carrier_native_object_id' => $nativeNodeIds[spl_object_id($section)] ?? null,
+                'carrier_native_object_id' => $nativeNodeIds['section:' . ($sourceOrder - 1)] ?? null,
             ];
         }
     }
