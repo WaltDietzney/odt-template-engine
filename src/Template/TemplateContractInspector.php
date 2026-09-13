@@ -167,6 +167,12 @@ final class TemplateContractInspector
         $controlStack = [];
 
         foreach ($inspection->expressions() as $sourceOrder => $expression) {
+            if ($controlStack === []) {
+                $scopeStack = [$this->declarativeScopeForOwnerChain(
+                    $expression->nativeOwnerChain()
+                )];
+            }
+
             $marker = $this->classicControlMarker($expression);
 
             if ($marker !== null) {
@@ -175,7 +181,8 @@ final class TemplateContractInspector
                     'classic_control_marker',
                     $sourceOrder,
                     $expression->rawText(),
-                    $expression->scope()
+                    $expression->scope(),
+                    $expression->nativeOwnerChain()
                 );
 
                 if ($marker['kind'] === 'FOREACH_OPEN') {
@@ -314,7 +321,8 @@ final class TemplateContractInspector
                 'visible_expression',
                 $sourceOrder,
                 $expression->rawText(),
-                $expression->scope()
+                $expression->scope(),
+                $expression->nativeOwnerChain()
             );
             $dependencyId = $this->ensureDependency(
                 $dependencyStates,
@@ -707,6 +715,39 @@ final class TemplateContractInspector
         return str_starts_with($name, '#foreach')
             || str_starts_with($name, '#if:')
             || str_starts_with($name, '#ifnot:');
+    }
+
+    /**
+     * @param list<string> $ownerChain
+     */
+    private function declarativeScopeForOwnerChain(array $ownerChain): DataScopeDescriptor
+    {
+        $scope = DataScopeDescriptor::root();
+
+        foreach ($ownerChain as $owner) {
+            if (!str_starts_with($owner, 'section:')) {
+                continue;
+            }
+
+            $name = substr($owner, strlen('section:'));
+            $candidate = $this->declarativeSectionCandidate($name);
+            if ($candidate === null || $candidate['kind'] !== 'FOREACH') {
+                continue;
+            }
+
+            $dependencyId = $this->dependencyId(
+                $scope,
+                'COLLECTION',
+                $candidate['reference']
+            );
+            $scope = DataScopeDescriptor::collectionItem(
+                $scope,
+                $dependencyId,
+                $scope->dependencyPath($candidate['reference'], true)
+            );
+        }
+
+        return $scope;
     }
 
     /**
