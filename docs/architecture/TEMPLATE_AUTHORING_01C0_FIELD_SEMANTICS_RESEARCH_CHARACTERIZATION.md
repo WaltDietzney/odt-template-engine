@@ -2,7 +2,7 @@
 
 ## Status
 
-**RESEARCH / CHARACTERIZATION BASELINE — NO PRODUCTION CHANGE / NO PUBLIC API DECISION**
+**EVIDENCE PASS COMPLETE / OPEN GAPS IDENTIFIED — NO PRODUCTION CHANGE / NO PUBLIC API DECISION**
 
 This document opens TEMPLATE-AUTHORING-01 Phase C from the completed Phase-B baseline.
 
@@ -186,4 +186,4 @@ C0 is complete when:
 - research gates for Writer-authored fixtures, scope, lifecycle, types, diagnostics, and interoperability are explicit;
 - no production behavior has changed.
 
-The next step is evidence collection against real LibreOffice-authored field fixtures, beginning with User Fields and Set/Get Variable.
+The initial Writer-authored evidence pass is recorded in `TEMPLATE_AUTHORING_01C0_FIELD_RESEARCH_EVIDENCE.md`. The remaining highest-value gaps are C-R3 collection-scope cloning, C-R4 engine lifecycle behavior, C-R7 malformed/ambiguous field states, and the explicit C-R5 decision on whether 1.0 remains string-only.
