@@ -222,8 +222,8 @@ The approved product direction is additive:
 
 The milestone phases are:
 
-1. **A — Existing Template Reliability & Format Preservation:** characterize conditions, foreach, `nl2br`, lists, and relevant ODF/style boundaries; fix only evidenced defects.
-2. **B — Unified Template Inspection:** compose template-language expressions with Sections, bookmarks, tables, frames, supported fields, declarative controls, dependencies, and diagnostics.
+1. **A — Existing Template Reliability & Format Preservation — COMPLETE:** characterize conditions, foreach, `nl2br`, lists, and relevant ODF/style boundaries; fix only evidenced defects.
+2. **B — Unified Template Inspection — COMPLETE:** compose template-language expressions with Sections, bookmarks, tables, frames, supported fields, declarative controls, dependencies, and diagnostics.
 3. **C — Native Field Binding:** design a bounded field-binding capability from Writer/ODF evidence; User Fields are a primary candidate, while broader field families require justification.
 4. **D — Declarative Structural Controls:** design Section declarations such as `#foreach:experience`, `#if:photo`, and `#ifnot:photo` as orchestration over existing Section mechanics and shared condition semantics.
 5. **E — High-Level Render Pipeline:** define deterministic orchestration for mapped data while preserving the lower-level APIs and lifecycle compatibility.
@@ -232,7 +232,7 @@ The milestone phases are:
 The conceptual target is:
 
 ```php
-$schema = $template->inspect();
+$contract = $template->inspectTemplate();
 $template->render($mappedData);
 ```
 
