@@ -61,6 +61,12 @@ final class TemplateAuthoring01BSlice1ContractSkeletonIntegrationTest extends Te
                     'region_owner' => 'Standard',
                     'carrier_kind' => 'style:header',
                 ],
+                [
+                    'source_part' => 'styles.xml',
+                    'region_kind' => 'MASTER_PAGE_CONTENT',
+                    'region_owner' => 'Standard',
+                    'carrier_kind' => 'style:footer',
+                ],
             ],
             $contract->coverage()->inspectedRegions()
         );
@@ -80,10 +86,10 @@ final class TemplateAuthoring01BSlice1ContractSkeletonIntegrationTest extends Te
         $contract = (new OdtTemplate($this->createTemplate()))->inspectTemplate();
 
         $bindings = $contract->bindings();
-        self::assertCount(2, $bindings);
+        self::assertCount(3, $bindings);
 
         self::assertSame(
-            ['body_name', 'header_name'],
+            ['body_name', 'header_name', 'footer_name'],
             array_map(
                 static fn ($binding): ?string => $binding->variableName(),
                 $bindings
@@ -96,6 +102,11 @@ final class TemplateAuthoring01BSlice1ContractSkeletonIntegrationTest extends Te
         self::assertSame('styles.xml', $bindings[1]->provenance()->sourcePart());
         self::assertSame('MASTER_PAGE_CONTENT', $bindings[1]->provenance()->regionKind());
         self::assertSame('Standard', $bindings[1]->provenance()->regionOwner());
+
+        self::assertSame('styles.xml', $bindings[2]->provenance()->sourcePart());
+        self::assertSame('MASTER_PAGE_CONTENT', $bindings[2]->provenance()->regionKind());
+        self::assertSame('Standard', $bindings[2]->provenance()->regionOwner());
+        self::assertSame('style:footer', $bindings[2]->provenance()->carrierKind());
 
         self::assertSame(
             [],
@@ -175,6 +186,7 @@ final class TemplateAuthoring01BSlice1ContractSkeletonIntegrationTest extends Te
         $template->assign([
             'body_name' => 'Ada',
             'header_name' => 'Header Ada',
+            'footer_name' => 'Footer Ada',
         ]);
         $template->render();
 
@@ -289,6 +301,7 @@ final class TemplateAuthoring01BSlice1ContractSkeletonIntegrationTest extends Te
             . '</table:table>'
             . '<draw:frame draw:name="HeaderFrame"/>'
             . '</style:header>'
+            . '<style:footer><text:p>Footer {{footer_name}}</text:p></style:footer>'
             . '</style:master-page>'
             . '</office:master-styles>'
             . '</office:document-styles>'
