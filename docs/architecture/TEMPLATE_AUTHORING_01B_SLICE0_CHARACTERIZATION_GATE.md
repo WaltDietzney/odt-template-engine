@@ -1,6 +1,6 @@
 # TEMPLATE-AUTHORING-01B Slice 0 — Characterization / Compatibility Gate
 
-Status: ACTIVE GATE / NO PRODUCTION CHANGE
+Status: COMPLETE / GATE GREEN / NO PRODUCTION CHANGE
 
 ## Purpose
 
@@ -113,6 +113,27 @@ Slice 0 is complete when the focused gate is green without new warnings and git 
 No production source file is changed in Slice 0.
 
 Once confirmed, proceed to:
+
+```text
+TEMPLATE-AUTHORING-01B Slice 1 — Contract Skeleton & Source-Region Discovery
+```
+
+
+## Closeout
+
+The Slice 0 compatibility gate was executed successfully.
+
+Result:
+
+```text
+GREEN
+```
+
+The characterization baseline is therefore accepted for Phase-B implementation.
+
+No production source file was changed by Slice 0.
+
+The next implementation slice is:
 
 ```text
 TEMPLATE-AUTHORING-01B Slice 1 — Contract Skeleton & Source-Region Discovery
