@@ -35,7 +35,7 @@ final class TemplateAuthoring01BSlice3ClassicControlsDataScopesTest extends Test
         );
 
         self::assertSame(
-            ['FOREACH', 'IF', 'IF', 'FOREACH', 'IF', 'IF'],
+            ['FOREACH', 'IF', 'IF', 'FOREACH', 'IF', 'IF', 'IFNOT'],
             array_map(static fn ($control): string => $control->kind(), $contract->controls())
         );
 
@@ -57,6 +57,7 @@ final class TemplateAuthoring01BSlice3ClassicControlsDataScopesTest extends Test
                 'after',
                 'status',
                 'priority',
+                'archived',
             ],
             array_keys($dependenciesByPath)
         );
@@ -143,6 +144,17 @@ final class TemplateAuthoring01BSlice3ClassicControlsDataScopesTest extends Test
             array_map(
                 static fn (string $id): string => $pathsById[$id],
                 $rootCondition->dependencyIds()
+            )
+        );
+
+        $ifnot = $controls[6];
+        self::assertSame('IFNOT', $ifnot->kind());
+        self::assertCount(2, $ifnot->markerEvidence());
+        self::assertSame(
+            ['archived'],
+            array_map(
+                static fn (string $id): string => $pathsById[$id],
+                $ifnot->dependencyIds()
             )
         );
 
@@ -262,6 +274,9 @@ final class TemplateAuthoring01BSlice3ClassicControlsDataScopesTest extends Test
             . '<text:p>Priority</text:p>'
             . '<text:p>{{#else}}</text:p>'
             . '<text:p>Fallback</text:p>'
+            . '<text:p>{{#endif}}</text:p>'
+            . '<text:p>{{#ifnot:archived}}</text:p>'
+            . '<text:p>Not archived</text:p>'
             . '<text:p>{{#endif}}</text:p>';
 
         $zip = new ZipArchive();
