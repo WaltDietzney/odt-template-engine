@@ -162,6 +162,7 @@ final class TemplateContractInspector
      * @param list<array<string, mixed>> $controlStates
      * @param array<string, array<string, mixed>> $dependencyStates
      * @param list<TemplateContractDiagnostic> $diagnostics
+     * @param array<string, string> $capabilityReadiness
      */
     private function projectRegionSemantics(
         array $region,
@@ -672,6 +673,7 @@ final class TemplateContractInspector
      * @param list<array<string,mixed>> $controlStates
      * @param array<string,array<string,mixed>> $dependencyStates
      * @param list<TemplateContractDiagnostic> $diagnostics
+     * @param array<string, string> $capabilityReadiness
      */
     private function projectDeclarativeSectionCandidates(
         array $region,
