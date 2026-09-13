@@ -90,7 +90,10 @@ final class TemplateExpressionProjector
                 $expressions[] = new TemplateExpressionDescriptor(
                     $raw, $kind, $variable, $filter, $option,
                     $this->scopeName($scope), count($fragments), array_keys($styles), array_keys($bookmarks),
-                    $classification, $physical, $expressionDiagnostics
+                    $classification,
+                    $physical,
+                    $expressionDiagnostics,
+                    $this->nativeOwnerChain($scope)
                 );
             }
         }
@@ -163,6 +166,27 @@ final class TemplateExpressionProjector
     private function diagnostic(string $code, string $severity, string $message, ?string $expression, DOMNode $scope, string $classification, bool $repairable): TemplateStructureDiagnostic
     {
         return new TemplateStructureDiagnostic($code, $severity, $message, $classification, $repairable, $expression, $this->scopeName($scope));
+    }
+
+    /** @return list<string> */
+    private function nativeOwnerChain(DOMNode $scope): array
+    {
+        $owners = [];
+        for ($current = $scope; $current !== null; $current = $current->parentNode) {
+            if (!$current instanceof DOMElement) {
+                continue;
+            }
+
+            if ($current->nodeName === 'text:section') {
+                $owners[] = 'section:' . $current->getAttribute('text:name');
+            } elseif ($current->nodeName === 'table:table') {
+                $owners[] = 'table:' . $current->getAttribute('table:name');
+            } elseif ($current->nodeName === 'draw:frame') {
+                $owners[] = 'frame:' . $current->getAttribute('draw:name');
+            }
+        }
+
+        return array_reverse($owners);
     }
 
     private function scopeName(DOMNode $scope): string
