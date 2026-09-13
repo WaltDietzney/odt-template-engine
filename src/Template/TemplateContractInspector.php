@@ -44,10 +44,21 @@ final class TemplateContractInspector
                 $diagnostics
             );
 
-            foreach ($this->nativeObjectEvidence($region) as $nativeObject) {
+            [$regionNativeObjects, $nativeNodeIds] = $this->nativeObjectEvidence($region);
+            foreach ($regionNativeObjects as $nativeObject) {
                 $nativeObjects[] = $nativeObject;
             }
+
+            $this->projectDeclarativeSectionCandidates(
+                $region,
+                $nativeNodeIds,
+                $controlStates,
+                $dependencyStates,
+                $diagnostics
+            );
         }
+
+        $this->appendDuplicateNativeNameDiagnostics($nativeObjects, $diagnostics);
 
         $dependencies = $this->materializeDependencies($dependencyStates);
         $controls = $this->materializeControls($controlStates);
@@ -419,8 +430,8 @@ final class TemplateContractInspector
             static fn (array $state): ControlDescriptor => new ControlDescriptor(
                 $state['id'],
                 $state['kind'],
-                'CLASSIC',
-                'SUPPORTED',
+                $state['representation'] ?? 'CLASSIC',
+                $state['support_state'] ?? 'SUPPORTED',
                 $state['scope'],
                 $state['marker_evidence'],
                 $state['dependency_ids'],
@@ -532,6 +543,355 @@ final class TemplateContractInspector
         }
 
         return $objects;
+    }
+
+    private function regionDocument(DOMElement $carrier): DOMDocument
+    {
+        $dom = new DOMDocument('1.0', 'UTF-8');
+        $imported = $dom->importNode($carrier, true);
+        $dom->appendChild($imported);
+
+        return $dom;
+    }
+
+    /**
+     * @param array{
+     *     source_part:string,
+     *     region_kind:string,
+     *     region_owner:?string,
+     *     carrier:DOMElement,
+     *     region_index:int
+     * } $region
+     * @param list<string> $nativeOwnerChain
+     */
+    private function provenance(
+        array $region,
+        string $representationKind,
+        int $sourceOrder,
+        string $sourceValue,
+        ?string $physicalScope = null,
+        array $nativeOwnerChain = []
+    ): SourceProvenance {
+        $seed = implode('|', [
+            $region['source_part'],
+            $region['region_kind'],
+            $region['region_owner'] ?? '',
+            $region['carrier']->nodeName,
+            (string) $region['region_index'],
+            $representationKind,
+            (string) $sourceOrder,
+            $sourceValue,
+        ]);
+
+        return new SourceProvenance(
+            'e_' . substr(hash('sha256', $seed), 0, 16),
+            $region['source_part'],
+            $region['region_kind'],
+            $region['region_owner'],
+            $region['carrier']->nodeName,
+            $representationKind,
+            $sourceOrder,
+            $physicalScope,
+            $nativeOwnerChain
+        );
+    }
+
+    /** @return list<string> */
+    private function nativeOwnerChain(DOMNode $node, DOMElement $regionRoot): array
+    {
+        $owners = [];
+        for ($current = $node->parentNode;
+            $current !== null && $current !== $regionRoot;
+            $current = $current->parentNode
+        ) {
+            if (!$current instanceof DOMElement) {
+                continue;
+            }
+
+            if ($current->nodeName === 'text:section') {
+                $name = $current->getAttribute('text:name');
+                $owners[] = 'section:' . ($name !== '' ? $name : '<unnamed>');
+            } elseif ($current->nodeName === 'table:table') {
+                $name = $current->getAttribute('table:name');
+                $owners[] = 'table:' . ($name !== '' ? $name : '<unnamed>');
+            } elseif ($current->nodeName === 'draw:frame') {
+                $name = $current->getAttribute('draw:name');
+                $owners[] = 'frame:' . ($name !== '' ? $name : '<unnamed>');
+            }
+        }
+
+        return array_reverse($owners);
+    }
+
+    private function xpath(DOMDocument $dom): DOMXPath
+    {
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('draw', self::DRAW_NAMESPACE);
+        $xpath->registerNamespace('office', self::OFFICE_NAMESPACE);
+        $xpath->registerNamespace('style', self::STYLE_NAMESPACE);
+        $xpath->registerNamespace('table', self::TABLE_NAMESPACE);
+        $xpath->registerNamespace('text', self::TEXT_NAMESPACE);
+
+        return $xpath;
+    }
+}    /**
+     * @param array{
+     *     source_part:string,
+     *     region_kind:string,
+     *     region_owner:?string,
+     *     carrier:DOMElement,
+     *     region_index:int
+     * } $region
+     * @return array{0:list<NativeObjectDescriptor>,1:array<int,string>}
+     */
+    private function nativeObjectEvidence(array $region): array
+    {
+        $xpath = $this->xpath($region['carrier']->ownerDocument);
+        $query = './/text:section'
+            . ' | .//text:bookmark'
+            . ' | .//text:bookmark-start'
+            . ' | .//table:table'
+            . ' | .//draw:frame';
+
+        $nodes = [];
+        foreach ($xpath->query($query, $region['carrier']) ?: [] as $node) {
+            if ($node instanceof DOMElement) {
+                $nodes[] = $node;
+            }
+        }
+
+        $nodeIds = [];
+        foreach ($nodes as $sourceOrder => $node) {
+            [$kind, $attribute] = $this->nativeObjectKindAndNameAttribute($node);
+            if ($kind === null || $attribute === null) {
+                continue;
+            }
+
+            $name = $node->getAttribute($attribute);
+            $name = $name !== '' ? $name : null;
+            $provenance = $this->provenance(
+                $region,
+                'native_object_name',
+                $sourceOrder,
+                $name ?? $kind,
+                $node->nodeName,
+                $this->nativeOwnerChain($node, $region['carrier'])
+            );
+            $nodeIds[spl_object_id($node)] = 'n_' . substr(
+                hash('sha256', $kind . '|' . $provenance->evidenceId()),
+                0,
+                16
+            );
+        }
+
+        $objects = [];
+        foreach ($nodes as $sourceOrder => $node) {
+            [$kind, $attribute] = $this->nativeObjectKindAndNameAttribute($node);
+            if ($kind === null || $attribute === null) {
+                continue;
+            }
+
+            $name = $node->getAttribute($attribute);
+            $name = $name !== '' ? $name : null;
+            $provenance = $this->provenance(
+                $region,
+                'native_object_name',
+                $sourceOrder,
+                $name ?? $kind,
+                $node->nodeName,
+                $this->nativeOwnerChain($node, $region['carrier'])
+            );
+
+            $ownerIds = [];
+            for ($owner = $node->parentNode;
+                $owner !== null && $owner !== $region['carrier'];
+                $owner = $owner->parentNode
+            ) {
+                if ($owner instanceof DOMElement
+                    && isset($nodeIds[spl_object_id($owner)])
+                ) {
+                    array_unshift($ownerIds, $nodeIds[spl_object_id($owner)]);
+                }
+            }
+
+            $objects[] = new NativeObjectDescriptor(
+                $kind,
+                $name,
+                $provenance,
+                $nodeIds[spl_object_id($node)],
+                $ownerIds
+            );
+        }
+
+        return [$objects, $nodeIds];
+    }
+
+    /**
+     * @return array{0:?string,1:?string}
+     */
+    private function nativeObjectKindAndNameAttribute(DOMElement $node): array
+    {
+        return match ($node->nodeName) {
+            'text:section' => ['section', 'text:name'],
+            'text:bookmark', 'text:bookmark-start' => ['bookmark', 'text:name'],
+            'table:table' => ['table', 'table:name'],
+            'draw:frame' => ['frame', 'draw:name'],
+            default => [null, null],
+        };
+    }
+
+    /**
+     * @param array{
+     *     source_part:string,
+     *     region_kind:string,
+     *     region_owner:?string,
+     *     carrier:DOMElement,
+     *     region_index:int
+     * } $region
+     * @param array<int,string> $nativeNodeIds
+     * @param list<array<string,mixed>> $controlStates
+     * @param array<string,array<string,mixed>> $dependencyStates
+     * @param list<TemplateContractDiagnostic> $diagnostics
+     */
+    private function projectDeclarativeSectionCandidates(
+        array $region,
+        array $nativeNodeIds,
+        array &$controlStates,
+        array &$dependencyStates,
+        array &$diagnostics
+    ): void {
+        $xpath = $this->xpath($region['carrier']->ownerDocument);
+        $sourceOrder = 0;
+
+        foreach ($xpath->query('.//text:section', $region['carrier']) ?: [] as $section) {
+            if (!$section instanceof DOMElement) {
+                continue;
+            }
+
+            $name = $section->getAttribute('text:name');
+            if ($name === '' || !str_starts_with($name, '#')) {
+                ++$sourceOrder;
+                continue;
+            }
+
+            $provenance = $this->provenance(
+                $region,
+                'native_section_name',
+                $sourceOrder,
+                $name,
+                'text:section',
+                $this->nativeOwnerChain($section, $region['carrier'])
+            );
+            ++$sourceOrder;
+
+            $parsed = $this->declarativeSectionCandidate($name);
+            if ($parsed === null) {
+                $diagnostics[] = new TemplateContractDiagnostic(
+                    'malformed_native_section_declaration',
+                    'warning',
+                    'Section name resembles a declarative control but does not match the recognized Phase-B candidate grammar.',
+                    $nativeNodeIds[spl_object_id($section)] ?? null,
+                    $provenance
+                );
+                continue;
+            }
+
+            $scope = DataScopeDescriptor::root();
+            $dependencyKind = $parsed['kind'] === 'FOREACH' ? 'COLLECTION' : 'VALUE';
+            $referenceName = $parsed['kind'] === 'FOREACH'
+                ? $parsed['reference']
+                : ConditionExpression::parse($parsed['reference'])->referenceName();
+            $dependencyId = $this->ensureDependency(
+                $dependencyStates,
+                $scope,
+                $dependencyKind,
+                $referenceName,
+                $provenance->evidenceId()
+            );
+
+            $createdScope = null;
+            if ($parsed['kind'] === 'FOREACH') {
+                $createdScope = DataScopeDescriptor::collectionItem(
+                    $scope,
+                    $dependencyId,
+                    $scope->dependencyPath($referenceName, true)
+                );
+            }
+
+            $controlStates[] = [
+                'id' => $this->controlId($provenance, $parsed['kind']),
+                'kind' => $parsed['kind'],
+                'representation' => 'NATIVE_SECTION_DECLARATION',
+                'support_state' => 'RECOGNIZED',
+                'scope' => $scope,
+                'marker_evidence' => [$provenance],
+                'dependency_ids' => [$dependencyId],
+                'created_scope' => $createdScope,
+            ];
+        }
+    }
+
+    /**
+     * @return array{kind:string,reference:string}|null
+     */
+    private function declarativeSectionCandidate(string $name): ?array
+    {
+        if (preg_match('/^#foreach:([A-Za-z_][A-Za-z0-9_]*)$/', $name, $match) === 1) {
+            return ['kind' => 'FOREACH', 'reference' => $match[1]];
+        }
+
+        if (preg_match('/^#(if|ifnot):(.+)$/', $name, $match) === 1) {
+            $expression = trim($match[2]);
+            if ($expression === '') {
+                return null;
+            }
+
+            $condition = ConditionExpression::parse($expression);
+            if ($condition->referenceName() === '') {
+                return null;
+            }
+
+            return [
+                'kind' => $match[1] === 'ifnot' ? 'IFNOT' : 'IF',
+                'reference' => $expression,
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * @param list<NativeObjectDescriptor> $nativeObjects
+     * @param list<TemplateContractDiagnostic> $diagnostics
+     */
+    private function appendDuplicateNativeNameDiagnostics(
+        array $nativeObjects,
+        array &$diagnostics
+    ): void {
+        $groups = [];
+        foreach ($nativeObjects as $object) {
+            if ($object->name() === null) {
+                continue;
+            }
+
+            $groups[$object->kind() . '|' . $object->name()][] = $object;
+        }
+
+        foreach ($groups as $objects) {
+            if (count($objects) < 2) {
+                continue;
+            }
+
+            foreach ($objects as $object) {
+                $diagnostics[] = new TemplateContractDiagnostic(
+                    'duplicate_native_name',
+                    'warning',
+                    'Multiple native objects of the same kind use the same authored name.',
+                    $object->id(),
+                    $object->provenance()
+                );
+            }
+        }
     }
 
     private function regionDocument(DOMElement $carrier): DOMDocument
