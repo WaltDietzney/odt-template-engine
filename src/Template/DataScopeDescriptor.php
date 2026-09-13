@@ -8,12 +8,14 @@ namespace OdtTemplateEngine\Template;
 final readonly class DataScopeDescriptor
 {
     public const ROOT = 'ROOT';
+    public const COLLECTION_ITEM = 'COLLECTION_ITEM';
 
     public function __construct(
         private string $id,
         private string $kind,
         private ?string $parentId = null,
-        private ?string $collectionDependencyId = null
+        private ?string $collectionDependencyId = null,
+        private string $pathPrefix = ''
     ) {
     }
 
@@ -22,24 +24,36 @@ final readonly class DataScopeDescriptor
         return new self('scope_root', self::ROOT);
     }
 
-    public function id(): string
-    {
-        return $this->id;
+    public static function collectionItem(
+        self $parent,
+        string $collectionDependencyId,
+        string $collectionPath
+    ): self {
+        $seed = implode('|', [$parent->id(), $collectionDependencyId, $collectionPath]);
+
+        return new self(
+            'scope_' . substr(hash('sha256', $seed), 0, 16),
+            self::COLLECTION_ITEM,
+            $parent->id(),
+            $collectionDependencyId,
+            $collectionPath
+        );
     }
 
-    public function kind(): string
-    {
-        return $this->kind;
-    }
+    public function id(): string { return $this->id; }
+    public function kind(): string { return $this->kind; }
+    public function parentId(): ?string { return $this->parentId; }
+    public function collectionDependencyId(): ?string { return $this->collectionDependencyId; }
+    public function pathPrefix(): string { return $this->pathPrefix; }
 
-    public function parentId(): ?string
+    public function dependencyPath(string $name, bool $collection = false): string
     {
-        return $this->parentId;
-    }
+        $suffix = $collection ? '[]' : '';
+        if ($this->pathPrefix === '') {
+            return $name . $suffix;
+        }
 
-    public function collectionDependencyId(): ?string
-    {
-        return $this->collectionDependencyId;
+        return $this->pathPrefix . '.' . $name . $suffix;
     }
 
     /** @return array<string, mixed> */
@@ -50,6 +64,7 @@ final readonly class DataScopeDescriptor
             'kind' => $this->kind,
             'parent_id' => $this->parentId,
             'collection_dependency_id' => $this->collectionDependencyId,
+            'path_prefix' => $this->pathPrefix,
         ];
     }
 }
