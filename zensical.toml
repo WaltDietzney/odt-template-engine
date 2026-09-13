@@ -37,6 +37,7 @@ nav = [
     { "Table & Cell Styles" = "styling/table-and-cell-styles.md" },
   ] },
   { "Advanced" = [
+    { "Template Inspection" = "advanced/template-inspection.md" },
     { "HTML Import" = "advanced/html-import.md" },
     { "Metadata" = "advanced/metadata.md" },
     { "Page Layout" = "advanced/page-layout.md" },
