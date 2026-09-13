@@ -186,7 +186,7 @@ final class TemplateAuthoring01BSlice4NativeOwnershipDeclarativeCandidatesTest e
 
         $ordinary = $this->nativeObject($contract->nativeObjects(), 'section', '#notes');
         self::assertSame('#notes', $ordinary->name());
-        self::assertNotContains($ordinary->id(), $candidateCarrierIds, true);
+        self::assertFalse(in_array($ordinary->id(), $candidateCarrierIds, true));
 
         $malformedSection = $this->nativeObject(
             $contract->nativeObjects(),
