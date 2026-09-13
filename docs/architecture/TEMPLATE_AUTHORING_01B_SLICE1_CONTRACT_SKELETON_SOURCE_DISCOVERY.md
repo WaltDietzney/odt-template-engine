@@ -1,6 +1,6 @@
 # TEMPLATE-AUTHORING-01B Slice 1 — Contract Skeleton & Source-Region Discovery
 
-Status: ACTIVE IMPLEMENTATION / AWAITING LOCAL GATE
+Status: COMPLETE / GATE GREEN
 
 ## Purpose
 
@@ -234,6 +234,31 @@ Slice 1 may close only when:
 - syntax checks are clean;
 - git diff --check is clean;
 - existing inspection/render semantics remain unchanged.
+
+## Closeout
+
+Slice 1 is complete.
+
+The local closeout gate was reported green for:
+
+- Slice 0 compatibility characterization;
+- Slice 1 contract/source-discovery integration coverage;
+- direct working-DOM mutation stability;
+- syntax checks for the touched production/test files;
+- `git diff --check develop...HEAD`.
+
+The completed slice proves:
+
+- `inspectTemplate()` is an additive public facade returning `TemplateContract`;
+- contract version 1 and its top-level serialization shape are established;
+- bounded authored source discovery covers body content in `content.xml` and page-owned header/footer content in `styles.xml`;
+- source provenance and deterministic evidence identity foundations are present;
+- initial visible binding and native-object evidence are projected without claiming scoped dependency/control semantics;
+- `inspectTemplate()` remains semantically tied to the original authored source across render, save, and direct working-document mutation;
+- existing `inspect()` and `inspectTemplateStructure()` lifecycle semantics remain unchanged;
+- no Phase-C, Phase-D, or Phase-E execution semantics are introduced.
+
+No Slice-2 dependency graph or Slice-3 control/data-scope semantics are claimed by this closeout.
 
 After closeout, proceed to:
 
