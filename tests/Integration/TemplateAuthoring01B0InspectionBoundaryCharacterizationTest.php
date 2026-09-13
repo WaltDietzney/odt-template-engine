@@ -63,7 +63,7 @@ final class TemplateAuthoring01B0InspectionBoundaryCharacterizationTest extends 
         self::assertSame([], $inspection->expressions());
     }
 
-    public function testExpressionInspectionGrammarIsNarrowerThanRuntimeConditionEvaluator(): void
+    public function testExpressionInspectionGrammarIsAlignedWithRuntimeConditionEvaluatorAfterSlice5Gate(): void
     {
         $dom = new DOMDocument('1.0', 'UTF-8');
         self::assertTrue($dom->loadXML(
@@ -75,15 +75,9 @@ final class TemplateAuthoring01B0InspectionBoundaryCharacterizationTest extends 
         $inspection = (new TemplateStructureInspector())->inspect($dom);
 
         self::assertCount(1, $inspection->expressions());
-        self::assertSame('UNSUPPORTED', $inspection->expressions()[0]->kind());
-        self::assertSame('UNSAFE', $inspection->expressions()[0]->classification());
-        self::assertSame(
-            ['unsupported_template_expression'],
-            array_map(
-                static fn ($diagnostic): string => $diagnostic->code(),
-                $inspection->diagnostics()
-            )
-        );
+        self::assertSame('CONDITION_OPEN', $inspection->expressions()[0]->kind());
+        self::assertNotSame('UNSAFE', $inspection->expressions()[0]->classification());
+        self::assertSame([], $inspection->diagnostics());
     }
 
     public function testDocumentInspectionHasDifferentDocumentPartCoveragePerNativeObjectType(): void
