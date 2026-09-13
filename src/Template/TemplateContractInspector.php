@@ -62,6 +62,7 @@ final class TemplateContractInspector
 
         $dependencies = $this->materializeDependencies($dependencyStates);
         $controls = $this->materializeControls($controlStates);
+        $capabilities = $this->composeCapabilities($diagnostics);
 
         return new TemplateContract(
             $bindings,
@@ -73,11 +74,37 @@ final class TemplateContractInspector
                 $coverageRegions,
                 ['meta.xml', 'settings.xml', 'META-INF/manifest.xml', 'embedded_objects']
             ),
-            new TemplateContractCapabilities([
-                'inspection' => TemplateContractCapabilities::READY,
-                'dependency_mapping' => TemplateContractCapabilities::READY,
-            ])
+            $capabilities
         );
+    }
+
+    /**
+     * @param list<TemplateContractDiagnostic> $diagnostics
+     */
+    private function composeCapabilities(array $diagnostics): TemplateContractCapabilities
+    {
+        $dependencyMapping = TemplateContractCapabilities::READY;
+
+        foreach ($diagnostics as $diagnostic) {
+            if (in_array(
+                $diagnostic->code(),
+                [
+                    'unsupported_template_expression',
+                    'malformed_template_expression',
+                    'expression_crosses_text_flow_boundary',
+                    'malformed_native_section_declaration',
+                ],
+                true
+            )) {
+                $dependencyMapping = TemplateContractCapabilities::LIMITED;
+                break;
+            }
+        }
+
+        return new TemplateContractCapabilities([
+            'inspection' => TemplateContractCapabilities::READY,
+            'dependency_mapping' => $dependencyMapping,
+        ]);
     }
 
     /**
@@ -161,6 +188,7 @@ final class TemplateContractInspector
         $inspection = (new TemplateStructureInspector())->inspect(
             $this->regionDocument($region['carrier'])
         );
+        $this->appendStructureDiagnostics($inspection, $region, $diagnostics);
 
         $root = DataScopeDescriptor::root();
         $scopeStack = [$root];
@@ -341,6 +369,40 @@ final class TemplateContractInspector
                 'SUPPORTED',
                 $provenance,
                 $dependencyId
+            );
+        }
+    }
+
+    /**
+     * @param array{
+     *     source_part:string,
+     *     region_kind:string,
+     *     region_owner:?string,
+     *     carrier:DOMElement,
+     *     region_index:int
+     * } $region
+     * @param list<TemplateContractDiagnostic> $diagnostics
+     */
+    private function appendStructureDiagnostics(
+        TemplateStructureInspection $inspection,
+        array $region,
+        array &$diagnostics
+    ): void {
+        foreach ($inspection->diagnostics() as $sourceOrder => $finding) {
+            $provenance = $this->provenance(
+                $region,
+                'template_structure_diagnostic',
+                $sourceOrder,
+                $finding->expression() ?? $finding->code(),
+                $finding->scope()
+            );
+
+            $diagnostics[] = new TemplateContractDiagnostic(
+                $finding->code(),
+                $finding->severity(),
+                $finding->message(),
+                null,
+                $provenance
             );
         }
     }
