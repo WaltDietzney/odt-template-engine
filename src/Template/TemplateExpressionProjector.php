@@ -90,7 +90,10 @@ final class TemplateExpressionProjector
                 $expressions[] = new TemplateExpressionDescriptor(
                     $raw, $kind, $variable, $filter, $option,
                     $this->scopeName($scope), count($fragments), array_keys($styles), array_keys($bookmarks),
-                    $classification, $physical, $expressionDiagnostics
+                    $classification,
+                    $physical,
+                    $expressionDiagnostics,
+                    $this->nativeOwnerChain($scope)
                 );
             }
         }
@@ -142,13 +145,29 @@ final class TemplateExpressionProjector
                 : ['FILTERED_SCALAR', $m[2], $m[1], $m[3] ?? null];
         }
         return match (true) {
-            preg_match('/^#(?:if|ifnot|elseif):\w+$/', $body) === 1 => ['CONDITION_OPEN', substr($body, 1), null, null],
+            $this->isClassicConditionMarker($body) => ['CONDITION_OPEN', substr($body, 1), null, null],
             $body === '#else' => ['CONDITION_ELSE', null, null, null],
             $body === '#endif' => ['CONDITION_END', null, null, null],
             preg_match('/^#foreach:\w+$/', $body) === 1 => ['FOREACH_OPEN', substr($body, 9), null, null],
             $body === '#endforeach' => ['FOREACH_END', null, null, null],
             default => ['UNSUPPORTED', null, null, null],
         };
+    }
+
+    private function isClassicConditionMarker(string $body): bool
+    {
+        if (preg_match('/^#(?:if|ifnot|elseif):(.+)$/', $body, $match) !== 1) {
+            return false;
+        }
+
+        $expression = trim($match[1]);
+        if ($expression === '') {
+            return false;
+        }
+
+        $condition = ConditionExpression::parse($expression);
+
+        return preg_match('/^\\w+$/', $condition->referenceName()) === 1;
     }
 
     private function unbalancedDiagnostics(string $text, DOMNode $scope, array &$diagnostics): void
@@ -163,6 +182,27 @@ final class TemplateExpressionProjector
     private function diagnostic(string $code, string $severity, string $message, ?string $expression, DOMNode $scope, string $classification, bool $repairable): TemplateStructureDiagnostic
     {
         return new TemplateStructureDiagnostic($code, $severity, $message, $classification, $repairable, $expression, $this->scopeName($scope));
+    }
+
+    /** @return list<string> */
+    private function nativeOwnerChain(DOMNode $scope): array
+    {
+        $owners = [];
+        for ($current = $scope; $current !== null; $current = $current->parentNode) {
+            if (!$current instanceof DOMElement) {
+                continue;
+            }
+
+            if ($current->nodeName === 'text:section') {
+                $owners[] = 'section:' . $current->getAttribute('text:name');
+            } elseif ($current->nodeName === 'table:table') {
+                $owners[] = 'table:' . $current->getAttribute('table:name');
+            } elseif ($current->nodeName === 'draw:frame') {
+                $owners[] = 'frame:' . $current->getAttribute('draw:name');
+            }
+        }
+
+        return array_reverse($owners);
     }
 
     private function scopeName(DOMNode $scope): string

@@ -81,6 +81,35 @@ final class TemplateStructureInspectorTest extends TestCase
         self::assertContains('expression_crosses_text_flow_boundary', array_map(static fn ($diagnostic): string => $diagnostic->code(), $inspection->diagnostics()));
     }
 
+    public function testRecognizesRuntimeSupportedComparisonConditionGrammar(): void
+    {
+        $dom = new DOMDocument('1.0', 'UTF-8');
+        $dom->loadXML(
+            '<root xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">'
+            . '<text:p>{{#if:gender=="female"}}</text:p>'
+            . '<text:p>{{#elseif:score>=10}}</text:p>'
+            . '<text:p>{{#endif}}</text:p>'
+            . '</root>'
+        );
+
+        $inspection = (new TemplateStructureInspector())->inspect($dom);
+
+        self::assertSame(
+            ['CONDITION_OPEN', 'CONDITION_OPEN', 'CONDITION_END'],
+            array_map(
+                static fn ($expression): string => $expression->kind(),
+                $inspection->expressions()
+            )
+        );
+        self::assertNotContains(
+            'unsupported_template_expression',
+            array_map(
+                static fn ($diagnostic): string => $diagnostic->code(),
+                $inspection->diagnostics()
+            )
+        );
+    }
+
     public function testToArrayIsDeterministicAndDoesNotExposeDom(): void
     {
         $dom = new DOMDocument('1.0', 'UTF-8');

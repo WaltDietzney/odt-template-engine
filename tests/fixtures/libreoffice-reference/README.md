@@ -94,6 +94,32 @@ engine snapshot.
 - Status: original fixture captured
 - Round-trip: not yet performed
 
+### TEMPLATE-AUTHORING-01B — Inspection contract reference
+
+- File: `odt/TEMPLATE-AUTHORING-01B-inspection-contract.odt`
+- LibreOffice: 24.2.7.2 (X86_64), Community, Build 420(Build:2)
+- Platform: Linux x86_64
+- Creation date: 2026-09-13T10:57:17.202202729
+- Last saved date in fixture metadata: 2026-09-13T11:20:40.957564266
+- ODF version: 1.3
+- SHA-256: `b115175bfc67544ba174c3d6a61804723d4881023a176f0844d3d25cf9ea2a60`
+- Status: original fixture captured
+- Round-trip: not yet performed
+- Manual creation procedure:
+  1. Create a one-page Writer document in LibreOffice.
+  2. Add a header on master page `Standard` containing `{{document_title}}`.
+  3. Add body placeholders `{{name}}` and `{{profession}}`.
+  4. Add Section `#if:show_profile` containing visible profile text and `{{profile}}`.
+  5. Add Section `#foreach:experience`.
+  6. Inside it, add nested Section `#ifnot:hidden` containing Table `ExperienceTable`.
+  7. Inside `#foreach:experience`, add ordinary Section `ExperienceBadge` containing
+     `{{company}}` and `{{role}}`.
+  8. Add ordinary Section `ProfileNotes`.
+  9. Add Bookmark `ProfileBookmark`.
+  10. Add a Writer text frame named `Textrahmen 1`.
+- Purpose: empirical Writer-authored reference for TEMPLATE-AUTHORING-01B source coverage,
+  native ownership, declarative Section candidates, scoped dependencies, and header provenance.
+
 ## Naming
 
 Use the stable reference ID followed by a descriptive name, for example:

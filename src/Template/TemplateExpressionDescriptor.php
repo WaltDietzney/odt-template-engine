@@ -21,6 +21,7 @@ final readonly class TemplateExpressionDescriptor
         private string $classification,
         private string $physicalNormalization,
         private array $diagnostics = [],
+        private array $nativeOwnerChain = [],
     ) {}
 
     public function rawText(): string { return $this->rawText; }
@@ -36,6 +37,7 @@ final readonly class TemplateExpressionDescriptor
     public function classification(): string { return $this->classification; }
     public function physicalNormalization(): string { return $this->physicalNormalization; }
     /** @return list<string> */ public function diagnostics(): array { return $this->diagnostics; }
+    /** @return list<string> */ public function nativeOwnerChain(): array { return $this->nativeOwnerChain; }
 
     /** @return array<string, mixed> */
     public function toArray(): array
