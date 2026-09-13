@@ -19,7 +19,8 @@ final readonly class BindingDescriptor
         private ?string $filterName,
         private ?string $filterOption,
         private string $supportState,
-        private SourceProvenance $provenance
+        private SourceProvenance $provenance,
+        private ?string $dependencyId = null
     ) {
     }
 
@@ -48,6 +49,11 @@ final readonly class BindingDescriptor
         return $this->provenance;
     }
 
+    public function dependencyId(): ?string
+    {
+        return $this->dependencyId;
+    }
+
     /** @return array<string, mixed> */
     public function toArray(): array
     {
@@ -58,6 +64,7 @@ final readonly class BindingDescriptor
             'filter_name' => $this->filterName,
             'filter_option' => $this->filterOption,
             'support_state' => $this->supportState,
+            'dependency_id' => $this->dependencyId,
             'provenance' => $this->provenance->toArray(),
         ];
     }
