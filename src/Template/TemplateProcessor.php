@@ -518,28 +518,6 @@ final class TemplateProcessor
      */
     public function evaluateCondition(string $expression, array $values): bool
     {
-        if (preg_match('/^(\w+)\s*(==|!=|>=|<=|>|<)\s*(.+)$/', $expression, $match)) {
-            $variable = $match[1];
-            $operator = $match[2];
-            $value = trim($match[3], '"\'');
-
-            $left = $values[$variable] ?? null;
-            if (is_numeric($left) && is_numeric($value)) {
-                $left = (float) $left;
-                $value = (float) $value;
-            }
-
-            return match ($operator) {
-                '==' => $left == $value,
-                '!=' => $left != $value,
-                '>' => $left > $value,
-                '<' => $left < $value,
-                '>=' => $left >= $value,
-                '<=' => $left <= $value,
-            };
-        }
-
-        $value = $values[$expression] ?? false;
-        return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        return ConditionExpression::parse($expression)->evaluate($values);
     }
 }
