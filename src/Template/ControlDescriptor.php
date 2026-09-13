@@ -19,7 +19,8 @@ final readonly class ControlDescriptor
         private DataScopeDescriptor $scope,
         private array $markerEvidence,
         private array $dependencyIds = [],
-        private ?DataScopeDescriptor $createdScope = null
+        private ?DataScopeDescriptor $createdScope = null,
+        private ?string $carrierNativeObjectId = null
     ) {
     }
 
@@ -31,6 +32,7 @@ final readonly class ControlDescriptor
     /** @return list<SourceProvenance> */ public function markerEvidence(): array { return $this->markerEvidence; }
     /** @return list<string> */ public function dependencyIds(): array { return $this->dependencyIds; }
     public function createdScope(): ?DataScopeDescriptor { return $this->createdScope; }
+    public function carrierNativeObjectId(): ?string { return $this->carrierNativeObjectId; }
 
     /** @return array<string, mixed> */
     public function toArray(): array
@@ -47,6 +49,7 @@ final readonly class ControlDescriptor
             ),
             'dependency_ids' => $this->dependencyIds,
             'created_scope' => $this->createdScope?->toArray(),
+            'carrier_native_object_id' => $this->carrierNativeObjectId,
         ];
     }
 }
