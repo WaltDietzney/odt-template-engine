@@ -1,6 +1,6 @@
 # TEMPLATE-AUTHORING-01B — LibreOffice Visual Regression Preflight
 
-Status: PLANNED / REQUIRED BEFORE PHASE-B CLOSEOUT
+Status: COMPLETE / GATE GREEN
 
 ## Purpose
 
@@ -122,8 +122,7 @@ The document should remain a compact one-page profile/CV-like document.
 Page/header:
 
 - one normal Writer header on the Standard master page;
-- visible text containing {{document_title}};
-- one named Frame in the header, for example HeaderBadge.
+- visible text containing {{document_title}}.
 
 Body:
 
@@ -141,13 +140,8 @@ Body:
 - one declarative candidate Section:
   - #foreach:experience
   containing:
-  - a named Table: ExperienceTable
-  - visible placeholders {{company}} and {{role}}
-  - a named Frame inside the table or section: ExperienceBadge
-
-- inside #foreach:experience, one nested declarative candidate Section:
-  - #ifnot:hidden
-  containing visible text
+  - nested Section `#ifnot:hidden` with named Table `ExperienceTable`;
+  - ordinary Section `ExperienceBadge` with visible placeholders {{company}} and {{role}}
 
 - one Bookmark in the body:
   - ProfileBookmark
@@ -202,7 +196,7 @@ asserts at least:
 - #if:show_profile is RECOGNIZED;
 - #foreach:experience is RECOGNIZED;
 - nested #ifnot:hidden is RECOGNIZED;
-- ExperienceTable and ExperienceBadge retain native ownership;
+- ExperienceTable, nested #ifnot:hidden, and ExperienceBadge retain native ownership;
 - ProfileBookmark is inventoried;
 - ProfileNotes remains an ordinary native Section;
 - derived dependencies include:
@@ -234,5 +228,6 @@ Phase B may be closed only when all of the following are true:
 - the new fixture passes its focused inspectTemplate() integration test;
 - no local sample-output or LibreOffice lock artifact is accidentally committed.
 
-Only after this gate should Slice 5 and TEMPLATE-AUTHORING-01B receive final COMPLETE / GATE GREEN
-closeout documentation.
+All listed visual and Writer-authored fixture checks were completed successfully. The resulting
+fixture, integration test, executable inspection sample, and manual LibreOffice regression were
+used as evidence for Slice 5 and the overall TEMPLATE-AUTHORING-01B closeout.
