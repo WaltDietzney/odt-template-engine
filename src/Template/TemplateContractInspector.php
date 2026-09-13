@@ -435,7 +435,8 @@ final class TemplateContractInspector
                 $state['scope'],
                 $state['marker_evidence'],
                 $state['dependency_ids'],
-                $state['created_scope']
+                $state['created_scope'],
+                $state['carrier_native_object_id'] ?? null
             ),
             $states
         );
@@ -616,6 +617,7 @@ final class TemplateContractInspector
     ): void {
         $xpath = $this->xpath($region['carrier']->ownerDocument);
         $sourceOrder = 0;
+        $sectionCreatedScopes = [];
 
         foreach ($xpath->query('.//text:section', $region['carrier']) ?: [] as $section) {
             if (!$section instanceof DOMElement) {
@@ -640,17 +642,30 @@ final class TemplateContractInspector
 
             $parsed = $this->declarativeSectionCandidate($name);
             if ($parsed === null) {
-                $diagnostics[] = new TemplateContractDiagnostic(
-                    'malformed_native_section_declaration',
-                    'warning',
-                    'Section name resembles a declarative control but does not match the recognized Phase-B candidate grammar.',
-                    $nativeNodeIds[spl_object_id($section)] ?? null,
-                    $provenance
-                );
+                if ($this->resemblesDeclarativeSectionCandidate($name)) {
+                    $diagnostics[] = new TemplateContractDiagnostic(
+                        'malformed_native_section_declaration',
+                        'warning',
+                        'Section name resembles a declarative control but does not match the recognized Phase-B candidate grammar.',
+                        $nativeNodeIds[spl_object_id($section)] ?? null,
+                        $provenance
+                    );
+                }
                 continue;
             }
 
             $scope = DataScopeDescriptor::root();
+            for ($owner = $section->parentNode;
+                $owner !== null && $owner !== $region['carrier'];
+                $owner = $owner->parentNode
+            ) {
+                if ($owner instanceof DOMElement
+                    && isset($sectionCreatedScopes[spl_object_id($owner)])
+                ) {
+                    $scope = $sectionCreatedScopes[spl_object_id($owner)];
+                    break;
+                }
+            }
             $dependencyKind = $parsed['kind'] === 'FOREACH' ? 'COLLECTION' : 'VALUE';
             $referenceName = $parsed['kind'] === 'FOREACH'
                 ? $parsed['reference']
@@ -670,6 +685,7 @@ final class TemplateContractInspector
                     $dependencyId,
                     $scope->dependencyPath($referenceName, true)
                 );
+                $sectionCreatedScopes[spl_object_id($section)] = $createdScope;
             }
 
             $controlStates[] = [
@@ -681,8 +697,16 @@ final class TemplateContractInspector
                 'marker_evidence' => [$provenance],
                 'dependency_ids' => [$dependencyId],
                 'created_scope' => $createdScope,
+                'carrier_native_object_id' => $nativeNodeIds[spl_object_id($section)] ?? null,
             ];
         }
+    }
+
+    private function resemblesDeclarativeSectionCandidate(string $name): bool
+    {
+        return str_starts_with($name, '#foreach')
+            || str_starts_with($name, '#if:')
+            || str_starts_with($name, '#ifnot:');
     }
 
     /**
