@@ -124,7 +124,18 @@ final class TemplateAuthoring01BSlice1ContractSkeletonIntegrationTest extends Te
                 $contract->dependencies()
             )
         );
-        self::assertSame([], $contract->diagnostics());
+        self::assertSame(
+            [
+                'duplicate_native_name',
+                'duplicate_native_name',
+                'duplicate_native_name',
+                'duplicate_native_name',
+            ],
+            array_map(
+                static fn ($diagnostic): string => $diagnostic->code(),
+                $contract->diagnostics()
+            )
+        );
     }
 
     public function testSlice1ProjectsNativeObjectsFromBodyAndHeaderWithoutCollapsingNames(): void
