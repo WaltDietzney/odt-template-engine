@@ -13,7 +13,7 @@ final readonly class TemplateContract
      * @param list<BindingDescriptor> $bindings
      * @param list<object> $controls
      * @param list<NativeObjectDescriptor> $nativeObjects
-     * @param list<object> $dependencies
+     * @param list<DependencyDescriptor> $dependencies
      * @param list<object> $diagnostics
      */
     public function __construct(
@@ -45,7 +45,7 @@ final readonly class TemplateContract
         return $this->nativeObjects;
     }
 
-    /** @return list<object> */
+    /** @return list<DependencyDescriptor> */
     public function dependencies(): array
     {
         return $this->dependencies;
@@ -86,7 +86,7 @@ final readonly class TemplateContract
                 $this->nativeObjects
             ),
             'dependencies' => array_map(
-                static fn (object $item): array => $item->toArray(),
+                static fn (DependencyDescriptor $item): array => $item->toArray(),
                 $this->dependencies
             ),
             'capabilities' => $this->capabilities->toArray(),
