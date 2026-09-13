@@ -29,8 +29,8 @@ final class TemplateAuthoring01BSlice4NativeOwnershipDeclarativeCandidatesTest e
         $contract = $template->inspectTemplate();
 
         $objects = $contract->nativeObjects();
-        self::assertCount(11, $objects);
-        self::assertCount(11, array_unique(array_map(
+        self::assertCount(12, $objects);
+        self::assertCount(12, array_unique(array_map(
             static fn ($object): string => $object->id(),
             $objects
         )));
@@ -174,22 +174,19 @@ final class TemplateAuthoring01BSlice4NativeOwnershipDeclarativeCandidatesTest e
         ));
         self::assertCount(1, $malformed);
 
-        $nativeControlNames = array_map(
-            static fn ($control): string =>
-                $control->markerEvidence()[0]->nativeOwnerChain() === []
-                    ? ''
-                    : implode('/', $control->markerEvidence()[0]->nativeOwnerChain()),
-            array_values(array_filter(
-                $contract->controls(),
-                static fn ($control): bool =>
-                    $control->representation() === 'NATIVE_SECTION_DECLARATION'
-            ))
+        $nativeControls = array_values(array_filter(
+            $contract->controls(),
+            static fn ($control): bool =>
+                $control->representation() === 'NATIVE_SECTION_DECLARATION'
+        ));
+        $candidateCarrierIds = array_map(
+            static fn ($control): ?string => $control->carrierNativeObjectId(),
+            $nativeControls
         );
-
-        self::assertNotContains('section:#notes', $nativeControlNames);
 
         $ordinary = $this->nativeObject($contract->nativeObjects(), 'section', '#notes');
         self::assertSame('#notes', $ordinary->name());
+        self::assertNotContains($ordinary->id(), $candidateCarrierIds, true);
 
         $malformedSection = $this->nativeObject(
             $contract->nativeObjects(),
