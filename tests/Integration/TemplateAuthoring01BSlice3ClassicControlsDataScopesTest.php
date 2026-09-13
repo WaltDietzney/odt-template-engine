@@ -163,7 +163,7 @@ final class TemplateAuthoring01BSlice3ClassicControlsDataScopesTest extends Test
         }
     }
 
-    public function testUnifiedInspectionUsesRuntimeConditionGrammarWithoutChangingFocusedInspection(): void
+    public function testUnifiedAndFocusedInspectionUseRuntimeConditionGrammar(): void
     {
         $template = new OdtTemplate($this->createTemplate());
         $contract = $template->inspectTemplate();
@@ -176,15 +176,19 @@ final class TemplateAuthoring01BSlice3ClassicControlsDataScopesTest extends Test
         self::assertContains('status', $paths);
 
         $focused = $template->inspectTemplateStructure();
-        $unsupported = array_values(array_filter(
+        $conditions = array_values(array_filter(
             $focused->expressions(),
             static fn ($expression): bool => $expression->rawText() === '{{#if:gender=="female"}}'
                 || $expression->rawText() === '{{#if:status=="active"}}'
         ));
-        self::assertCount(2, $unsupported);
-        foreach ($unsupported as $expression) {
-            self::assertSame('UNSUPPORTED', $expression->kind());
-            self::assertSame('UNSAFE', $expression->classification());
+        self::assertCount(2, $conditions);
+        foreach ($conditions as $expression) {
+            self::assertSame('CONDITION_OPEN', $expression->kind());
+            self::assertNotSame('UNSAFE', $expression->classification());
+            self::assertNotContains(
+                'unsupported_template_expression',
+                $expression->diagnostics()
+            );
         }
 
         $processor = new TemplateProcessor();
