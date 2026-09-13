@@ -47,11 +47,13 @@ final class TemplateContractInspector
             }
         }
 
+        [$bindings, $dependencies] = $this->projectRootDependencies($bindings);
+
         return new TemplateContract(
             $bindings,
             [],
             $nativeObjects,
-            [],
+            $dependencies,
             [],
             new TemplateContractCoverage(
                 $coverageRegions,
@@ -59,7 +61,7 @@ final class TemplateContractInspector
             ),
             new TemplateContractCapabilities([
                 'inspection' => TemplateContractCapabilities::READY,
-                'dependency_mapping' => TemplateContractCapabilities::BLOCKED,
+                'dependency_mapping' => TemplateContractCapabilities::READY,
             ])
         );
     }
@@ -175,6 +177,68 @@ final class TemplateContractInspector
         }
 
         return $bindings;
+    }
+
+    /**
+     * @param list<BindingDescriptor> $bindings
+     * @return array{0:list<BindingDescriptor>,1:list<DependencyDescriptor>}
+     */
+    private function projectRootDependencies(array $bindings): array
+    {
+        $root = DataScopeDescriptor::root();
+        $evidenceByName = [];
+
+        foreach ($bindings as $binding) {
+            $name = $binding->variableName();
+            if ($name === null || $name === '') {
+                continue;
+            }
+
+            $evidenceByName[$name][] = $binding->provenance()->evidenceId();
+        }
+
+        $dependenciesByName = [];
+        foreach ($evidenceByName as $name => $evidenceIds) {
+            $dependenciesByName[$name] = new DependencyDescriptor(
+                $this->dependencyId($root, 'VALUE', $name),
+                'VALUE',
+                $name,
+                $root,
+                $name,
+                $evidenceIds
+            );
+        }
+
+        $linkedBindings = [];
+        foreach ($bindings as $binding) {
+            $name = $binding->variableName();
+            $dependency = $name !== null ? ($dependenciesByName[$name] ?? null) : null;
+
+            $linkedBindings[] = new BindingDescriptor(
+                $binding->kind(),
+                $binding->rawText(),
+                $binding->variableName(),
+                $binding->filterName(),
+                $binding->filterOption(),
+                $binding->supportState(),
+                $binding->provenance(),
+                $dependency?->id()
+            );
+        }
+
+        return [$linkedBindings, array_values($dependenciesByName)];
+    }
+
+    private function dependencyId(
+        DataScopeDescriptor $scope,
+        string $kind,
+        string $name
+    ): string {
+        return 'd_' . substr(hash('sha256', implode('|', [
+            $scope->id(),
+            $kind,
+            $name,
+        ])), 0, 16);
     }
 
     /**
