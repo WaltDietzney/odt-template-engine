@@ -392,7 +392,7 @@ Conceptual graph:
 
 ```text
 ROOT
-└── experience[] 
+└── experience[]
     └── experience-item
         ├── company
         └── projects[]
