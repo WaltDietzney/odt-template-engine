@@ -76,7 +76,7 @@ final class TemplateAuthoring01BSlice1ContractSkeletonIntegrationTest extends Te
             $contract->capabilities()->readiness('inspection')
         );
         self::assertSame(
-            TemplateContractCapabilities::BLOCKED,
+            TemplateContractCapabilities::READY,
             $contract->capabilities()->readiness('dependency_mapping')
         );
     }
@@ -117,7 +117,13 @@ final class TemplateAuthoring01BSlice1ContractSkeletonIntegrationTest extends Te
         );
 
         self::assertSame([], $contract->controls());
-        self::assertSame([], $contract->dependencies());
+        self::assertSame(
+            ['body_name', 'header_name', 'footer_name'],
+            array_map(
+                static fn ($dependency): string => $dependency->name(),
+                $contract->dependencies()
+            )
+        );
         self::assertSame([], $contract->diagnostics());
     }
 
