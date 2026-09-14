@@ -1,6 +1,6 @@
 # TEMPLATE-AUTHORING-01C0 — Field Research Evidence Assessment
 
-Status: EVIDENCE PASS COMPLETE / OPEN GAPS IDENTIFIED / NO PRODUCTION CHANGE
+Status: COMPLETE / GATE GREEN / NO PRODUCTION CHANGE
 
 ## Purpose
 
@@ -287,28 +287,31 @@ The exact public mutation API and whether native field binding participates in `
 
 ## 8. C-R5 — type/value semantics
 
-Status: **OPEN BEYOND STRING / STRING EVIDENCE GREEN**
+Status: **GREEN — STRING USER FIELDS ONLY FOR PHASE C v1**
 
-All characterized User Field and Set/Get examples relevant to C currently use:
+All characterized User Field and Set/Get examples relevant to the approved Phase-C binding candidate use:
 
 ```xml
 office:value-type="string"
 ```
 
-No evidence currently justifies claiming equivalent semantics for:
+The Phase-C v1 scope is deliberately bounded to **string User Fields**.
+
+No Phase-C v1 support is claimed for:
 
 - numeric values;
 - date/time values;
 - booleans;
 - currency;
-- formulas.
+- formulas;
+- Set/Get Variable as a general binding model;
+- other Writer field families.
 
-Two safe paths remain available for the Change Contract:
+This is a scope decision, not a statement that those mechanisms are unimportant or permanently unsupported.
 
-1. deliberately approve **string User Fields only** for the bounded 1.0 slice; or
-2. conduct additional Writer research before approving more types.
+Broader Writer field types and field families are deferred to post-1.0 work, targeted for version 1.1 or later unless a concrete earlier dependency emerges.
 
-C0 does not choose between them.
+This keeps Phase C bounded around the field semantics for which source identity, ROOT scope, lifecycle, Writer reevaluation, cross-part synchronization, interoperability boundary, and ambiguity behavior have all been characterized.
 
 ## 9. C-R6 — interoperability / finalization boundary
 
@@ -375,7 +378,7 @@ The characterization suite is green. C-R7 therefore has enough evidence for the 
 | C-R2 | EVIDENCE GREEN / contract decision pending | cross-part declarations and repeated references established |
 | C-R3 | GREEN | cloning proves native containment does not localize User Field scope |
 | C-R4 | GREEN | declaration mutation, render/save/reopen, repeated application, load reset, and cross-part synchronization characterized |
-| C-R5 | STRING GREEN / broader types open | no basis for non-string support yet |
+| C-R5 | GREEN | Phase C v1 is intentionally limited to string User Fields; broader field support deferred to 1.1+ |
 | C-R6 | BOUNDARY GREEN | ODT/Writer/PDF evidence exists; no broad DOCX semantic promise |
 | C-R7 | GREEN | bounded User Field ambiguity states characterized; diagnostic policy remains a Change-Contract decision |
 
@@ -399,10 +402,24 @@ Set/Get Variable
 
 This is still a research conclusion, not a public API decision.
 
-## 13. Next evidence work
+## 13. C0 conclusion
 
-The highest-value remaining work is now narrow:
+All C0 research gates are green for the bounded Phase-C v1 scope.
 
-1. decide whether Phase C is intentionally string-only for 1.0 or whether C-R5 receives additional type research.
+The approved research baseline is:
 
-Set/Get Variable should not receive implementation work until there is a concrete requirement that justifies modeling document-flow state.
+```text
+Phase C v1
+    -> Writer User Fields
+    -> office:value-type="string"
+    -> logical ROOT scope
+    -> cross-part declaration synchronization
+    -> multiple declaration/reference evidence sites
+    -> no automatic foreach/item-scope localization
+```
+
+Set/Get Variable remains outside the Phase-C v1 binding model because its semantics are document-flow-sensitive.
+
+Additional Writer field types and field families are deferred to version 1.1 or later unless a concrete earlier dependency emerges.
+
+C0 is complete. The next step is the Phase-C Change Contract.
