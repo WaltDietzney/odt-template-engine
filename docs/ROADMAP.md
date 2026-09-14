@@ -283,9 +283,13 @@ Existing `TemplateStructureInspector` and `DocumentInspector` are architectural 
 
 #### C — Native Field Binding
 
-Define a bounded 1.0 native-field capability based on actual Writer/ODF semantics and RESEARCH-01 evidence. User Fields are a primary candidate; Set/Get Variable support and other field families require explicit justification.
+Define a bounded 1.0 native-field capability based on actual Writer/ODF semantics and RESEARCH-01 evidence.
 
-Native fields complement `{{...}}` rather than replace the portable scalar placeholder path. Scope, identity, repeated rendering, finalization, and interoperability semantics must be understood before public API approval.
+C0 research is complete. The Phase-C v1 binding scope is intentionally limited to **Writer User Fields with `office:value-type="string"`**. These fields are document-global/ROOT-scoped in the characterized model, may have multiple physical declaration/reference evidence sites across source parts, and must not inherit foreach item scope merely from native containment.
+
+Native fields complement `{{...}}` rather than replace the portable scalar placeholder path.
+
+Set/Get Variable, additional Writer field families, and non-string User Field value types are deferred to version 1.1 or later unless a concrete earlier dependency emerges.
 
 #### D — Declarative Structural Controls
 
