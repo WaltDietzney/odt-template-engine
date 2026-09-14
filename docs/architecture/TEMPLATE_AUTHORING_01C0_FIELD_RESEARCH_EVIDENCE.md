@@ -259,7 +259,7 @@ This result directly validates the Phase-B separation of native containment, con
 
 ## 7. C-R4 — mutation authority and lifecycle
 
-Status: **PARTIAL**
+Status: **GREEN**
 
 Established by prior RESEARCH-01:
 
@@ -268,20 +268,22 @@ Established by prior RESEARCH-01:
 - headless PDF conversion reevaluates the changed declaration;
 - the visible `user-field-get` character data is not authoritative.
 
-Established by C0 characterization:
+Established by C0 lifecycle characterization:
 
-- current `inspectTemplate()` ignores native fields and remains original-source stable across classic render/save.
+- the logical User Field value is carried by declaration state rather than current `user-field-get` display text;
+- synchronized declaration mutation across `content.xml` and `styles.xml` survives classic `render()`;
+- save/reopen preserves the mutated declaration value;
+- a second mutation on the reopened document also survives save/reopen;
+- `load()` restores the original template source declarations;
+- `inspectTemplate()` remains stable because it reads the original authored source rather than the mutable working DOM;
+- a mutation applied to only one source part creates a persistent contradictory cross-part field state;
+- therefore an approved logical User Field binding must synchronize all declaration evidence sites that participate in the same logical field identity.
 
-Still required before implementation contract:
+The characterization deliberately leaves cached/materialized `text:user-field-get` character data unchanged while mutating the authoritative declaration. This matches the prior Writer evidence that Writer reevaluates the field from declaration state.
 
-- define and characterize the exact engine-side mutation authority for an approved User Field binding;
-- repeated bind/save behavior;
-- repeated render/save behavior if binding participates in render;
-- `load()` reset behavior;
-- saved ODT reopen behavior;
-- interaction between authoritative declaration mutation and cached/materialized get text.
+The C-R4 research gate is therefore green for the bounded string User Field candidate.
 
-This gate is not yet closed.
+The exact public mutation API and whether native field binding participates in `render()`, a dedicated binding method, or Phase-E orchestration remain Change-Contract decisions rather than unresolved lifecycle evidence.
 
 ## 8. C-R5 — type/value semantics
 
@@ -349,7 +351,7 @@ These cases need a bounded characterization matrix before Phase-C diagnostics ar
 | C-R1 | GREEN for current string candidates | User Field and Set/Get source semantics distinguished |
 | C-R2 | EVIDENCE GREEN / contract decision pending | cross-part declarations and repeated references established |
 | C-R3 | GREEN | cloning proves native containment does not localize User Field scope |
-| C-R4 | PARTIAL | Writer mutation authority known; engine lifecycle not yet characterized |
+| C-R4 | GREEN | declaration mutation, render/save/reopen, repeated application, load reset, and cross-part synchronization characterized |
 | C-R5 | STRING GREEN / broader types open | no basis for non-string support yet |
 | C-R6 | BOUNDARY GREEN | ODT/Writer/PDF evidence exists; no broad DOCX semantic promise |
 | C-R7 | OPEN | malformed/ambiguous field diagnostics need characterization |
@@ -378,8 +380,7 @@ This is still a research conclusion, not a public API decision.
 
 The highest-value remaining work is now narrow:
 
-1. C-R4 — lifecycle characterization for declaration mutation, save/reopen, repeated application, and `load()`;
-2. C-R7 — malformed/ambiguous User Field cases;
-3. decide whether Phase C is intentionally string-only for 1.0 or whether C-R5 receives additional type research.
+1. C-R7 — malformed/ambiguous User Field cases;
+2. decide whether Phase C is intentionally string-only for 1.0 or whether C-R5 receives additional type research.
 
 Set/Get Variable should not receive implementation work until there is a concrete requirement that justifies modeling document-flow state.
