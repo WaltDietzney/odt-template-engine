@@ -135,9 +135,9 @@ final class TemplateAuthoring01C3LibreOfficeUserFieldIntegrationTest extends Tes
             2,
             substr_count($content, 'text:user-field-get text:name="company_globa"')
         );
-        self::assertSame(
+        self::assertCount(
             1,
-            substr_count($content, 'text:user-field-decl')
+            $this->declarationValues($output, 'content.xml', 'company_globa')
         );
     }
 
