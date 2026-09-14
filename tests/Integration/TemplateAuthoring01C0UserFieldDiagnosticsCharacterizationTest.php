@@ -39,9 +39,13 @@ final class TemplateAuthoring01C0UserFieldDiagnosticsCharacterizationTest extend
         $template = new OdtTemplate($path);
         $contract = $template->inspectTemplate();
 
-        self::assertSame([], $contract->bindings());
+        self::assertCount(1, $contract->bindings());
+        self::assertSame('MALFORMED', $contract->bindings()[0]->supportState());
         self::assertSame([], $contract->dependencies());
-        self::assertSame([], $contract->diagnostics());
+        self::assertSame(
+            ['orphan_user_field_reference'],
+            array_map(static fn ($diagnostic): string => $diagnostic->code(), $contract->diagnostics())
+        );
 
         $output = $this->outputPath('orphan');
         $template->save($output);
@@ -79,7 +83,13 @@ final class TemplateAuthoring01C0UserFieldDiagnosticsCharacterizationTest extend
             $this->fieldDeclarationsFromArchive($output, 'content.xml')
         );
 
-        self::assertSame([], $template->inspectTemplate()->diagnostics());
+        self::assertSame(
+            ['ambiguous_user_field_declaration'],
+            array_map(
+                static fn ($diagnostic): string => $diagnostic->code(),
+                $template->inspectTemplate()->diagnostics()
+            )
+        );
     }
 
     public function testConflictingCrossPartDeclarationsRemainContradictory(): void
@@ -104,7 +114,13 @@ final class TemplateAuthoring01C0UserFieldDiagnosticsCharacterizationTest extend
             $this->fieldDeclarationsFromArchive($output, 'styles.xml')
         );
 
-        self::assertSame([], $template->inspectTemplate()->diagnostics());
+        self::assertSame(
+            ['conflicting_user_field_value'],
+            array_map(
+                static fn ($diagnostic): string => $diagnostic->code(),
+                $template->inspectTemplate()->diagnostics()
+            )
+        );
     }
 
     public function testSameLogicalNameCanCarryConflictingValueTypesAcrossParts(): void
@@ -129,7 +145,13 @@ final class TemplateAuthoring01C0UserFieldDiagnosticsCharacterizationTest extend
             $this->fieldDeclarationsFromArchive($output, 'styles.xml')
         );
 
-        self::assertSame([], $template->inspectTemplate()->diagnostics());
+        self::assertSame(
+            ['conflicting_user_field_type'],
+            array_map(
+                static fn ($diagnostic): string => $diagnostic->code(),
+                $template->inspectTemplate()->diagnostics()
+            )
+        );
     }
 
     public function testUnreferencedEmptyDeclarationIsPreservedAsSourceEvidence(): void
@@ -156,6 +178,13 @@ final class TemplateAuthoring01C0UserFieldDiagnosticsCharacterizationTest extend
         );
 
         self::assertSame([], $template->inspectTemplate()->diagnostics());
+        self::assertSame(
+            ['customer'],
+            array_map(
+                static fn ($dependency): string => $dependency->name(),
+                $template->inspectTemplate()->dependencies()
+            )
+        );
     }
 
     private function createTemplate(
