@@ -22,21 +22,27 @@ final class TemplateAuthoring01C0FieldSemanticsCharacterizationTest extends Test
         }
     }
 
-    public function testCurrentUnifiedInspectionDoesNotPromoteNativeFieldsToBindingsOrDependencies(): void
+    public function testUnifiedInspectionPromotesStringUserFieldsButStillIgnoresSetGetVariables(): void
     {
         $contract = (new OdtTemplate($this->createTemplate()))->inspectTemplate();
 
         self::assertSame(
-            ['classic_name', 'header_classic'],
+            [
+                'classic_name',
+                'header_classic',
+                'user_customer',
+                'user_customer',
+                'user_customer',
+            ],
             array_map(static fn ($binding): ?string => $binding->variableName(), $contract->bindings())
         );
         self::assertSame(
-            ['classic_name', 'header_classic'],
+            ['classic_name', 'header_classic', 'user_customer'],
             array_map(static fn ($dependency): string => $dependency->name(), $contract->dependencies())
         );
 
         $serialized = json_encode($contract->toArray(), JSON_THROW_ON_ERROR);
-        self::assertStringNotContainsString('user_customer', $serialized);
+        self::assertStringContainsString('user_customer', $serialized);
         self::assertStringNotContainsString('flow_customer', $serialized);
     }
 
