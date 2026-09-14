@@ -2,7 +2,7 @@
 
 ## Status
 
-**EVIDENCE PASS COMPLETE / OPEN GAPS IDENTIFIED — NO PRODUCTION CHANGE / NO PUBLIC API DECISION**
+**COMPLETE / GATE GREEN — NO PRODUCTION CHANGE / CHANGE CONTRACT NEXT**
 
 This document opens TEMPLATE-AUTHORING-01 Phase C from the completed Phase-B baseline.
 
@@ -186,4 +186,10 @@ C0 is complete when:
 - research gates for Writer-authored fixtures, scope, lifecycle, types, diagnostics, and interoperability are explicit;
 - no production behavior has changed.
 
-The initial Writer-authored evidence pass is recorded in `TEMPLATE_AUTHORING_01C0_FIELD_RESEARCH_EVIDENCE.md`. The remaining highest-value gaps are C-R3 collection-scope cloning, C-R4 engine lifecycle behavior, C-R7 malformed/ambiguous field states, and the explicit C-R5 decision on whether 1.0 remains string-only.
+The completed evidence assessment is recorded in `TEMPLATE_AUTHORING_01C0_FIELD_RESEARCH_EVIDENCE.md`.
+
+All research gates C-R1 through C-R7 are green for the bounded Phase-C v1 scope.
+
+Phase C v1 is intentionally limited to Writer User Fields with `office:value-type="string"`. Broader value types, Set/Get Variable, and other Writer field families are deferred to version 1.1 or later unless a concrete earlier dependency emerges.
+
+The next step is the Phase-C Change Contract.
