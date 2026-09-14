@@ -2,7 +2,7 @@
 
 ## Status
 
-**IMPLEMENTED / REAL FIXTURES PENDING — NOT CLOSED**
+**REAL-FIXTURE INTEGRATION GREEN / FULL PREFLIGHT PENDING — NOT CLOSED**
 
 C3 is the final Phase-C slice.
 
@@ -120,7 +120,7 @@ The pre-existing C-R3 screenshot/observation is research evidence; C3 requires t
 
 ## Automated preflight
 
-After both binary fixtures are committed, run:
+Both binary fixtures are now committed and the focused real-fixture integration gate is green. Continue with:
 
 ```bash
 vendor/bin/phpunit \
