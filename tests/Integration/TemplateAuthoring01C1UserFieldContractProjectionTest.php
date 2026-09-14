@@ -84,7 +84,7 @@ final class TemplateAuthoring01C1UserFieldContractProjectionTest extends TestCas
             $contract->bindings(),
             static fn ($binding): bool => $binding->variableName() === 'customer'
         ));
-        self::assertCount(4, $customerBindings);
+        self::assertCount(5, $customerBindings);
 
         self::assertSame(
             [
@@ -92,8 +92,9 @@ final class TemplateAuthoring01C1UserFieldContractProjectionTest extends TestCas
                 'NATIVE_USER_FIELD_DECLARATION',
                 'NATIVE_USER_FIELD_REFERENCE',
                 'NATIVE_USER_FIELD_DECLARATION',
+                'NATIVE_USER_FIELD_REFERENCE',
             ],
-            array_map(static fn ($binding): string => $binding->kind(), array_slice($customerBindings, 0, 4))
+            array_map(static fn ($binding): string => $binding->kind(), $customerBindings)
         );
 
         $kinds = array_map(
