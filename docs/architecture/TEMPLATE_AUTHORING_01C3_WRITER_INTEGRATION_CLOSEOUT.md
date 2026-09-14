@@ -2,7 +2,7 @@
 
 ## Status
 
-**REAL-FIXTURE INTEGRATION GREEN / FULL PREFLIGHT PENDING — NOT CLOSED**
+**COMPLETE / GATE GREEN**
 
 C3 is the final Phase-C slice.
 
@@ -188,3 +188,43 @@ TEMPLATE-AUTHORING-01C may be closed only after:
 - final review confirms no deviation from the accepted Change Contract.
 
 Only then may the Phase-C status be changed to COMPLETE.
+
+
+## Final verification record
+
+The final C3 verification was reported green on 2026-09-14:
+
+- focused C3 real-fixture integration;
+- combined C0–C3 integration chain;
+- Phase-B Slice 1–5 compatibility chain;
+- `PublicSampleSmokeTest`;
+- full `composer test`: 804 tests, 5637 assertions, no failures or errors;
+- PHP lint for the Phase-C source/test/sample files;
+- `git diff --check`;
+- manual LibreOffice body/header regression;
+- manual LibreOffice foreach/ROOT-scope regression.
+
+The full PHPUnit run reports eight test-runner deprecations for legacy
+doc-comment metadata. They occur in pre-existing Bookmark/D5G/FrameLayout test
+code and are unrelated to Phase C; they are therefore not a Phase-C closeout
+blocker.
+
+Manual Writer verification confirmed:
+
+- generated ODT files open without repair warning;
+- body and header User Field references reevaluate to the bound value;
+- the User Field remains a native editable Writer field;
+- foreach item-local classic values remain distinct;
+- the native User Field remains document-global across cloned Section
+  instances.
+
+No C3 stop condition remains active.
+
+## C3 closeout finding
+
+C3 introduces no additional production semantics beyond the accepted C1/C2
+implementation. The committed Writer fixtures, public sample, documentation,
+automated preflight, and manual LibreOffice regression confirm the Phase-C
+contract on real authored documents.
+
+C3 is complete.
