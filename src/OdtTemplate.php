@@ -35,6 +35,7 @@ use OdtTemplateEngine\Template\TemplateProcessor;
 use OdtTemplateEngine\Template\TemplateStructureInspection;
 use OdtTemplateEngine\Template\TemplateStructureInspector;
 use OdtTemplateEngine\Template\TemplateStructureNormalizer;
+use OdtTemplateEngine\Template\UserFieldBinder;
 use OdtTemplateEngine\Utils\StyleMapper;
 
 
@@ -188,6 +189,23 @@ class OdtTemplate
         return (new TemplateContractInspector())->inspect(
             $this->package->sourceDom('content.xml'),
             $this->package->sourceDom('styles.xml')
+        );
+    }
+
+    /**
+     * Bind one supported Writer string User Field in the current working document.
+     *
+     * The authored source inspected by inspectTemplate() remains unchanged.
+     */
+    public function setUserField(string $name, string $value): void
+    {
+        $context = $this->documentContext();
+
+        (new UserFieldBinder())->bind(
+            $context->contentDom(),
+            $context->stylesDom(),
+            $name,
+            $value
         );
     }
 
