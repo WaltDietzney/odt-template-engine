@@ -76,10 +76,11 @@ These models can coexist in one document. The important design choice is **who o
 - **HTML import** — convert supported HTML fragments into native ODT content.
 - **Styles** — use friendly element styling and document-local named paragraph styles.
 - **Metadata** — write document title, author, description, dates and other metadata.
-- **Document inspection** — inspect native named sections, bookmarks, tables, and frames.
+- **Document inspection** — inspect native named sections, bookmarks, tables, frames, template dependencies, and supported Writer User Fields.
 - **Typed native targets** — resolve native ODT objects by semantic name instead of application XPath.
 - **Named sections** — replace section content, clone native structure, and instantiate repeatable section collections.
 - **Nested collections** — expand owner-scoped nested section prototypes without manually constructing generated native names.
+- **Native Writer User Fields** — inspect and explicitly bind document-global string User Fields while preserving native Writer reevaluation semantics.
 - **ODT-aware processing** — preserve and manipulate native ODF structures inside real ODT packages.
 
 ## Requirements
@@ -197,6 +198,23 @@ $experiences = $template
 Each returned `SectionTarget` represents the generated native section and can address nested section prototypes relative to its own subtree. This allows application data to drive collections without rebuilding the visual block in PHP.
 
 Use `inspect()` when you need an immutable snapshot of the native named sections, bookmarks, tables, frames, and diagnostics present in the current document.
+
+
+
+## Native Writer User Fields
+
+For LibreOffice-authored document-global values, Phase C supports Writer User Fields with string values:
+
+```php
+$template = new OdtTemplate(__DIR__ . '/templates/example.odt');
+
+$template->setUserField('customer', 'Jane Smith');
+$template->save(__DIR__ . '/output/example-result.odt');
+```
+
+The engine updates the authoritative User Field declarations in the working ODT. Cached field display text is left to Writer reevaluation.
+
+This is intentionally separate from classic `{{customer}}` placeholder assignment. Phase C v1 is limited to string User Fields; Set/Get Variable and broader native field types are deferred.
 
 ## Interactive samples
 
