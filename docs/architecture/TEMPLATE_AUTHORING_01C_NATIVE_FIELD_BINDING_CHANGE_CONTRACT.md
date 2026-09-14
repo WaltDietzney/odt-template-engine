@@ -2,7 +2,7 @@
 
 ## Status
 
-**DRAFT / FOR ARCHITECTURE REVIEW — NO IMPLEMENTATION AUTHORIZED BY THIS DOCUMENT YET**
+**ACCEPTED / IMPLEMENTATION AUTHORIZED**
 
 This Change Contract defines the bounded Phase-C v1 capability that follows the completed TEMPLATE-AUTHORING-01C0 field-semantics research.
 
@@ -244,6 +244,8 @@ For a supported declaration:
 
 The authoritative default value is not promoted to logical dependency identity.
 
+A declaration is represented through `BindingDescriptor` for contract uniformity and evidence/provenance composition. This does not make declaration and reference semantically equivalent: the declaration is also the **authoritative native value carrier**, while references are authored occurrence/display evidence.
+
 ### 5.2 Reference binding descriptor
 
 For a supported `text:user-field-get`:
@@ -444,7 +446,13 @@ conflicting_user_field_value
 conflicting_user_field_type
 ```
 
-The implementation may use `ambiguous_user_field_declaration` for same-part conflicting duplicates while reserving the more specific value/type conflict codes for cross-part or logical-identity conflicts.
+The diagnostic boundary is fixed as follows:
+
+- `ambiguous_user_field_declaration` is used for conflicting duplicate authoritative declarations within the same source part/region where no unique declaration state can be selected safely;
+- `conflicting_user_field_value` is used when declaration evidence belonging to one logical field identity agrees on supported type but disagrees on authoritative value across source parts/regions;
+- `conflicting_user_field_type` is used when declaration evidence belonging to one logical field identity disagrees on `office:value-type` across source parts/regions.
+
+Implementations must not choose among these conflicting states by source-order precedence or fuzzy reconciliation.
 
 Diagnostics must include provenance when one concrete evidence site is the subject.
 
@@ -623,6 +631,8 @@ MALFORMED
 AMBIGUOUS
 ```
 
+The reason values form a **closed, stable machine-readable vocabulary** for Phase C v1. Implementations should centralize them as constants or an equivalent closed representation rather than distribute free-form strings. The concrete PHP representation remains an implementation detail.
+
 The exact human-readable message is not a stable machine API.
 
 Binding failure must be atomic: the working document remains unchanged for that field operation.
@@ -658,7 +668,9 @@ OdtTemplate
     -> public compatibility/additive facade
 ```
 
-Names may vary if repository evidence suggests a better fit, but the responsibilities must not collapse back into `OdtTemplate` or duplicate field-semantics logic between inspection and mutation.
+The class names above are illustrative, not mandatory. The **responsibility boundaries are contractual**: semantic field analysis, contract projection, mutation, and public facade responsibilities must remain separated.
+
+Names and exact file placement may vary if repository evidence suggests a better fit, but the responsibilities must not collapse back into `OdtTemplate` or duplicate field-semantics logic between inspection and mutation.
 
 The analyzer/binder should be stateless unless concrete evidence requires document-owned state.
 
