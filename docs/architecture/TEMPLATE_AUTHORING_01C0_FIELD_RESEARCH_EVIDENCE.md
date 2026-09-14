@@ -329,7 +329,7 @@ General materialization/finalization remains owned by FINALIZATION-01.
 
 ## 10. C-R7 — diagnostics and malformed/ambiguous states
 
-Status: **CHARACTERIZATION IMPLEMENTED / VERIFICATION PENDING**
+Status: **GREEN**
 
 C-R7 is deliberately bounded to the current Phase-C primary candidate: User Fields.
 
@@ -365,7 +365,7 @@ The empty unreferenced declaration is also treated cautiously because a real Wri
 
 The characterization test does not implement Phase-C diagnostics. It records that the current Phase-B inspector ignores these native-field states and that save/reopen preserves them, so the later Change Contract can define diagnostics without silently changing legacy behavior.
 
-If the characterization test is green, C-R7 has enough evidence for the User Field candidate to proceed to diagnostic design in the Phase-C Change Contract.
+The characterization suite is green. C-R7 therefore has enough evidence for the User Field candidate to proceed to diagnostic design in the Phase-C Change Contract.
 
 ## 11. Gate summary
 
@@ -377,7 +377,7 @@ If the characterization test is green, C-R7 has enough evidence for the User Fie
 | C-R4 | GREEN | declaration mutation, render/save/reopen, repeated application, load reset, and cross-part synchronization characterized |
 | C-R5 | STRING GREEN / broader types open | no basis for non-string support yet |
 | C-R6 | BOUNDARY GREEN | ODT/Writer/PDF evidence exists; no broad DOCX semantic promise |
-| C-R7 | VERIFICATION PENDING | bounded User Field ambiguity matrix implemented; no production diagnostics yet |
+| C-R7 | GREEN | bounded User Field ambiguity states characterized; diagnostic policy remains a Change-Contract decision |
 
 ## 12. Architecture consequence
 
@@ -403,7 +403,6 @@ This is still a research conclusion, not a public API decision.
 
 The highest-value remaining work is now narrow:
 
-1. verify the C-R7 User Field ambiguity characterization matrix;
-2. decide whether Phase C is intentionally string-only for 1.0 or whether C-R5 receives additional type research.
+1. decide whether Phase C is intentionally string-only for 1.0 or whether C-R5 receives additional type research.
 
 Set/Get Variable should not receive implementation work until there is a concrete requirement that justifies modeling document-flow state.
