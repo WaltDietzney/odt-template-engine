@@ -329,20 +329,43 @@ General materialization/finalization remains owned by FINALIZATION-01.
 
 ## 10. C-R7 — diagnostics and malformed/ambiguous states
 
-Status: **OPEN**
+Status: **CHARACTERIZATION IMPLEMENTED / VERIFICATION PENDING**
 
-Not yet characterized sufficiently:
+C-R7 is deliberately bounded to the current Phase-C primary candidate: User Fields.
 
-- `text:user-field-get` without a declaration;
-- conflicting duplicated User Field declarations across source parts;
-- same field name with incompatible value types;
-- unsupported value types;
-- duplicate declarations within one source part;
-- malformed Set/Get state;
-- Set/Get references with no applicable preceding set;
-- ambiguous state after structural cloning/reordering.
+Set/Get Variable diagnostics are not part of this gate because Set/Get Variable is not currently approved as an ordinary Phase-C binding model. If that field family is promoted later, its document-flow-specific malformed states require a separate characterization.
 
-These cases need a bounded characterization matrix before Phase-C diagnostics are approved.
+The dedicated characterization test is:
+
+```text
+tests/Integration/TemplateAuthoring01C0UserFieldDiagnosticsCharacterizationTest.php
+```
+
+It freezes the current engine behavior for five distinct source states:
+
+| Case | Source state | Current behavior being characterized | Future semantic question |
+| --- | --- | --- | --- |
+| Orphan reference | `text:user-field-get` without declaration | package loads, source persists, no contract projection/diagnostic today | should become malformed/unsupported field evidence |
+| Duplicate same-part declarations | same name/type, different values in one part | both declarations persist physically | ambiguity/conflict must not be silently deduplicated |
+| Cross-part value conflict | same name/type, different values in `content.xml` and `styles.xml` | contradictory declarations persist | one logical field cannot be READY while authoritative values disagree |
+| Cross-part type conflict | same name, incompatible value types | both typed declarations persist | logical identity is ambiguous/incompatible |
+| Empty unreferenced declaration | empty authored declaration plus valid field | source persists | must not automatically poison an otherwise valid field contract |
+
+This matrix is intentionally different from ordinary cross-part duplication with the same name, type, and value. C-R2 established that Writer can legitimately duplicate one logical User Field declaration across source parts. Therefore:
+
+```text
+same name + same type + same value across parts
+    -> normal physical duplication candidate
+
+same name + conflicting value/type
+    -> ambiguity/conflict candidate
+```
+
+The empty unreferenced declaration is also treated cautiously because a real Writer-authored C-R3 fixture produced such an artifact during authoring. Its mere presence is therefore not sufficient evidence for a global malformed state.
+
+The characterization test does not implement Phase-C diagnostics. It records that the current Phase-B inspector ignores these native-field states and that save/reopen preserves them, so the later Change Contract can define diagnostics without silently changing legacy behavior.
+
+If the characterization test is green, C-R7 has enough evidence for the User Field candidate to proceed to diagnostic design in the Phase-C Change Contract.
 
 ## 11. Gate summary
 
@@ -354,7 +377,7 @@ These cases need a bounded characterization matrix before Phase-C diagnostics ar
 | C-R4 | GREEN | declaration mutation, render/save/reopen, repeated application, load reset, and cross-part synchronization characterized |
 | C-R5 | STRING GREEN / broader types open | no basis for non-string support yet |
 | C-R6 | BOUNDARY GREEN | ODT/Writer/PDF evidence exists; no broad DOCX semantic promise |
-| C-R7 | OPEN | malformed/ambiguous field diagnostics need characterization |
+| C-R7 | VERIFICATION PENDING | bounded User Field ambiguity matrix implemented; no production diagnostics yet |
 
 ## 12. Architecture consequence
 
@@ -380,7 +403,7 @@ This is still a research conclusion, not a public API decision.
 
 The highest-value remaining work is now narrow:
 
-1. C-R7 — malformed/ambiguous User Field cases;
+1. verify the C-R7 User Field ambiguity characterization matrix;
 2. decide whether Phase C is intentionally string-only for 1.0 or whether C-R5 receives additional type research.
 
 Set/Get Variable should not receive implementation work until there is a concrete requirement that justifies modeling document-flow state.
