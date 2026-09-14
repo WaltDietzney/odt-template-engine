@@ -2,7 +2,7 @@
 
 ## Status
 
-**ACCEPTED / IMPLEMENTATION AUTHORIZED**
+**COMPLETE / IMPLEMENTED / VERIFIED**
 
 This Change Contract defines the bounded Phase-C v1 capability that follows the completed TEMPLATE-AUTHORING-01C0 field-semantics research.
 
@@ -922,3 +922,53 @@ TEMPLATE-AUTHORING-01C is complete when:
 - Phase-C closeout review finds no unresolved contract deviation.
 
 Only then may work proceed to TEMPLATE-AUTHORING-01D declarative structural controls.
+
+
+---
+
+## 22. Final closeout
+
+**TEMPLATE-AUTHORING-01C is complete.**
+
+The accepted Change Contract has been implemented and verified through:
+
+```text
+C0  Field-Semantics Research & Characterization
+C1  User Field Semantic Analysis & Contract Projection
+C2  Explicit User Field Binding
+C3  Writer Integration, Documentation & Final Closeout
+```
+
+Final evidence confirms:
+
+- only Writer string User Fields are bound in Phase-C v1;
+- logical User Field identity remains ROOT + field name;
+- declaration/reference evidence and provenance are represented in
+  `TemplateContract`;
+- classic and native evidence can contribute to one logical ROOT dependency
+  without changing low-level classic mutation semantics;
+- `setUserField()` validates before mutation and synchronizes authoritative
+  declarations across supported source parts;
+- cached `text:user-field-get` display text is not engine-materialized;
+- source-oriented inspection and working-document mutation remain separate;
+- save/reopen/load lifecycle behavior is preserved;
+- real LibreOffice-authored body/header and foreach fixtures pass integration
+  tests;
+- full automated preflight is green;
+- manual LibreOffice regression is green with no repair warning;
+- public documentation and a representative sample are present;
+- no unresolved contract deviation remains.
+
+The eight PHPUnit test-runner deprecations observed in the final full-suite run
+belong to pre-existing legacy doc-comment metadata and are outside the Phase-C
+change scope.
+
+Deferred work remains deferred:
+
+- Set/Get Variable;
+- non-string User Fields and other native field families;
+- FINALIZATION-01 display/materialization policy;
+- Phase-E high-level orchestration.
+
+Phase C therefore satisfies its completion criterion and may hand off to
+TEMPLATE-AUTHORING-01D.
