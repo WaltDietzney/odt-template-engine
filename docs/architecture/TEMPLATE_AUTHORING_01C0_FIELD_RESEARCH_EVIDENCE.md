@@ -212,30 +212,50 @@ Still deferred to the Change Contract:
 
 ## 6. C-R3 — collection-scope boundary
 
-Status: **OPEN / NEXT EMPIRICAL GAP**
+Status: **GREEN**
 
-Existing evidence is sufficient to warn against automatic item-local interpretation, but not sufficient to close the gate empirically.
+A Writer-authored fixture `08-foreach-section-user-field.odt` placed both classic item-local placeholders and a native User Field reference inside the same native `#foreach:experience` Section.
 
-Known architecture:
-
-- User Field declarations are document-global in the characterized Writer model;
-- Phase-B foreach creates item-local application scopes;
-- `07-foreach-section-placeholders.odt` demonstrates the established portable model using `{{position}}` and `{{company}}` inside `#foreach:experience`.
-
-Still required:
-
-Create a real Writer-authored fixture with a User Field reference inside a native `#foreach:experience` Section, then run it through the existing Section instantiation/cloning path.
-
-The gate must prove that cloned references continue to target the global User Field unless explicit identity localization is implemented.
-
-No Phase-C design may infer:
+The existing Section `instantiateMany()` path created two instances with different item-local data:
 
 ```text
-User Field company inside #foreach:experience
-    == experience[].company
+instance 1
+{{company}}              -> Firma A
+User Field company_globa -> Global Company
+
+instance 2
+{{company}}              -> Firma B
+User Field company_globa -> Global Company
 ```
 
-without that evidence and an explicit semantic decision.
+LibreOffice opened the generated result without repair and visibly showed the same native User Field value in both cloned Sections while the classic placeholder value differed per item.
+
+This empirically proves:
+
+> Native containment inside a repeated Section does not confer collection-item data scope on a User Field.
+
+The cloned `text:user-field-get` references retain the same native field identity. No item-local declaration is synthesized by Section cloning.
+
+Therefore a future contract must not project:
+
+```text
+User Field company_globa inside #foreach:experience
+    -> experience[].company_globa
+```
+
+merely because of native containment.
+
+The supported working interpretation for the characterized model is:
+
+```text
+{{company}} inside #foreach:experience
+    -> experience[].company
+
+User Field company_globa inside #foreach:experience
+    -> document-global / ROOT field identity
+```
+
+This result directly validates the Phase-B separation of native containment, control ownership, and data-scope nesting.
 
 ## 7. C-R4 — mutation authority and lifecycle
 
@@ -328,7 +348,7 @@ These cases need a bounded characterization matrix before Phase-C diagnostics ar
 | --- | --- | --- |
 | C-R1 | GREEN for current string candidates | User Field and Set/Get source semantics distinguished |
 | C-R2 | EVIDENCE GREEN / contract decision pending | cross-part declarations and repeated references established |
-| C-R3 | OPEN | User Field inside repeated native Section still needs empirical cloning test |
+| C-R3 | GREEN | cloning proves native containment does not localize User Field scope |
 | C-R4 | PARTIAL | Writer mutation authority known; engine lifecycle not yet characterized |
 | C-R5 | STRING GREEN / broader types open | no basis for non-string support yet |
 | C-R6 | BOUNDARY GREEN | ODT/Writer/PDF evidence exists; no broad DOCX semantic promise |
@@ -358,9 +378,8 @@ This is still a research conclusion, not a public API decision.
 
 The highest-value remaining work is now narrow:
 
-1. C-R3 — User Field inside `#foreach:experience`, followed by actual Section cloning/instantiation;
-2. C-R4 — lifecycle characterization for declaration mutation, save/reopen, repeated application, and `load()`;
-3. C-R7 — malformed/ambiguous User Field cases;
-4. decide whether Phase C is intentionally string-only for 1.0 or whether C-R5 receives additional type research.
+1. C-R4 — lifecycle characterization for declaration mutation, save/reopen, repeated application, and `load()`;
+2. C-R7 — malformed/ambiguous User Field cases;
+3. decide whether Phase C is intentionally string-only for 1.0 or whether C-R5 receives additional type research.
 
 Set/Get Variable should not receive implementation work until there is a concrete requirement that justifies modeling document-flow state.
