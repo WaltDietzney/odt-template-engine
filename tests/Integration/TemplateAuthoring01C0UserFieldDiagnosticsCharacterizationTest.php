@@ -27,7 +27,7 @@ final class TemplateAuthoring01C0UserFieldDiagnosticsCharacterizationTest extend
         }
     }
 
-    public function testOrphanUserFieldGetLoadsAndPersistsWithoutCurrentContractProjection(): void
+    public function testOrphanUserFieldGetLoadsPersistsAndProjectsMalformedContractEvidence(): void
     {
         $path = $this->createTemplate(
             contentDeclarations: '',
