@@ -333,6 +333,8 @@ final class TemplateAuthoring01C0UserFieldLifecycleCharacterizationTest extends 
     {
         return ' xmlns:office="' . self::OFFICE_NS . '"'
             . ' xmlns:text="' . self::TEXT_NS . '"'
-            . ' xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"';
+            . ' xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"'
+            . ' xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"'
+            . ' xmlns:loext="urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0"';
     }
 }
