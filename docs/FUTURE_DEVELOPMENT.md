@@ -453,3 +453,22 @@ Most importantly:
 > Semantics before implementation.
 
 A feature belongs in the engine when its ODF semantics, ownership, lifecycle, compatibility impact, and authoring model are understood—not merely because an API can be invented for it.
+
+
+## NATIVE-FIELDS-1.1 — Broader Writer field types and field families
+
+**Target:** version 1.1 or later.
+
+TEMPLATE-AUTHORING-01C v1 is deliberately bounded to Writer User Fields with `office:value-type="string"`.
+
+Future research/implementation may consider:
+
+- numeric User Fields;
+- date/time User Fields;
+- boolean semantics;
+- currency/value formatting;
+- formulas;
+- Set/Get Variable with document-flow-aware semantics;
+- additional Writer field families where they provide a concrete authoring benefit.
+
+This work must not be folded back into Phase C v1 without new evidence and an explicit architecture decision. Set/Get Variable in particular must not be modeled as an ordinary document-global binding because its characterized semantics are position-dependent document-flow state.

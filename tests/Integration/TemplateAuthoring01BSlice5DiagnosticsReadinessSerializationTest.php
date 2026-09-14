@@ -107,7 +107,7 @@ final class TemplateAuthoring01BSlice5DiagnosticsReadinessSerializationTest exte
             array_keys($first)
         );
         self::assertSame(
-            ['inspection', 'dependency_mapping'],
+            ['inspection', 'dependency_mapping', 'native_field_binding'],
             array_keys($first['capabilities'])
         );
 

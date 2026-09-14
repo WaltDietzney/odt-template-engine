@@ -63,6 +63,15 @@ $contract->toArray();
 
 For example, `{{name}}` in the body and `{{name}}` in a header are two binding sites.
 
+Phase C also projects supported Writer string User Fields as native binding evidence. Declarations and references are separate evidence kinds:
+
+```text
+NATIVE_USER_FIELD_DECLARATION
+NATIVE_USER_FIELD_REFERENCE
+```
+
+A declaration is the authoritative native value carrier. A `text:user-field-get` reference is authored occurrence/display evidence; its cached character data is not treated as the authoritative application value.
+
 ### Dependencies
 
 `dependencies()` returns deduplicated logical data requirements.
@@ -84,6 +93,10 @@ experience[].projects[].project_name
 ```
 
 Readable paths are derived projections; opaque contract identities remain the stable graph references.
+
+Supported Writer User Fields are document-global in Phase C v1 and therefore project into ROOT dependencies. Native containment inside a repeated Section does not localize them to the foreach item scope.
+
+If a classic ROOT placeholder and a supported User Field share the same name, they contribute evidence to the same logical dependency.
 
 ### Controls
 
@@ -125,6 +138,7 @@ Contract version 1 exposes:
 ```text
 inspection
 dependency_mapping
+native_field_binding
 ```
 
 Readiness values are:
@@ -152,6 +166,52 @@ dependency_mapping  LIMITED
 while known bindings and native objects remain available.
 
 There is intentionally no primary global `valid()` flag on `TemplateContract`. Consumers should use capability readiness together with diagnostics.
+
+
+
+## Native Writer User Fields
+
+Phase C v1 supports explicit binding of LibreOffice Writer **User Fields** with:
+
+```text
+office:value-type = string
+```
+
+Use:
+
+```php
+$template->setUserField('customer', 'Maria');
+```
+
+The operation updates all compatible authoritative `text:user-field-decl` sites for the logical field in the current working document, including matching declarations authored in supported page-header/footer regions.
+
+It deliberately does **not** rewrite the cached character data of `text:user-field-get` references. LibreOffice Writer reevaluates the native field from the declaration value when the document is opened/rendered.
+
+`setUserField()` is independent of classic placeholder assignment:
+
+```php
+$template->assign(['customer' => 'Maria']);
+$template->render();
+```
+
+does not bind a same-named native User Field.
+
+Phase C v1 does not support Set/Get Variable or non-string User Field types. Those remain deferred work.
+
+Binding failures raise:
+
+```php
+OdtTemplateEngine\Template\UserFieldBindingException
+```
+
+with stable reason values:
+
+```text
+NOT_FOUND
+UNSUPPORTED_TYPE
+MALFORMED
+AMBIGUOUS
+```
 
 ## Source provenance
 
@@ -199,3 +259,11 @@ php samples/sample_28_inspectTemplateContract.php
 ```
 
 It loads the Writer-authored reference fixture `TEMPLATE-AUTHORING-01B-inspection-contract.odt` and prints its coverage, bindings, controls, native objects, dependencies, capabilities, and diagnostics without rendering or mutating the document.
+
+Phase C adds a Writer User Field binding example:
+
+```bash
+php samples/sample_29_userFieldBinding.php
+```
+
+It binds one logical string User Field across body/header declarations and writes an ODT for manual LibreOffice reevaluation.

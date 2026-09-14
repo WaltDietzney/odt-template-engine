@@ -30,6 +30,7 @@ final class TemplateContractInspector
         $capabilityReadiness = [
             'inspection' => TemplateContractCapabilities::READY,
             'dependency_mapping' => TemplateContractCapabilities::READY,
+            'native_field_binding' => TemplateContractCapabilities::NOT_APPLICABLE,
         ];
 
         foreach ($regions as $region) {
@@ -65,6 +66,14 @@ final class TemplateContractInspector
         }
 
         $this->appendDuplicateNativeNameDiagnostics($nativeObjects, $diagnostics);
+
+        $this->projectUserFieldAnalysis(
+            (new UserFieldAnalyzer())->analyze($regions),
+            $bindings,
+            $dependencyStates,
+            $diagnostics,
+            $capabilityReadiness
+        );
 
         $dependencies = $this->materializeDependencies($dependencyStates);
         $controls = $this->materializeControls($controlStates);
@@ -362,6 +371,117 @@ final class TemplateContractInspector
                 $dependencyId
             );
         }
+    }
+
+    /**
+     * @param array{
+     *     evidence:list<array<string,mixed>>,
+     *     fields:list<array<string,mixed>>
+     * } $analysis
+     * @param list<BindingDescriptor> $bindings
+     * @param array<string,array<string,mixed>> $dependencyStates
+     * @param list<TemplateContractDiagnostic> $diagnostics
+     * @param array<string,string> $capabilityReadiness
+     */
+    private function projectUserFieldAnalysis(
+        array $analysis,
+        array &$bindings,
+        array &$dependencyStates,
+        array &$diagnostics,
+        array &$capabilityReadiness
+    ): void {
+        if ($analysis['evidence'] === []) {
+            return;
+        }
+
+        $statesByName = [];
+        $supportedCount = 0;
+        $problemCount = 0;
+
+        foreach ($analysis['fields'] as $field) {
+            $statesByName[$field['name']] = $field;
+
+            if ($field['support_state'] === 'SUPPORTED') {
+                ++$supportedCount;
+            } else {
+                ++$problemCount;
+                $capabilityReadiness['dependency_mapping'] = TemplateContractCapabilities::LIMITED;
+            }
+        }
+
+        $root = DataScopeDescriptor::root();
+        $primaryProvenance = [];
+
+        foreach ($analysis['evidence'] as $entry) {
+            $name = (string) $entry['name'];
+            $state = $statesByName[$name];
+            $kind = $entry['kind'] === 'DECLARATION'
+                ? 'NATIVE_USER_FIELD_DECLARATION'
+                : 'NATIVE_USER_FIELD_REFERENCE';
+
+            $provenance = $this->provenance(
+                $entry['region'],
+                $kind,
+                (int) $entry['source_order'],
+                $name !== '' ? $name : (string) $entry['display_text'],
+                $entry['node']->nodeName,
+                $this->nativeOwnerChain(
+                    $entry['node'],
+                    $entry['region']['carrier']
+                ),
+                $entry['node']->nodeName
+            );
+
+            $primaryProvenance[$name] ??= $provenance;
+
+            $dependencyId = null;
+            if ($state['support_state'] === 'SUPPORTED') {
+                $dependencyId = $this->ensureDependency(
+                    $dependencyStates,
+                    $root,
+                    'VALUE',
+                    $name,
+                    $provenance->evidenceId()
+                );
+            }
+
+            $bindings[] = new BindingDescriptor(
+                $kind,
+                $entry['kind'] === 'DECLARATION'
+                    ? $name
+                    : (string) $entry['display_text'],
+                $name !== '' ? $name : null,
+                null,
+                null,
+                $state['support_state'],
+                $provenance,
+                $dependencyId
+            );
+        }
+
+        foreach ($analysis['fields'] as $field) {
+            if ($field['diagnostic_code'] === null) {
+                continue;
+            }
+
+            $provenance = $primaryProvenance[$field['name']] ?? null;
+            $diagnostics[] = new TemplateContractDiagnostic(
+                $field['diagnostic_code'],
+                'warning',
+                $field['diagnostic_message'],
+                $provenance?->evidenceId(),
+                $provenance
+            );
+        }
+
+        $capabilityReadiness['native_field_binding'] = match (true) {
+            $supportedCount > 0 && $problemCount === 0
+                => TemplateContractCapabilities::READY,
+            $supportedCount > 0
+                => TemplateContractCapabilities::LIMITED,
+            default
+                => TemplateContractCapabilities::BLOCKED,
+        };
     }
 
     /**
@@ -899,7 +1019,8 @@ final class TemplateContractInspector
         int $sourceOrder,
         string $sourceValue,
         ?string $physicalScope = null,
-        array $nativeOwnerChain = []
+        array $nativeOwnerChain = [],
+        ?string $carrierKind = null
     ): SourceProvenance {
         $seed = implode('|', [
             $region['source_part'],
@@ -917,7 +1038,7 @@ final class TemplateContractInspector
             $region['source_part'],
             $region['region_kind'],
             $region['region_owner'],
-            $region['carrier']->nodeName,
+            $carrierKind ?? $region['carrier']->nodeName,
             $representationKind,
             $sourceOrder,
             $physicalScope,
