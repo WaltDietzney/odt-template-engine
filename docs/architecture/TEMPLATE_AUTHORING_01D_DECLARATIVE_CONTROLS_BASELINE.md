@@ -49,6 +49,74 @@ existing Section mechanics
 
 Existing imperative Section APIs remain first-class and compatible.
 
+## Core engine versus optional mapping automation
+
+Template inspection and the growing set of addressable native objects enable a
+useful higher-level workflow, but that workflow is **not an inherent lifecycle
+responsibility of `OdtTemplate`**.
+
+The core engine should expose composable capabilities and preserve programmer
+control, for example:
+
+```text
+OdtTemplate
+├── inspectTemplate()
+├── scalar/classic binding
+├── native User Field binding
+├── section()/instantiate()/instantiateMany()
+├── bookmark and other typed structured operations
+├── declarative native Section-control execution
+├── load()
+└── save()
+```
+
+Applications remain free to compose those capabilities imperatively and in the
+order appropriate to their own document workflow.
+
+A separate optional mapping/automation layer may later use
+`inspectTemplate()` to discover the template contract, map application or form
+data to that contract, and orchestrate several engine capabilities. A typical
+consumer could be a WordPress plugin, CV generator, form-driven document
+service, or another application that benefits from pre-inspecting a template.
+
+Conceptually:
+
+```text
+Application / WordPress plugin / CV generator
+                    │
+                    ▼
+       optional mapping/automation layer
+                    │
+                    ▼
+             ODT Template Engine
+                    │
+                    ▼
+                   ODT
+```
+
+Such an optional layer may be shipped by this project as a convenience class or
+service. That does **not** make mapping-driven automatic rendering mandatory for
+normal library use, and it does not authorize a monolithic core render
+lifecycle.
+
+Consequences for TEMPLATE-AUTHORING-01:
+
+- Phase D defines the bounded semantics required to execute native declarative
+  structural controls; it does not prescribe processing of every template
+  feature in one automatic document pass.
+- Atomicity/lifecycle decisions in D0-3 must be scoped to one invocation that
+  recursively processes the selected declarative structural-control tree or
+  execution unit, not silently generalized to all document mutations.
+- After declarative structural processing, callers remain free to perform
+  bookmarks, images, User Fields, scalar binding, structured insertion, or
+  other imperative operations before `save()`.
+- Phase E may design an **optional** mapping-driven orchestration/convenience
+  layer. It must preserve the lower-level APIs as first-class usage and must
+  not turn a conceptual `render($mappedData)` example into a mandatory
+  `OdtTemplate` lifecycle or public method signature without a separate
+  accepted architecture decision.
+- Inspection enables automation; inspection does not imply automation.
+
 ## Established SECTION-03 substrate
 
 The current implementation already provides the structural mechanics required
@@ -288,7 +356,7 @@ Contract, not an implemented capability.
 | User Field ROOT scope from Phase C | **CLOSED** |
 | Automatic control-tree orchestration | **OPEN** |
 | Conditional Section finalization | **OPEN** |
-| Whole automatic-pass atomicity/lifecycle | **OPEN** |
+| Declarative execution-unit atomicity/lifecycle | **OPEN** |
 | Missing collection data policy | **OPEN** |
 | BODY-only versus cross-part execution | **OPEN — scope decision** |
 | Classic/native coexistence in automatic execution | **OPEN — compatibility decision** |
@@ -322,7 +390,7 @@ Section remains with its semantic name, is renamed/finalized, is unwrapped, or
 uses another evidenced native transformation. Do not choose this from API
 convenience alone; inspect ODF/Writer behavior and lifecycle consequences.
 
-### D0-3 — Whole-pass atomicity and lifecycle
+### D0-3 — Declarative execution-unit atomicity and lifecycle
 
 Existing `instantiateMany()` atomicity is operation-local. Automatic execution
 introduces a larger unit:
@@ -334,10 +402,16 @@ outer foreach
             → possible later failure
 ```
 
-Specify whether Phase D guarantees atomicity for each control, each collection,
-each root declarative subtree, or the entire automatic structural pass. Also
-define the interaction with repeated execution and the later Phase-E render
-pipeline without prematurely solving FINALIZATION-01.
+Specify the atomicity boundary for one invocation that recursively processes a
+declarative structural-control tree or selected execution unit. Do not infer a
+transaction around unrelated document operations performed before or after that
+invocation.
+
+Also characterize repeated execution of that structural operation only as far
+as Phase D requires. Do not use D0-3 to prescribe a global `OdtTemplate`
+render lifecycle, ordering for scalar/User Field/bookmark/image operations, or
+the optional Phase-E mapping/automation workflow. FINALIZATION-01 remains a
+separate lifecycle/export concern.
 
 ### D0-4 — Missing collection data
 
@@ -385,7 +459,7 @@ D must not:
 - invent a second dependency/scope model;
 - invent a second condition evaluator;
 - broaden Writer field support;
-- implement the complete high-level `render($mappedData)` pipeline;
+- implement or require a monolithic high-level `OdtTemplate::render($mappedData)` pipeline;
 - solve FINALIZATION-01;
 - introduce page-style authoring;
 - add cross-part Section mutation opportunistically;
@@ -411,7 +485,9 @@ A new chat or coding agent should be able to start Phase D with this rule:
 > **Do not ask how Sections clone, how nested foreach is addressed, how item
 > binding works, how identities are rewritten, how scopes are discovered, or
 > how conditions are parsed. Those questions are already answered. Start with
-> orchestration, conditional finalization, pass atomicity, missing collection
-> data, source-part scope, and classic/native coexistence.**
+> orchestration, conditional finalization, declarative execution-unit atomicity,
+> missing collection data, source-part scope, and classic/native coexistence.
+> Mapping-driven automation is an optional higher layer, not an inherent
+> `OdtTemplate` lifecycle.**
 
 Semantics before implementation.
