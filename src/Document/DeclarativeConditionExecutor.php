@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace OdtTemplateEngine\Document;
 
+use DOMDocument;
+use DOMElement;
 use OdtTemplateEngine\OdtDocumentContext;
 use OdtTemplateEngine\Template\ConditionExpression;
 use OdtTemplateEngine\Template\ControlDescriptor;
@@ -28,6 +30,33 @@ final class DeclarativeConditionExecutor
 
     /** @param array<string, mixed> $values */
     public function execute(
+        OdtDocumentContext $context,
+        TemplateContract $contract,
+        array $values
+    ): void {
+        $contentSnapshot = $this->snapshot($context->contentDom());
+        $stylesSnapshot = $this->snapshot($context->stylesDom());
+
+        try {
+            $this->executeWithoutRollback($context, $contract, $values);
+        } catch (\Throwable $exception) {
+            try {
+                $this->restore($context->contentDom(), $contentSnapshot);
+                $this->restore($context->stylesDom(), $stylesSnapshot);
+            } catch (\Throwable $rollbackException) {
+                throw new DeclarativeConditionExecutionException(
+                    'declarative execution rollback failed: ' . $rollbackException->getMessage(),
+                    0,
+                    $exception
+                );
+            }
+
+            throw $exception;
+        }
+    }
+
+    /** @param array<string, mixed> $values */
+    private function executeWithoutRollback(
         OdtDocumentContext $context,
         TemplateContract $contract,
         array $values
@@ -82,6 +111,57 @@ final class DeclarativeConditionExecutor
                 null,
                 $contract
             );
+        }
+    }
+
+    private function snapshot(DOMDocument $document): DOMDocument
+    {
+        $snapshot = $document->cloneNode(true);
+        if (!$snapshot instanceof DOMDocument) {
+            throw new DeclarativeConditionExecutionException('working document could not be snapshotted');
+        }
+
+        return $snapshot;
+    }
+
+    private function restore(DOMDocument $document, DOMDocument $snapshot): void
+    {
+        $targetRoot = $document->documentElement;
+        $snapshotRoot = $snapshot->documentElement;
+        if (!$targetRoot instanceof DOMElement || !$snapshotRoot instanceof DOMElement) {
+            throw new DeclarativeConditionExecutionException('working document could not be restored');
+        }
+
+        while ($targetRoot->hasAttributes()) {
+            $attribute = $targetRoot->attributes?->item(0);
+            if ($attribute === null) {
+                break;
+            }
+            if ($attribute->namespaceURI !== null) {
+                $targetRoot->removeAttributeNS($attribute->namespaceURI, $attribute->localName);
+            } else {
+                $targetRoot->removeAttribute($attribute->name);
+            }
+        }
+        if ($snapshotRoot->hasAttributes()) {
+            foreach ($snapshotRoot->attributes as $attribute) {
+                if ($attribute->namespaceURI !== null) {
+                    $targetRoot->setAttributeNS(
+                        $attribute->namespaceURI,
+                        $attribute->nodeName,
+                        $attribute->nodeValue ?? ''
+                    );
+                } else {
+                    $targetRoot->setAttribute($attribute->name, $attribute->nodeValue ?? '');
+                }
+            }
+        }
+
+        while ($targetRoot->firstChild !== null) {
+            $targetRoot->removeChild($targetRoot->firstChild);
+        }
+        foreach ($snapshotRoot->childNodes as $child) {
+            $targetRoot->appendChild($document->importNode($child, true));
         }
     }
 
