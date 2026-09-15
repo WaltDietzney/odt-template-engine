@@ -45,7 +45,54 @@ final class SectionWorkingTargetResolver
             throw new AmbiguousAddressableTargetException('section', $descriptor->name());
         }
 
-        return new SectionWorkingTarget($document, $regionRoot, $matches[0], $provenance);
+        return new SectionWorkingTarget($document, $regionRoot, $matches[0], $provenance, $descriptor->id());
+    }
+
+    /**
+     * Resolve a nested Section inside an already bounded working target.
+     *
+     * @internal
+     */
+    public function resolveWithin(
+        SectionWorkingTarget $owner,
+        NativeObjectDescriptor $descriptor
+    ): SectionWorkingTarget {
+        if ($descriptor->kind() !== 'section' || $descriptor->name() === null) {
+            throw new SectionResolutionException('native object is not a named Section');
+        }
+
+        $provenance = $descriptor->provenance();
+        $ownerProvenance = $owner->provenance();
+        if ($provenance->sourcePart() !== $ownerProvenance->sourcePart()
+            || $provenance->regionKind() !== $ownerProvenance->regionKind()
+            || $provenance->regionOwner() !== $ownerProvenance->regionOwner()
+            || $provenance->carrierKind() !== $ownerProvenance->carrierKind()
+            || !in_array($owner->nativeObjectId(), $descriptor->ownerIds(), true)
+        ) {
+            throw new SectionResolutionException('nested Section provenance is outside its owner');
+        }
+
+        $matches = [];
+        foreach ($owner->section()->getElementsByTagNameNS(self::TEXT_NAMESPACE, 'section') as $node) {
+            if ($node instanceof DOMElement && $node->getAttribute('text:name') === $descriptor->name()) {
+                $matches[] = $node;
+            }
+        }
+
+        if ($matches === []) {
+            throw new TargetNotFoundException('nested section', $descriptor->name());
+        }
+        if (count($matches) > 1) {
+            throw new AmbiguousAddressableTargetException('nested section', $descriptor->name());
+        }
+
+        return new SectionWorkingTarget(
+            $owner->document(),
+            $owner->regionRoot(),
+            $matches[0],
+            $provenance,
+            $descriptor->id()
+        );
     }
 
     /** @return array{0:\DOMDocument,1:DOMElement} */
