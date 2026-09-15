@@ -20,7 +20,8 @@ final readonly class SectionWorkingTarget
         private DOMDocument $document,
         private DOMElement $regionRoot,
         private DOMElement $section,
-        private SourceProvenance $provenance
+        private SourceProvenance $provenance,
+        private string $nativeObjectId
     ) {
     }
 
@@ -47,5 +48,10 @@ final readonly class SectionWorkingTarget
     public function provenance(): SourceProvenance
     {
         return $this->provenance;
+    }
+
+    public function nativeObjectId(): string
+    {
+        return $this->nativeObjectId;
     }
 }
