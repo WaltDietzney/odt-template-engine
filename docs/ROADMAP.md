@@ -298,17 +298,20 @@ Set/Get Variable, additional Writer field families, and non-string User Field va
 
 #### D — Declarative Structural Controls
 
-**Current entry point:** Phase D now has an evidence/handoff baseline in
+**D0 research is COMPLETE / GREEN.** The authoritative evidence and decision
+baseline is
 [`architecture/TEMPLATE_AUTHORING_01D_DECLARATIVE_CONTROLS_BASELINE.md`](architecture/TEMPLATE_AUTHORING_01D_DECLARATIVE_CONTROLS_BASELINE.md).
-Future D0 work must start there. Questions marked **CLOSED** in that baseline
-must not be reopened without contradictory repository or ODF evidence.
+The next architecture step is the **Phase-D Change Contract**. CLOSED substrate
+and GREEN D0 decisions must not be reopened without contradictory repository or
+ODF evidence.
 
-The remaining D0 scope is deliberately narrow: automatic control-tree
-orchestration, conditional Section finalization, declarative execution-unit
-atomicity/lifecycle, missing collection-data policy, BODY/content.xml versus cross-part execution,
-and classic/native coexistence. Existing SECTION-03 collection/nesting,
-clone/identity, local binding, inspection/scope, and condition semantics are
-established substrate rather than Phase-D research topics.
+D0 establishes parent-first orchestration, Section-preserving true conditions,
+bounded declarative execution-unit atomicity, strict collection dependencies,
+part-/region-aware execution in supported BODY and master-page regions, and a
+bounded classic/native coexistence model. Existing SECTION-03
+collection/nesting, clone/identity, local binding, Phase-B inspection/scope, and
+shared condition semantics remain established substrate rather than Phase-D
+research topics.
 
 Design native template structures as a declarative frontend over existing structural mechanics rather than as a second renderer. Writer Section names such as:
 
@@ -322,7 +325,13 @@ are the principal design direction already supported by RESEARCH-01A mechanical 
 
 Where condition expressions are supported, visible template syntax and native declarations should share one condition semantics instead of developing independent evaluators. Likewise, declarative repetition should orchestrate the established Section instantiation model.
 
-Execution-unit lifecycle/atomicity, missing-data behavior, diagnostics, source-part scope, and compatibility must be specified before implementation. Established nesting, prototype-removal, and identity-rewriting mechanics are not reopened.
+The Phase-D Change Contract must now translate the completed D0 decisions into
+bounded, testable implementation obligations. In particular, the historical
+`contentDom()` limitation of SECTION-03 must not be promoted into a public
+BODY-only semantic restriction: declarative Section controls are eligible in
+TemplateContract-supported BODY and master-page header/footer regions through a
+part-/region-aware working-DOM bridge. Established nesting, prototype-removal,
+identity-rewriting, and compatibility facades must be preserved.
 
 #### E — Optional Mapping / Automation Layer
 
