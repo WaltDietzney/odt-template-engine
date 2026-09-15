@@ -177,7 +177,7 @@ TEMPLATE-AUTHORING-01
     ├── A — Existing Template Reliability & Format Preservation
     ├── B — Unified Template Inspection
     ├── C — Native Field Binding
-    ├── D — Declarative Structural Controls
+    ├── D — Declarative Structural Controls — COMPLETE / FINAL GO
     ├── E — Optional Mapping / Automation Layer
     └── F — Authoring Documentation & Samples
     ↓
@@ -296,42 +296,26 @@ Native fields complement `{{...}}` rather than replace the portable scalar place
 
 Set/Get Variable, additional Writer field families, and non-string User Field value types are deferred to version 1.1 or later unless a concrete earlier dependency emerges.
 
-#### D — Declarative Structural Controls
+#### D — Declarative Structural Controls — COMPLETE / FINAL GO
 
-**D0 research is COMPLETE / GREEN.** The authoritative evidence and decision
-baseline is
-[`architecture/TEMPLATE_AUTHORING_01D_DECLARATIVE_CONTROLS_BASELINE.md`](architecture/TEMPLATE_AUTHORING_01D_DECLARATIVE_CONTROLS_BASELINE.md).
-The Phase-D Change Contract is **ACCEPTED** in [`architecture/TEMPLATE_AUTHORING_01D_CHANGE_CONTRACT.md`](architecture/TEMPLATE_AUTHORING_01D_CHANGE_CONTRACT.md). The next step is **D1 — part-/region-aware Section resolution**. CLOSED substrate
-and GREEN D0 decisions must not be reopened without contradictory repository or
-ODF evidence.
+TEMPLATE-AUTHORING-01D is **COMPLETE / FINAL GO**. The authoritative research handoff remains
+[`architecture/TEMPLATE_AUTHORING_01D_DECLARATIVE_CONTROLS_BASELINE.md`](architecture/TEMPLATE_AUTHORING_01D_DECLARATIVE_CONTROLS_BASELINE.md), and the implemented completion contract is
+[`architecture/TEMPLATE_AUTHORING_01D_CHANGE_CONTRACT.md`](architecture/TEMPLATE_AUTHORING_01D_CHANGE_CONTRACT.md).
 
-D0 establishes parent-first orchestration, Section-preserving true conditions,
-bounded declarative execution-unit atomicity, strict collection dependencies,
-part-/region-aware execution in supported BODY and master-page regions, and a
-bounded classic/native coexistence model. Existing SECTION-03
-collection/nesting, clone/identity, local binding, Phase-B inspection/scope, and
-shared condition semantics remain established substrate rather than Phase-D
-research topics.
+D1–D4 are complete:
 
-Design native template structures as a declarative frontend over existing structural mechanics rather than as a second renderer. Writer Section names such as:
+- bounded part-/region-aware Section resolution from TemplateContract provenance to the current Working DOM;
+- native `#if` / `#ifnot` execution with Section-preserving true semantics and subtree removal on false;
+- native `#foreach` with strict named-record item scopes, classic scalar/filter binding, nested controls, BODY/header/footer execution, and collection input order preserved as document order;
+- execution-unit atomicity with rollback across `content.xml` and `styles.xml`.
 
-```text
-#foreach:experience
-#if:photo
-#ifnot:photo
-```
+Existing public SECTION-03 semantics remain unchanged and content-oriented where previously established. Phase D introduced no mandatory global render lifecycle and no Phase-E mapping automation.
 
-are the principal design direction already supported by RESEARCH-01A mechanical evidence.
+Final automated validation reached **845 tests / 5,754 assertions**, plus **199 assertions** in `PublicSampleSmokeTest`. The manual completion gate used a real LibreOffice-authored template containing BODY controls, nested `foreach -> if`, a master-page header condition, and a master-page footer foreach. Materialization and removal/empty-collection runs opened without repair warnings and remained stable after LibreOffice save/close/reopen.
 
-Where condition expressions are supported, visible template syntax and native declarations should share one condition semantics instead of developing independent evaluators. Likewise, declarative repetition should orchestrate the established Section instantiation model.
+The first manual run exposed a D3 WorkingTarget defect that reversed foreach physical document order. Investigation confirmed that SECTION-03 already defines input order as document order and that public `instantiateMany()` was correct. The declarative path was corrected with a bounded local insertion anchor, covered by RED-first BODY/footer/nested/save-reopen tests, and manually revalidated as `Anna -> Peter` and `Footer A -> Footer B`.
 
-The accepted Phase-D Change Contract translates the completed D0 decisions into
-bounded, testable implementation obligations. In particular, the historical
-`contentDom()` limitation of SECTION-03 must not be promoted into a public
-BODY-only semantic restriction: declarative Section controls are eligible in
-TemplateContract-supported BODY and master-page header/footer regions through a
-part-/region-aware working-DOM bridge. Established nesting, prototype-removal,
-identity-rewriting, and compatibility facades must be preserved.
+**Handoff rule:** D0–D4 are closed. Do not restart Phase-D research or redesign without contradictory repository or ODF evidence. The next TEMPLATE-AUTHORING phase is **E — Optional Mapping / Automation Layer**, which has not started and requires its own architecture decision before implementation.
 
 #### E — Optional Mapping / Automation Layer
 
