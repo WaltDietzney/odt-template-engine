@@ -44,8 +44,8 @@ final class SectionCloneService
             throw new SectionCloneException($name, 'native subtree could not be cloned');
         }
 
-        $index = $this->nextCloneIndex($context, $source);
-        $this->rewriteNativeIdentities($context, $source, $clone, $index);
+        $index = $this->nextCloneIndex($context->contentDom(), $source);
+        $this->rewriteNativeIdentities($context->contentDom(), $source, $clone, $index);
         (new TemplateExpressionIdentityRewriter())->rewrite($clone, $index, $name);
         if ($beforeInsert !== null) {
             $beforeInsert($clone, $index);
@@ -58,6 +58,46 @@ final class SectionCloneService
         try {
             $anchor = $insertionAnchor ?? $source;
             $anchor->parentNode->insertBefore($clone, $anchor->nextSibling);
+        } catch (\Throwable $exception) {
+            throw new SectionCloneException($name, 'rewritten subtree could not be inserted atomically');
+        }
+
+        return $clone;
+    }
+
+    /**
+     * Clone a Section selected by the internal part-/region-aware resolver.
+     *
+     * @internal
+     */
+    public function cloneWithRewrittenIdentitiesInWorkingTarget(
+        SectionWorkingTarget $target,
+        ?callable $beforeInsert = null
+    ): DOMElement {
+        $source = $target->section();
+        $name = $target->name();
+        if (preg_match('/_\d+$/', $name) === 1) {
+            throw new SectionCloneException($name, 'only a prototype section may be cloned in this slice');
+        }
+
+        $clone = $source->cloneNode(true);
+        if (!$clone instanceof DOMElement) {
+            throw new SectionCloneException($name, 'native subtree could not be cloned');
+        }
+
+        $index = $this->nextCloneIndex($target->document(), $source);
+        $this->rewriteNativeIdentities($target->document(), $source, $clone, $index);
+        (new TemplateExpressionIdentityRewriter())->rewrite($clone, $index, $name);
+        if ($beforeInsert !== null) {
+            $beforeInsert($clone, $index);
+        }
+
+        if (!$source->parentNode) {
+            throw new SectionCloneException($name, 'source section has no parent insertion context');
+        }
+
+        try {
+            $source->parentNode->insertBefore($clone, $source->nextSibling);
         } catch (\Throwable $exception) {
             throw new SectionCloneException($name, 'rewritten subtree could not be inserted atomically');
         }
@@ -84,8 +124,8 @@ final class SectionCloneService
             throw new SectionCloneException($name, 'native nested subtree could not be cloned');
         }
 
-        $index = $this->nextCloneIndex($context, $source);
-        $this->rewriteNativeIdentities($context, $source, $clone, $index);
+        $index = $this->nextCloneIndex($context->contentDom(), $source);
+        $this->rewriteNativeIdentities($context->contentDom(), $source, $clone, $index);
         (new TemplateExpressionIdentityRewriter())->rewrite($clone, $index, $name);
         if ($beforeInsert !== null) $beforeInsert($clone, $index);
 
@@ -191,10 +231,10 @@ final class SectionCloneService
         return $last;
     }
 
-    private function nextCloneIndex(OdtDocumentContext $context, DOMElement $source): int
+    private function nextCloneIndex(DOMDocument $document, DOMElement $source): int
     {
         $prototypeNames = $this->identityNames($source);
-        $occupied = $this->allNativeNames($context->contentDom(), $source);
+        $occupied = $this->allNativeNames($document, $source);
         $index = 1;
         while (true) {
             foreach ($prototypeNames as $name) {
@@ -249,7 +289,7 @@ final class SectionCloneService
     }
 
     private function rewriteNativeIdentities(
-        OdtDocumentContext $context,
+        DOMDocument $document,
         DOMElement $source,
         DOMElement $clone,
         int $index
@@ -263,7 +303,7 @@ final class SectionCloneService
             'draw:frame' => 'draw:name',
             'draw:custom-shape' => 'draw:name',
         ];
-        $occupied = $this->nativeNamesOutside($context->contentDom(), $source, $attributes);
+        $occupied = $this->nativeNamesOutside($document, $source, $attributes);
         $rewrites = [];
 
         $nodes = [$clone];
@@ -293,7 +333,7 @@ final class SectionCloneService
             $node->setAttribute($attribute, $rewrites[$key]);
         }
 
-        $this->rewriteTechnicalIds($context, $source, $clone, $index);
+        $this->rewriteTechnicalIds($document, $source, $clone, $index);
     }
 
     /** @param array<string, string> $attributes */
@@ -316,13 +356,13 @@ final class SectionCloneService
     }
 
     private function rewriteTechnicalIds(
-        OdtDocumentContext $context,
+        DOMDocument $document,
         DOMElement $source,
         DOMElement $clone,
         int $index
     ): void {
         $occupied = [];
-        foreach ($context->contentDom()->getElementsByTagName('*') as $node) {
+        foreach ($document->getElementsByTagName('*') as $node) {
             if ($node instanceof DOMElement && !$this->inside($node, $source) && $node->hasAttributeNS(self::XML_NAMESPACE, 'id')) {
                 $occupied[$node->getAttributeNS(self::XML_NAMESPACE, 'id')] = true;
             }
