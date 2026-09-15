@@ -223,11 +223,11 @@ final class DeclarativeConditionExecutor
         }
 
         foreach ($collection as $item) {
-            if (!is_array($item)) {
+            if (!is_array($item) || !$this->hasOnlyStringKeys($item)) {
                 throw new DeclarativeForeachExecutionException(
                     $carrier->name() ?? '<unnamed>',
                     $dependency->path(),
-                    'collection item must be an associative array'
+                    'collection item must be a named record with string keys'
                 );
             }
 
@@ -256,6 +256,18 @@ final class DeclarativeConditionExecutor
         }
 
         $this->removal->remove($target->section());
+    }
+
+    /** @param array<mixed, mixed> $item */
+    private function hasOnlyStringKeys(array $item): bool
+    {
+        foreach (array_keys($item) as $key) {
+            if (!is_string($key)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /** @param array<string, NativeObjectDescriptor> $nativeObjects */

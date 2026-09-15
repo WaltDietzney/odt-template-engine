@@ -50,6 +50,39 @@ final class DeclarativeForeachExecutionTest extends TestCase
         self::assertSame(0, $this->sectionCount($context->contentDom(), '#foreach:people'));
     }
 
+    public function testEmptyItemRecordIsValidWhenNoItemDependencyIsRequired(): void
+    {
+        [$context, $contract] = $this->fixture([
+            $this->definition('body', '#foreach:people', 'static content'),
+        ]);
+
+        (new DeclarativeConditionExecutor())->execute($context, $contract, [
+            'people' => [[]],
+        ]);
+
+        self::assertSame(1, $this->sectionCount($context->contentDom(), '#foreach:people'));
+        self::assertStringContainsString('static content', $this->sectionTexts($context->contentDom()));
+    }
+
+    /** @return iterable<string, array{array<string, mixed>}> */
+    public static function invalidCollectionItems(): iterable
+    {
+        yield 'scalar item' => [['people' => ['scalar item']]];
+        yield 'null item' => [['people' => [null]]];
+        yield 'positional item' => [['people' => [['Alice', 'Developer']]]];
+    }
+
+    #[DataProvider('invalidCollectionItems')]
+    public function testInvalidCollectionItemsFailExplicitly(array $values): void
+    {
+        [$context, $contract] = $this->fixture([
+            $this->definition('body', '#foreach:people', 'static content'),
+        ]);
+
+        $this->expectException(DeclarativeForeachExecutionException::class);
+        (new DeclarativeConditionExecutor())->execute($context, $contract, $values);
+    }
+
     /** @return iterable<string, array{mixed}> */
     public static function invalidCollections(): iterable
     {
