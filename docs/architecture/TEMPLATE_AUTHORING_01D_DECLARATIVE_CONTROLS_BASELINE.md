@@ -11,7 +11,8 @@ the current repository.
 
 Phase D has **not** approved a public execution API or a Change Contract yet.
 D0 research is complete. The six D0 decisions below are the accepted research
-baseline from which the Phase-D Change Contract must now be written.
+baseline. The resulting Phase-D Change Contract is now **ACCEPTED** in
+[`TEMPLATE_AUTHORING_01D_CHANGE_CONTRACT.md`](TEMPLATE_AUTHORING_01D_CHANGE_CONTRACT.md).
 
 ## Handoff rule
 
@@ -507,11 +508,13 @@ application value to multiple template dependencies.
 
 ## D0 completion boundary
 
-D0 is complete. The next architecture step is the **Phase-D Change Contract**.
+D0 is complete and the **Phase-D Change Contract is ACCEPTED**.
 
-The Change Contract must translate these six research decisions into bounded,
-testable implementation obligations without reopening CLOSED SECTION-03,
-Phase-B inspection/scope, Phase-C User Field, or shared condition semantics.
+Implementation must proceed from
+[`TEMPLATE_AUTHORING_01D_CHANGE_CONTRACT.md`](TEMPLATE_AUTHORING_01D_CHANGE_CONTRACT.md)
+in exactly four planned slices D1–D4 without reopening CLOSED SECTION-03,
+Phase-B inspection/scope, Phase-C User Field, shared condition semantics, or
+GREEN D0 decisions without contradictory evidence.
 
 ## Explicit non-goals for D0/D
 
@@ -532,11 +535,11 @@ D must not:
 
 ## Required workflow from here
 
-1. Verify this baseline against current `develop` when work resumes.
-2. Draft the Phase-D Change Contract directly from D0-1 through D0-6.
+1. Verify this baseline and the accepted Change Contract against current `develop` when work resumes.
+2. Start with D1 — part-/region-aware Section resolution.
 3. Add characterization tests where the contract touches existing behavior that is not yet protected.
-4. Review and explicitly accept the Change Contract before implementation.
-5. Implement in small slices above the existing Section substrate.
+4. Preserve the accepted Change Contract; do not change semantics during implementation without explicit review.
+5. Implement exactly the planned D1–D4 slices above the existing Section substrate.
 6. Run focused tests and the full project preflight.
 7. Perform LibreOffice regression for any rendering-sensitive transformation.
 8. Review the final diff against the Change Contract before merge to
@@ -548,7 +551,8 @@ A new chat or coding agent should be able to start Phase D with this rule:
 
 > **Do not reopen SECTION-03 mechanics, Phase-B scope/ownership, Phase-C User
 > Field semantics, or the six completed D0 decisions without contradictory
-> evidence. D0 is complete. Start with the Phase-D Change Contract. Preserve
+> evidence. D0 is complete and the Phase-D Change Contract is ACCEPTED. Start
+> implementation with D1 from that contract. Preserve
 > parent-first orchestration, Section-preserving true conditions, bounded
 > execution-unit atomicity, strict collection dependencies, part-/region-aware
 > execution in supported BODY and master-page regions, and the documented
