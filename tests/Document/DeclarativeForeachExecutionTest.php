@@ -9,6 +9,7 @@ use DOMElement;
 use OdtTemplateEngine\Document\DeclarativeConditionExecutor;
 use OdtTemplateEngine\Document\DeclarativeForeachExecutionException;
 use OdtTemplateEngine\OdtDocumentContext;
+use OdtTemplateEngine\OdtTemplate;
 use OdtTemplateEngine\Template\TemplateContract;
 use OdtTemplateEngine\Template\TemplateContractInspector;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -37,6 +38,89 @@ final class DeclarativeForeachExecutionTest extends TestCase
         self::assertStringContainsString('Firma A / PROJEKTLEITER', $this->sectionTexts($context->contentDom()));
         self::assertStringContainsString('Firma B / ENTWICKLER', $this->sectionTexts($context->contentDom()));
         self::assertStringNotContainsString('{{company', $this->sectionTexts($context->contentDom()));
+    }
+
+    public function testBodyForeachPreservesCollectionOrderAndIdentityMapping(): void
+    {
+        [$context, $contract] = $this->fixture([
+            $this->definition('body', '#foreach:people', '{{name}}'),
+        ]);
+
+        (new DeclarativeConditionExecutor())->execute($context, $contract, [
+            'people' => [
+                ['name' => 'A'],
+                ['name' => 'B'],
+                ['name' => 'C'],
+            ],
+        ]);
+
+        self::assertSame(
+            ['#foreach:people_1', '#foreach:people_2', '#foreach:people_3'],
+            $this->orderedSectionNames($context->contentDom(), '#foreach:people')
+        );
+        self::assertSame(['A', 'B', 'C'], $this->orderedSectionTexts($context->contentDom(), '#foreach:people'));
+    }
+
+    public function testFooterForeachPreservesCollectionOrderAndIdentityMapping(): void
+    {
+        [$context, $contract] = $this->fixture([
+            $this->definition('footer', '#foreach:footer_items', '{{label}}', 'Standard'),
+        ]);
+
+        (new DeclarativeConditionExecutor())->execute($context, $contract, [
+            'footer_items' => [
+                ['label' => 'A'],
+                ['label' => 'B'],
+                ['label' => 'C'],
+            ],
+        ]);
+
+        self::assertSame(
+            ['#foreach:footer_items_1', '#foreach:footer_items_2', '#foreach:footer_items_3'],
+            $this->orderedSectionNames($context->stylesDom(), '#foreach:footer_items')
+        );
+        self::assertSame(['A', 'B', 'C'], $this->orderedSectionTexts($context->stylesDom(), '#foreach:footer_items'));
+    }
+
+    public function testBodyForeachOrderSurvivesSaveAndReopen(): void
+    {
+        $output = sys_get_temp_dir() . '/template-authoring-01d-order-' . uniqid('', true) . '.odt';
+        $template = new class(__DIR__ . '/../fixtures/libreoffice-reference/odt/TEMPLATE-AUTHORING-01B-inspection-contract.odt') extends OdtTemplate {
+            public function context(): OdtDocumentContext
+            {
+                return $this->documentContext();
+            }
+        };
+
+        try {
+            (new DeclarativeConditionExecutor())->execute($template->context(), $template->inspectTemplate(), [
+                'show_profile' => true,
+                'profile' => 'Profile',
+                'hidden' => false,
+                'experience' => [
+                    ['company' => 'A', 'role' => 'A'],
+                    ['company' => 'B', 'role' => 'B'],
+                    ['company' => 'C', 'role' => 'C'],
+                ],
+            ]);
+            $template->save($output);
+
+            $reopened = new OdtTemplate($output);
+            self::assertSame(
+                ['#foreach:experience_1', '#foreach:experience_2', '#foreach:experience_3'],
+                array_values(array_map(
+                    static fn ($section): string => $section->name(),
+                    array_filter(
+                        $reopened->inspect()->sections(),
+                        static fn ($section): bool => str_starts_with($section->name(), '#foreach:experience_')
+                    )
+                ))
+            );
+        } finally {
+            if (is_file($output)) {
+                unlink($output);
+            }
+        }
     }
 
     public function testEmptyCollectionConsumesPrototypeWithoutCreatingInstances(): void
@@ -192,6 +276,34 @@ final class DeclarativeForeachExecutionTest extends TestCase
         self::assertStringContainsString('A2', $texts);
         self::assertStringContainsString('B1', $texts);
         self::assertSame(3, $this->sectionCount($context->contentDom(), '#foreach:projects'));
+    }
+
+    public function testNestedForeachPreservesOuterAndLocalCollectionOrder(): void
+    {
+        [$context, $contract] = $this->fixture([
+            $this->definition('body', '#foreach:outer', '', null, [
+                $this->definition('body', '#foreach:inner', ''),
+            ]),
+        ]);
+
+        (new DeclarativeConditionExecutor())->execute($context, $contract, [
+            'outer' => [
+                ['inner' => [['value' => 'A1'], ['value' => 'A2']]],
+                ['inner' => [['value' => 'B1'], ['value' => 'B2']]],
+            ],
+        ]);
+
+        self::assertSame(
+            [
+                '#foreach:outer_1',
+                '#foreach:inner_1_1',
+                '#foreach:inner_1_2',
+                '#foreach:outer_2',
+                '#foreach:inner_2_1',
+                '#foreach:inner_2_2',
+            ],
+            $this->orderedSectionNames($context->contentDom(), '#foreach:')
+        );
     }
 
     public function testConditionCanEnableOrRemoveNestedForeach(): void
@@ -382,6 +494,40 @@ final class DeclarativeForeachExecutionTest extends TestCase
             $text .= '|' . ($section->textContent ?? '');
         }
         return $text;
+    }
+
+    /** @return list<string> */
+    private function orderedSectionNames(DOMDocument $dom, string $prefix): array
+    {
+        $names = [];
+        foreach ($dom->getElementsByTagNameNS(self::TEXT, 'section') as $section) {
+            if (!$section instanceof DOMElement) {
+                continue;
+            }
+            $name = $section->getAttribute('text:name');
+            if ($prefix === '#foreach:' || str_starts_with($name, $prefix . '_')) {
+                $names[] = $name;
+            }
+        }
+
+        return $names;
+    }
+
+    /** @return list<string> */
+    private function orderedSectionTexts(DOMDocument $dom, string $prefix): array
+    {
+        $texts = [];
+        foreach ($dom->getElementsByTagNameNS(self::TEXT, 'section') as $section) {
+            if (!$section instanceof DOMElement) {
+                continue;
+            }
+            $name = $section->getAttribute('text:name');
+            if (str_starts_with($name, $prefix . '_')) {
+                $texts[] = trim($section->textContent ?? '');
+            }
+        }
+
+        return $texts;
     }
 
     private function userFieldCount(DOMDocument $dom): int

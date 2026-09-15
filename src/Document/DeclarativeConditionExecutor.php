@@ -302,6 +302,7 @@ final class DeclarativeConditionExecutor
             );
         }
 
+        $insertionAnchor = null;
         foreach ($collection as $item) {
             if (!is_array($item) || !$this->hasOnlyStringKeys($item)) {
                 throw new DeclarativeForeachExecutionException(
@@ -311,7 +312,8 @@ final class DeclarativeConditionExecutor
                 );
             }
 
-            $clone = $this->instances->instantiateWorkingTarget($target, $item);
+            $clone = $this->instances->instantiateWorkingTarget($target, $item, $insertionAnchor);
+            $insertionAnchor = $clone;
             $cloneTarget = new SectionWorkingTarget(
                 $target->document(),
                 $target->regionRoot(),
