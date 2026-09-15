@@ -225,7 +225,7 @@ The milestone phases are:
 1. **A — Existing Template Reliability & Format Preservation — COMPLETE:** characterize conditions, foreach, `nl2br`, lists, and relevant ODF/style boundaries; fix only evidenced defects.
 2. **B — Unified Template Inspection — COMPLETE:** compose template-language expressions with Sections, bookmarks, tables, frames, supported fields, declarative controls, dependencies, and diagnostics.
 3. **C — Native Field Binding:** design a bounded field-binding capability from Writer/ODF evidence; User Fields are a primary candidate, while broader field families require justification.
-4. **D — Declarative Structural Controls:** design Section declarations such as `#foreach:experience`, `#if:photo`, and `#ifnot:photo` as orchestration over existing Section mechanics and shared condition semantics.
+4. **D — Declarative Structural Controls:** design Section declarations such as `#foreach:experience`, `#if:photo`, and `#ifnot:photo` as orchestration over existing Section mechanics and shared condition semantics. The authoritative D0 handoff baseline is [`architecture/TEMPLATE_AUTHORING_01D_DECLARATIVE_CONTROLS_BASELINE.md`](architecture/TEMPLATE_AUTHORING_01D_DECLARATIVE_CONTROLS_BASELINE.md); its CLOSED evidence must not be turned back into research without contradictory evidence. D0 is limited to automatic orchestration, conditional finalization, whole-pass atomicity/lifecycle, missing collection-data policy, execution source-part scope, and classic/native coexistence.
 5. **E — High-Level Render Pipeline:** define deterministic orchestration for mapped data while preserving the lower-level APIs and lifecycle compatibility.
 6. **F — Authoring Documentation & Samples:** provide first-class guidance for creating inspectable, reusable LibreOffice templates and polished examples before 1.0.
 
@@ -249,6 +249,8 @@ Authoring UX is no longer merely non-blocking research. The bounded 1.0 authorin
 ### DECLARATIVE-SECTION-01 — absorbed provenance
 
 RESEARCH-01A already proved that Writer preserves names such as `#foreach:experience` and that existing Section mechanics can address such names. Phase D decides and implements the bounded 1.0 declarative semantics after compatibility/design review. Do not fuzzy-correct malformed declaration names.
+
+**Superseding planning note:** early Phase-D planning that treated nested foreach mechanics, item-local binding, identity rewriting, prototype removal, collection rollback, scope discovery, or condition grammar as open research is obsolete. Those topics are established repository baseline. Resume Phase D from [`architecture/TEMPLATE_AUTHORING_01D_DECLARATIVE_CONTROLS_BASELINE.md`](architecture/TEMPLATE_AUTHORING_01D_DECLARATIVE_CONTROLS_BASELINE.md).
 
 ### NATIVE-FIELDS-01 — split between 1.0 and later work
 
