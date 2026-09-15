@@ -65,6 +65,31 @@ final class TypedTargetResolverTest extends TestCase
         $resolver->resolveSection($context, 'Profile');
     }
 
+    public function testSectionFacadeRemainsContentXmlScopedWhenStylesContainsSameNamedMasterPageSection(): void
+    {
+        $context = $this->contextWithNamedObjects();
+        $styles = $context->stylesDom();
+        $masterPage = $styles->createElementNS(
+            'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+            'style:master-page'
+        );
+        $masterPage->setAttribute('style:name', 'Standard');
+        $header = $styles->createElementNS(
+            'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+            'style:header'
+        );
+        $section = $styles->createElementNS(self::TEXT_NAMESPACE, 'text:section');
+        $section->setAttribute('text:name', 'Profile');
+        $header->appendChild($section);
+        $masterPage->appendChild($header);
+        $styles->documentElement->appendChild($masterPage);
+
+        $target = (new TypedTargetResolver())->resolveSection($context, 'Profile');
+
+        self::assertSame('Profile', $target->name());
+        self::assertSame('content.xml', $target->descriptor()->documentPart());
+    }
+
     public function testMalformedBookmarkRemainsInspectableButCannotBecomeTarget(): void
     {
         $context = $this->contextWithMalformedBookmark();

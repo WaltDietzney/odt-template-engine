@@ -1,8 +1,8 @@
 # TEMPLATE-AUTHORING-01D — Declarative Structural Controls Change Contract
 
-**Status:** ACCEPTED  
-**Milestone:** TEMPLATE-AUTHORING-01D  
-**Baseline:** `TEMPLATE_AUTHORING_01D_DECLARATIVE_CONTROLS_BASELINE.md`  
+**Status:** ACCEPTED
+**Milestone:** TEMPLATE-AUTHORING-01D
+**Baseline:** `TEMPLATE_AUTHORING_01D_DECLARATIVE_CONTROLS_BASELINE.md`
 **Implementation base:** `develop`
 
 ## 1. Purpose and scope
