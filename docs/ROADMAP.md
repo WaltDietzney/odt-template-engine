@@ -301,7 +301,7 @@ Set/Get Variable, additional Writer field families, and non-string User Field va
 **D0 research is COMPLETE / GREEN.** The authoritative evidence and decision
 baseline is
 [`architecture/TEMPLATE_AUTHORING_01D_DECLARATIVE_CONTROLS_BASELINE.md`](architecture/TEMPLATE_AUTHORING_01D_DECLARATIVE_CONTROLS_BASELINE.md).
-The next architecture step is the **Phase-D Change Contract**. CLOSED substrate
+The Phase-D Change Contract is **ACCEPTED** in [`architecture/TEMPLATE_AUTHORING_01D_CHANGE_CONTRACT.md`](architecture/TEMPLATE_AUTHORING_01D_CHANGE_CONTRACT.md). The next step is **D1 — part-/region-aware Section resolution**. CLOSED substrate
 and GREEN D0 decisions must not be reopened without contradictory repository or
 ODF evidence.
 
@@ -325,7 +325,7 @@ are the principal design direction already supported by RESEARCH-01A mechanical 
 
 Where condition expressions are supported, visible template syntax and native declarations should share one condition semantics instead of developing independent evaluators. Likewise, declarative repetition should orchestrate the established Section instantiation model.
 
-The Phase-D Change Contract must now translate the completed D0 decisions into
+The accepted Phase-D Change Contract translates the completed D0 decisions into
 bounded, testable implementation obligations. In particular, the historical
 `contentDom()` limitation of SECTION-03 must not be promoted into a public
 BODY-only semantic restriction: declarative Section controls are eligible in
