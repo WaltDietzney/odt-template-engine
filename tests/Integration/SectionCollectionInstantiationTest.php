@@ -54,6 +54,16 @@ final class SectionCollectionInstantiationTest extends TestCase
             static fn ($instance): string => $instance->text(),
             $instances
         )));
+        self::assertSame(
+            ['ExperienceEntry_1', 'ExperienceEntry_2', 'ExperienceEntry_3'],
+            array_values(array_map(
+                static fn ($section): string => $section->name(),
+                array_filter(
+                    $template->inspect()->sections(),
+                    static fn ($section): bool => str_starts_with($section->name(), 'ExperienceEntry_')
+                )
+            ))
+        );
         $this->expectException(TargetNotFoundException::class);
         $prototype->text();
     }

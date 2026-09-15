@@ -72,7 +72,8 @@ final class SectionCloneService
      */
     public function cloneWithRewrittenIdentitiesInWorkingTarget(
         SectionWorkingTarget $target,
-        ?callable $beforeInsert = null
+        ?callable $beforeInsert = null,
+        ?DOMElement $insertionAnchor = null
     ): DOMElement {
         $source = $target->section();
         $name = $target->name();
@@ -89,12 +90,13 @@ final class SectionCloneService
             $beforeInsert($clone, $index);
         }
 
-        if (!$source->parentNode) {
+        $anchor = $insertionAnchor ?? $source;
+        if (!$source->parentNode || $anchor->parentNode !== $source->parentNode) {
             throw new SectionCloneException($name, 'source section has no parent insertion context');
         }
 
         try {
-            $source->parentNode->insertBefore($clone, $source->nextSibling);
+            $anchor->parentNode->insertBefore($clone, $anchor->nextSibling);
         } catch (\Throwable $exception) {
             throw new SectionCloneException($name, 'rewritten subtree could not be inserted atomically');
         }

@@ -122,13 +122,15 @@ final class SectionInstantiationService
      */
     public function instantiateWorkingTarget(
         SectionWorkingTarget $target,
-        array $values
+        array $values,
+        ?DOMElement $insertionAnchor = null
     ): DOMElement {
         return $this->cloneService->cloneWithRewrittenIdentitiesInWorkingTarget(
             $target,
             function (DOMElement $clone) use ($values, $target): void {
                 $this->bindOwnedScalars($clone, $values, $target->name());
-            }
+            },
+            $insertionAnchor
         );
     }
 
