@@ -114,6 +114,75 @@ final class SectionInstantiationService
         );
     }
 
+    /**
+     * Clone and bind a Section selected by the part-/region-aware resolver.
+     *
+     * @param array<string, mixed> $values
+     * @internal
+     */
+    public function instantiateWorkingTarget(
+        SectionWorkingTarget $target,
+        array $values
+    ): DOMElement {
+        return $this->cloneService->cloneWithRewrittenIdentitiesInWorkingTarget(
+            $target,
+            function (DOMElement $clone) use ($values, $target): void {
+                $this->bindOwnedScalars($clone, $values, $target->name());
+            }
+        );
+    }
+
+    /**
+     * Bind scalar/filter expressions owned directly by one current Section.
+     * Nested Sections are left for their own effective scope.
+     *
+     * @param array<string, mixed> $values
+     * @internal
+     */
+    public function bindWorkingTargetScalars(
+        SectionWorkingTarget $target,
+        array $values
+    ): void {
+        $this->bindOwnedScalars($target->section(), $values, $target->name());
+    }
+
+    /** @param array<string, mixed> $values */
+    private function validateValues(string $sectionName, array $values): void
+    {
+        foreach ($values as $key => $value) {
+            if ($key === '' || ($value !== null && !is_scalar($value))) {
+                throw new SectionInstantiationException($sectionName, 'invalid binding data', (string) $key);
+            }
+        }
+    }
+
+    /** @param array<string, mixed> $values */
+    private function bindOwnedScalars(DOMElement $section, array $values, string $sectionName): void
+    {
+        $unsupported = $this->processor->unsupportedExpressions($section);
+        if ($unsupported !== []) {
+            throw new SectionInstantiationException($sectionName, 'unsupported expression in clone', $unsupported[0]);
+        }
+
+        $binding = [];
+        foreach ($this->processor->scalarVariableNamesOwnedBy($section) as $variable) {
+            $sourceVariable = preg_replace('/(?:_\d+)+$/', '', $variable) ?: $variable;
+            if (!array_key_exists($sourceVariable, $values)) {
+                throw new SectionInstantiationException($sectionName, 'missing required value', $sourceVariable);
+            }
+            if ($values[$sourceVariable] !== null && !is_scalar($values[$sourceVariable])) {
+                throw new SectionInstantiationException($sectionName, 'invalid binding data', $sourceVariable);
+            }
+            $binding[$variable] = $values[$sourceVariable] === null ? '' : (string) $values[$sourceVariable];
+        }
+
+        $this->processor->replaceScalarTextOwnedBy(
+            $section,
+            $binding,
+            [$this->processor, 'applyFilter']
+        );
+    }
+
     private function lastInstance(OdtDocumentContext $context, string $prototypeName): ?DOMElement
     {
         $source = null;
