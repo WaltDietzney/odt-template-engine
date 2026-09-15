@@ -293,6 +293,18 @@ Set/Get Variable, additional Writer field families, and non-string User Field va
 
 #### D — Declarative Structural Controls
 
+**Current entry point:** Phase D now has an evidence/handoff baseline in
+[`architecture/TEMPLATE_AUTHORING_01D_DECLARATIVE_CONTROLS_BASELINE.md`](architecture/TEMPLATE_AUTHORING_01D_DECLARATIVE_CONTROLS_BASELINE.md).
+Future D0 work must start there. Questions marked **CLOSED** in that baseline
+must not be reopened without contradictory repository or ODF evidence.
+
+The remaining D0 scope is deliberately narrow: automatic control-tree
+orchestration, conditional Section finalization, whole-pass atomicity/lifecycle,
+missing collection-data policy, BODY/content.xml versus cross-part execution,
+and classic/native coexistence. Existing SECTION-03 collection/nesting,
+clone/identity, local binding, inspection/scope, and condition semantics are
+established substrate rather than Phase-D research topics.
+
 Design native template structures as a declarative frontend over existing structural mechanics rather than as a second renderer. Writer Section names such as:
 
 ```text
