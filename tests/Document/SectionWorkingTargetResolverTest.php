@@ -27,10 +27,28 @@ final class SectionWorkingTargetResolverTest extends TestCase
 
         $target = (new SectionWorkingTargetResolver())->resolve($context, $descriptors['body']);
 
-        self::assertSame('BodyShared', $target->name());
+        self::assertSame('Shared', $target->name());
         self::assertSame('content.xml', $target->provenance()->sourcePart());
         self::assertSame('BODY', $target->provenance()->regionKind());
         self::assertSame('BODY CONTENT', $target->section()->textContent);
+    }
+
+    public function testSameLogicalNameResolvesBodyAndHeaderByProvenance(): void
+    {
+        [$context, $descriptors] = $this->context();
+        $resolver = new SectionWorkingTargetResolver();
+
+        $body = $resolver->resolve($context, $descriptors['body']);
+        $header = $resolver->resolve($context, $descriptors['header']);
+
+        self::assertSame('BODY CONTENT', $body->section()->textContent);
+        self::assertSame('MASTER HEADER', $header->section()->textContent);
+        self::assertSame('content.xml', $body->provenance()->sourcePart());
+        self::assertSame('BODY', $body->provenance()->regionKind());
+        self::assertNull($body->provenance()->regionOwner());
+        self::assertSame('styles.xml', $header->provenance()->sourcePart());
+        self::assertSame('MASTER_PAGE_CONTENT', $header->provenance()->regionKind());
+        self::assertSame('Standard', $header->provenance()->regionOwner());
     }
 
     public function testResolvesSameNamedHeaderAndFooterByCarrierRegion(): void
@@ -109,7 +127,7 @@ final class SectionWorkingTargetResolverTest extends TestCase
         $content = $this->document('office:document-content');
         $body = $content->createElementNS(self::OFFICE, 'office:body');
         $text = $content->createElementNS(self::OFFICE, 'office:text');
-        $bodySection = $this->section($content, 'BodyShared', 'BODY CONTENT');
+        $bodySection = $this->section($content, 'Shared', 'BODY CONTENT');
         $text->appendChild($bodySection);
         $body->appendChild($text);
         $content->documentElement->appendChild($body);
@@ -123,7 +141,7 @@ final class SectionWorkingTargetResolverTest extends TestCase
         return [
             new OdtDocumentContext($content, $styles, $this->document('office:document-meta')),
             [
-                'body' => $this->descriptor('BodyShared', 'content.xml', 'BODY', null, 'office:text'),
+                'body' => $this->descriptor('Shared', 'content.xml', 'BODY', null, 'office:text'),
                 'header' => $this->descriptor('Shared', 'styles.xml', 'MASTER_PAGE_CONTENT', 'Standard', 'style:header'),
                 'footer' => $this->descriptor('Shared', 'styles.xml', 'MASTER_PAGE_CONTENT', 'Standard', 'style:footer'),
                 'firstHeader' => $this->descriptor('Shared', 'styles.xml', 'MASTER_PAGE_CONTENT', 'First', 'style:header'),
