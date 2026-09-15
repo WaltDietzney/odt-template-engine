@@ -8,11 +8,12 @@ use OdtTemplateEngine\OdtDocumentContext;
 use OdtTemplateEngine\Template\ConditionExpression;
 use OdtTemplateEngine\Template\ControlDescriptor;
 use OdtTemplateEngine\Template\DataScopeDescriptor;
+use OdtTemplateEngine\Template\DependencyDescriptor;
 use OdtTemplateEngine\Template\NativeObjectDescriptor;
 use OdtTemplateEngine\Template\TemplateContract;
 
 /**
- * Executes recognized native #if/#ifnot Section controls in bounded regions.
+ * Executes recognized native Section controls in bounded regions.
  *
  * @internal
  */
@@ -20,7 +21,8 @@ final class DeclarativeConditionExecutor
 {
     public function __construct(
         private SectionWorkingTargetResolver $resolver = new SectionWorkingTargetResolver(),
-        private SectionRemovalService $removal = new SectionRemovalService()
+        private SectionRemovalService $removal = new SectionRemovalService(),
+        private SectionInstantiationService $instances = new SectionInstantiationService()
     ) {
     }
 
@@ -40,27 +42,22 @@ final class DeclarativeConditionExecutor
             static fn ($control): bool => $control instanceof ControlDescriptor
                 && $control->representation() === 'NATIVE_SECTION_DECLARATION'
                 && $control->supportState() === 'RECOGNIZED'
-                && in_array($control->kind(), ['IF', 'IFNOT'], true)
+                && in_array($control->kind(), ['IF', 'IFNOT', 'FOREACH'], true)
         ));
+        $controlIds = [];
         foreach ($controls as $control) {
-            if ($control->scope()->kind() !== DataScopeDescriptor::ROOT) {
-                throw new DeclarativeConditionExecutionException(
-                    'conditional Section requires an unsupported non-root data scope'
-                );
-            }
+            $controlIds[$this->carrier($control, $nativeObjects)->id()] = true;
         }
-        $controlIds = array_fill_keys(array_map(
-            static fn (ControlDescriptor $control): string => $control->carrierNativeObjectId() ?? '',
-            $controls
-        ), true);
+
         $children = [];
         $roots = [];
-
         foreach ($controls as $control) {
             $carrier = $this->carrier($control, $nativeObjects);
             $parentId = null;
             foreach ($carrier->ownerIds() as $ownerId) {
                 if (isset($controlIds[$ownerId])) {
+                    // Phase-B ownerIds are ordered outermost to innermost.
+                    // The last matching control is the direct owner.
                     $parentId = $ownerId;
                 }
             }
@@ -72,8 +69,19 @@ final class DeclarativeConditionExecutor
             }
         }
 
+        $rootScope = DataScopeDescriptor::root();
         foreach ($roots as $control) {
-            $this->executeControl($context, $control, $children, $nativeObjects, $values, null);
+            $this->executeControl(
+                $context,
+                $control,
+                $children,
+                $nativeObjects,
+                $values,
+                $rootScope,
+                null,
+                null,
+                $contract
+            );
         }
     }
 
@@ -88,25 +96,57 @@ final class DeclarativeConditionExecutor
         array $children,
         array $nativeObjects,
         array $values,
-        ?SectionWorkingTarget $owner
+        DataScopeDescriptor $scope,
+        ?SectionWorkingTarget $owner,
+        ?NativeObjectDescriptor $ownerCarrier,
+        TemplateContract $contract
     ): void {
         $carrier = $this->carrier($control, $nativeObjects);
+        if ($control->scope()->id() !== $scope->id()) {
+            throw new DeclarativeConditionExecutionException(
+                sprintf(
+                    'control %s has scope %s but execution is in scope %s',
+                    $control->id(),
+                    $control->scope()->pathPrefix(),
+                    $scope->pathPrefix()
+                )
+            );
+        }
+
         try {
             $target = $owner === null
                 ? $this->resolver->resolve($context, $carrier)
-                : $this->resolver->resolveWithin($owner, $carrier);
+                : $this->resolver->resolveWithin(
+                    $owner,
+                    $carrier,
+                    $this->identitySuffix($ownerCarrier, $owner)
+                );
         } catch (\Throwable $exception) {
             if ($exception instanceof DeclarativeConditionExecutionException) {
                 throw $exception;
             }
             throw new DeclarativeConditionExecutionException(
-                'could not resolve conditional Section ' . ($carrier->name() ?? '<unnamed>'),
+                'could not resolve native Section ' . ($carrier->name() ?? '<unnamed>'),
                 0,
                 $exception
             );
         }
 
-        $expression = $this->expression($carrier);
+        if ($control->kind() === 'FOREACH') {
+            $this->executeForeach(
+                $context,
+                $control,
+                $carrier,
+                $target,
+                $children,
+                $nativeObjects,
+                $values,
+                $contract
+            );
+            return;
+        }
+
+        $expression = $this->conditionExpression($carrier);
         try {
             $condition = ConditionExpression::parse($expression)->evaluate($values);
         } catch (\Throwable $exception) {
@@ -123,9 +163,111 @@ final class DeclarativeConditionExecutor
             return;
         }
 
+        $this->instances->bindWorkingTargetScalars($target, $values);
         foreach ($children[$carrier->id()] ?? [] as $child) {
-            $this->executeControl($context, $child, $children, $nativeObjects, $values, $target);
+            $this->executeControl(
+                $context,
+                $child,
+                $children,
+                $nativeObjects,
+                $values,
+                $scope,
+                $target,
+                $carrier,
+                $contract
+            );
         }
+    }
+
+    /**
+     * @param array<string, list<ControlDescriptor>> $children
+     * @param array<string, NativeObjectDescriptor> $nativeObjects
+     * @param array<string, mixed> $values
+     */
+    private function executeForeach(
+        OdtDocumentContext $context,
+        ControlDescriptor $control,
+        NativeObjectDescriptor $carrier,
+        SectionWorkingTarget $target,
+        array $children,
+        array $nativeObjects,
+        array $values,
+        TemplateContract $contract
+    ): void {
+        $dependency = $this->dependency($control, $carrier, $contract);
+        $name = $dependency->name();
+        if (!array_key_exists($name, $values)) {
+            throw new DeclarativeForeachExecutionException(
+                $carrier->name() ?? '<unnamed>',
+                $dependency->path(),
+                'missing collection dependency'
+            );
+        }
+
+        $collection = $values[$name];
+        if (!is_array($collection)) {
+            throw new DeclarativeForeachExecutionException(
+                $carrier->name() ?? '<unnamed>',
+                $dependency->path(),
+                $collection === null ? 'collection is null' : 'collection must be an array'
+            );
+        }
+
+        $createdScope = $control->createdScope();
+        if ($createdScope === null) {
+            throw new DeclarativeForeachExecutionException(
+                $carrier->name() ?? '<unnamed>',
+                $dependency->path(),
+                'collection item scope is unavailable'
+            );
+        }
+
+        foreach ($collection as $item) {
+            if (!is_array($item) || !$this->hasOnlyStringKeys($item)) {
+                throw new DeclarativeForeachExecutionException(
+                    $carrier->name() ?? '<unnamed>',
+                    $dependency->path(),
+                    'collection item must be a named record with string keys'
+                );
+            }
+
+            $clone = $this->instances->instantiateWorkingTarget($target, $item);
+            $cloneTarget = new SectionWorkingTarget(
+                $target->document(),
+                $target->regionRoot(),
+                $clone,
+                $target->provenance(),
+                $target->nativeObjectId()
+            );
+
+            foreach ($children[$carrier->id()] ?? [] as $child) {
+                $this->executeControl(
+                    $context,
+                    $child,
+                    $children,
+                    $nativeObjects,
+                    $item,
+                    $createdScope,
+                    $cloneTarget,
+                    $carrier,
+                    $contract
+                );
+            }
+        }
+
+        $this->removal->remove($target->section());
+    }
+
+    /** @param array<mixed, mixed> $item */
+    private function hasOnlyStringKeys(array $item): bool
+    {
+        foreach (array_keys($item) as $key) {
+            if (!is_string($key)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /** @param array<string, NativeObjectDescriptor> $nativeObjects */
@@ -134,14 +276,14 @@ final class DeclarativeConditionExecutor
         $id = $control->carrierNativeObjectId();
         if ($id === null || !isset($nativeObjects[$id])) {
             throw new DeclarativeConditionExecutionException(
-                'recognized conditional control has no resolvable native Section carrier'
+                'recognized native control has no resolvable Section carrier'
             );
         }
 
         return $nativeObjects[$id];
     }
 
-    private function expression(NativeObjectDescriptor $carrier): string
+    private function conditionExpression(NativeObjectDescriptor $carrier): string
     {
         $name = $carrier->name();
         if ($name === null || preg_match('/^#(?:if|ifnot):(.+)$/', $name, $match) !== 1) {
@@ -154,5 +296,43 @@ final class DeclarativeConditionExecutor
         }
 
         return $expression;
+    }
+
+    private function dependency(
+        ControlDescriptor $control,
+        NativeObjectDescriptor $carrier,
+        TemplateContract $contract
+    ): DependencyDescriptor {
+        $dependencyId = $control->dependencyIds()[0] ?? null;
+        foreach ($contract->dependencies() as $dependency) {
+            if ($dependency->id() === $dependencyId && $dependency->kind() === 'COLLECTION') {
+                return $dependency;
+            }
+        }
+
+        throw new DeclarativeForeachExecutionException(
+            $carrier->name() ?? '<unnamed>',
+            (string) $dependencyId,
+            'collection dependency is unavailable'
+        );
+    }
+
+    private function identitySuffix(
+        ?NativeObjectDescriptor $ownerCarrier,
+        SectionWorkingTarget $owner
+    ): string {
+        if ($ownerCarrier === null || $ownerCarrier->name() === null) {
+            return '';
+        }
+
+        $physicalName = $owner->name();
+        $prototypeName = $ownerCarrier->name();
+        if (!str_starts_with($physicalName, $prototypeName)) {
+            throw new DeclarativeConditionExecutionException(
+                'working Section identity does not match its contract carrier'
+            );
+        }
+
+        return substr($physicalName, strlen($prototypeName));
     }
 }

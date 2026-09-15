@@ -76,9 +76,6 @@ final class SectionCloneService
     ): DOMElement {
         $source = $target->section();
         $name = $target->name();
-        if (preg_match('/_\d+$/', $name) === 1) {
-            throw new SectionCloneException($name, 'only a prototype section may be cloned in this slice');
-        }
 
         $clone = $source->cloneNode(true);
         if (!$clone instanceof DOMElement) {

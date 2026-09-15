@@ -55,7 +55,8 @@ final class SectionWorkingTargetResolver
      */
     public function resolveWithin(
         SectionWorkingTarget $owner,
-        NativeObjectDescriptor $descriptor
+        NativeObjectDescriptor $descriptor,
+        string $identitySuffix = ''
     ): SectionWorkingTarget {
         if ($descriptor->kind() !== 'section' || $descriptor->name() === null) {
             throw new SectionResolutionException('native object is not a named Section');
@@ -72,18 +73,19 @@ final class SectionWorkingTargetResolver
             throw new SectionResolutionException('nested Section provenance is outside its owner');
         }
 
+        $expectedName = $descriptor->name() . $identitySuffix;
         $matches = [];
         foreach ($owner->section()->getElementsByTagNameNS(self::TEXT_NAMESPACE, 'section') as $node) {
-            if ($node instanceof DOMElement && $node->getAttribute('text:name') === $descriptor->name()) {
+            if ($node instanceof DOMElement && $node->getAttribute('text:name') === $expectedName) {
                 $matches[] = $node;
             }
         }
 
         if ($matches === []) {
-            throw new TargetNotFoundException('nested section', $descriptor->name());
+            throw new TargetNotFoundException('nested section', $expectedName);
         }
         if (count($matches) > 1) {
-            throw new AmbiguousAddressableTargetException('nested section', $descriptor->name());
+            throw new AmbiguousAddressableTargetException('nested section', $expectedName);
         }
 
         return new SectionWorkingTarget(

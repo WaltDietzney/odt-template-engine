@@ -98,6 +98,12 @@ effective data scope.
 | `null` | fail |
 | scalar or unsupported non-collection value | fail |
 
+Each collection item is a named record scope and must therefore be represented
+by an array with string keys. An empty item record is valid when execution does
+not require an item dependency. Positional/list arrays, scalar items, `null`,
+and objects are invalid. The engine does not introduce implicit item keys such
+as `value`, `this`, `item`, or `@value`.
+
 The same rules apply recursively to nested item scopes. The core must not
 normalize missing, null, scalar, or object values into collections. Such
 application-specific normalization belongs to an optional mapping layer.
