@@ -2,7 +2,7 @@
 
 ## Status
 
-**Architecture handoff baseline / D0 entry document**
+**Architecture handoff baseline / D0 research complete**
 
 This document records the evidence already established before implementation of
 TEMPLATE-AUTHORING-01D. Its purpose is to prevent future work, especially after
@@ -10,7 +10,8 @@ a chat or agent handoff, from reopening questions that are already answered by
 the current repository.
 
 Phase D has **not** approved a public execution API or a Change Contract yet.
-The remaining open decisions listed here must be resolved before implementation.
+D0 research is complete. The six D0 decisions below are the accepted research
+baseline from which the Phase-D Change Contract must now be written.
 
 ## Handoff rule
 
@@ -283,60 +284,203 @@ Declarative structural orchestration
 The exact service/API name is not approved. This diagram expresses
 responsibility placement only.
 
-## Classic versus native controls
+## D0 research decisions
 
-Classic paragraph-marker controls have existing runtime behavior and known
-nested-control limitations. TEMPLATE-AUTHORING-01B records these through
-`classic_nested_control_runtime_limitation` diagnostics.
+The six previously open D0 questions are now resolved. These decisions are the
+research baseline for the Phase-D Change Contract. They are not yet public API
+signatures.
 
-Native Section controls should use the established Section architecture rather
-than inherit structural limitations merely because the classic implementation
-has them.
+### D0-1 — Automatic control-tree orchestration — GREEN
 
-The compatibility principle is:
+Native declarative controls execute **parent-first / outside-in**.
 
-```text
-shared semantic meaning
-    └── ConditionExpression
+The Phase-B TemplateContract remains the semantic authority for control kind,
+dependency, data scope, carrier identity, and native ownership. The current
+working DOM remains the structural mutation authority.
 
-representation-specific structural mechanics
-    ├── classic markers → existing classic processor
-    └── native Sections → Section architecture
-```
-
-How both representations participate in a future automatic render pass remains
-an explicit Phase-D/E compatibility decision; do not silently choose precedence
-or double-execute equivalent controls.
-
-## Source-part boundary
-
-Inspection is already cross-part and can discover native declarative Section
-candidates in locations such as master-page header content in `styles.xml`.
-
-The current Section mutation/instantiation substrate, however, resolves and
-mutates Sections through `contentDom()`. It is therefore a
-**content.xml execution substrate** today.
-
-This difference is intentional evidence:
+A declarative executor must therefore orchestrate existing Section mechanics
+rather than build a second persistent control tree:
 
 ```text
-inspection: content.xml + styles.xml
-execution substrate: content.xml
+TemplateContract ownership/scope
+        ↓
+parent control
+        ↓
+existing Section operation
+        ↓
+surviving/generated concrete instance
+        ↓
+direct owned child controls
+        ↓
+recursive execution in that instance
 ```
 
-Phase D must explicitly decide whether its bounded v1 execution scope is BODY /
-`content.xml` only or whether a separate cross-part mutation extension is
-justified. Cross-part execution must not be introduced accidentally as an
-implementation detail.
+Consequences:
 
-The current preferred bounded direction is **BODY/content.xml-only for Phase D
-v1**, unless new evidence demonstrates that 1.0 requires cross-part declarative
-structural execution. This is still a scope decision to ratify in the Change
-Contract, not an implemented capability.
+- child controls execute only after their parent survives or produces a
+  concrete instance;
+- foreach children execute separately for every concrete parent instance;
+- a false parent condition prevents all owned descendants from executing;
+- existing `instantiateMany()`, relative `SectionTarget::section()`,
+  clone/identity rewriting, and local prototype mechanics remain the mutation
+  substrate;
+- no second scope model, ownership analyzer, persistent render AST, clone
+  mechanism, or identity allocator is introduced.
+
+### D0-2 — Conditional Section finalization — GREEN
+
+ODF/LibreOffice evidence shows that a `text:section` carrier can own native
+Section semantics such as its name, Section style, condition/display state, and
+Section properties. A surviving condition must therefore not be unwrapped merely
+to consume template syntax.
+
+The Phase-D structural result is:
+
+```text
+#if / #ifnot false
+    → remove the complete native Section subtree
+
+#if / #ifnot true
+    → preserve the native Section container and its contents
+```
+
+For a true condition, Section-owned styles/properties, nested native objects,
+and nested controls survive. Those nested controls are then eligible for
+parent-first execution under D0-1.
+
+Phase D introduces no special materialized-name scheme. A surviving condition
+Section keeps its authored native name. Existing foreach clone identity
+rewriting remains unchanged. Any broader export/finalization policy belongs to
+FINALIZATION-01 rather than to conditional execution.
+
+### D0-3 — Declarative execution-unit atomicity/lifecycle — GREEN
+
+Atomicity is bounded to **one invocation that recursively processes the selected
+declarative structural-control tree/execution unit**.
+
+If that invocation fails, mutations made by that invocation are rolled back to
+the state immediately before it began. Unrelated document mutations performed
+before the invocation are not rolled back.
+
+On success, the affected controls are structurally materialized, but
+`OdtTemplate` does **not** enter a global rendered/materialized state. Callers
+remain free to continue with User Fields, bookmarks, images, scalar binding,
+structured insertion, or other imperative operations before saving.
+
+Phase D therefore defines:
+
+- no mandatory global processing order;
+- no document-wide render transaction;
+- no new global lifecycle state;
+- no general idempotence/repeated-execution guarantee for an already consumed
+  structural control;
+- no new marker-finalization naming scheme.
+
+Existing `load()` behavior remains unchanged. Optional mapping-driven
+automation is a higher layer and may define its own orchestration contract.
+
+### D0-4 — Missing collection data — GREEN
+
+A native `#foreach:key` requires the corresponding collection dependency in
+its effective data scope.
+
+```text
+key present with []
+    → valid empty collection; zero instances
+
+key present with collection items
+    → valid collection
+
+key absent
+    → data-contract failure
+
+key present with null/non-collection value
+    → invalid collection input; failure
+```
+
+The same rule applies recursively in nested collection-item scopes. A nested
+missing or invalid collection fails the containing declarative execution unit,
+so D0-3 atomicity applies.
+
+The core engine does not silently normalize missing/null/scalar values into
+collections. Application-specific defaults or normalization belong to an
+optional mapping layer.
+
+Condition missing-value behavior remains governed by the existing shared
+`ConditionExpression` semantics and is not redefined here.
+
+### D0-5 — Execution source-part scope — GREEN
+
+The earlier provisional BODY/`content.xml`-only preference is **superseded**.
+
+ODF permits `text:section` in Writer header/footer content, and conditional
+header/footer content is a practical authoring use case. Phase-B inspection
+already preserves the source provenance required to distinguish such carriers:
+
+```text
+ControlDescriptor
+    → carrierNativeObjectId
+        → NativeObjectDescriptor
+            → sourcePart
+            → regionKind
+            → regionOwner
+            → carrierKind
+            → ownerIds
+```
+
+`OdtDocumentContext`/`OdtPackage` already own mutable `content.xml` and
+`styles.xml` DOMs. The current SECTION-03 services are historically
+`contentDom()`-bound; that is an implementation limitation, not a semantic
+restriction of declarative controls.
+
+Phase D therefore treats declarative native Section controls as source-part
+independent **within TemplateContract-supported inspected regions**:
+
+- BODY content in `content.xml`;
+- supported master-page header/footer content in `styles.xml`.
+
+There is no control-kind-specific source-part matrix: `#if`, `#ifnot`, and
+`#foreach` share the same eligibility rule where the inspected ODF region
+supports the Section carrier.
+
+Execution needs a bounded part-/region-aware bridge from source-semantic
+identity to the current working DOM. The existing TemplateContract provenance
+is sufficient input; Phase D does not need another inspection model. Concrete
+working-DOM target API design belongs to the Change Contract/implementation
+design and must preserve compatibility facades where required.
+
+### D0-6 — Classic/native coexistence — GREEN
+
+Classic and native representations may coexist in one document.
+
+The supported composition boundary is:
+
+| Composition | Phase-D position |
+| --- | --- |
+| native structural control containing classic scalar/filter expressions | **SUPPORTED** |
+| classic scalar/filter expressions elsewhere in the document | **SUPPORTED / independent** |
+| classic structural control owning native structural control, or the reverse | **no new Phase-D orchestration guarantee** |
+
+Native structural controls own structural materialization and collection-item
+scope creation. Classic scalar/filter expressions inside a concrete native
+instance use the effective native data scope through the existing classic
+binding semantics.
+
+Phase D does not redesign classic structural controls or repair their known
+nested-control runtime limitations as collateral work. Cross-representation
+structural nesting must not acquire hidden precedence or double-execution rules.
+
+Native User Fields retain the Phase-C document-level/ROOT binding semantics;
+physical placement inside a repeated Section does not convert a User Field into
+an item-scoped binding.
+
+Identically named dependencies in different representations are not implicitly
+aliased by the core engine. An optional mapping layer may deliberately map one
+application value to multiple template dependencies.
 
 ## D0 evidence matrix
 
-| Topic | Status before D0 |
+| Topic | Status after D0 |
 | --- | --- |
 | Writer Section as control carrier | **CLOSED** |
 | Control discovery | **CLOSED** |
@@ -354,100 +498,20 @@ Contract, not an implemented capability.
 | Collection-local rollback | **CLOSED** |
 | Save/reopen of finalized collections | **CLOSED** |
 | User Field ROOT scope from Phase C | **CLOSED** |
-| Automatic control-tree orchestration | **OPEN** |
-| Conditional Section finalization | **OPEN** |
-| Declarative execution-unit atomicity/lifecycle | **OPEN** |
-| Missing collection data policy | **OPEN** |
-| BODY-only versus cross-part execution | **OPEN — scope decision** |
-| Classic/native coexistence in automatic execution | **OPEN — compatibility decision** |
+| Automatic control-tree orchestration | **GREEN / D0-1** |
+| Conditional Section finalization | **GREEN / D0-2** |
+| Declarative execution-unit atomicity/lifecycle | **GREEN / D0-3** |
+| Missing collection data policy | **GREEN / D0-4** |
+| Cross-part execution in supported regions | **GREEN / D0-5** |
+| Classic/native coexistence | **GREEN / D0-6** |
 
-## The only Phase-D questions that remain open
+## D0 completion boundary
 
-### D0-1 — Automatic control-tree orchestration
+D0 is complete. The next architecture step is the **Phase-D Change Contract**.
 
-Specify how the executor walks declarative native controls and translates them
-into existing imperative Section operations, including recursion into concrete
-instances and deterministic processing order.
-
-This is orchestration design. It is not permission to redesign Section cloning,
-identity allocation, local binding, nested addressing, or collection
-finalization.
-
-### D0-2 — Conditional Section finalization
-
-Define the native result of:
-
-```text
-#if:x    → true / false
-#ifnot:x → true / false
-```
-
-The false branch can plausibly use bounded Section removal, but this must be
-specified.
-
-The true branch is especially important: decide whether the declarative carrier
-Section remains with its semantic name, is renamed/finalized, is unwrapped, or
-uses another evidenced native transformation. Do not choose this from API
-convenience alone; inspect ODF/Writer behavior and lifecycle consequences.
-
-### D0-3 — Declarative execution-unit atomicity and lifecycle
-
-Existing `instantiateMany()` atomicity is operation-local. Automatic execution
-introduces a larger unit:
-
-```text
-outer foreach
-    → nested foreach
-        → condition
-            → possible later failure
-```
-
-Specify the atomicity boundary for one invocation that recursively processes a
-declarative structural-control tree or selected execution unit. Do not infer a
-transaction around unrelated document operations performed before or after that
-invocation.
-
-Also characterize repeated execution of that structural operation only as far
-as Phase D requires. Do not use D0-3 to prescribe a global `OdtTemplate`
-render lifecycle, ordering for scalar/User Field/bookmark/image operations, or
-the optional Phase-E mapping/automation workflow. FINALIZATION-01 remains a
-separate lifecycle/export concern.
-
-### D0-4 — Missing collection data
-
-Differentiate deliberately between:
-
-```text
-collection key present with []
-collection key absent
-collection key present with invalid/non-collection value
-```
-
-The existing empty-collection behavior is already fixed. What remains is the
-automatic executor's policy for absent and invalid collection dependencies.
-
-For conditions, existing `ConditionExpression` behavior is compatibility
-evidence and should be reused unless the Change Contract explicitly documents a
-reason not to.
-
-### D0-5 — Execution source-part scope
-
-Ratify BODY/`content.xml`-only execution for the bounded Phase-D v1, or provide
-concrete evidence and a separate design for extending Section mutation across
-document parts.
-
-Do not confuse cross-part inspection or User Field binding with cross-part
-Section instantiation.
-
-### D0-6 — Classic/native coexistence
-
-Specify what an automatic structural pass does when classic and native control
-representations coexist. Preserve existing imperative APIs and classic
-compatibility. Avoid both double execution and hidden precedence rules.
-
-Phase D should solve only the structural-control boundary required for native
-Section execution. Full ordering of all scalar/native-field/structured
-operations belongs to Phase E.
+The Change Contract must translate these six research decisions into bounded,
+testable implementation obligations without reopening CLOSED SECTION-03,
+Phase-B inspection/scope, Phase-C User Field, or shared condition semantics.
 
 ## Explicit non-goals for D0/D
 
@@ -462,16 +526,16 @@ D must not:
 - implement or require a monolithic high-level `OdtTemplate::render($mappedData)` pipeline;
 - solve FINALIZATION-01;
 - introduce page-style authoring;
-- add cross-part Section mutation opportunistically;
+- broaden Section mutation beyond TemplateContract-supported inspected regions;
 - change classic template semantics as collateral work;
 - mix unrelated refactoring with declarative behavior changes.
 
 ## Required workflow from here
 
 1. Verify this baseline against current `develop` when work resumes.
-2. Investigate only D0-1 through D0-6.
-3. Add characterization tests where an open question touches existing behavior.
-4. Record the accepted semantics in a Phase-D Change Contract.
+2. Draft the Phase-D Change Contract directly from D0-1 through D0-6.
+3. Add characterization tests where the contract touches existing behavior that is not yet protected.
+4. Review and explicitly accept the Change Contract before implementation.
 5. Implement in small slices above the existing Section substrate.
 6. Run focused tests and the full project preflight.
 7. Perform LibreOffice regression for any rendering-sensitive transformation.
@@ -482,12 +546,13 @@ D must not:
 
 A new chat or coding agent should be able to start Phase D with this rule:
 
-> **Do not ask how Sections clone, how nested foreach is addressed, how item
-> binding works, how identities are rewritten, how scopes are discovered, or
-> how conditions are parsed. Those questions are already answered. Start with
-> orchestration, conditional finalization, declarative execution-unit atomicity,
-> missing collection data, source-part scope, and classic/native coexistence.
-> Mapping-driven automation is an optional higher layer, not an inherent
-> `OdtTemplate` lifecycle.**
+> **Do not reopen SECTION-03 mechanics, Phase-B scope/ownership, Phase-C User
+> Field semantics, or the six completed D0 decisions without contradictory
+> evidence. D0 is complete. Start with the Phase-D Change Contract. Preserve
+> parent-first orchestration, Section-preserving true conditions, bounded
+> execution-unit atomicity, strict collection dependencies, part-/region-aware
+> execution in supported BODY and master-page regions, and the documented
+> classic/native coexistence boundary. Mapping-driven automation remains an
+> optional higher layer, not an inherent `OdtTemplate` lifecycle.**
 
 Semantics before implementation.
