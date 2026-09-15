@@ -178,7 +178,7 @@ TEMPLATE-AUTHORING-01
     ├── B — Unified Template Inspection
     ├── C — Native Field Binding
     ├── D — Declarative Structural Controls
-    ├── E — High-Level Render Pipeline
+    ├── E — Optional Mapping / Automation Layer
     └── F — Authoring Documentation & Samples
     ↓
 FINALIZATION-01
@@ -240,15 +240,20 @@ Broader Writer drawing features, CustomShape architecture, and exhaustive positi
 
 Version 1.0 must support a coherent template philosophy in which a LibreOffice-authored ODT can carry not only layout and scalar placeholders, but also discoverable native structure and bounded declarative control. The existing imperative APIs remain supported; this milestone complements them with a higher-level template-driven path rather than replacing them.
 
-The target application-facing workflow is conceptually:
+A useful **optional** application-facing workflow is conceptually:
 
 ```php
 $contract = $template->inspectTemplate();
-$template->render($mappedData);
+$automation->renderMapped($template, $mappedData);
 $template->save('result.odt');
 ```
 
-The exact public API remains subject to evidence, compatibility review, and a Change Contract. The product goal is nevertheless fixed: a generic application should be able to inspect a well-authored template, map application data to its declared inputs, and let the engine orchestrate supported rendering without rebuilding the document layout in PHP.
+This is deliberately illustrative, not an approved class or method signature.
+The product goal is that a generic application can inspect a well-authored
+template and, where useful, build a mapping-driven automation workflow without
+rebuilding the document layout in PHP. That convenience workflow is not an
+inherent `OdtTemplate` lifecycle. Existing lower-level and imperative APIs
+remain first-class and may be composed directly in any appropriate order.
 
 The milestone is divided into six bounded phases:
 
@@ -299,8 +304,8 @@ Future D0 work must start there. Questions marked **CLOSED** in that baseline
 must not be reopened without contradictory repository or ODF evidence.
 
 The remaining D0 scope is deliberately narrow: automatic control-tree
-orchestration, conditional Section finalization, whole-pass atomicity/lifecycle,
-missing collection-data policy, BODY/content.xml versus cross-part execution,
+orchestration, conditional Section finalization, declarative execution-unit
+atomicity/lifecycle, missing collection-data policy, BODY/content.xml versus cross-part execution,
 and classic/native coexistence. Existing SECTION-03 collection/nesting,
 clone/identity, local binding, inspection/scope, and condition semantics are
 established substrate rather than Phase-D research topics.
@@ -317,13 +322,22 @@ are the principal design direction already supported by RESEARCH-01A mechanical 
 
 Where condition expressions are supported, visible template syntax and native declarations should share one condition semantics instead of developing independent evaluators. Likewise, declarative repetition should orchestrate the established Section instantiation model.
 
-Nesting, lifecycle order, missing-data behavior, diagnostics, prototype removal, identity rewriting, and compatibility must be specified before implementation.
+Execution-unit lifecycle/atomicity, missing-data behavior, diagnostics, source-part scope, and compatibility must be specified before implementation. Established nesting, prototype-removal, and identity-rewriting mechanics are not reopened.
 
-#### E — High-Level Render Pipeline
+#### E — Optional Mapping / Automation Layer
 
-Design a high-level render orchestration path over the existing lower-level APIs. It should coordinate supported structural controls, native binding, classic scalar/filter processing, structured insertion, and finalization boundaries in a deterministic order.
+Determine the bounded design of an optional convenience layer that can use the
+inspection contract and mapped application data to orchestrate supported engine
+capabilities for integrations that benefit from automation, such as CMS
+plugins, form-driven document generation, or application-specific document
+services.
 
-The existing imperative methods remain first-class APIs. A high-level `render($mappedData)` path is additive and intended to enable generic integrations such as CMS plugins, form-driven document generation, and other applications that can map their data to an inspected template contract.
+The existing imperative methods remain first-class APIs. Phase E must not
+require one global processing order for normal library use or turn
+mapping-driven rendering into an inherent `OdtTemplate` lifecycle. If a
+convenience class/service is provided, its orchestration, atomicity, diagnostics,
+and lifecycle belong to that optional layer and require their own accepted
+contract.
 
 #### F — Authoring Documentation & Samples
 
@@ -334,7 +348,7 @@ Version 1.0 requires first-class authoring guidance, not merely API reference. D
 - how to create inspectable LibreOffice templates;
 - naming conventions for native objects and declarative controls;
 - when to use `{{...}}`, native fields, Sections, bookmarks, tables, and frames;
-- how generic data mapping and high-level rendering fit together;
+- how generic data mapping and optional automation fit together;
 - formatting-preservation and nesting constraints;
 - diagnostics and validation;
 - realistic complete examples.
