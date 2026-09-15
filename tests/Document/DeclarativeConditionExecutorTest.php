@@ -139,6 +139,43 @@ final class DeclarativeConditionExecutorTest extends TestCase
         self::assertSame(0, $this->sectionCount($context->contentDom(), '#if:inner'));
     }
 
+    public function testThreeLevelNativeOwnershipUsesTheDirectConditionalParent(): void
+    {
+        [$context, $contract] = $this->fixture([
+            ['body', '#if:A', 'A', null, [
+                ['#if:B', 'B', [
+                    ['#if:C', 'C'],
+                ]],
+            ]],
+        ]);
+
+        $controls = array_values(array_filter(
+            $contract->nativeObjects(),
+            static fn ($object): bool => in_array($object->name(), ['#if:A', '#if:B', '#if:C'], true)
+        ));
+        $objects = [];
+        foreach ($controls as $object) {
+            $objects[$object->name()] = $object;
+        }
+
+        self::assertSame([], $objects['#if:A']->ownerIds());
+        self::assertSame([$objects['#if:A']->id()], $objects['#if:B']->ownerIds());
+        self::assertSame(
+            [$objects['#if:A']->id(), $objects['#if:B']->id()],
+            $objects['#if:C']->ownerIds()
+        );
+
+        (new DeclarativeConditionExecutor())->execute(
+            $context,
+            $contract,
+            ['A' => true, 'B' => false, 'C' => true]
+        );
+
+        self::assertNotNull($this->findSection($context->contentDom(), '#if:A'));
+        self::assertNull($this->findSection($context->contentDom(), '#if:B'));
+        self::assertNull($this->findSection($context->contentDom(), '#if:C'));
+    }
+
     public function testMixedNestedIfAndIfnotConditionsAreEvaluatedUsingTheSharedGrammar(): void
     {
         [$context, $contract] = $this->fixture([
@@ -189,7 +226,7 @@ final class DeclarativeConditionExecutorTest extends TestCase
         (new DeclarativeConditionExecutor())->execute($context, $brokenContract, ['show' => true]);
     }
 
-    /** @param list<array{0:string,1:string,2:string,3:?string,4?:list<array{0:string,1:string}>}> $sections */
+    /** @param list<array{0:string,1:string,2:string,3:?string,4?:list<array>}> $sections */
     private function fixture(array $sections): array
     {
         $sourceContent = $this->document('office:document-content');
@@ -236,8 +273,8 @@ final class DeclarativeConditionExecutorTest extends TestCase
         $paragraph = $dom->createElementNS(self::TEXT, 'text:p');
         $paragraph->appendChild($dom->createTextNode($text));
         $section->appendChild($paragraph);
-        foreach ($children as [$childName, $childText]) {
-            $section->appendChild($this->section($dom, $childName, $childText));
+        foreach ($children as $child) {
+            $section->appendChild($this->section($dom, $child[0], $child[1], $child[2] ?? []));
         }
         return $section;
     }

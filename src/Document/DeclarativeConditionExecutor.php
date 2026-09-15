@@ -62,7 +62,6 @@ final class DeclarativeConditionExecutor
             foreach ($carrier->ownerIds() as $ownerId) {
                 if (isset($controlIds[$ownerId])) {
                     $parentId = $ownerId;
-                    break;
                 }
             }
 
