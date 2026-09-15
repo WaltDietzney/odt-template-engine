@@ -1,6 +1,6 @@
 # TEMPLATE-AUTHORING-01D — Declarative Structural Controls Change Contract
 
-**Status:** ACCEPTED
+**Status:** COMPLETE / FINAL GO
 **Milestone:** TEMPLATE-AUTHORING-01D
 **Baseline:** `TEMPLATE_AUTHORING_01D_DECLARATIVE_CONTROLS_BASELINE.md`
 **Implementation base:** `develop`
@@ -380,3 +380,23 @@ regression.
 
 Optional mapped-data automation and broader finalization remain explicitly
 outside Phase D.
+
+## 13. Completion record
+
+TEMPLATE-AUTHORING-01D reached **FINAL GO** after D1–D4 implementation, full automated regression, and manual LibreOffice end-to-end validation with a real Writer-authored template.
+
+Completion evidence includes:
+
+- bounded part-/region-aware Section resolution for BODY, master-page header, and master-page footer regions;
+- native `#if`, `#ifnot`, and `#foreach` execution with nested ownership and item scopes;
+- classic scalar/filter binding inside foreach item scopes;
+- strict foreach collection/item validation and empty-collection semantics;
+- execution-unit rollback across `content.xml` and `styles.xml`;
+- preservation of existing public SECTION-03 semantics and identity policy;
+- final full automated suite: **845 tests, 5,754 assertions**, with only the 8 known pre-existing PHPUnit metadata deprecations;
+- `PublicSampleSmokeTest`: **1 test, 199 assertions**;
+- successful Writer open, save, close, and reopen for both materialization and removal/empty-collection cases, without repair/corruption warnings or observed layout instability.
+
+The final manual regression found one D3 defect before closure: declarative WorkingTarget foreach cloning reversed physical document order although SECTION-03 defines input order as document order. The public SECTION-03 `instantiateMany()` path was already correct. The declarative path was corrected with a bounded per-foreach insertion anchor, preserving clone identity allocation, prototype lifecycle, nested ownership, rollback, and public compatibility. The regression was rerun successfully with BODY order `Anna -> Peter` and footer order `Footer A -> Footer B`, and remained stable after LibreOffice save/reopen.
+
+Phase E optional mapping/automation and FINALIZATION-01 remain outside this completed contract.
