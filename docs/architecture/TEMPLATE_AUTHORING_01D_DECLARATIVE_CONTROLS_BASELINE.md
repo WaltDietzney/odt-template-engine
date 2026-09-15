@@ -2,17 +2,19 @@
 
 ## Status
 
-**Architecture handoff baseline / D0 research complete**
+**COMPLETE / FINAL GO — Phase D implementation and regression closed**
 
 This document records the evidence already established before implementation of
 TEMPLATE-AUTHORING-01D. Its purpose is to prevent future work, especially after
 a chat or agent handoff, from reopening questions that are already answered by
 the current repository.
 
-Phase D has **not** approved a public execution API or a Change Contract yet.
-D0 research is complete. The six D0 decisions below are the accepted research
-baseline. The resulting Phase-D Change Contract is now **ACCEPTED** in
+Phase D is **COMPLETE / FINAL GO**. D0 research and the four accepted implementation slices D1–D4 are complete. The resulting Phase-D Change Contract is **ACCEPTED AND IMPLEMENTED** in
 [`TEMPLATE_AUTHORING_01D_CHANGE_CONTRACT.md`](TEMPLATE_AUTHORING_01D_CHANGE_CONTRACT.md).
+
+The final closure included automated regression and a real LibreOffice-authored end-to-end regression across BODY and master-page header/footer content. The manual regression exposed a declarative foreach ordering defect: WorkingTarget clones were inserted repeatedly after the prototype, reversing input/document order. The defect was characterized against the established SECTION-03 contract, covered by RED tests, corrected without changing the public SECTION-03 path, and revalidated in LibreOffice. Final observable order is collection input order, including nested foreach families and footer materialization. Save/reopen remained stable and produced no LibreOffice repair warning.
+
+Phase E has **not** started. Optional mapping/automation remains a separate convenience-layer architecture topic and must not be inferred from Phase-D completion.
 
 ## Handoff rule
 
