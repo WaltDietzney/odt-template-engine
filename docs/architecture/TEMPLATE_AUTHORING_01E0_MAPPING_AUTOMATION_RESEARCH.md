@@ -22,7 +22,7 @@ TEMPLATE-AUTHORING-01A through D established:
 - part-/region-aware execution in `content.xml` and supported master-page header/footer regions;
 - bounded execution-unit rollback for declarative controls.
 
-The engine therefore already owns the relevant document semantics. What is missing is an optional application-facing layer that can connect an external application data model to the dependencies discovered in a template and then orchestrate only those existing capabilities whose mutation semantics are unambiguous.
+The engine therefore already owns the relevant document semantics. What is missing is an optional application-facing layer that can connect an external application data model not only to dependencies discovered in a template, but also to explicitly addressable native template objects and selected document capabilities, and then orchestrate only existing capabilities whose mutation semantics are unambiguous.
 
 The target problem is:
 
@@ -32,10 +32,12 @@ Application data
 mapping definition
        +
 TemplateContract
+       +
+engine automation capabilities
        ↓
 resolution / validation / normalization
        ↓
-resolved template data
+resolved automation input
        ↓
 optional bounded automation
        ↓
@@ -58,6 +60,8 @@ The research is governed by the following existing architecture:
 6. No mandatory global render order may be imposed on normal library use.
 7. Save, finalization, export semantics, and repeated-render lifecycle remain outside Phase E and belong to FINALIZATION-01.
 8. Phase E must not introduce a renderer-neutral document AST, PHP pagination/layout model, or competing template/dependency/scope graph.
+9. `NativeObjectDescriptor` remains source evidence; engine-version-dependent automation capabilities must not be embedded into that source description.
+10. Phase E must remain suitable as a machine-inspectable semantic backend for the separately planned pre-1.0 `TEMPLATE-AUTHORING-UX-01` milestone.
 
 ## 3. E0-1 — Separate mapping/resolution from mutation/execution
 
@@ -295,27 +299,166 @@ Resolved Mapping is not:
 
 ## 8. E0-6 — Bounded automation and orchestration
 
-### Decision: GREEN
+### Decision: GREEN, broadened by E0-7
 
-The optional Phase-E automation may automatically execute only contract-driven capabilities for which both data dependency and mutation semantics are already unambiguously defined by `TemplateContract` plus existing engine services.
+The optional Phase-E automation may execute only capabilities for which target identity, payload semantics, mutation ownership, and mutation behavior are already unambiguously defined by the source-derived contract plus existing engine services.
 
-For the bounded 1.0 Phase-E core, this includes:
+The original dependency-driven core remains valid and includes:
 
 1. classic scalar/filter bindings;
 2. supported Writer User Field binding;
 3. native declarative Section controls (`#if`, `#ifnot`, `#foreach`).
 
-Inspection alone does not imply an automation action.
+E0-7 establishes that Phase E is not limited to dependency-driven automation. Explicit mappings may also target supported native-object actions and selected document capabilities when their semantics satisfy the same boundedness and preflight requirements.
 
-Therefore ordinary named Sections, bookmarks, tables, frames, images, arbitrary structured insertion, styles, page layout, and metadata are not automatically mutated merely because inspection discovers them.
+Inspection alone never implies mutation. Discovering a Section, bookmark, table, frame, metadata field, style, or page-layout structure does not authorize an action. An explicit action/capability mapping is required where the template itself does not already determine the consumer.
 
-Additional explicit action-mapping semantics may be considered later, but are not required for the bounded Phase-E core.
+Phase E must not invent missing target semantics merely to make a mapping executable.
+
+## 8A. E0-7 — Object/action mapping and authoring-UX readiness
+
+### Decision: GREEN with bounded capability set
+
+E0-7 extends the Phase-E research baseline from dependency-only mapping to three distinct automation target families:
+
+```text
+Automation Target
+├── Dependency Target
+├── Native Object Action Target
+└── Document Capability Target
+```
+
+These target families share resolution, complete preflight, diagnostics, ownership, and automation atomicity, but they do not share the same target identity semantics.
+
+### 8A.1 Native-object inventory
+
+`TemplateContract::nativeObjects()` is the source authority for addressable authored native objects. The current inspected inventory includes:
+
+- Sections identified by `text:name`;
+- bookmarks identified by `text:name`;
+- tables identified by `table:name`;
+- frames identified by `draw:name`.
+
+`NativeObjectDescriptor` already provides semantic identity, kind, name, owner relationships, and provenance. Phase E must reuse this inventory rather than create a second native-object discovery model.
+
+### 8A.2 Object/action mapping
+
+Dependency mapping and object/action mapping are different mapping semantics.
+
+Conceptually:
+
+```text
+Dependency mapping:
+application source
+    → DependencyDescriptor
+
+Object/action mapping:
+application source
+    → NativeObjectDescriptor
+    + registered supported action
+```
+
+The native-object target must first resolve uniquely against the source-derived `TemplateContract`. Resolution of the corresponding typed target in the Working Document is an execution concern and must not become a second template-inspection mechanism.
+
+An action exists for Phase E only when the engine explicitly knows its semantics. Arbitrary action strings or a universal action DSL are not part of this architecture.
+
+Each supported action must have describable:
+
+- compatible target kind;
+- payload semantics;
+- mutation owner;
+- applicability/preflight rules.
+
+Phase E does not implicitly transform arbitrary application data into `OdtElement` or another structured payload merely because a target action accepts such a type.
+
+### 8A.3 Current native-object action readiness
+
+Repository research establishes the following baseline:
+
+| Native target/action | Status | Research conclusion |
+|---|---|---|
+| Section `replaceContent(OdtElement)` | GREEN | Existing typed-target mutation semantics. |
+| Section clone/instantiate capabilities | GREEN capability, Change-Contract scope still required | Existing semantics; automation exposure must remain explicit. |
+| Bookmark `replaceText(string)` | GREEN | Existing bounded marker-preserving mutation semantics. |
+| Bookmark structured/RichText insertion | RESEARCH NEEDED | No established equivalent action yet. |
+| Frame image replacement | GREEN semantically / integration required | Existing `replaceImageByName()` semantics address named frames; typed `FrameTarget` does not yet own the action. |
+| Table `populate` | RESEARCH NEEDED | No established named-table population semantics; Phase E must not invent row/prototype/style behavior. |
+
+The existence of `RichTable` and structured placeholder insertion does not by itself define native named-table population.
+
+### 8A.4 Capability introspection
+
+Source evidence and engine capabilities remain separate.
+
+```text
+TemplateContract
+    → what this authored template contains/requires
+
+Engine capability catalog
+    → what this engine version knows how to automate
+
+Capability projection
+    → what this engine can do with this specific template/target
+```
+
+`NativeObjectDescriptor` must therefore remain immutable/source-oriented evidence rather than becoming the owner of engine-version-dependent actions.
+
+The architecture requires a machine-inspectable capability projection that can distinguish at least:
+
+- action supported by the engine;
+- action applicable to this concrete source target;
+- expected payload semantics;
+- diagnostic reason when unsupported or inapplicable.
+
+This distinction matters particularly for frames: generic frame image-replacement support must not imply that every `draw:frame` instance contains a replaceable image.
+
+The concrete class/API shape of the capability catalog/projection is not decided by E0.
+
+### 8A.5 Authoring-UX readiness
+
+`TEMPLATE-AUTHORING-UX-01` is a separate pre-1.0 milestone. Phase E does not implement that UI, but its semantic output must be suitable as its backend.
+
+A future CLI, web UI, LibreOffice extension, or AI-assisted authoring client should be able to inspect dependencies, native targets, supported/applicable actions, payload requirements, mapping provenance, and diagnostics without reimplementing ODF/XPath or engine-internal capability knowledge.
+
+### 8A.6 Document capability targets
+
+Some automation targets are neither dependencies nor authored native objects.
+
+Metadata is the first established example:
+
+```text
+person.name → metadata.author
+locale      → metadata.language
+```
+
+`MetadataManager` provides a bounded owner and a finite supported field set in `meta.xml`. Metadata mapping is therefore GREEN as a Phase-E document-capability candidate.
+
+A document capability is eligible for Phase-E automation only when:
+
+1. it has an unambiguous existing engine owner;
+2. its mutation semantics are already defined;
+3. its target is machine-identifiable;
+4. its payload semantics are describable;
+5. it can participate in complete preflight to the extent supported by the existing core;
+6. its mutations can participate in automation-level atomicity;
+7. it does not require Phase E to invent new layout, rendering, or finalization semantics;
+8. it does not require a competing source-inspection architecture.
+
+### 8A.7 Page layout and styles
+
+Page-layout mutation exists through `PageLayoutOdtTemplate`/`PageLayoutManager`, but the relevant master-page/page-layout target identity is not currently represented by the Phase-B native-object contract in the same way as Sections, bookmarks, tables, and frames.
+
+Therefore general page-layout mapping is **DEFER / separate research**, not part of the established Phase-E core.
+
+General style mapping is also **DEFER / separate research**. "Style mapping" is not one sufficiently defined semantic operation: style selection, named-style mutation, conditional styling, and property authoring are distinct concerns. Phase E must not create a generic application-value-to-style-property language.
+
+These topics are not implicitly post-1.0; if required for the pre-1.0 authoring/product path they require their own semantics/research milestone.
 
 ## 9. Execution ownership
 
-Automation must not become a central renderer that independently reinterprets all template constructs.
+Automation must not become a central renderer that independently reinterprets all template constructs or native/document capabilities.
 
-Existing execution ownership must be preserved.
+Existing execution ownership must be preserved. This applies equally to dependency consumers, typed native-object actions, and document services such as metadata.
 
 A contract evidence/binding has exactly one effective mutating owner during one automation invocation.
 
@@ -374,7 +517,7 @@ failure
 state = after A + B, before automation
 ```
 
-The technical snapshot/rollback mechanism is not decided by this research document.
+The technical snapshot/rollback mechanism is not decided by this research document. Because Phase E may include metadata and other bounded capabilities beyond `content.xml`/`styles.xml`, rollback coverage must be derived from every Working-DOM/document-local state actually mutated by the selected automation capabilities rather than being hard-coded to the Phase-D snapshot set.
 
 Existing D4 atomicity remains valid inside the declarative executor. Phase E must compose with it rather than weaken it.
 
@@ -458,18 +601,23 @@ jobs[].projects[].title       → experience[].projects[].project_name
 
 Within the explicit `jobs[] → experience[]` scope relationship, same-name dependencies such as `position` and `current` may resolve through the scoped same-name default.
 
-The architecture is successful if this case can be handled without CV-specific engine APIs, a second scope system, or rebuilding LibreOffice layout in PHP.
+The architecture is successful if this case can be handled without CV-specific engine APIs, a second scope system, or rebuilding LibreOffice layout in PHP. The benchmark should also be extensible with explicit native/document actions such as a named portrait frame and metadata author mapping, without changing the dependency/scope model.
 
 ## 14. Consolidated E0 decisions
 
 | ID | Status | Decision |
 |---|---|---|
 | E0-1 | GREEN | Mapping/resolution and mutation/execution are separate responsibilities. |
-| E0-2 | GREEN | `TemplateContract` remains the sole template-side semantic authority. |
+| E0-2 | GREEN | `TemplateContract` remains the template-side semantic authority; engine capabilities remain a separate projection. |
 | E0-3 | GREEN | Existing dependency/scope semantics cover ROOT and nested collection mapping. |
 | E0-4 | GREEN | Preflight validation, explicit application normalization, and scoped same-name resolution precede core execution without weakening it. |
-| E0-5 | GREEN | An inspectable Resolved Mapping exists before mutation; it is not a document or global execution model. |
-| E0-6 | GREEN | Optional automation is bounded to unambiguous contract-driven capabilities and owns only its own orchestration/atomicity boundary. |
+| E0-5 | GREEN, broadened | An inspectable non-mutating resolution result exists before mutation and must be able to describe dependency and explicit action/capability resolutions. |
+| E0-6 | GREEN, broadened | Optional automation is bounded to capabilities with unambiguous target, payload, owner, and mutation semantics. |
+| E0-7.1 | GREEN | `TemplateContract::nativeObjects()` is the source authority for native object targets; no second discovery model. |
+| E0-7.2 | PARTIAL GREEN | Section content replacement, bookmark text replacement, and frame image replacement have established semantics; native table population does not. |
+| E0-7.3 | GREEN | Object/action mapping is a distinct rule type: application source + source-derived native target + registered action. |
+| E0-7.4 | GREEN | Machine-inspectable capability projection is required and remains separate from source evidence; it is the semantic backend for pre-1.0 Authoring UX. |
+| E0-7.5 | GREEN / bounded | Document capability targets are valid when they satisfy explicit eligibility criteria; metadata is GREEN, page layout and general style mapping require separate research. |
 
 ## 15. Proposed Phase-E architecture
 
@@ -478,17 +626,29 @@ The architecture is successful if this case can be handled without CV-specific e
                               │
                               ▼
                        TemplateContract
+                  ┌───────────┴───────────┐
+                  │                       │
+           dependencies()           nativeObjects()
+                  │                       │
+                  └───────────┬───────────┘
                               │
-                              │
-Application Data ────→ Mapping Resolver ←──── Mapping Definition
-                              │
-                         validation
-                        normalization
-                         resolution
+                    Engine Capability Catalog
                               │
                               ▼
-                       Resolved Mapping
+                    Capability Projection
+                              │
+Application Data ────→ Mapping / Resolution ←──── Mapping Definition
+                              │
+                 ┌────────────┼────────────┐
+                 ▼            ▼            ▼
+            Dependency     Native       Document
+             Targets      Object+Action Capability
+                              │
+                       complete preflight
                          + diagnostics
+                              │
+                              ▼
+                 inspectable resolved result
                               │
                     NO DOCUMENT MUTATION
 ══════════════════════════════╪══════════════════════════════
@@ -497,13 +657,14 @@ Application Data ────→ Mapping Resolver ←──── Mapping Defini
                               ▼
                      Optional Automation
                               │
-                 contract/evidence ownership
+                    effective ownership
                               │
-             ┌────────────────┼────────────────┐
-             ▼                ▼                ▼
-       User Fields      Declarative       appropriate
-                         Controls       classic bindings
-                              │
+       ┌──────────────────────┼──────────────────────┐
+       ▼                      ▼                      ▼
+ dependency owners     typed native-object      document
+                      action owners/services    services
+       │                      │                      │
+       └──────────────────────┼──────────────────────┘
                               ▼
                          Working ODT
                               │
@@ -516,6 +677,11 @@ Application Data ────→ Mapping Resolver ←──── Mapping Defini
                               ▼
                        save / later
                       FINALIZATION-01
+
+Machine-inspectable contract + capability projection + diagnostics
+                              │
+                              ▼
+              pre-1.0 TEMPLATE-AUTHORING-UX-01
 ```
 
 ## 16. Explicit non-decisions
@@ -529,7 +695,10 @@ E0 does not approve:
 - a normalization/filter DSL;
 - a universal execution order;
 - automatic mutation of every inspected native object;
-- generalized named-object action mapping;
+- arbitrary/unregistered native-object actions or a universal action DSL;
+- native named-table `populate` semantics;
+- general page-layout mapping without separate target/inspection research;
+- general style mapping without separate semantic research;
 - finalization or export semantics;
 - implementation slices.
 
@@ -537,7 +706,7 @@ These belong to the Phase-E Change Contract or later milestones.
 
 ## 17. Next step
 
-The next architecture step is to derive and review a **TEMPLATE-AUTHORING-01E Change Contract** from this research baseline before implementation.
+The next architecture step is to resume and revise the **TEMPLATE-AUTHORING-01E Change Contract** from this expanded research baseline before implementation. Change-Contract decisions already accepted for the dependency core remain valid in principle but must be checked and broadened where E0-7 adds native-object and document-capability targets.
 
 That contract should at minimum define:
 
@@ -545,7 +714,8 @@ That contract should at minimum define:
 - mapping-definition semantics and precedence;
 - application-path semantics;
 - static and concrete preflight behavior;
-- resolved-mapping semantics and diagnostics;
+- inspectable resolved-result semantics and diagnostics across dependency, native-object/action, and document-capability targets;
+- capability-catalog/projection responsibilities and Authoring-UX readiness;
 - exact automation ownership and orchestration;
 - automation-level rollback boundaries;
 - compatibility and lifecycle constraints;
