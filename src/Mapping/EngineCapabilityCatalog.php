@@ -25,7 +25,7 @@ final readonly class EngineCapabilityCatalog
     public static function phaseE1(): self
     {
         return new self(
-            new DependencyAutomationCapability('dependency.automate'),
+            new DependencyAutomationCapability('dependency.automation'),
             [
                 new NativeActionCapability('replace-content', 'section', 'ODT_ELEMENT', 'SECTION_TARGET'),
                 new NativeActionCapability('replace-text', 'bookmark', 'STRING', 'BOOKMARK_TARGET'),

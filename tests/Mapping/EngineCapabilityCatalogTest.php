@@ -13,7 +13,7 @@ final class EngineCapabilityCatalogTest extends TestCase
     {
         $catalog = EngineCapabilityCatalog::phaseE1();
 
-        self::assertSame('dependency.automate', $catalog->dependencyAutomation()->id());
+        self::assertSame('dependency.automation', $catalog->dependencyAutomation()->id());
         self::assertSame([
             'section:replace-content:ODT_ELEMENT:SECTION_TARGET',
             'bookmark:replace-text:STRING:BOOKMARK_TARGET',
