@@ -16,6 +16,8 @@ use OdtTemplateEngine\Document\FillImageRequirementCollector;
 use OdtTemplateEngine\Document\FillImageRequirementMaterializer;
 use OdtTemplateEngine\Document\FontFaceRequirementDiscovery;
 use OdtTemplateEngine\Document\FontFaceRequirementMaterializer;
+use OdtTemplateEngine\Document\FrameImageReplacementService;
+use OdtTemplateEngine\Document\NativeObjectActionExecutor;
 use OdtTemplateEngine\Document\BookmarkTarget;
 use OdtTemplateEngine\Document\FrameTarget;
 use OdtTemplateEngine\Document\MetadataManager;
@@ -223,6 +225,19 @@ class OdtTemplate
             fn (string $name, string $value): mixed => $this->setUserField($name, $value),
             fn (string $filter, string $value, ?string $option): string => $this->applyFilter($filter, $value, $option),
             fn (string $expression, array $values): bool => $this->evaluateCondition($expression, $values)
+        );
+    }
+
+    /** Execute explicit native-object actions from a READY Phase-E preflight. */
+    public function automateNativeObjectActions(
+        TemplateContract $contract,
+        ConcretePreflightResult $preflight
+    ): void {
+        (new NativeObjectActionExecutor())->execute(
+            $this->documentContext(),
+            $this->package,
+            $contract,
+            $preflight
         );
     }
 
@@ -1189,14 +1204,12 @@ class OdtTemplate
         string $width,
         string $height
     ): void {
-        $frame->setAttribute('svg:width', $width);
-        $frame->setAttribute('svg:height', $height);
-
-        foreach ($frame->childNodes as $child) {
-            if ($child->nodeName === 'draw:image') {
-                $child->setAttribute('xlink:href', 'Pictures/' . $filename);
-            }
-        }
+        (new FrameImageReplacementService())->updateFrame(
+            $frame,
+            'Pictures/' . $filename,
+            $width,
+            $height
+        );
     }
 
 
