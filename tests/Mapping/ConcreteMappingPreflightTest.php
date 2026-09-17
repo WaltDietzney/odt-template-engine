@@ -283,10 +283,16 @@ final class ConcreteMappingPreflightTest extends TestCase
         ]);
         $data = ['person' => ['photo' => ['source' => $image, 'options' => ['width' => '4cm']]]];
         $before = serialize($data);
+        $documentBefore = $document->toArray();
+        $imageBefore = hash_file('sha256', $image);
+        $fixtureBefore = hash_file('sha256', $path);
 
         $ready = (new ConcreteMappingPreflight())->preflight($definition, $contract, $data, $document);
         self::assertSame(ConcretePreflightOperation::READY, $this->operation($ready, 'native_action', 'frame:Portrait')->status());
         self::assertSame($before, serialize($data));
+        self::assertSame($documentBefore, $document->toArray());
+        self::assertSame($imageBefore, hash_file('sha256', $image));
+        self::assertSame($fixtureBefore, hash_file('sha256', $path));
 
         $invalidDefinition = new MappingDefinition([], [
             new NativeObjectActionMapping(ApplicationPath::parse('person.photo'), 'frame', 'EmptyFrame', 'replace-image'),
@@ -311,6 +317,55 @@ final class ConcreteMappingPreflightTest extends TestCase
             static fn ($diagnostic): string => $diagnostic->code(),
             $badSource->diagnostics()
         ));
+    }
+
+    public function testBoundedImageDimensionsRemainValidatedByFramePreflight(): void
+    {
+        $path = $this->fixture();
+        [$contract, $document] = $this->inspect($path);
+        $image = $this->png();
+        $definition = new MappingDefinition([], [
+            new NativeObjectActionMapping(ApplicationPath::parse('person.photo'), 'frame', 'Portrait', 'replace-image'),
+        ]);
+        $preflight = new ConcreteMappingPreflight();
+
+        foreach ([
+            ['width' => '4cm'],
+            ['height' => '25mm'],
+            ['width' => '1in', 'height' => '72pt'],
+            ['width' => '2pc'],
+            ['height' => '10px'],
+        ] as $options) {
+            $result = $preflight->preflight(
+                $definition,
+                $contract,
+                ['person' => ['photo' => ['source' => $image, 'options' => $options]]],
+                $document
+            );
+            self::assertSame(
+                ConcretePreflightOperation::READY,
+                $this->operation($result, 'native_action', 'frame:Portrait')->status()
+            );
+        }
+
+        foreach ([
+            ['width' => '0cm'],
+            ['height' => '-1mm'],
+            ['width' => '4em'],
+            ['height' => ' 3cm'],
+            ['width' => 4],
+        ] as $options) {
+            $result = $preflight->preflight(
+                $definition,
+                $contract,
+                ['person' => ['photo' => ['source' => $image, 'options' => $options]]],
+                $document
+            );
+            self::assertContains('INVALID_REPLACEMENT_OPTION', array_map(
+                static fn ($diagnostic): string => $diagnostic->code(),
+                $result->diagnostics()
+            ));
+        }
     }
 
     private function cvMappings(): MappingDefinition

@@ -71,8 +71,8 @@ final class FrameImageReplacementPreflightValidator
         if ($data->status() !== ApplicationDataResolution::PRESENT || $data->items() !== []) {
             return [];
         }
-        $payload = $data->value();
-        if (!is_array($payload) || !isset($payload['source']) || !is_string($payload['source'])) {
+        $payload = ImageReplacementPreflightPayload::fromApplicationValue($data->value());
+        if ($payload === null) {
             return [$this->diagnostic(
                 'INCOMPATIBLE_NATIVE_ACTION_PAYLOAD',
                 'replace-image requires an image payload with a local source path.',
@@ -82,25 +82,23 @@ final class FrameImageReplacementPreflightValidator
         }
 
         $diagnostics = [];
-        $unknownKeys = array_diff(array_keys($payload), ['source', 'options']);
-        if ($unknownKeys !== []) {
+        if ($payload->unsupportedFields() !== []) {
             $diagnostics[] = $this->diagnostic(
                 'INVALID_REPLACEMENT_OPTION',
                 'Image replacement payload contains unsupported fields.',
                 $identity,
                 $sourcePath,
-                ['unsupported_fields' => implode(',', array_map('strval', $unknownKeys))]
+                ['unsupported_fields' => implode(',', $payload->unsupportedFields())]
             );
         }
-        $options = array_key_exists('options', $payload) ? $payload['options'] : [];
-        if (!is_array($options)) {
+        $options = $payload->options();
+        if (!$payload->optionsWereArray()) {
             $diagnostics[] = $this->diagnostic(
                 'INVALID_REPLACEMENT_OPTION',
                 'Image replacement options must be an associative array.',
                 $identity,
                 $sourcePath
             );
-            $options = [];
         }
         foreach ($options as $key => $value) {
             if (!in_array($key, ['width', 'height'], true)) {
@@ -124,7 +122,7 @@ final class FrameImageReplacementPreflightValidator
             }
         }
 
-        $path = $payload['source'];
+        $path = $payload->sourcePath();
         if (!is_file($path) || !is_readable($path)) {
             $diagnostics[] = $this->diagnostic(
                 'INVALID_IMAGE_SOURCE',

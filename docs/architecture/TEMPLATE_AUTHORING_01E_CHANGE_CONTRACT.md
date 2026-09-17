@@ -346,6 +346,14 @@ Phase-E preflight may reject unsupported metadata targets while the existing imp
 
 ### 10.2 Research candidates / deferred semantics
 
+#### Frame image replacement semantics: accepted boundary and E4 gate
+
+**Accepted now:** Phase-E image replacement follows “preserve by default, override explicitly.” E2-C validates a bounded concrete replacement payload but does not define the complete application-facing `IMAGE_REPLACEMENT` authoring API or execute replacement. The current internal E2-C projection accepts a local image source and explicit `width`/`height` options; these are the currently bounded options, not a declaration that they exhaust future replacement instructions. Its positive-length check accepts decimal values with `cm`, `mm`, `in`, `pt`, `pc`, or `px`. This check is local to E2-C; the repository has no shared authoritative ODF-length parser, and this is not a universal ODF length API. The imperative `replaceImageByName()` remains unchanged, including its legacy `5cm × 3cm` defaults.
+
+**Future semantic questions:** Before Frame `replace-image` execution is implemented, investigate width and height overrides; supported ODF-compatible length values/units; aspect-ratio preservation; width-only and height-only interactions with aspect preservation; conflicts when width, height, and aspect preservation are all supplied; and preservation of template dimensions when no dimensional override is requested. Further image adaptation concepts such as fit, contain, cover, and crop are research candidates only. These terms (including any keep-ratio-equivalent) are not approved public option names or API.
+
+**E4 gate:** E4 must review and settle the bounded replacement-option semantics before implementing Phase-E Frame `replace-image`. It must reconcile preserve-by-default, explicit dimensions, aspect-ratio behavior, supported ODF lengths/units, and imperative compatibility. E4 must not inherit the imperative `5cm × 3cm` defaults as Phase-E defaults by accident.
+
 The following are relevant architecture/product topics but do not have sufficiently approved semantics for Phase-E implementation:
 
 - native named-table population;
