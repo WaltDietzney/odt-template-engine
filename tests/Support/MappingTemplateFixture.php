@@ -8,7 +8,12 @@ use ZipArchive;
 
 final class MappingTemplateFixture
 {
-    public static function create(string $additionalBody = '', ?string $experienceBody = null): string
+    public static function create(
+        string $additionalBody = '',
+        ?string $experienceBody = null,
+        string $stylesBody = '',
+        string $contentDeclarations = ''
+    ): string
     {
         $experienceBody ??= '<text:p>{{company}}</text:p>'
             . '<text:section text:name="#foreach:projects"><text:p>{{title}}</text:p></text:section>';
@@ -23,6 +28,11 @@ final class MappingTemplateFixture
             . ' xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"'
             . ' xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"'
             . ' xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0"'
+            . ($stylesBody !== ''
+                ? ' xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"'
+                    . ' xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"'
+                    . ' xmlns:loext="urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0"'
+                : '')
             . ' xmlns:xlink="http://www.w3.org/1999/xlink"';
         $zip = new ZipArchive();
         if ($zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
@@ -34,7 +44,7 @@ final class MappingTemplateFixture
             'content.xml',
             '<?xml version="1.0" encoding="UTF-8"?>'
             . '<office:document-content' . $namespaces . '><office:automatic-styles/>'
-            . '<office:body><office:text><text:p>{{name}}</text:p>'
+            . '<office:body><office:text>' . $contentDeclarations . '<text:p>{{name}}</text:p>'
             . '<text:section text:name="#foreach:experience">' . $experienceBody
             . '</text:section>'
             . '<text:section text:name="Profile"><text:p>Profile body</text:p></text:section>'
@@ -48,7 +58,12 @@ final class MappingTemplateFixture
             'styles.xml',
             '<?xml version="1.0" encoding="UTF-8"?>'
             . '<office:document-styles' . $namespaces . '><office:styles/><office:automatic-styles/>'
-            . '<office:master-styles/></office:document-styles>'
+            . ($stylesBody === ''
+                ? '<office:master-styles/>'
+                : '<office:master-styles><style:master-page style:name="Standard">'
+                    . $stylesBody
+                    . '</style:master-page></office:master-styles>')
+            . '</office:document-styles>'
         );
         $zip->addFromString(
             'meta.xml',

@@ -1,6 +1,6 @@
 # TEMPLATE-AUTHORING-01E3 — Dependency Automation Change Contract
 
-Status: E2-to-E3 bridge implemented / E3 dependency automation not started
+Status: E2-to-E3 bridge and E3 dependency automation implemented; E4/E5/E6 not started
 
 ## 1. Purpose
 
@@ -310,7 +310,13 @@ Review result:
 - E2-B: **GREEN for accepted E2-B scope**;
 - E2-C: **GREEN for accepted E2-C scope**;
 - E2-to-E3 bridge prerequisite: **GREEN / closed** after implementation and characterization.
-- E3 dependency automation: **not started**; this bridge does not authorize or implement E3 mutation.
+- E3 dependency automation: **implemented and characterized** in the bounded E3 slice; see `TEMPLATE_AUTHORING_01E3_COMPLETION.md`.
+
+## 19. E3 implementation closure
+
+The bounded E3 executor consumes only a READY `ConcretePreflightResult` through `DependencyScopeProjector`, applies Writer User Fields through `UserFieldBinder`, executes declarative Sections in projected scope hierarchy through the established Section mutation services, and applies remaining classic consumers through `TemplateProcessor`. The public `OdtTemplate::automateDependencies()` facade retains protected `applyFilter()` and `evaluateCondition()` dispatch.
+
+E3 does not implement native object actions, document capability mutation, invocation-wide rollback, or finalization. E4, E5, and E6 remain separate slices. E3 has no second mapping pass, raw application-data traversal, or `render()` lifecycle integration.
 
 ---
 

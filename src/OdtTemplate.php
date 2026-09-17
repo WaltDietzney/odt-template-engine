@@ -11,6 +11,7 @@ use RuntimeException;
 use OdtTemplateEngine\Document\AmbiguousTemplateTargetException;
 use OdtTemplateEngine\Document\DocumentInspection;
 use OdtTemplateEngine\Document\DocumentInspector;
+use OdtTemplateEngine\Document\DependencyAutomationExecutor;
 use OdtTemplateEngine\Document\FillImageRequirementCollector;
 use OdtTemplateEngine\Document\FillImageRequirementMaterializer;
 use OdtTemplateEngine\Document\FontFaceRequirementDiscovery;
@@ -30,6 +31,7 @@ use OdtTemplateEngine\Document\TypedTargetResolver;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Style\DocumentStyles;
 use OdtTemplateEngine\Template\TemplateContract;
+use OdtTemplateEngine\Mapping\ConcretePreflightResult;
 use OdtTemplateEngine\Template\TemplateContractInspector;
 use OdtTemplateEngine\Template\TemplateProcessor;
 use OdtTemplateEngine\Template\TemplateStructureInspection;
@@ -206,6 +208,21 @@ class OdtTemplate
             $context->stylesDom(),
             $name,
             $value
+        );
+    }
+
+    /** Execute READY Phase-E dependency consumers against this template's working document. */
+    public function automateDependencies(
+        TemplateContract $contract,
+        ConcretePreflightResult $preflight
+    ): void {
+        (new DependencyAutomationExecutor())->execute(
+            $this->documentContext(),
+            $contract,
+            $preflight,
+            fn (string $name, string $value): mixed => $this->setUserField($name, $value),
+            fn (string $filter, string $value, ?string $option): string => $this->applyFilter($filter, $value, $option),
+            fn (string $expression, array $values): bool => $this->evaluateCondition($expression, $values)
         );
     }
 

@@ -134,6 +134,18 @@ final class SectionInstantiationService
         );
     }
 
+    /** Clone a resolved target without applying a flat value row. */
+    public function cloneWorkingTarget(
+        SectionWorkingTarget $target,
+        ?DOMElement $insertionAnchor = null
+    ): DOMElement {
+        return $this->cloneService->cloneWithRewrittenIdentitiesInWorkingTarget(
+            $target,
+            null,
+            $insertionAnchor
+        );
+    }
+
     /**
      * Bind scalar/filter expressions owned directly by one current Section.
      * Nested Sections are left for their own effective scope.
@@ -143,9 +155,10 @@ final class SectionInstantiationService
      */
     public function bindWorkingTargetScalars(
         SectionWorkingTarget $target,
-        array $values
+        array $values,
+        ?callable $applyFilter = null
     ): void {
-        $this->bindOwnedScalars($target->section(), $values, $target->name());
+        $this->bindOwnedScalars($target->section(), $values, $target->name(), $applyFilter);
     }
 
     /** @param array<string, mixed> $values */
@@ -159,7 +172,12 @@ final class SectionInstantiationService
     }
 
     /** @param array<string, mixed> $values */
-    private function bindOwnedScalars(DOMElement $section, array $values, string $sectionName): void
+    private function bindOwnedScalars(
+        DOMElement $section,
+        array $values,
+        string $sectionName,
+        ?callable $applyFilter = null
+    ): void
     {
         $unsupported = $this->processor->unsupportedExpressions($section);
         if ($unsupported !== []) {
@@ -181,7 +199,7 @@ final class SectionInstantiationService
         $this->processor->replaceScalarTextOwnedBy(
             $section,
             $binding,
-            [$this->processor, 'applyFilter']
+            $applyFilter ?? [$this->processor, 'applyFilter']
         );
     }
 

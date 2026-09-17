@@ -7,6 +7,9 @@ namespace OdtTemplateEngine\Document;
 use DOMDocument;
 use DOMElement;
 use OdtTemplateEngine\OdtDocumentContext;
+use OdtTemplateEngine\Mapping\DependencyScopeProjection;
+use OdtTemplateEngine\Mapping\ProjectedDependencyValue;
+use OdtTemplateEngine\Mapping\ApplicationDataResolution;
 use OdtTemplateEngine\Template\ConditionExpression;
 use OdtTemplateEngine\Template\ControlDescriptor;
 use OdtTemplateEngine\Template\DataScopeDescriptor;
@@ -53,6 +56,226 @@ final class DeclarativeConditionExecutor
 
             throw $exception;
         }
+    }
+
+    /**
+     * Execute the recognized structural controls using already projected template scopes.
+     *
+     * @param callable(string, array<string, mixed>): bool $evaluateCondition
+     * @param callable(DOMElement, DependencyScopeProjection, list<int>): void $completeScope
+     * @internal
+     */
+    public function executeProjected(
+        OdtDocumentContext $context,
+        TemplateContract $contract,
+        DependencyScopeProjection $rootScope,
+        callable $evaluateCondition,
+        callable $completeScope
+    ): void {
+        $contentSnapshot = $this->snapshot($context->contentDom());
+        $stylesSnapshot = $this->snapshot($context->stylesDom());
+        try {
+            $this->executeProjectedWithoutRollback(
+                $context,
+                $contract,
+                $rootScope,
+                $evaluateCondition,
+                $completeScope
+            );
+        } catch (\Throwable $exception) {
+            try {
+                $this->restore($context->contentDom(), $contentSnapshot);
+                $this->restore($context->stylesDom(), $stylesSnapshot);
+            } catch (\Throwable $rollbackException) {
+                throw new DeclarativeConditionExecutionException(
+                    'declarative execution rollback failed: ' . $rollbackException->getMessage(),
+                    0,
+                    $exception
+                );
+            }
+            throw $exception;
+        }
+    }
+
+    private function executeProjectedWithoutRollback(
+        OdtDocumentContext $context,
+        TemplateContract $contract,
+        DependencyScopeProjection $rootScope,
+        callable $evaluateCondition,
+        callable $completeScope
+    ): void {
+        [$roots, $children, $nativeObjects] = $this->controlTree($contract);
+        foreach ($roots as $control) {
+            $this->executeProjectedControl(
+                $context,
+                $control,
+                $children,
+                $nativeObjects,
+                $rootScope,
+                null,
+                null,
+                [],
+                $evaluateCondition,
+                $completeScope
+            );
+        }
+    }
+
+    /**
+     * @param array<string, list<ControlDescriptor>> $children
+     * @param array<string, NativeObjectDescriptor> $nativeObjects
+     */
+    private function executeProjectedControl(
+        OdtDocumentContext $context,
+        ControlDescriptor $control,
+        array $children,
+        array $nativeObjects,
+        DependencyScopeProjection $scope,
+        ?SectionWorkingTarget $owner,
+        ?NativeObjectDescriptor $ownerCarrier,
+        array $identityIndexes,
+        callable $evaluateCondition,
+        callable $completeScope
+    ): void {
+        $carrier = $this->carrier($control, $nativeObjects);
+        if ($control->scope()->id() !== $scope->scope()->id()) {
+            throw new DeclarativeConditionExecutionException('control and projected template scopes do not match');
+        }
+        $target = $owner === null
+            ? $this->resolver->resolve($context, $carrier)
+            : $this->resolver->resolveWithin($owner, $carrier, $this->identitySuffix($ownerCarrier, $owner));
+
+        if ($control->kind() === 'FOREACH') {
+            $dependencyId = $control->dependencyIds()[0] ?? null;
+            $collectionValue = $dependencyId === null ? null : $scope->dependency($dependencyId);
+            if (!$collectionValue instanceof ProjectedDependencyValue
+                || $collectionValue->target()->kind() !== 'COLLECTION'
+                || !in_array($collectionValue->status(), [
+                    ApplicationDataResolution::PRESENT,
+                    ApplicationDataResolution::EMPTY_COLLECTION,
+                ], true)
+            ) {
+                throw new DeclarativeForeachExecutionException(
+                    $carrier->name() ?? '<unnamed>',
+                    $collectionValue instanceof ProjectedDependencyValue ? $collectionValue->target()->path() : (string) $dependencyId,
+                    'collection is not represented by a valid projected collection dependency'
+                );
+            }
+            $items = $scope->collectionItems((string) $dependencyId);
+            $anchor = null;
+            foreach ($items as $itemScope) {
+                $clone = $this->instances->cloneWorkingTarget($target, $anchor);
+                $anchor = $clone;
+                $cloneTarget = new SectionWorkingTarget(
+                    $target->document(),
+                    $target->regionRoot(),
+                    $clone,
+                    $target->provenance(),
+                    $target->nativeObjectId()
+                );
+                $localIndex = $this->localCloneIndex($target, $clone);
+                $itemIdentityIndexes = [...$identityIndexes, $localIndex];
+                foreach ($children[$carrier->id()] ?? [] as $child) {
+                    $this->executeProjectedControl(
+                        $context,
+                        $child,
+                        $children,
+                        $nativeObjects,
+                        $itemScope,
+                        $cloneTarget,
+                        $carrier,
+                        $itemIdentityIndexes,
+                        $evaluateCondition,
+                        $completeScope
+                    );
+                }
+                $completeScope($clone, $itemScope, $itemIdentityIndexes);
+            }
+            $this->removal->remove($target->section());
+            return;
+        }
+
+        $expression = $this->conditionExpression($carrier);
+        $values = $this->scopeValues($scope);
+        $condition = $evaluateCondition($expression, $values);
+        $keep = $control->kind() === 'IFNOT' ? !$condition : $condition;
+        if (!$keep) {
+            $this->removal->remove($target->section());
+            return;
+        }
+        foreach ($children[$carrier->id()] ?? [] as $child) {
+            $this->executeProjectedControl(
+                $context,
+                $child,
+                $children,
+                $nativeObjects,
+                $scope,
+                $target,
+                $carrier,
+                $identityIndexes,
+                $evaluateCondition,
+                $completeScope
+            );
+        }
+        $completeScope($target->section(), $scope, $identityIndexes);
+    }
+
+    /** @return array<string, mixed> */
+    private function scopeValues(DependencyScopeProjection $scope): array
+    {
+        $values = [];
+        foreach ($scope->dependencies() as $projected) {
+            if ($projected->target()->kind() === 'VALUE') {
+                $values[$projected->target()->name()] = $projected->value();
+            }
+        }
+        return $values;
+    }
+
+    private function localCloneIndex(SectionWorkingTarget $prototype, DOMElement $clone): int
+    {
+        $suffix = substr($clone->getAttribute('text:name'), strlen($prototype->name()));
+        if (preg_match('/^_(\d+)$/', $suffix, $match) !== 1) {
+            throw new DeclarativeConditionExecutionException('cloned Section has an invalid local identity suffix');
+        }
+        return (int) $match[1];
+    }
+
+    /** @return array{0:list<ControlDescriptor>,1:array<string,list<ControlDescriptor>>,2:array<string,NativeObjectDescriptor>} */
+    private function controlTree(TemplateContract $contract): array
+    {
+        $nativeObjects = [];
+        foreach ($contract->nativeObjects() as $nativeObject) {
+            $nativeObjects[$nativeObject->id()] = $nativeObject;
+        }
+        $controls = array_values(array_filter(
+            $contract->controls(),
+            static fn ($control): bool => $control instanceof ControlDescriptor
+                && $control->representation() === 'NATIVE_SECTION_DECLARATION'
+                && $control->supportState() === 'RECOGNIZED'
+                && in_array($control->kind(), ['IF', 'IFNOT', 'FOREACH'], true)
+        ));
+        $controlIds = [];
+        foreach ($controls as $control) {
+            $controlIds[$this->carrier($control, $nativeObjects)->id()] = true;
+        }
+        $children = [];
+        $roots = [];
+        foreach ($controls as $control) {
+            $carrier = $this->carrier($control, $nativeObjects);
+            $parentId = null;
+            foreach ($carrier->ownerIds() as $ownerId) {
+                if (isset($controlIds[$ownerId])) {
+                    $parentId = $ownerId;
+                }
+            }
+            if ($parentId === null) {
+                $roots[] = $control;
+            } else {
+                $children[$parentId][] = $control;
+            }
+        }
+        return [$roots, $children, $nativeObjects];
     }
 
     /** @param array<string, mixed> $values */
