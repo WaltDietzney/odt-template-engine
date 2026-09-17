@@ -1,6 +1,6 @@
 # TEMPLATE-AUTHORING-01E3 — Dependency Automation Change Contract
 
-Status: Accepted semantics / implementation not started
+Status: Parent-contract reviewed / implementation not started
 
 ## 1. Purpose
 
@@ -136,11 +136,13 @@ Raw application records MUST NOT be passed directly into the legacy flat row-rep
 
 The source contract can represent collection item scopes and controls nested within those scopes. This representational ability does not automatically make every nested-control combination a supported Phase-E capability.
 
-E3 executes only structures that the applicable contract/capability/preflight path accepts as supported and READY.
+ROOT and nested collection-item scope execution required by the parent `TEMPLATE_AUTHORING_01E_CHANGE_CONTRACT.md` is mandatory E3 scope and MUST NOT be removed or deferred merely because individual nested-control combinations require compatibility characterization.
+
+E3 executes individual nested-control combinations only when the applicable contract/capability/preflight path accepts them as supported and READY. Compatibility-limited combinations require characterization before they may be accepted as READY; this gate narrows concrete runtime support and does not narrow the parent contract's approved ROOT/nested collection-item scope support.
 
 When a supported nested structure is READY, execution MUST follow the authored template/scope hierarchy. E3 MUST NOT impose a universal flat internal ordering such as "all foreach controls before all conditions".
 
-Unsupported or compatibility-limited nested structures must remain non-executable through Phase E until their semantics are separately characterized and accepted.
+Unsupported or compatibility-limited nested-control combinations must remain non-executable through Phase E until their runtime semantics are characterized and accepted.
 
 ## 10. Dependency execution ordering
 
@@ -220,7 +222,7 @@ E3 does not add or implement:
 - new template syntax;
 - new condition semantics;
 - new filter semantics;
-- universal nested-control support;
+- universal nested-control support beyond the parent contract's required nested collection-item scope semantics;
 - native object actions;
 - Section `replace-content` automation;
 - Bookmark `replace-text` automation;
@@ -248,6 +250,22 @@ The implementation must prefer small bounded extensions or facade bridges over d
 Any discovery that the current E2-C result does not retain sufficient concrete hierarchical item data for execution must be resolved explicitly. It MUST NOT be worked around by re-traversing raw application data or silently creating a second mapping/resolution model.
 
 Any proposed expansion of supported nested-control combinations requires characterization evidence before it is treated as Phase-E READY behavior.
+
+## 17. Parent-contract review closure
+
+The E3 contract has been reviewed against the accepted parent `TEMPLATE_AUTHORING_01E_CHANGE_CONTRACT.md`.
+
+The review found no remaining contradiction or Phase-E scope expansion after clarifying Section 9. In particular:
+
+- `TemplateContract` remains the sole source-derived semantic authority;
+- Working-DOM location remains execution targeting rather than second inspection;
+- dependency execution ordering matches the parent contract;
+- ROOT and nested collection-item scope support remains mandatory E3 scope;
+- compatibility characterization gates only individual nested-control combinations, not the parent-approved nested scope model;
+- E3 does not implement the E6 invocation-wide rollback guarantee early, while E6 remains responsible for completing the parent contract's atomicity requirement;
+- imperative APIs, legacy `render()` behavior, E4 native actions, E5 document capabilities, and E6 integration remain outside E3's implementation boundary.
+
+Parent-contract review result: **GREEN**.
 
 ---
 
