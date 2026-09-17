@@ -1,6 +1,6 @@
 # TEMPLATE-AUTHORING-01E3 — Dependency Automation Change Contract
 
-Status: E2-to-E3 consistency reviewed / bridge required before implementation
+Status: E2-to-E3 bridge implemented / E3 dependency automation not started
 
 ## 1. Purpose
 
@@ -268,6 +268,12 @@ Any inability to derive an unambiguous template-scope projection from already re
 
 Any proposed expansion of supported nested-control combinations requires characterization evidence before it is treated as Phase-E READY behavior.
 
+### Bridge slice implementation status
+
+The required E2-to-E3 dependency scope bridge is implemented by the internal `DependencyScopeProjector`, which accepts only a `TemplateContract` and a READY `ConcretePreflightResult`. Its immutable `DependencyScopeProjection` and `ProjectedDependencyValue` types are read-only views over the resolved template scopes and values; they are not a general mapping language, execution plan, or new scope model. The projection retains template dependency identity, mapping provenance, concrete local value state, and nested item indices while omitting raw application source paths and collection record arrays from the E3-facing values.
+
+This closes the bridge prerequisite after characterization of ROOT, sibling values, explicit overrides, nested scoped-same-name mappings through three collection levels, empty collections, and inconsistent lineage. It does not implement E3 mutation or change the E3 scope defined above.
+
 ## 17. Parent-contract review closure
 
 The E3 contract has been reviewed against the accepted parent `TEMPLATE_AUTHORING_01E_CHANGE_CONTRACT.md`.
@@ -303,7 +309,8 @@ Review result:
 - E2-A: **GREEN**;
 - E2-B: **GREEN for accepted E2-B scope**;
 - E2-C: **GREEN for accepted E2-C scope**;
-- E3 implementation readiness: **YELLOW until the bounded E2-to-E3 bridge is implemented and characterized**.
+- E2-to-E3 bridge prerequisite: **GREEN / closed** after implementation and characterization.
+- E3 dependency automation: **not started**; this bridge does not authorize or implement E3 mutation.
 
 ---
 

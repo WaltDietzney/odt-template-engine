@@ -8,8 +8,10 @@ use ZipArchive;
 
 final class MappingTemplateFixture
 {
-    public static function create(string $additionalBody = ''): string
+    public static function create(string $additionalBody = '', ?string $experienceBody = null): string
     {
+        $experienceBody ??= '<text:p>{{company}}</text:p>'
+            . '<text:section text:name="#foreach:projects"><text:p>{{title}}</text:p></text:section>';
         $path = tempnam(sys_get_temp_dir(), 'mapping-template-e1-');
         if (!is_string($path)) {
             throw new \RuntimeException('Could not allocate a mapping fixture path.');
@@ -33,8 +35,7 @@ final class MappingTemplateFixture
             '<?xml version="1.0" encoding="UTF-8"?>'
             . '<office:document-content' . $namespaces . '><office:automatic-styles/>'
             . '<office:body><office:text><text:p>{{name}}</text:p>'
-            . '<text:section text:name="#foreach:experience"><text:p>{{company}}</text:p>'
-            . '<text:section text:name="#foreach:projects"><text:p>{{title}}</text:p></text:section>'
+            . '<text:section text:name="#foreach:experience">' . $experienceBody
             . '</text:section>'
             . '<text:section text:name="Profile"><text:p>Profile body</text:p></text:section>'
             . '<text:bookmark text:name="Signature"/>'
