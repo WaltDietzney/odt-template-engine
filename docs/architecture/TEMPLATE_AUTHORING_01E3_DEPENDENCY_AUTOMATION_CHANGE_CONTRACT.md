@@ -1,6 +1,6 @@
 # TEMPLATE-AUTHORING-01E3 — Dependency Automation Change Contract
 
-Status: Parent-contract reviewed / implementation not started
+Status: E2-to-E3 consistency reviewed / bridge required before implementation
 
 ## 1. Purpose
 
@@ -247,7 +247,24 @@ Before E3 implementation begins, the implementation slice must identify the smal
 
 The implementation must prefer small bounded extensions or facade bridges over duplicated renderer logic or new mutable runtime architecture.
 
-Any discovery that the current E2-C result does not retain sufficient concrete hierarchical item data for execution must be resolved explicitly. It MUST NOT be worked around by re-traversing raw application data or silently creating a second mapping/resolution model.
+The E2-to-E3 consistency review established that current E2 results preserve the concrete information needed for each independently resolved application path, including nested `ApplicationDataResolution` item lineage, but do not yet expose a canonical template-scope-oriented projection that joins sibling dependency resolutions into executable collection-item scopes.
+
+Therefore a bounded E2-to-E3 bridge is REQUIRED before dependency mutation implementation begins. That bridge MUST:
+
+- derive only from the existing `TemplateContract` scope hierarchy, `DependencyMappingResolution` values, and their existing `ApplicationDataResolution` item lineage;
+- be immutable and non-mutating;
+- preserve ROOT and nested collection-item hierarchy without flattening;
+- join independently resolved dependency values by their already resolved collection lineage;
+- expose template dependency identities/values needed by E3 without leaking raw application record names into execution;
+- perform no new `ApplicationPath` resolution and no traversal of raw application data;
+- introduce no fallback, same-name search, mapping reinterpretation, or payload reinterpretation;
+- remain a projection of accepted E2 semantics rather than a second dependency/scope model or execution AST.
+
+The bridge belongs before the first E3-owned document mutation. Its concrete class/API name is intentionally not fixed by this contract.
+
+The bridge must include characterization coverage for multi-level nested collection lineage and scoped same-name mappings. In particular, the current multi-level scoped same-name construction must be verified for accepted nested mapping combinations rather than inferred from implementation shape alone.
+
+Any inability to derive an unambiguous template-scope projection from already resolved E2 data is a pre-execution error/design finding. It MUST NOT be repaired inside E3 by re-traversing application data.
 
 Any proposed expansion of supported nested-control combinations requires characterization evidence before it is treated as Phase-E READY behavior.
 
@@ -266,6 +283,27 @@ The review found no remaining contradiction or Phase-E scope expansion after cla
 - imperative APIs, legacy `render()` behavior, E4 native actions, E5 document capabilities, and E6 integration remain outside E3's implementation boundary.
 
 Parent-contract review result: **GREEN**.
+
+## 18. E2-to-E3 consistency review closure
+
+E2-A, E2-B, and E2-C have been reviewed against the accepted E3 execution semantics.
+
+The review found:
+
+- E2-A preserves hierarchical item lineage for each resolved application path through `ApplicationDataResolution`;
+- E2-B preserves target dependency identity, application source, mapping provenance, and the concrete application-data resolution for each dependency;
+- E2-C preserves those dependency resolutions in its machine-readable operations/result and remains valid for its original complete-preflight responsibility;
+- the current representation resolves dependency paths independently and therefore does not itself provide the template-scope-oriented sibling join required for direct E3 collection execution;
+- constructing that join during mutation would move resolution semantics into E3 and violate the accepted execution boundary.
+
+No defect is assigned to the completed E2-A/B/C slices for their original contracts. The missing scope-oriented projection is an integration requirement discovered at the E2-to-E3 boundary.
+
+Review result:
+
+- E2-A: **GREEN**;
+- E2-B: **GREEN for accepted E2-B scope**;
+- E2-C: **GREEN for accepted E2-C scope**;
+- E3 implementation readiness: **YELLOW until the bounded E2-to-E3 bridge is implemented and characterized**.
 
 ---
 
