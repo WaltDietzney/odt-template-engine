@@ -8,6 +8,8 @@ E3 base: `b303ab679cbf86ce16ad56adaf198bee85e11c7a`
 
 Starting HEAD: `b9c6de10be1635330eb5cea890f97214b0b45afe`
 
+Implementation commit: `fbf53ac` (`feat: implement E4 native object action automation`)
+
 ## Implemented
 
 The additive `OdtTemplate::automateNativeObjectActions()` entry point accepts the source `TemplateContract` and a READY `ConcretePreflightResult`. `NativeObjectActionExecutor` selects only explicit native-action resolutions represented by that preflight, verifies their target evidence, localizes every selected target before mutation, checks destructive Section ownership conflicts, and dispatches in the supplied preflight order. It does not resolve application data, rerun mapping, execute E3/E5, or save/finalize.
