@@ -1,6 +1,6 @@
 # TEMPLATE-AUTHORING-01E4 — Native Object Action Automation Change Contract
 
-Status: Accepted semantics / implementation not started
+Status: Accepted semantics / implementation-ready
 
 ## 1. Purpose
 
@@ -143,11 +143,30 @@ There is no `keepRatio` option in E4. The one-dimension form already expresses p
 
 ### 6.3 Intrinsic aspect ratio
 
-For a one-dimension override, the missing dimension is calculated from the intrinsic pixel dimensions of the replacement image, not from the old Frame ratio.
+For a one-dimension override, the missing dimension is calculated from the intrinsic dimensions of the replacement image, not from the old Frame ratio.
 
 For example, a replacement image with intrinsic ratio `3:2` and explicit `width = 6cm` yields `height = 4cm`.
 
 Supplying both width and height is an explicit instruction and MAY change/distort the intrinsic image ratio. E4 MUST NOT silently apply contain, cover, crop, fit, or another image-adaptation policy.
+
+#### 6.3.1 Intrinsic-ratio applicability gate
+
+A one-dimensional override is executable only when the replacement image exposes a deterministic intrinsic aspect ratio.
+
+This requirement is part of predictable concrete applicability and MUST be checked before the first E4 mutation. E2-C or the bounded E4 pre-execution validation MUST therefore reject `width`-only or `height`-only replacement when no deterministic intrinsic ratio can be obtained from the accepted image source.
+
+The requirement is conditional:
+
+| Explicit dimensional options | Intrinsic ratio required |
+| --- | --- |
+| none | no |
+| `width` only | yes |
+| `height` only | yes |
+| `width` and `height` | no |
+
+This rule is especially relevant to accepted vector sources such as SVG. A syntactically valid supported image source is not by itself sufficient for one-dimensional proportional replacement when its intrinsic ratio cannot be determined. Such a source remains usable for zero-dimensional preservation or two-dimensional explicit replacement if all other preflight requirements are satisfied.
+
+Failure to determine the required intrinsic ratio MUST be reported before mutation. E4 MUST NOT fall back to the old Frame ratio, legacy `5cm × 3cm` dimensions, an arbitrary ratio, or a best-effort runtime resize.
 
 ### 6.4 Length values and units
 
@@ -354,24 +373,26 @@ E4 implementation MUST characterize at least the following.
 15. proportional derivation works with the bounded accepted units without cross-unit conversion;
 16. unrelated Frame attributes/style/anchor/position/wrap/z-index remain unchanged;
 17. the addressed direct `draw:image` is replaced and unrelated images/Frames are unchanged;
-18. invalid/unreadable/non-interpretable image sources remain rejected before E4 mutation as required by E2-C.
+18. invalid/unreadable/non-interpretable image sources remain rejected before E4 mutation as required by E2-C;
+19. width-only/height-only replacement is rejected before mutation when the accepted image source has no determinable intrinsic aspect ratio;
+20. the same source remains eligible for zero-dimensional preservation or explicit width+height replacement when all other requirements are satisfied.
 
 ### 13.4 Compatibility
 
-19. imperative `replaceImageByName()` with no options still exhibits its legacy `5cm × 3cm` behavior;
-20. imperative explicit width/height behavior remains characterized;
-21. existing duplicate-frame-name imperative compatibility behavior remains unchanged;
-22. Phase-E does not mutate multiple duplicate-name targets;
-23. existing public/protected compatibility surfaces remain intact.
+21. imperative `replaceImageByName()` with no options still exhibits its legacy `5cm × 3cm` behavior;
+22. imperative explicit width/height behavior remains characterized;
+23. existing duplicate-frame-name imperative compatibility behavior remains unchanged;
+24. Phase-E does not mutate multiple duplicate-name targets;
+25. existing public/protected compatibility surfaces remain intact.
 
 ### 13.5 Interference and boundaries
 
-24. Section replacement that predictably destroys another selected Bookmark target is rejected before E4 mutation;
-25. Section replacement that predictably destroys another selected Frame target is rejected before E4 mutation;
-26. independent native actions can execute without an invented family-wide priority;
-27. E4 accepts no raw application data and performs no Mapping/ApplicationPath resolution;
-28. E4 does not execute E3 dependencies, E5 metadata, E6 rollback, save, or finalization;
-29. pre-execution interference failure leaves the Working Document and package resources unchanged.
+26. Section replacement that predictably destroys another selected Bookmark target is rejected before E4 mutation;
+27. Section replacement that predictably destroys another selected Frame target is rejected before E4 mutation;
+28. independent native actions can execute without an invented family-wide priority;
+29. E4 accepts no raw application data and performs no Mapping/ApplicationPath resolution;
+30. E4 does not execute E3 dependencies, E5 metadata, E6 rollback, save, or finalization;
+31. pre-execution interference failure leaves the Working Document and package resources unchanged.
 
 Tests SHOULD use actual TemplateContract/Mapping/E2-C results where practical rather than constructing unrealistic executor-only state that bypasses the accepted Phase-E boundary.
 
@@ -405,6 +426,7 @@ E4 is complete only when:
 - all three approved native actions execute from READY Phase-E resolutions;
 - Section and Bookmark reuse their established typed semantics;
 - Frame `replace-image` implements the accepted 0/1/2-dimension rule;
+- one-dimensional Frame replacement is executable only with a determinable replacement-image intrinsic ratio;
 - no Phase-E path inherits the imperative `5cm × 3cm` defaults;
 - imperative image replacement compatibility remains unchanged;
 - unrelated Frame/template properties are preserved;
@@ -425,6 +447,26 @@ E5 remains responsible for bounded metadata/document capability automation.
 E6 remains responsible for the outer Phase-E atomic invocation, including rollback coverage for all document/package-local mutable state touched by E3, E4, and E5, lifecycle/integration closure, and final Phase-E compatibility verification.
 
 E4 MUST therefore expose enough bounded execution behavior for E6 to compose it later without turning E4 itself into the global Phase-E lifecycle owner.
+
+## 17. Parent-/Source-Consistency Review Closure
+
+The E4 contract was reviewed against the accepted parent `TEMPLATE-AUTHORING-01E` contract and the current E3-complete source baseline before implementation.
+
+The review confirmed:
+
+- E4 scope matches the parent contract exactly: Section `replace-content`, Bookmark `replace-text`, and Frame `replace-image` only;
+- `SectionTarget::replaceContent(OdtElement)` and `BookmarkTarget::replaceText(string)` already provide the established typed mutation semantics to reuse;
+- `FrameTarget` currently has no mutation method, so a bounded typed Frame image-replacement owner may be added/extracted without introducing a second native-object model;
+- the existing imperative `replaceImageByName()` compatibility behavior, including legacy `5cm × 3cm` defaults and duplicate-name handling, must remain unchanged;
+- E2-C already bounds replacement options to `width`/`height`, validates the accepted local image source, and accepts the local positive-length unit set used by this contract;
+- the existing E2-C image payload view is internal and is not promoted by E4 into a general application-facing replacement API;
+- source-derived nested native-object evidence is sufficient for the bounded destructive-interference check without authorizing a second Working-DOM inspection or a general action dependency graph.
+
+The review identified one integration gap: E2-C can accept supported image sources, especially SVG, without proving that an intrinsic aspect ratio is available. Because E4 one-dimensional replacement requires such a ratio, section 6.3.1 now makes ratio availability a conditional pre-mutation applicability requirement. Zero-dimensional preservation and two-dimensional explicit replacement do not require an intrinsic ratio.
+
+With that clarification, no unresolved contradiction remains between the E4 contract, the parent Phase-E contract, and the reviewed source baseline.
+
+Review result: **GREEN / implementation-ready**.
 
 ---
 
