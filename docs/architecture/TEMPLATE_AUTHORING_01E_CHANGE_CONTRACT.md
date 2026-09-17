@@ -2,7 +2,7 @@
 
 ## Status
 
-**Accepted architecture contract / implementation not started**
+**Accepted architecture contract / E1 implementation in progress**
 
 This Change Contract defines the approved implementation boundary for TEMPLATE-AUTHORING-01E, the optional application-facing mapping and automation layer.
 
