@@ -3,7 +3,7 @@
 **Branch:** `architecture/template-authoring-01e5-document-capabilities`
 **Base:** `02868882db7b66aa419b29ee783f54a3a33bf05b`
 **Implementation commit:** `72e1eb87a6f560cce5b4e13442d2d2c87ef7bf97`
-**Status:** implementation complete / automated preflight green / manual LibreOffice regression pending
+**Status:** COMPLETE / GREEN
 
 ## Implementation
 
@@ -49,8 +49,10 @@ capability dispatcher. **E6 has not started.**
 - `composer test` — 934 tests / 6,538 assertions; 8 PHPUnit deprecations.
 - `find src tests -name '*.php' -print0 | xargs -0 -n1 php -l` — all 310 PHP files passed.
 - `composer validate --no-check-publish` — passed.
-- `git diff --check 02868882db7b66aa419b29ee783f54a3a33bf05b...HEAD` — passed for the final commits.
+- `git diff --check 02868882db7b66aa419b29ee783f54a3a33bf05b...HEAD` — passed for the implementation/completion commits.
 - `zensical build --strict` — passed, no documentation issues.
+- Independent GitHub diff review of `02868882db7b66aa419b29ee783f54a3a33bf05b` through
+  `6dcf6eb06404c662da553a78abfaabf394c982c7` — GREEN, no blocking findings.
 
 The temporary E5 regression document was generated through real
 TemplateContract inspection, concrete preflight, E5 execution, and explicit
@@ -68,12 +70,12 @@ dates, editing cycles, and editing duration were retained. LibreOffice
 updated the generator field. Headless runs warned that `javaldx` could not be
 launched; conversion and round-trip still succeeded.
 
-The required manual LibreOffice Writer File Properties inspection and
-save/close/reopen cycle have not been performed. E5 is therefore not declared
-fully GREEN pending that user-run visual/manual gate. Open the source ODT
-above in Writer and verify no repair warning, Creator, Initial Creator, the
-three separate Keywords, Coverage, and representative typed metadata; save,
-close, reopen, and confirm stability.
+Manual LibreOffice Writer regression is GREEN. The source regression ODT opened
+without a repair warning. Writer's File Properties showed the expected initial
+creator (`Original Template Creator`) and creator (`E5 Creator Example`),
+the three keywords (`phase-e`, `metadata`, `regression`), and the expected
+metadata values. Existing unrelated template metadata remained present. The
+document was saved, closed, reopened, and remained stable without errors.
 
 ## Changed files
 
@@ -84,3 +86,12 @@ close, reopen, and confirm stability.
 - `docs/architecture/TEMPLATE_AUTHORING_01E5_COMPLETION.md`
 
 No sample output or local regression artifact is part of the change.
+
+## Closure
+
+Implementation, automated validation, independent GitHub diff review, and the
+required manual LibreOffice Writer regression are GREEN.
+
+**TEMPLATE-AUTHORING-01E5 is COMPLETE.**
+
+E6 has not been started by this slice.
