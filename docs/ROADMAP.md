@@ -176,9 +176,9 @@ FRAME-LAYOUT-01              COMPLETE
 TEMPLATE-AUTHORING-01
     ├── A — Existing Template Reliability & Format Preservation
     ├── B — Unified Template Inspection
-    ├── C — Native Field Binding
+    ├── C — Native Field Binding — COMPLETE (bounded 1.0 scope)
     ├── D — Declarative Structural Controls — COMPLETE / FINAL GO
-    ├── E — Optional Mapping / Automation Layer
+    ├── E — Optional Mapping / Automation Layer — COMPLETE / FINAL GO
     └── F — Authoring Documentation & Samples
     ↓
 FINALIZATION-01
@@ -255,7 +255,7 @@ rebuilding the document layout in PHP. That convenience workflow is not an
 inherent `OdtTemplate` lifecycle. Existing lower-level and imperative APIs
 remain first-class and may be composed directly in any appropriate order.
 
-The milestone is divided into six bounded phases:
+The milestone is divided into six bounded phases. The reconciled remaining 1.0 path and product-authoring principles are recorded in [`architecture/RELEASE_1_0_PLANNING_RECONCILIATION.md`](architecture/RELEASE_1_0_PLANNING_RECONCILIATION.md):
 
 #### A — Existing Template Reliability & Format Preservation — COMPLETE
 
@@ -286,7 +286,7 @@ Design one read-only template inspection result that composes existing template-
 
 Existing `TemplateStructureInspector` and `DocumentInspector` are architectural inputs; do not create competing inspection models without evidence.
 
-#### C — Native Field Binding
+#### C — Native Field Binding — COMPLETE (bounded 1.0 scope)
 
 Define a bounded 1.0 native-field capability based on actual Writer/ODF semantics and RESEARCH-01 evidence.
 
@@ -315,9 +315,9 @@ Final automated validation reached **845 tests / 5,754 assertions**, plus **199 
 
 The first manual run exposed a D3 WorkingTarget defect that reversed foreach physical document order. Investigation confirmed that SECTION-03 already defines input order as document order and that public `instantiateMany()` was correct. The declarative path was corrected with a bounded local insertion anchor, covered by RED-first BODY/footer/nested/save-reopen tests, and manually revalidated as `Anna -> Peter` and `Footer A -> Footer B`.
 
-**Handoff rule:** D0–D4 are closed. Do not restart Phase-D research or redesign without contradictory repository or ODF evidence. E1–E6 implementation and automated integration are complete; the required manual LibreOffice Writer gate remains pending. See [`architecture/TEMPLATE_AUTHORING_01E6_COMPLETION.md`](architecture/TEMPLATE_AUTHORING_01E6_COMPLETION.md). Phase E remains optional and does not redefine the normal imperative/render lifecycle.
+**Handoff rule:** D0–D4 are closed. Do not restart Phase-D research or redesign without contradictory repository or ODF evidence. E1–E6 implementation, automated integration, and the required manual LibreOffice Writer gate are complete. See [`architecture/TEMPLATE_AUTHORING_01E6_COMPLETION.md`](architecture/TEMPLATE_AUTHORING_01E6_COMPLETION.md). Phase E remains optional and does not redefine the normal imperative/render lifecycle.
 
-#### E — Optional Mapping / Automation Layer — IMPLEMENTED / MANUAL REGRESSION PENDING
+#### E — Optional Mapping / Automation Layer — COMPLETE / FINAL GO
 
 Phase E now provides source-derived mapping and complete non-mutating
 preflight, dependency-scope projection, and optional dependency/native-object/
