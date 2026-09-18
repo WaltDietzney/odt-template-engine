@@ -2,7 +2,7 @@
 
 **Branch:** `architecture/template-authoring-01e4-native-object-actions`
 **Base:** `7c0033b4702dab4b17ae5becfb6f50e02e3f2298`
-**Status:** implementation complete / automated preflight green / manual LibreOffice regression pending
+**Status:** COMPLETE / GREEN
 
 ## Outcome
 
@@ -74,30 +74,23 @@ the Phase-E value types, and the bounded coverage support.
 - `git diff --check`: passed.
 - Strict docs build: passed with Zensical (`zensical build --strict`;
   no documentation issues).
+- Temporary ODT ZIP integrity, engine save/reopen, LibreOffice headless PDF
+  conversion, and LibreOffice ODT round trip passed. LibreOffice updated the
+  generator field during its round trip; both LibreOffice commands emitted the
+  environment warning that `javaldx` could not be launched.
+- Manual LibreOffice Writer regression: GREEN. The updated Sample 04 opened
+  without a repair warning and displayed the canonical Creator and Initial
+  creator values, all three keywords, and the expected typed metadata values.
+  LibreOffice's document properties showed the expected creator/initial-creator
+  lifecycle information and keyword collection while preserving unrelated
+  template metadata. A manual save, close, and reopen cycle remained stable.
 
-A temporary ODT was saved at
-`/tmp/METADATA-SEMANTICS-01-manual.odt`. ZIP integrity and engine
-save/reopen checks passed. LibreOffice headless converted it successfully to
-`/tmp/METADATA-SEMANTICS-01-manual.pdf` and performed an ODT round trip at
-`/tmp/METADATA-SEMANTICS-01-lo-roundtrip/METADATA-SEMANTICS-01-manual.odt`.
-The round-tripped package retained creator, initial creator, all three
-keywords, coverage, language, dates, editing cycles, and editing duration;
-LibreOffice updated the generator field. Both LibreOffice commands emitted
-the environment warning that `javaldx` could not be launched. The packages
-passed ZIP integrity checks. This does not verify Writer's GUI metadata
-dialog, repair-warning behavior, or a manual Writer save/close/reopen cycle.
+## Closure
 
-## Remaining manual gate
+The implementation diff `7c0033b4702dab4b17ae5becfb6f50e02e3f2298` →
+`485d77392fda365b1e7a9ebb23f279e5c0fca48c` received final architecture
+review with no blocking findings. Automated validation and the required manual
+LibreOffice regression are GREEN.
 
-Open `/tmp/METADATA-SEMANTICS-01-manual.odt` in LibreOffice Writer and verify:
-
-1. It opens without a repair warning.
-2. Creator and initial creator show the intended values where Writer exposes
-   them.
-3. The three keywords (`finance`, `report`, `2026`) remain separate.
-4. Coverage remains present where Writer exposes it.
-5. Save, close, and reopen the document; verify those values remain stable.
-
-Record any LibreOffice normalization that materially changes the metadata
-semantics. The manual regression is pending; this record does not declare the
-slice fully GREEN or authorize E5.
+**METADATA-SEMANTICS-01 is COMPLETE.** The metadata semantics cleanup no longer
+blocks TEMPLATE-AUTHORING-01E5.
