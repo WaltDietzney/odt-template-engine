@@ -47,10 +47,10 @@ foreach ($imagesToReplace as $name => $options) {
 // [5] Set document metadata
 $template->setMeta([
     'title' => 'Sample 5b - Multiple Image Replacement',
-    'author' => 'OdtTemplateEngine Team',
+    'creator' => 'OdtTemplateEngine Team',
     'subject' => 'Replacing multiple images dynamically in an ODT template',
     'description' => 'This document demonstrates how to replace several images based on their frame names and add metadata.',
-    'keywords' => 'odt, template, replace image, metadata, php',
+    'keywords' => ['odt', 'template', 'replace image', 'metadata', 'php'],
     'language' => 'en',
     'generator' => 'OdtTemplateEngine v1.0',
     'editing_cycles' => 2,

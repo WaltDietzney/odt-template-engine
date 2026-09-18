@@ -199,14 +199,26 @@ final class TemplateProcessor
      *
      * @param array<string, string> $values
      */
-    public function replaceScalarTextInSubtree(DOMNode $root, array $values, callable $applyFilter): void
+    public function replaceScalarTextInSubtree(
+        DOMNode $root,
+        array $values,
+        callable $applyFilter,
+        bool $excludeNestedSections = false,
+        bool $excludeSpecialExpressions = false
+    ): void
     {
         (new TemplateExpressionReplacementService())->replace(
             $root,
-            function (string $token) use ($values, $applyFilter): ?string {
+            function (string $token) use ($values, $applyFilter, $excludeSpecialExpressions): ?string {
+                if ($excludeSpecialExpressions
+                    && preg_match('/^\{\{(?:nl2br|ul|ol):\w+(?:\|[^}]*)?\}\}$/', $token) === 1
+                ) {
+                    return null;
+                }
                 $replaced = $this->replaceScalarText($token, $values, $applyFilter);
                 return $replaced === $token ? null : $replaced;
-            }
+            },
+            $excludeNestedSections
         );
     }
 
@@ -278,15 +290,41 @@ final class TemplateProcessor
      */
     public function replaceNl2brInDom(DOMDocument $dom, array $values): void
     {
-        $xpath = new DOMXPath($dom);
-        $xpath->registerNamespace('text', 'urn:oasis:names:tc:opendocument:xmlns:text:1.0');
-        $nodes = $xpath->query('//text()');
+        $this->replaceNl2brInNode($dom, $values);
+    }
 
-        foreach ($nodes as $textNode) {
+    /** Apply the established nl2br mutation to one already bounded subtree. */
+    public function replaceNl2brInNode(
+        DOMNode $root,
+        array $values,
+        bool $excludeNestedSections = false,
+        ?array $allowedNames = null
+    ): void
+    {
+        $document = $root instanceof DOMDocument ? $root : $root->ownerDocument;
+        if (!$document instanceof DOMDocument) {
+            return;
+        }
+        $xpath = new DOMXPath($document);
+        $nodes = $xpath->query(
+            $root instanceof DOMDocument ? '//text()' : './/text()',
+            $root instanceof DOMDocument ? null : $root
+        );
+
+        foreach ($nodes ?: [] as $textNode) {
+            if (!$textNode instanceof DOMNode) {
+                continue;
+            }
+            if ($excludeNestedSections && $this->insideNestedSection($textNode, $root)) {
+                continue;
+            }
             $text = $textNode->nodeValue;
 
             if (preg_match('/{{nl2br:(\w+)}}/', $text, $match)) {
                 $key = $match[1];
+                if ($allowedNames !== null && !isset($allowedNames[$key])) {
+                    continue;
+                }
                 $original = $values[$key] ?? '';
                 $parts = preg_split('/\r\n|\n|\r/', $original);
                 $parent = $textNode->parentNode;
@@ -294,10 +332,10 @@ final class TemplateProcessor
                 $newNodes = [];
                 foreach ($parts as $i => $part) {
                     if ($i > 0) {
-                        $newNodes[] = $dom->createElement('text:line-break');
+                        $newNodes[] = $document->createElement('text:line-break');
                     }
                     if ($part !== '') {
-                        $newNodes[] = $dom->createTextNode($part);
+                        $newNodes[] = $document->createTextNode($part);
                     }
                 }
 
@@ -317,26 +355,55 @@ final class TemplateProcessor
      */
     public function replaceListsInDom(DOMDocument $dom, array $values): void
     {
-        $xpath = new DOMXPath($dom);
-        $nodes = $xpath->query('//text()');
+        $this->replaceListsInNode($dom, $values);
+    }
 
-        foreach ($nodes as $textNode) {
+    /** Apply the established ul/ol mutation to one already bounded subtree. */
+    public function replaceListsInNode(
+        DOMNode $root,
+        array $values,
+        bool $excludeNestedSections = false,
+        ?array $unorderedNames = null,
+        ?array $orderedNames = null
+    ): void
+    {
+        $document = $root instanceof DOMDocument ? $root : $root->ownerDocument;
+        if (!$document instanceof DOMDocument) {
+            return;
+        }
+        $xpath = new DOMXPath($document);
+        $nodes = $xpath->query(
+            $root instanceof DOMDocument ? '//text()' : './/text()',
+            $root instanceof DOMDocument ? null : $root
+        );
+
+        foreach ($nodes ?: [] as $textNode) {
+            if (!$textNode instanceof DOMNode) {
+                continue;
+            }
+            if ($excludeNestedSections && $this->insideNestedSection($textNode, $root)) {
+                continue;
+            }
             $text = $textNode->nodeValue;
 
             if (preg_match('/{{(ul|ol):(\w+)}}/', $text, $match)) {
                 $listType = $match[1];
                 $key = $match[2];
+                $allowedNames = $listType === 'ul' ? $unorderedNames : $orderedNames;
+                if ($allowedNames !== null && !isset($allowedNames[$key])) {
+                    continue;
+                }
                 $original = $values[$key] ?? '';
                 $lines = preg_split('/\r\n|\r|\n/', $original);
 
-                $list = $dom->createElement('text:list');
+                $list = $document->createElement('text:list');
                 $styleName = ($listType === 'ol') ? 'Numbering_20_Symbol' : 'Bullet_20_Symbol';
                 $list->setAttribute('text:style-name', $styleName);
 
                 foreach ($lines as $line) {
-                    $listItem = $dom->createElement('text:list-item');
-                    $paragraph = $dom->createElement('text:p');
-                    $paragraph->appendChild($dom->createTextNode($line));
+                    $listItem = $document->createElement('text:list-item');
+                    $paragraph = $document->createElement('text:p');
+                    $paragraph->appendChild($document->createTextNode($line));
                     $listItem->appendChild($paragraph);
                     $list->appendChild($listItem);
                 }
@@ -519,5 +586,15 @@ final class TemplateProcessor
     public function evaluateCondition(string $expression, array $values): bool
     {
         return ConditionExpression::parse($expression)->evaluate($values);
+    }
+
+    private function insideNestedSection(DOMNode $node, DOMNode $root): bool
+    {
+        for ($current = $node->parentNode; $current !== null && $current !== $root; $current = $current->parentNode) {
+            if ($current instanceof DOMElement && $current->nodeName === 'text:section') {
+                return true;
+            }
+        }
+        return false;
     }
 }

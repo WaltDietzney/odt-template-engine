@@ -53,7 +53,7 @@ A placeholder can occur outside the normal body, so the engine processes both `c
 
 ## meta.xml
 
-`meta.xml` contains document metadata such as title, author, language, dates, generator information, and editing metadata.
+`meta.xml` contains document metadata such as title, creator, language, dates, generator information, and editing metadata.
 
 The public `setMeta()` and `getMeta()` methods provide the supported abstraction for these values.
 

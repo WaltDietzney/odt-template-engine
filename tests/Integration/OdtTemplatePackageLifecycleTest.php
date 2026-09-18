@@ -93,6 +93,65 @@ final class OdtTemplatePackageLifecycleTest extends TestCase
         }
     }
 
+    public function testLegacyMetadataAliasesAndStringKeywordInputRemainCompatible(): void
+    {
+        $template = new OdtTemplate($this->templatePath('template_04_metadata.odt'));
+        $output = $this->newOutputPath('metadata-legacy-characterization');
+
+        $before = $template->getMeta();
+        self::assertSame(['odt emplate metadata richtext', 'php sample'], $before['keywords'] ?? null);
+        self::assertArrayNotHasKey('creator', $before);
+        self::assertArrayNotHasKey('initial_creator', $before);
+
+        $template->setMeta([
+            'author' => 'Legacy Current Creator',
+            'initial_author' => 'Legacy Original Creator',
+            'keywords' => 'finance,report,2026',
+            'not_a_supported_key' => 'ignored',
+        ]);
+
+        $metadata = $template->getMeta();
+        self::assertSame('Legacy Current Creator', $metadata['author'] ?? null);
+        self::assertSame('Legacy Original Creator', $metadata['initial_author'] ?? null);
+        self::assertSame('Legacy Current Creator', $metadata['creator'] ?? null);
+        self::assertSame('Legacy Original Creator', $metadata['initial_creator'] ?? null);
+        self::assertSame(['finance,report,2026'], $metadata['keywords'] ?? null);
+        self::assertArrayNotHasKey('not_a_supported_key', $metadata);
+
+        $template->save($output);
+        $template->cleanup();
+
+        $archive = new ZipArchive();
+        self::assertTrue($archive->open($output) === true);
+        try {
+            $metaXml = $archive->getFromName('meta.xml');
+            self::assertIsString($metaXml);
+            $dom = new \DOMDocument();
+            self::assertTrue($dom->loadXML($metaXml));
+            $xpath = new \DOMXPath($dom);
+            $xpath->registerNamespace('meta', 'urn:oasis:names:tc:opendocument:xmlns:meta:1.0');
+            $keywords = $xpath->query('//meta:keyword');
+            self::assertNotFalse($keywords);
+            self::assertSame(1, $keywords->length);
+            self::assertSame('finance,report,2026', $keywords->item(0)?->textContent);
+            self::assertSame(0, $xpath->query('//*[local-name()="not_a_supported_key"]')->length);
+        } finally {
+            $archive->close();
+        }
+
+        $reopened = new OdtTemplate($output);
+        try {
+            $afterReload = $reopened->getMeta();
+            self::assertSame('Legacy Current Creator', $afterReload['author'] ?? null);
+            self::assertSame('Legacy Original Creator', $afterReload['initial_author'] ?? null);
+            self::assertSame('Legacy Current Creator', $afterReload['creator'] ?? null);
+            self::assertSame('Legacy Original Creator', $afterReload['initial_creator'] ?? null);
+            self::assertSame(['finance,report,2026'], $afterReload['keywords'] ?? null);
+        } finally {
+            $reopened->cleanup();
+        }
+    }
+
     public function testImageEmbeddingAndManifestSynchronizationRemainCompatible(): void
     {
         $template = new OdtTemplate($this->templatePath('template_06_imageSettings.odt'));

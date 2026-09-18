@@ -28,15 +28,34 @@ final class SectionMutationService
     ): void
     {
         $section = $this->findSection($context->contentDom(), $name);
-        $staging = $context->contentDom()->cloneNode(true);
+        $this->replaceLocatedContent($context->contentDom(), $section, $name, $content, $package);
+    }
+
+    /** @internal Reuse SECTION-03 mutation semantics for a provenance-bounded region target. */
+    public function replaceContentInWorkingTarget(
+        SectionWorkingTarget $target,
+        OdtElement $content,
+        ?OdtPackage $package = null
+    ): void {
+        $this->replaceLocatedContent($target->document(), $target->section(), $target->name(), $content, $package);
+    }
+
+    private function replaceLocatedContent(
+        DOMDocument $document,
+        DOMElement $section,
+        string $name,
+        OdtElement $content,
+        ?OdtPackage $package
+    ): void {
+        $staging = $document->cloneNode(true);
         if (!$staging instanceof DOMDocument) {
             $this->fail($name, 'unable to create a detached materialization document');
         }
 
-        $stagedSection = $this->findSection($staging, $name);
+        $stagedSection = $this->correspondingElement($document, $section, $staging);
         $replacement = $content->toDomNode($staging);
         $nodes = $this->replacementNodes($replacement, $name);
-        $this->validateNames($context->contentDom(), $section, $nodes, $name);
+        $this->validateNames($document, $section, $nodes, $name);
 
         $assets = $content->getImageAssets();
         $containsImage = false;
@@ -70,18 +89,41 @@ final class SectionMutationService
                 $section->removeChild($section->firstChild);
             }
             foreach ($nodes as $node) {
-                $section->appendChild($this->copyNode($context->contentDom(), $node));
+                $section->appendChild($this->copyNode($document, $node));
             }
         } catch (\Throwable $exception) {
             while ($section->firstChild !== null) {
                 $section->removeChild($section->firstChild);
             }
             foreach ($originalChildren as $child) {
-                $section->appendChild($this->copyNode($context->contentDom(), $child));
+                $section->appendChild($this->copyNode($document, $child));
             }
             $package?->removePreparedPackageFiles($createdResources);
             throw $exception;
         }
+    }
+
+    private function correspondingElement(DOMDocument $source, DOMElement $element, DOMDocument $clone): DOMElement
+    {
+        $indexes = [];
+        for ($node = $element; $node !== $source; $node = $node->parentNode) {
+            if ($node->parentNode === null) {
+                $this->fail($element->getAttribute('text:name'), 'Section target is detached from its owning document');
+            }
+            $index = 0;
+            for ($sibling = $node->previousSibling; $sibling !== null; $sibling = $sibling->previousSibling) {
+                ++$index;
+            }
+            $indexes[] = $index;
+        }
+        $current = $clone;
+        foreach (array_reverse($indexes) as $index) {
+            $current = $current->childNodes->item($index);
+            if (!$current instanceof DOMElement) {
+                $this->fail($element->getAttribute('text:name'), 'Unable to correlate the Section in the staging document');
+            }
+        }
+        return $current;
     }
 
     private function findSection(DOMDocument $dom, string $name): DOMElement

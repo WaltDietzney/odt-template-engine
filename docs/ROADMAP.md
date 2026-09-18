@@ -315,22 +315,18 @@ Final automated validation reached **845 tests / 5,754 assertions**, plus **199 
 
 The first manual run exposed a D3 WorkingTarget defect that reversed foreach physical document order. Investigation confirmed that SECTION-03 already defines input order as document order and that public `instantiateMany()` was correct. The declarative path was corrected with a bounded local insertion anchor, covered by RED-first BODY/footer/nested/save-reopen tests, and manually revalidated as `Anna -> Peter` and `Footer A -> Footer B`.
 
-**Handoff rule:** D0–D4 are closed. Do not restart Phase-D research or redesign without contradictory repository or ODF evidence. The next TEMPLATE-AUTHORING phase is **E — Optional Mapping / Automation Layer**, which has not started and requires its own architecture decision before implementation.
+**Handoff rule:** D0–D4 are closed. Do not restart Phase-D research or redesign without contradictory repository or ODF evidence. E1–E6 implementation and automated integration are complete; the required manual LibreOffice Writer gate remains pending. See [`architecture/TEMPLATE_AUTHORING_01E6_COMPLETION.md`](architecture/TEMPLATE_AUTHORING_01E6_COMPLETION.md). Phase E remains optional and does not redefine the normal imperative/render lifecycle.
 
-#### E — Optional Mapping / Automation Layer
+#### E — Optional Mapping / Automation Layer — IMPLEMENTED / MANUAL REGRESSION PENDING
 
-Determine the bounded design of an optional convenience layer that can use the
-inspection contract and mapped application data to orchestrate supported engine
-capabilities for integrations that benefit from automation, such as CMS
-plugins, form-driven document generation, or application-specific document
-services.
-
-The existing imperative methods remain first-class APIs. Phase E must not
-require one global processing order for normal library use or turn
-mapping-driven rendering into an inherent `OdtTemplate` lifecycle. If a
-convenience class/service is provided, its orchestration, atomicity, diagnostics,
-and lifecycle belong to that optional layer and require their own accepted
-contract.
+Phase E now provides source-derived mapping and complete non-mutating
+preflight, dependency-scope projection, and optional dependency/native-object/
+metadata automation. The common invocation is document-scoped and atomic across
+E3–E5, while the established specialized facades and imperative APIs remain
+available. It does not make automation part of `render()` or require an
+automation lifecycle for ordinary library use. The accepted semantics and
+closure evidence are recorded in [`architecture/TEMPLATE_AUTHORING_01E_CHANGE_CONTRACT.md`](architecture/TEMPLATE_AUTHORING_01E_CHANGE_CONTRACT.md)
+and [`architecture/TEMPLATE_AUTHORING_01E6_COMPLETION.md`](architecture/TEMPLATE_AUTHORING_01E6_COMPLETION.md).
 
 #### F — Authoring Documentation & Samples
 

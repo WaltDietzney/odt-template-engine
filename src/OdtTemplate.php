@@ -11,10 +11,15 @@ use RuntimeException;
 use OdtTemplateEngine\Document\AmbiguousTemplateTargetException;
 use OdtTemplateEngine\Document\DocumentInspection;
 use OdtTemplateEngine\Document\DocumentInspector;
+use OdtTemplateEngine\Document\DependencyAutomationExecutor;
+use OdtTemplateEngine\Document\DocumentCapabilityAutomationExecutor;
 use OdtTemplateEngine\Document\FillImageRequirementCollector;
 use OdtTemplateEngine\Document\FillImageRequirementMaterializer;
 use OdtTemplateEngine\Document\FontFaceRequirementDiscovery;
 use OdtTemplateEngine\Document\FontFaceRequirementMaterializer;
+use OdtTemplateEngine\Document\FrameImageReplacementService;
+use OdtTemplateEngine\Document\NativeObjectActionExecutor;
+use OdtTemplateEngine\Document\PhaseEAutomationExecutor;
 use OdtTemplateEngine\Document\BookmarkTarget;
 use OdtTemplateEngine\Document\FrameTarget;
 use OdtTemplateEngine\Document\MetadataManager;
@@ -30,6 +35,7 @@ use OdtTemplateEngine\Document\TypedTargetResolver;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Style\DocumentStyles;
 use OdtTemplateEngine\Template\TemplateContract;
+use OdtTemplateEngine\Mapping\ConcretePreflightResult;
 use OdtTemplateEngine\Template\TemplateContractInspector;
 use OdtTemplateEngine\Template\TemplateProcessor;
 use OdtTemplateEngine\Template\TemplateStructureInspection;
@@ -80,6 +86,8 @@ class OdtTemplate
      * the document-owned setElement() path.
      */
     private bool $legacyStructuredValuesMaterialized = false;
+
+    private bool $phaseEAutomationSucceeded = false;
 
     private ?DocumentStyles $documentStyles = null;
 
@@ -135,6 +143,7 @@ class OdtTemplate
     {
         $this->package->resetFromTemplate();
         $this->legacyStructuredValuesMaterialized = false;
+        $this->phaseEAutomationSucceeded = false;
         $this->prepareLoadedTemplate();
     }
 
@@ -207,6 +216,71 @@ class OdtTemplate
             $name,
             $value
         );
+    }
+
+    /** Execute READY Phase-E dependency consumers against this template's working document. */
+    public function automateDependencies(
+        TemplateContract $contract,
+        ConcretePreflightResult $preflight
+    ): void {
+        (new DependencyAutomationExecutor())->execute(
+            $this->documentContext(),
+            $contract,
+            $preflight,
+            fn (string $name, string $value): mixed => $this->setUserField($name, $value),
+            fn (string $filter, string $value, ?string $option): string => $this->applyFilter($filter, $value, $option),
+            fn (string $expression, array $values): bool => $this->evaluateCondition($expression, $values)
+        );
+    }
+
+    /** Execute explicit native-object actions from a READY Phase-E preflight. */
+    public function automateNativeObjectActions(
+        TemplateContract $contract,
+        ConcretePreflightResult $preflight
+    ): void {
+        (new NativeObjectActionExecutor())->execute(
+            $this->documentContext(),
+            $this->package,
+            $contract,
+            $preflight
+        );
+    }
+
+    /** Execute explicit READY metadata capabilities through MetadataManager. */
+    public function automateDocumentCapabilities(ConcretePreflightResult $preflight): void
+    {
+        (new DocumentCapabilityAutomationExecutor())->execute(
+            new MetadataManager($this->documentContext()),
+            $preflight
+        );
+    }
+
+    /**
+     * Execute one atomic Phase-E invocation from the existing source contract and READY preflight.
+     *
+     * E3 needs the already-inspected TemplateContract; accepting it avoids a second inspection.
+     */
+    public function automate(TemplateContract $contract, ConcretePreflightResult $preflight): void
+    {
+        if ($this->phaseEAutomationSucceeded) {
+            throw new \LogicException('A successful Phase-E invocation already ran in this document lifecycle.');
+        }
+        if (!$preflight->ready()) {
+            throw new \InvalidArgumentException('Phase-E automation requires a READY concrete preflight.');
+        }
+
+        (new PhaseEAutomationExecutor())->execute(
+            $this->package,
+            $preflight,
+            function () use ($contract, $preflight): void {
+                // E4 localizes native targets against source-order evidence before E3
+                // can materialize/remove structural Sections in the Working DOM.
+                $this->automateNativeObjectActions($contract, $preflight);
+                $this->automateDependencies($contract, $preflight);
+                $this->automateDocumentCapabilities($preflight);
+            }
+        );
+        $this->phaseEAutomationSucceeded = true;
     }
 
     /**
@@ -845,28 +919,16 @@ class OdtTemplate
     }
 
     /**
-     * Sets metadata fields for the ODT document (e.g. title, author, description).
+     * Sets metadata fields for the ODT document (e.g. title, creator, description).
      *
      * Updates or creates metadata elements in `meta.xml` using standard ODF/DC/meta tags.
-     * This includes common document information like title, author, subject, and creation date.
-     *
-     * Supported keys:
-     * - 'title'            => dc:title
-     * - 'subject'          => dc:subject
-     * - 'description'      => dc:description
-     * - 'keywords'         => meta:keyword
-     * - 'initial_author'   => meta:initial-creator
-     * - 'author'           => dc:creator
-     * - 'language'         => dc:language
-     * - 'creation_date'    => meta:creation-date
-     * - 'date'             => dc:date
-     * - 'editing_cycles'   => meta:editing-cycles
-     * - 'editing_duration' => meta:editing-duration
-     * - 'generator'        => meta:generator
-     *
      * Missing XML nodes are automatically created under the <office:meta> element.
      *
-     * @param array<string, string> $meta Associative array of metadata fields and values.
+     * Canonical names are creator and initial_creator; author and initial_author
+     * remain accepted as imperative compatibility aliases. Keywords accept a
+     * list of strings, while a string remains one keyword.
+     *
+     * @param array<string, mixed> $meta Associative array of metadata fields and values.
      *
      * @return void
      */
@@ -879,24 +941,10 @@ class OdtTemplate
     /**
      * Returns a list of known document metadata fields extracted from meta.xml.
      *
-     * Scans the ODT document's meta.xml using standard ODF namespaces and collects values
-     * for supported metadata fields such as title, author, and creation date.
+     * Canonical creator keys are returned alongside their established legacy
+     * aliases. Keywords are returned as a list containing all meta:keyword values.
      *
-     * Supported keys:
-     * - 'title'            => dc:title
-     * - 'subject'          => dc:subject
-     * - 'description'      => dc:description
-     * - 'keywords'         => meta:keyword
-     * - 'initial_author'   => meta:initial-creator
-     * - 'author'           => dc:creator
-     * - 'language'         => dc:language
-     * - 'creation_date'    => meta:creation-date
-     * - 'date'             => dc:date
-     * - 'editing_cycles'   => meta:editing-cycles
-     * - 'editing_duration' => meta:editing-duration
-     * - 'generator'        => meta:generator
-     *
-     * @return array<string, string> Associative array of metadata fields and their current values.
+     * @return array<string, string|list<string>> Metadata currently present in the document.
      */
     public function getMeta(): array
     {
@@ -1172,14 +1220,12 @@ class OdtTemplate
         string $width,
         string $height
     ): void {
-        $frame->setAttribute('svg:width', $width);
-        $frame->setAttribute('svg:height', $height);
-
-        foreach ($frame->childNodes as $child) {
-            if ($child->nodeName === 'draw:image') {
-                $child->setAttribute('xlink:href', 'Pictures/' . $filename);
-            }
-        }
+        (new FrameImageReplacementService())->updateFrame(
+            $frame,
+            'Pictures/' . $filename,
+            $width,
+            $height
+        );
     }
 
 

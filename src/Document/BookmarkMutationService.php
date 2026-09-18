@@ -17,8 +17,23 @@ final class BookmarkMutationService
 
     public function replaceText(OdtDocumentContext $context, string $name, string $value): void
     {
+        $this->replaceTextInWorkingRegion(
+            $context->contentDom(),
+            $context->contentDom()->documentElement,
+            $name,
+            $value
+        );
+    }
+
+    /** @internal Applies the established plain-text range mutation within a provenance-bounded region. */
+    public function replaceTextInWorkingRegion(
+        \DOMDocument $document,
+        DOMElement $regionRoot,
+        string $name,
+        string $value
+    ): void {
         $this->validateValue($name, $value);
-        [$start, $end] = $this->markers($context, $name);
+        [$start, $end] = $this->markers($document, $regionRoot, $name);
 
         if ($start->parentNode === null || $start->parentNode !== $end->parentNode) {
             $this->fail($name, BookmarkDescriptor::TOPOLOGY_PARAGRAPH_SPANNING, 'bookmark range crosses text contexts');
@@ -56,7 +71,7 @@ final class BookmarkMutationService
             foreach (iterator_to_array($span->childNodes) as $child) {
                 $span->removeChild($child);
             }
-            $span->appendChild($context->contentDom()->createTextNode($value));
+            $span->appendChild($document->createTextNode($value));
             return;
         }
 
@@ -69,27 +84,27 @@ final class BookmarkMutationService
         foreach ($between as $node) {
             $parent->removeChild($node);
         }
-        $parent->insertBefore($context->contentDom()->createTextNode($value), $end);
+        $parent->insertBefore($document->createTextNode($value), $end);
     }
 
     /** @return array{DOMElement, DOMElement} */
-    private function markers(OdtDocumentContext $context, string $name): array
+    private function markers(\DOMDocument $document, DOMElement $regionRoot, string $name): array
     {
-        $xpath = new \DOMXPath($context->contentDom());
+        $xpath = new \DOMXPath($document);
         $xpath->registerNamespace('text', self::TEXT_NAMESPACE);
-        foreach ($xpath->query('//text:bookmark') ?: [] as $node) {
+        foreach ($xpath->query('.//text:bookmark', $regionRoot) ?: [] as $node) {
             if ($node instanceof DOMElement && $node->getAttribute('text:name') === $name) {
                 $this->fail($name, BookmarkDescriptor::TOPOLOGY_COLLAPSED, 'collapsed bookmark has no selected text');
             }
         }
         $starts = [];
         $ends = [];
-        foreach ($xpath->query('//text:bookmark-start') ?: [] as $node) {
+        foreach ($xpath->query('.//text:bookmark-start', $regionRoot) ?: [] as $node) {
             if ($node instanceof DOMElement && $node->getAttribute('text:name') === $name) {
                 $starts[] = $node;
             }
         }
-        foreach ($xpath->query('//text:bookmark-end') ?: [] as $node) {
+        foreach ($xpath->query('.//text:bookmark-end', $regionRoot) ?: [] as $node) {
             if ($node instanceof DOMElement && $node->getAttribute('text:name') === $name) {
                 $ends[] = $node;
             }
