@@ -28,11 +28,9 @@ final class MappingTemplateFixture
             . ' xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"'
             . ' xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"'
             . ' xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0"'
-            . ($stylesBody !== ''
-                ? ' xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"'
-                    . ' xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"'
-                    . ' xmlns:loext="urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0"'
-                : '')
+            . ' xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"'
+            . ' xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"'
+            . ' xmlns:loext="urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0"'
             . ' xmlns:xlink="http://www.w3.org/1999/xlink"';
         $zip = new ZipArchive();
         if ($zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {

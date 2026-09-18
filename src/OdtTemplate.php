@@ -12,6 +12,7 @@ use OdtTemplateEngine\Document\AmbiguousTemplateTargetException;
 use OdtTemplateEngine\Document\DocumentInspection;
 use OdtTemplateEngine\Document\DocumentInspector;
 use OdtTemplateEngine\Document\DependencyAutomationExecutor;
+use OdtTemplateEngine\Document\DocumentCapabilityAutomationExecutor;
 use OdtTemplateEngine\Document\FillImageRequirementCollector;
 use OdtTemplateEngine\Document\FillImageRequirementMaterializer;
 use OdtTemplateEngine\Document\FontFaceRequirementDiscovery;
@@ -237,6 +238,15 @@ class OdtTemplate
             $this->documentContext(),
             $this->package,
             $contract,
+            $preflight
+        );
+    }
+
+    /** Execute explicit READY metadata capabilities through MetadataManager. */
+    public function automateDocumentCapabilities(ConcretePreflightResult $preflight): void
+    {
+        (new DocumentCapabilityAutomationExecutor())->execute(
+            new MetadataManager($this->documentContext()),
             $preflight
         );
     }
