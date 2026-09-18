@@ -1,6 +1,6 @@
 # TEMPLATE-AUTHORING-01E6 — Automation Atomicity + Integration Closure
 
-**Status:** implementation complete / automated preflight green / manual LibreOffice regression pending
+**Status:** implementation complete / automated preflight green / manual LibreOffice regression green / independent diff review pending
 
 **Branch:** `architecture/template-authoring-01e6-atomicity-integration`
 
@@ -110,7 +110,25 @@ and Section replacement. LibreOffice emitted the environment warning
 also encountered read-only dconf and was rerun successfully outside the
 sandbox.
 
-The required human LibreOffice Writer open/save/close/reopen inspection is
-**PENDING**. Headless package/render checks do not replace that gate. No
-rendering repair warning was reported by the headless conversion, but only the
-manual Writer inspection can complete the gate.
+The corrected artifact was manually opened in LibreOffice Writer without a
+repair warning. Dependency replacement, both foreach entries, Section
+replacement, the Portrait image, and all three Keywords were visible. Save,
+close, and reopen preserved the visible content and image. The manual
+LibreOffice regression gate is **GREEN**.
+
+## Manual regression artifact follow-up
+
+The first manual artifact used the synthetic test fixture's bare `draw:frame`
+without Writer anchor or geometry attributes. LibreOffice removed that
+unpositioned frame when saving; this was a fixture defect, not an E4/E6
+execution or package-snapshot defect. The corrected temporary generator
+supplies a paragraph-anchored 3 cm × 2 cm frame. Its replacement image and
+frame survive engine save/reload, headless roundtrip, and the manual Writer
+save/close/reopen cycle.
+
+The generated `meta.xml` contains `dc:creator` with `E6 Manual Regression`,
+and LibreOffice preserves it through roundtrip. The value was not visible in
+the Writer File Properties views checked manually. This is recorded as a
+LibreOffice UI visibility limitation; the ODF metadata itself is present and
+stable. The independent GitHub diff review remains pending, so E6 is not yet
+declared finally complete.
