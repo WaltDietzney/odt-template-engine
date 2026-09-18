@@ -1,6 +1,6 @@
 # TEMPLATE-AUTHORING-01E6 — Automation Atomicity + Integration Closure
 
-**Status:** implementation complete / automated preflight green / manual LibreOffice regression green / independent diff review pending
+**Status:** **COMPLETE / GREEN**
 
 **Branch:** `architecture/template-authoring-01e6-atomicity-integration`
 
@@ -73,8 +73,7 @@ scope/consumer evidence; this avoids hidden source reinspection.
 No E7, Phase F, FINALIZATION-01, new mapping/capability semantics, or E6 work
 inside individual E3/E4/E5 transactions was introduced. `samples/output/` and
 other pre-existing local sample/research artifacts were not changed or
-committed. No temporary Git worktree was created under `/tmp` and this branch
-was not pushed.
+committed. No temporary Git worktree was created under `/tmp`. The completed E6 branch was pushed for independent GitHub diff review.
 
 ## Changed implementation files
 
@@ -130,5 +129,10 @@ The generated `meta.xml` contains `dc:creator` with `E6 Manual Regression`,
 and LibreOffice preserves it through roundtrip. The value was not visible in
 the Writer File Properties views checked manually. This is recorded as a
 LibreOffice UI visibility limitation; the ODF metadata itself is present and
-stable. The independent GitHub diff review remains pending, so E6 is not yet
-declared finally complete.
+stable. The independent GitHub diff review of `1140da2a771d532df8fa3d69661ae76aa9cdbf15` → `2c8833d0ca77aa520c0cc3e101a1965d73b8c87c` is **GREEN**. It confirmed the single outer transaction boundary, complete characterized rollback state including package resources, in-place restoration of authoritative document-local owners, deterministic E4 → E3 → E5 orchestration, lifecycle behavior, compatibility, test coverage, and bounded documentation scope.
+
+All E6 gates are therefore GREEN: implementation, automated preflight, package/save-reload coverage, headless LibreOffice regression, corrected manual LibreOffice regression, and independent GitHub diff review.
+
+**TEMPLATE-AUTHORING-01E6 — Automation Atomicity + Integration Closure is COMPLETE / GREEN.**
+
+With E1–E6 complete, **TEMPLATE-AUTHORING-01E — Mapping / Automation is COMPLETE / GREEN.** No Phase F, TEMPLATE-AUTHORING-UX-01, or FINALIZATION-01 implementation is included in this closure.
