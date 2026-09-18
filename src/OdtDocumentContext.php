@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OdtTemplateEngine;
 
 use DOMDocument;
+use DOMElement;
 use OdtTemplateEngine\Document\FillImageRequirement;
 use OdtTemplateEngine\Document\FillImageRequirementRegistry;
 use OdtTemplateEngine\Document\FontFaceRequirement;
@@ -94,5 +95,77 @@ final class OdtDocumentContext
         $this->fillImageRequirements->reset();
         $this->styleContext->reset();
         $this->styleContext->replaceDocumentParts($contentDom, $stylesDom);
+    }
+
+    /** @internal Capture all mutable document-local state used by Phase-E owners. */
+    public function snapshotState(): OdtDocumentContextSnapshot
+    {
+        $content = $this->cloneDom($this->contentDom);
+        $styles = $this->cloneDom($this->stylesDom);
+        $meta = $this->cloneDom($this->metaDom);
+
+        return new OdtDocumentContextSnapshot(
+            $content,
+            $styles,
+            $meta,
+            $this->styleContext->snapshotState(),
+            $this->fontFaceRequirements->requirements(),
+            $this->fillImageRequirements->requirements()
+        );
+    }
+
+    /** @internal Restore state in the existing DOM and service instances. */
+    public function restoreState(OdtDocumentContextSnapshot $snapshot): void
+    {
+        $this->restoreDom($this->contentDom, $snapshot->contentDom());
+        $this->restoreDom($this->stylesDom, $snapshot->stylesDom());
+        $this->restoreDom($this->metaDom, $snapshot->metaDom());
+        $this->styleContext->restoreState($snapshot->styleContext(), $this->contentDom, $this->stylesDom);
+        $this->fontFaceRequirements->restore($snapshot->fontFaceRequirements());
+        $this->fillImageRequirements->restore($snapshot->fillImageRequirements());
+    }
+
+    private function cloneDom(DOMDocument $dom): DOMDocument
+    {
+        $clone = $dom->cloneNode(true);
+        if (!$clone instanceof DOMDocument) {
+            throw new \RuntimeException('Unable to snapshot a working ODT XML document.');
+        }
+
+        return $clone;
+    }
+
+    private function restoreDom(DOMDocument $target, DOMDocument $snapshot): void
+    {
+        $targetRoot = $target->documentElement;
+        $snapshotRoot = $snapshot->documentElement;
+        if (!$targetRoot instanceof DOMElement || !$snapshotRoot instanceof DOMElement) {
+            throw new \RuntimeException('Unable to restore a working ODT XML document.');
+        }
+
+        while ($targetRoot->hasAttributes()) {
+            $attribute = $targetRoot->attributes?->item(0);
+            if ($attribute === null) {
+                break;
+            }
+            if ($attribute->namespaceURI !== null) {
+                $targetRoot->removeAttributeNS($attribute->namespaceURI, $attribute->localName);
+            } else {
+                $targetRoot->removeAttribute($attribute->name);
+            }
+        }
+        foreach ($snapshotRoot->attributes as $attribute) {
+            if ($attribute->namespaceURI !== null) {
+                $targetRoot->setAttributeNS($attribute->namespaceURI, $attribute->nodeName, $attribute->nodeValue ?? '');
+            } else {
+                $targetRoot->setAttribute($attribute->name, $attribute->nodeValue ?? '');
+            }
+        }
+        while ($targetRoot->firstChild !== null) {
+            $targetRoot->removeChild($targetRoot->firstChild);
+        }
+        foreach ($snapshotRoot->childNodes as $child) {
+            $targetRoot->appendChild($target->importNode($child, true));
+        }
     }
 }

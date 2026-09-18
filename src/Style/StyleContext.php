@@ -242,6 +242,27 @@ final class StyleContext
         $this->fillImages = [];
     }
 
+    /** @internal Capture document-local style requirements for a bounded rollback. */
+    public function snapshotState(): self
+    {
+        return clone $this;
+    }
+
+    /** @internal Restore pending style requirements while retaining this context instance. */
+    public function restoreState(self $snapshot, DOMDocument $contentDom, DOMDocument $stylesDom): void
+    {
+        $this->semanticDefinitions = $snapshot->semanticDefinitions;
+        $this->semanticReferences = $snapshot->semanticReferences;
+        $this->referenceResolutions = $snapshot->referenceResolutions;
+        $this->referenceCandidates = $snapshot->referenceCandidates;
+        $this->ambiguousReferenceCandidates = $snapshot->ambiguousReferenceCandidates;
+        $this->frameStyles = $snapshot->frameStyles;
+        $this->imageStyles = $snapshot->imageStyles;
+        $this->fillImages = $snapshot->fillImages;
+        $this->contentDom = $contentDom;
+        $this->stylesDom = $stylesDom;
+    }
+
     private function semanticIdentity(StyleRequirement $requirement): string
     {
         return implode("\0", [

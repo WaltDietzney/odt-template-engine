@@ -19,6 +19,7 @@ use OdtTemplateEngine\Document\FontFaceRequirementDiscovery;
 use OdtTemplateEngine\Document\FontFaceRequirementMaterializer;
 use OdtTemplateEngine\Document\FrameImageReplacementService;
 use OdtTemplateEngine\Document\NativeObjectActionExecutor;
+use OdtTemplateEngine\Document\PhaseEAutomationExecutor;
 use OdtTemplateEngine\Document\BookmarkTarget;
 use OdtTemplateEngine\Document\FrameTarget;
 use OdtTemplateEngine\Document\MetadataManager;
@@ -86,6 +87,8 @@ class OdtTemplate
      */
     private bool $legacyStructuredValuesMaterialized = false;
 
+    private bool $phaseEAutomationSucceeded = false;
+
     private ?DocumentStyles $documentStyles = null;
 
     /** @var list<string> */
@@ -140,6 +143,7 @@ class OdtTemplate
     {
         $this->package->resetFromTemplate();
         $this->legacyStructuredValuesMaterialized = false;
+        $this->phaseEAutomationSucceeded = false;
         $this->prepareLoadedTemplate();
     }
 
@@ -249,6 +253,34 @@ class OdtTemplate
             new MetadataManager($this->documentContext()),
             $preflight
         );
+    }
+
+    /**
+     * Execute one atomic Phase-E invocation from the existing source contract and READY preflight.
+     *
+     * E3 needs the already-inspected TemplateContract; accepting it avoids a second inspection.
+     */
+    public function automate(TemplateContract $contract, ConcretePreflightResult $preflight): void
+    {
+        if ($this->phaseEAutomationSucceeded) {
+            throw new \LogicException('A successful Phase-E invocation already ran in this document lifecycle.');
+        }
+        if (!$preflight->ready()) {
+            throw new \InvalidArgumentException('Phase-E automation requires a READY concrete preflight.');
+        }
+
+        (new PhaseEAutomationExecutor())->execute(
+            $this->package,
+            $preflight,
+            function () use ($contract, $preflight): void {
+                // E4 localizes native targets against source-order evidence before E3
+                // can materialize/remove structural Sections in the Working DOM.
+                $this->automateNativeObjectActions($contract, $preflight);
+                $this->automateDependencies($contract, $preflight);
+                $this->automateDocumentCapabilities($preflight);
+            }
+        );
+        $this->phaseEAutomationSucceeded = true;
     }
 
     /**

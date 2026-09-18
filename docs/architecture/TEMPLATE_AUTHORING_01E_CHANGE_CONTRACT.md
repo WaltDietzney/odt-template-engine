@@ -2,9 +2,11 @@
 
 ## Status
 
-**Accepted architecture contract / E1 implementation in progress**
+**Accepted architecture contract / E1–E6 implementation complete; manual LibreOffice closure pending**
 
 This Change Contract defines the approved implementation boundary for TEMPLATE-AUTHORING-01E, the optional application-facing mapping and automation layer.
+
+E1–E6 implementation and automated integration evidence, including the common atomic invocation, are recorded in [`TEMPLATE_AUTHORING_01E6_COMPLETION.md`](TEMPLATE_AUTHORING_01E6_COMPLETION.md). The required manual LibreOffice Writer integration gate remains pending.
 
 It is derived from `TEMPLATE_AUTHORING_01E0_MAPPING_AUTOMATION_RESEARCH.md` and supersedes conceptual E0 examples only where this contract makes a narrower implementation decision.
 

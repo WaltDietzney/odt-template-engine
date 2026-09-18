@@ -213,6 +213,38 @@ MALFORMED
 AMBIGUOUS
 ```
 
+## Optional Phase-E automation
+
+Applications using the Phase-E mapping model can execute one complete READY
+preflight through the common atomic invocation:
+
+```php
+use OdtTemplateEngine\Mapping\ConcreteMappingPreflight;
+
+$contract = $template->inspectTemplate();
+$workingDocument = $template->inspect();
+$preflight = (new ConcreteMappingPreflight())->preflight($mapping, $contract, $data, $workingDocument);
+
+if (!$preflight->ready()) {
+    // Present $preflight->diagnostics() to the caller.
+    return;
+}
+
+$template->automate($contract, $preflight);
+$template->save($outputPath);
+```
+
+The caller supplies the already-inspected source `TemplateContract` because
+dependency execution uses its scope and consumer evidence. The common method
+does not inspect the template, resolve application data, render, or save. It
+coordinates dependency, native-object, and metadata automation under one
+rollback boundary. A failed invocation is restored and may be retried; after
+one successful common invocation, a second common invocation is rejected for
+that working-document lifecycle. Imperative operations remain available before
+and after it. The older specialized automation methods remain available, but
+their individually invoked calls do not claim the common E6 atomicity
+guarantee.
+
 ## Source provenance
 
 Evidence records retain source provenance such as:

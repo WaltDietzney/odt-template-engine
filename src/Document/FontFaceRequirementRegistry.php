@@ -42,6 +42,18 @@ final class FontFaceRequirementRegistry
         $this->requirements = [];
     }
 
+    /**
+     * @internal
+     * @param list<FontFaceRequirement> $requirements
+     */
+    public function restore(array $requirements): void
+    {
+        $this->requirements = [];
+        foreach ($requirements as $requirement) {
+            $this->register($requirement);
+        }
+    }
+
     private function key(FontFaceRequirement $requirement): string
     {
         return $requirement->documentPart() . "\0" . $requirement->fontFaceName();

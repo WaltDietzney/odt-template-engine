@@ -65,6 +65,31 @@ final class OdtPackage
         return $this->context;
     }
 
+    /** @internal Capture the complete package workspace and document-local live state. */
+    public function snapshotWorkingState(): OdtPackageSnapshot
+    {
+        $snapshotPath = sys_get_temp_dir() . '/odt_phase_e_snapshot_' . bin2hex(random_bytes(12));
+        if (!mkdir($snapshotPath, 0700)) {
+            throw new RuntimeException('Unable to create a Phase-E package snapshot.');
+        }
+
+        try {
+            $this->copyDirectoryContents($this->workspacePath, $snapshotPath);
+            return new OdtPackageSnapshot($snapshotPath, $this->context->snapshotState());
+        } catch (\Throwable $exception) {
+            $this->removeDirectory($snapshotPath);
+            throw $exception;
+        }
+    }
+
+    /** @internal Restore the package workspace and existing document-context owners. */
+    public function restoreWorkingState(OdtPackageSnapshot $snapshot): void
+    {
+        $this->clearWorkspaceContents();
+        $this->copyDirectoryContents($snapshot->workspacePath(), $this->workspacePath);
+        $this->context->restoreState($snapshot->contextState());
+    }
+
     public function contentDom(): DOMDocument
     {
         return $this->context->contentDom();
@@ -479,5 +504,47 @@ final class OdtPackage
                 unlink($file->getPathname());
             }
         }
+    }
+
+    private function copyDirectoryContents(string $source, string $destination): void
+    {
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($source, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::SELF_FIRST
+        );
+
+        foreach ($iterator as $entry) {
+            $relative = substr($entry->getPathname(), strlen($source) + 1);
+            $target = $destination . '/' . $relative;
+            if ($entry->isDir()) {
+                if (!is_dir($target) && !mkdir($target, $entry->getPerms() & 0777, true) && !is_dir($target)) {
+                    throw new RuntimeException(sprintf('Unable to restore package directory %s.', $relative));
+                }
+                continue;
+            }
+
+            if (!is_dir(dirname($target)) && !mkdir(dirname($target), 0777, true) && !is_dir(dirname($target))) {
+                throw new RuntimeException(sprintf('Unable to restore package directory for %s.', $relative));
+            }
+            if (!copy($entry->getPathname(), $target)) {
+                throw new RuntimeException(sprintf('Unable to restore package resource %s.', $relative));
+            }
+            chmod($target, $entry->getPerms() & 0777);
+        }
+    }
+
+    private function removeDirectory(string $directory): void
+    {
+        if (!is_dir($directory)) {
+            return;
+        }
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+        foreach ($iterator as $entry) {
+            $entry->isDir() ? rmdir($entry->getPathname()) : unlink($entry->getPathname());
+        }
+        rmdir($directory);
     }
 }

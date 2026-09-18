@@ -13,7 +13,7 @@ The explicit path to 1.0 is now:
 1. `PAGE-FLOW-01` — **COMPLETE / FINAL GO**;
 2. `TABLE-LAYOUT-01` — professional table geometry — **COMPLETE / FINAL GO**;
 3. `FRAME-LAYOUT-01` — bounded reliable frame geometry core — **COMPLETE / FINAL GO**;
-4. `TEMPLATE-AUTHORING-01` — **1.0 BLOCKER** — template-driven authoring and rendering, comprising reliability/format preservation, unified inspection, bounded native-field binding, declarative structural controls, high-level render orchestration, and authoring documentation/samples;
+4. `TEMPLATE-AUTHORING-01` — **1.0 BLOCKER** — template-driven authoring and rendering. Phase-E mapping/automation implementation (E1–E6) and automated integration are complete; its required manual LibreOffice Writer gate remains pending. The broader milestone also includes reliability/format preservation, unified inspection, bounded native-field binding, declarative structural controls, high-level render orchestration, and authoring documentation/samples;
 5. `FINALIZATION-01` — final document/export lifecycle contract;
 6. `RELEASE-1.0` integration preflight.
 
