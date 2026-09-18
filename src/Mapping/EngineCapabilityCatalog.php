@@ -8,12 +8,12 @@ namespace OdtTemplateEngine\Mapping;
 final readonly class EngineCapabilityCatalog
 {
     /** @param list<NativeActionCapability> $nativeActions
-     *  @param list<string> $metadataTargets
+     *  @param array<string, string> $metadataPayloadKinds
      */
     private function __construct(
         private DependencyAutomationCapability $dependencyAutomation,
         private array $nativeActions,
-        private array $metadataTargets
+        private array $metadataPayloadKinds
     ) {
         foreach ($nativeActions as $action) {
             if (!$action instanceof NativeActionCapability) {
@@ -32,9 +32,19 @@ final readonly class EngineCapabilityCatalog
                 new NativeActionCapability('replace-image', 'frame', 'IMAGE_REPLACEMENT', 'FRAME_IMAGE_REPLACEMENT'),
             ],
             [
-                'title', 'subject', 'description', 'coverage', 'keywords', 'initial_author',
-                'author', 'language', 'creation_date', 'date', 'editing_cycles',
-                'editing_duration', 'generator',
+                'title' => 'STRING',
+                'subject' => 'STRING',
+                'description' => 'STRING',
+                'keywords' => 'LIST<STRING>',
+                'initial_creator' => 'STRING',
+                'creator' => 'STRING',
+                'language' => 'LANGUAGE',
+                'creation_date' => 'DATETIME',
+                'date' => 'DATETIME',
+                'editing_cycles' => 'NON_NEGATIVE_INTEGER',
+                'editing_duration' => 'DURATION',
+                'generator' => 'STRING',
+                'coverage' => 'STRING',
             ]
         );
     }
@@ -75,7 +85,12 @@ final readonly class EngineCapabilityCatalog
     /** @return list<string> */
     public function metadataTargets(string $group = 'metadata'): array
     {
-        return $group === 'metadata' ? $this->metadataTargets : [];
+        return $group === 'metadata' ? array_keys($this->metadataPayloadKinds) : [];
+    }
+
+    public function metadataPayloadKind(string $target, string $group = 'metadata'): ?string
+    {
+        return $group === 'metadata' ? ($this->metadataPayloadKinds[$target] ?? null) : null;
     }
 
     public function supportsDocumentTarget(string $group, string $target): bool

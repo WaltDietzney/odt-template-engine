@@ -64,10 +64,14 @@ final class TemplateAuthoring01E1AuthoringUxProjectionTest extends TestCase
         ));
         self::assertNull($projection->nativeObject('section', 'Missing'));
 
-        self::assertContains('author', array_map(
+        $metadataTargets = array_map(
             static fn ($capability): string => $capability->target(),
             $projection->documentCapabilities()
-        ));
+        );
+        self::assertContains('creator', $metadataTargets);
+        self::assertContains('initial_creator', $metadataTargets);
+        self::assertNotContains('author', $metadataTargets);
+        self::assertNotContains('initial_author', $metadataTargets);
         self::assertSame($sourceEvidenceBefore, $contract->toArray());
         self::assertSame(
             $contract->nativeObjects()[0],

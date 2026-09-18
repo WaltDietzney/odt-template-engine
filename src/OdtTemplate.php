@@ -877,28 +877,16 @@ class OdtTemplate
     }
 
     /**
-     * Sets metadata fields for the ODT document (e.g. title, author, description).
+     * Sets metadata fields for the ODT document (e.g. title, creator, description).
      *
      * Updates or creates metadata elements in `meta.xml` using standard ODF/DC/meta tags.
-     * This includes common document information like title, author, subject, and creation date.
-     *
-     * Supported keys:
-     * - 'title'            => dc:title
-     * - 'subject'          => dc:subject
-     * - 'description'      => dc:description
-     * - 'keywords'         => meta:keyword
-     * - 'initial_author'   => meta:initial-creator
-     * - 'author'           => dc:creator
-     * - 'language'         => dc:language
-     * - 'creation_date'    => meta:creation-date
-     * - 'date'             => dc:date
-     * - 'editing_cycles'   => meta:editing-cycles
-     * - 'editing_duration' => meta:editing-duration
-     * - 'generator'        => meta:generator
-     *
      * Missing XML nodes are automatically created under the <office:meta> element.
      *
-     * @param array<string, string> $meta Associative array of metadata fields and values.
+     * Canonical names are creator and initial_creator; author and initial_author
+     * remain accepted as imperative compatibility aliases. Keywords accept a
+     * list of strings, while a string remains one keyword.
+     *
+     * @param array<string, mixed> $meta Associative array of metadata fields and values.
      *
      * @return void
      */
@@ -911,24 +899,10 @@ class OdtTemplate
     /**
      * Returns a list of known document metadata fields extracted from meta.xml.
      *
-     * Scans the ODT document's meta.xml using standard ODF namespaces and collects values
-     * for supported metadata fields such as title, author, and creation date.
+     * Canonical creator keys are returned alongside their established legacy
+     * aliases. Keywords are returned as a list containing all meta:keyword values.
      *
-     * Supported keys:
-     * - 'title'            => dc:title
-     * - 'subject'          => dc:subject
-     * - 'description'      => dc:description
-     * - 'keywords'         => meta:keyword
-     * - 'initial_author'   => meta:initial-creator
-     * - 'author'           => dc:creator
-     * - 'language'         => dc:language
-     * - 'creation_date'    => meta:creation-date
-     * - 'date'             => dc:date
-     * - 'editing_cycles'   => meta:editing-cycles
-     * - 'editing_duration' => meta:editing-duration
-     * - 'generator'        => meta:generator
-     *
-     * @return array<string, string> Associative array of metadata fields and their current values.
+     * @return array<string, string|list<string>> Metadata currently present in the document.
      */
     public function getMeta(): array
     {

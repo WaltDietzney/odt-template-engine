@@ -53,8 +53,12 @@ final class TemplateCapabilityProjector
         }
 
         $documentCapabilities = array_map(
-            static fn (string $target): ProjectedDocumentCapability =>
-                new ProjectedDocumentCapability('metadata', $target),
+            fn (string $target): ProjectedDocumentCapability =>
+                new ProjectedDocumentCapability(
+                    'metadata',
+                    $target,
+                    $catalog->metadataPayloadKind($target) ?? 'UNKNOWN'
+                ),
             $catalog->metadataTargets()
         );
 

@@ -15,11 +15,13 @@ final class ConcreteMappingPreflight
     public function __construct(
         private ?MappingResolutionResolver $resolver = null,
         private ?DependencyConcretePreflightValidator $dependencyValidator = null,
-        private ?FrameImageReplacementPreflightValidator $frameValidator = null
+        private ?FrameImageReplacementPreflightValidator $frameValidator = null,
+        private ?MetadataPayloadValidator $metadataValidator = null
     ) {
         $this->resolver ??= new MappingResolutionResolver();
         $this->dependencyValidator ??= new DependencyConcretePreflightValidator();
         $this->frameValidator ??= new FrameImageReplacementPreflightValidator();
+        $this->metadataValidator ??= new MetadataPayloadValidator();
     }
 
     /**
@@ -112,6 +114,7 @@ final class ConcreteMappingPreflight
             $mapping = $documentResolution->mapping();
             $identity = $mapping->group() . '.' . $mapping->target();
             $sourcePath = $mapping->source()->canonical();
+            $payloadKind = $catalog->metadataPayloadKind($mapping->target(), $mapping->group());
             $diagnostics = $this->dataStateDiagnostics(
                 $documentResolution->dataResolution(),
                 'document_capability',
@@ -121,11 +124,12 @@ final class ConcreteMappingPreflight
             $value = $documentResolution->dataResolution()->value();
             if ($documentResolution->dataResolution()->status() === ApplicationDataResolution::PRESENT
                 && $documentResolution->dataResolution()->items() === []
-                && !is_string($value) && !is_int($value) && !is_float($value) && !is_bool($value)
+                && $payloadKind !== null
+                && !$this->metadataValidator->isCompatible($payloadKind, $value)
             ) {
                 $diagnostics[] = $this->diagnostic(
                     'INCOMPATIBLE_DOCUMENT_CAPABILITY_PAYLOAD',
-                    'Metadata Phase-E values must be string, int, float, or bool.',
+                    sprintf('Metadata target %s requires a %s payload.', $mapping->target(), $payloadKind),
                     'document_capability',
                     $identity,
                     $sourcePath
@@ -136,7 +140,7 @@ final class ConcreteMappingPreflight
                 $identity,
                 $documentResolution,
                 $identity,
-                'SCALAR',
+                $payloadKind,
                 FrameImageReplacementPreflightValidator::APPLICABLE,
                 $diagnostics
             );

@@ -1,105 +1,111 @@
 # Metadata
 
-ODT document metadata is stored in `meta.xml`. `OdtTemplate` exposes `setMeta()` and `getMeta()` so applications can update common document properties without editing the package XML directly.
+ODT document metadata is stored in `meta.xml`. `OdtTemplate::setMeta()` and
+`OdtTemplate::getMeta()` provide the bounded public API for the supported
+document properties; they are not an arbitrary custom-metadata interface.
 
-## Set metadata
+## Canonical keys and creator aliases
+
+Use `creator` for `dc:creator` and `initial_creator` for
+`meta:initial-creator`. These distinguish the current/last-modified creator
+from the original creator. The imperative input aliases `author` and
+`initial_author` remain accepted for compatibility.
+
+`getMeta()` returns canonical creator keys and, when present, also returns the
+established `author` / `initial_author` aliases with the same values.
 
 ```php
 $template->setMeta([
     'title' => 'Q2 Financial Report',
-    'author' => 'Anna Example',
+    'creator' => 'Anna Example',
+    'initial_creator' => 'ODT Template Engine Sample',
     'subject' => 'Quarterly Financial Analysis',
     'description' => 'Generated with ODT Template Engine.',
-    'keywords' => 'finance,report,2026',
     'language' => 'en',
     'generator' => 'ODT Template Engine',
-    'date' => date('c'),
+    'date' => '2026-09-18T10:30:00Z',
 ]);
 ```
 
-Supported keys currently include:
+## Keywords
 
-| PHP key | ODF metadata element |
-| --- | --- |
-| `title` | `dc:title` |
-| `subject` | `dc:subject` |
-| `description` | `dc:description` |
-| `coverage` | `dc:coverage` |
-| `keywords` | `meta:keyword` |
-| `initial_author` | `meta:initial-creator` |
-| `author` | `dc:creator` |
-| `language` | `dc:language` |
-| `creation_date` | `meta:creation-date` |
-| `date` | `dc:date` |
-| `editing_cycles` | `meta:editing-cycles` |
-| `editing_duration` | `meta:editing-duration` |
-| `generator` | `meta:generator` |
-
-Unknown keys are currently ignored.
-
-## Read metadata
+ODF stores keywords as repeatable `meta:keyword` elements. Use a list to set
+multiple values:
 
 ```php
-$metadata = $template->getMeta();
-
-$title = $metadata['title'] ?? null;
-$author = $metadata['author'] ?? null;
+$template->setMeta([
+    'keywords' => ['finance', 'report', '2026'],
+]);
 ```
 
-`getMeta()` returns the supported fields that are present in the document.
+This replaces the complete existing keyword collection. `getMeta()` returns
+all present keywords as a list. An empty list removes all existing keyword
+elements.
 
-## Metadata is separate from visible content
-
-Setting metadata does not insert visible text into `content.xml`.
-
-```text
-meta.xml
-└── document properties
-
-content.xml
-└── visible document body
-```
-
-If metadata should also appear visibly in the document, read it and build normal ODT content from it:
+For imperative compatibility, a string is also accepted and represents
+exactly one keyword. It is not split on commas, semicolons, whitespace, or
+other delimiters:
 
 ```php
-$metadata = $template->getMeta();
-
-$paragraph = new Paragraph();
-$paragraph
-    ->addText('Title: ', ['bold' => true])
-    ->addText($metadata['title'] ?? '');
-
-$template->setElement('metadata_summary', $paragraph);
+$template->setMeta(['keywords' => 'finance,report,2026']);
+// One keyword: "finance,report,2026"
 ```
 
-## Save and reload
+## Supported fields and Phase-E value semantics
 
-Metadata changes are serialized when the ODT is saved. Sample 04 demonstrates a complete round trip: set metadata, save the document, reopen it with a fresh `OdtTemplate`, call `getMeta()`, and render selected metadata as visible styled content.
+| Canonical PHP key | ODF element | Phase-E concrete value |
+| --- | --- | --- |
+| `title` | `dc:title` | string |
+| `subject` | `dc:subject` | string |
+| `description` | `dc:description` | string |
+| `keywords` | repeated `meta:keyword` | list of strings |
+| `initial_creator` | `meta:initial-creator` | string |
+| `creator` | `dc:creator` | string |
+| `language` | `dc:language` | language tag |
+| `creation_date` | `meta:creation-date` | XML Schema `dateTime` |
+| `date` | `dc:date` | XML Schema `dateTime` |
+| `editing_cycles` | `meta:editing-cycles` | non-negative integer |
+| `editing_duration` | `meta:editing-duration` | XML Schema `duration` |
+| `generator` | `meta:generator` | string |
+| `coverage` | `dc:coverage` | string; LibreOffice/Dublin Core extended metadata |
 
-That pattern is useful when testing that metadata survives the package write/read cycle rather than only inspecting the in-memory DOM.
+Phase-E preflight applies these target-specific types. In particular, a value
+is not valid merely because PHP can cast it to a string: booleans and floats
+are not generic metadata payloads. The existing imperative `setMeta()` facade
+continues its legacy string-writing behavior for singular fields; the stricter
+type checks apply to Phase-E preflight.
 
-## Date and duration values
+ODF 1.2 assigns the language, non-negative-integer, and duration datatypes to
+the corresponding metadata elements; see the [OASIS OpenDocument 1.2
+specification](https://docs.oasis-open.org/office/v1.2/OpenDocument-v1.2.html).
 
-ODF metadata uses structured textual values. For dates, ISO 8601 values are a good default:
+Date values use XML Schema `dateTime` lexical form, for example
+`2026-09-18T10:30:00Z` or `2026-09-18T10:30:00+02:00`. Language values use the
+ODF language-tag form, for example `en` or `en-US`. `editing_cycles` accepts
+non-negative integer values. `editing_duration` uses XML Schema duration
+syntax, for example `PT20M` or `P1DT2H`.
+
+`coverage` is supported as LibreOffice / Dublin Core-compatible extended
+metadata. This API does not expose arbitrary Dublin Core fields or user-defined
+metadata. Support for additional fields requires a separate decision.
+
+Unknown keys passed to the imperative `setMeta()` remain ignored for
+compatibility.
+
+## Read, save, and reload
 
 ```php
-'date' => date('c')
+$template->save($outputPath);
+$reopened = new OdtTemplate($outputPath);
+$metadata = $reopened->getMeta();
+
+$creator = $metadata['creator'] ?? null;
+$keywords = $metadata['keywords'] ?? [];
 ```
 
-Editing duration values are typically ISO 8601 durations, for example:
-
-```php
-'editing_duration' => 'PT20M'
-```
-
-The engine currently writes these values; it does not provide a high-level date/duration value object or semantic validator for every metadata field.
-
-## Custom metadata fields
-
-Arbitrary user-defined metadata fields are not part of the current `setMeta()` / `getMeta()` API. The public API currently covers the known standard mappings listed above.
-
-If custom metadata becomes a project requirement, it should be added deliberately to the metadata API rather than relying on undocumented XML manipulation from application code.
+Metadata is separate from visible content. Setting it does not insert text into
+`content.xml`. Sample 04 demonstrates setting metadata, saving, reopening, and
+displaying selected values in document content.
 
 ## Related sample
 

@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace OdtTemplateEngine\Document;
 
+use DOMDocument;
 use DOMElement;
+use DOMNode;
 use DOMXPath;
+use InvalidArgumentException;
 use OdtTemplateEngine\OdtDocumentContext;
 
 /**
- * Reads and updates standard ODT metadata for one document context.
+ * Reads and updates the bounded metadata set supported by one document context.
  */
 final class MetadataManager
 {
@@ -24,14 +27,20 @@ final class MetadataManager
         'description' => 'dc:description',
         'coverage' => 'dc:coverage',
         'keywords' => 'meta:keyword',
-        'initial_author' => 'meta:initial-creator',
-        'author' => 'dc:creator',
+        'initial_creator' => 'meta:initial-creator',
+        'creator' => 'dc:creator',
         'language' => 'dc:language',
         'creation_date' => 'meta:creation-date',
         'date' => 'dc:date',
         'editing_cycles' => 'meta:editing-cycles',
         'editing_duration' => 'meta:editing-duration',
         'generator' => 'meta:generator',
+    ];
+
+    /** @var array<string, string> */
+    private const INPUT_ALIASES = [
+        'author' => 'creator',
+        'initial_author' => 'initial_creator',
     ];
 
     public function __construct(private readonly OdtDocumentContext $context)
@@ -48,43 +57,28 @@ final class MetadataManager
         $dom = $this->context->metaDom();
         $xpath = $this->createXPath();
 
-        foreach ($metadata as $key => $value) {
+        foreach ($metadata as $inputKey => $value) {
+            $key = self::INPUT_ALIASES[$inputKey] ?? $inputKey;
             $qualifiedName = self::FIELD_MAP[$key] ?? null;
             if ($qualifiedName === null) {
                 continue;
             }
 
-            $node = $xpath->query('//' . $qualifiedName)->item(0);
-            if ($node !== null) {
-                $node->nodeValue = (string) $value;
+            if ($key === 'keywords') {
+                $this->replaceKeywords($dom, $xpath, $value);
                 continue;
             }
 
-            $metaRoot = $xpath->query('//office:document-meta/office:meta')->item(0);
-            if (!$metaRoot instanceof DOMElement) {
-                continue;
-            }
-
-            [$prefix, $localName] = explode(':', $qualifiedName, 2);
-            $namespace = match ($prefix) {
-                'dc' => self::DC_NS,
-                'meta' => self::META_NS,
-                default => null,
-            };
-
-            if ($namespace === null) {
-                continue;
-            }
-
-            $element = $dom->createElementNS($namespace, $qualifiedName, (string) $value);
-            $metaRoot->appendChild($element);
+            $this->setSingularField($dom, $xpath, $qualifiedName, (string) $value);
         }
     }
 
     /**
-     * Return all supported metadata fields currently present in meta.xml.
+     * Return supported metadata currently present in meta.xml.
      *
-     * @return array<string, string>
+     * Creator fields include both canonical keys and their established read aliases.
+     *
+     * @return array<string, string|list<string>>
      */
     public function get(): array
     {
@@ -92,13 +86,94 @@ final class MetadataManager
         $result = [];
 
         foreach (self::FIELD_MAP as $key => $qualifiedName) {
+            if ($key === 'keywords') {
+                $nodes = $xpath->query('//meta:keyword');
+                if ($nodes === false || $nodes->length === 0) {
+                    continue;
+                }
+
+                $result[$key] = array_map(
+                    static fn (DOMNode $node): string => $node->textContent,
+                    iterator_to_array($nodes)
+                );
+                continue;
+            }
+
             $node = $xpath->query('//' . $qualifiedName)->item(0);
-            if ($node !== null) {
-                $result[$key] = $node->textContent;
+            if ($node === null) {
+                continue;
+            }
+
+            $result[$key] = $node->textContent;
+            if ($key === 'creator') {
+                $result['author'] = $node->textContent;
+            } elseif ($key === 'initial_creator') {
+                $result['initial_author'] = $node->textContent;
             }
         }
 
         return $result;
+    }
+
+    private function setSingularField(DOMDocument $dom, DOMXPath $xpath, string $qualifiedName, string $value): void
+    {
+        $node = $xpath->query('//' . $qualifiedName)->item(0);
+        if ($node !== null) {
+            $node->nodeValue = $value;
+            return;
+        }
+
+        $metaRoot = $xpath->query('//office:document-meta/office:meta')->item(0);
+        if (!$metaRoot instanceof DOMElement) {
+            return;
+        }
+
+        $element = $this->createMetadataElement($dom, $qualifiedName, $value);
+        $metaRoot->appendChild($element);
+    }
+
+    private function replaceKeywords(DOMDocument $dom, DOMXPath $xpath, mixed $value): void
+    {
+        if (is_string($value)) {
+            $keywords = [$value];
+        } elseif (is_array($value) && array_is_list($value)) {
+            foreach ($value as $keyword) {
+                if (!is_string($keyword)) {
+                    throw new InvalidArgumentException('Metadata keywords must be a string or a list of strings.');
+                }
+            }
+            $keywords = $value;
+        } else {
+            throw new InvalidArgumentException('Metadata keywords must be a string or a list of strings.');
+        }
+
+        $nodes = $xpath->query('//meta:keyword');
+        if ($nodes !== false) {
+            foreach (iterator_to_array($nodes) as $node) {
+                $node?->parentNode?->removeChild($node);
+            }
+        }
+
+        $metaRoot = $xpath->query('//office:document-meta/office:meta')->item(0);
+        if (!$metaRoot instanceof DOMElement) {
+            return;
+        }
+
+        foreach ($keywords as $keyword) {
+            $metaRoot->appendChild($this->createMetadataElement($dom, 'meta:keyword', $keyword));
+        }
+    }
+
+    private function createMetadataElement(DOMDocument $dom, string $qualifiedName, string $value): DOMElement
+    {
+        [$prefix] = explode(':', $qualifiedName, 2);
+        $namespace = match ($prefix) {
+            'dc' => self::DC_NS,
+            'meta' => self::META_NS,
+            default => throw new InvalidArgumentException('Unsupported metadata namespace.'),
+        };
+
+        return $dom->createElementNS($namespace, $qualifiedName, $value);
     }
 
     private function createXPath(): DOMXPath

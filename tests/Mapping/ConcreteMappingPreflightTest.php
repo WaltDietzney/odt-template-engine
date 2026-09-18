@@ -48,7 +48,7 @@ final class ConcreteMappingPreflightTest extends TestCase
                 'content' => new Paragraph('Profile replacement'),
                 'signature' => 'Ada',
                 'photo' => ['source' => $image, 'options' => []],
-                'author' => 'Ada Lovelace',
+                'creator' => 'Ada Lovelace',
             ],
             'jobs' => [[
                 'employer' => 'Analytical Engines',
@@ -74,7 +74,7 @@ final class ConcreteMappingPreflightTest extends TestCase
         self::assertSame('APPLICABLE', $this->operation($result, 'native_action', 'frame:Portrait')->applicability());
         self::assertSame('ODT_ELEMENT', $this->operation($result, 'native_action', 'section:Profile')->payloadKind());
         self::assertSame('STRING', $this->operation($result, 'native_action', 'bookmark:Signature')->payloadKind());
-        self::assertSame('SCALAR', $this->operation($result, 'document_capability', 'metadata.author')->payloadKind());
+        self::assertSame('STRING', $this->operation($result, 'document_capability', 'metadata.creator')->payloadKind());
     }
 
     public function testUnresolvedMissingWrongShapeAndIncompatibleConsumersAreAllDiagnosed(): void
@@ -238,7 +238,7 @@ final class ConcreteMappingPreflightTest extends TestCase
                 new NativeObjectActionMapping(ApplicationPath::parse('section.content'), 'section', 'Profile', 'replace-content'),
                 new NativeObjectActionMapping(ApplicationPath::parse('sign.text'), 'bookmark', 'Signature', 'replace-text'),
             ],
-            [new DocumentCapabilityMapping(ApplicationPath::parse('meta.author'), 'metadata', 'author')]
+            [new DocumentCapabilityMapping(ApplicationPath::parse('meta.author'), 'metadata', 'creator')]
         );
         $result = (new ConcreteMappingPreflight())->preflight(
             $definition,
@@ -250,18 +250,18 @@ final class ConcreteMappingPreflightTest extends TestCase
         self::assertContains('INCOMPATIBLE_NATIVE_ACTION_PAYLOAD', $codes);
         self::assertContains('NULL_SOURCE_VALUE', $codes);
 
-        foreach (['ok', 4, 2.5, false] as $value) {
+        foreach (['ok'] as $value) {
             $ready = (new ConcreteMappingPreflight())->preflight(
-                new MappingDefinition([], [], [new DocumentCapabilityMapping(ApplicationPath::parse('meta.author'), 'metadata', 'author')]),
+                new MappingDefinition([], [], [new DocumentCapabilityMapping(ApplicationPath::parse('meta.author'), 'metadata', 'creator')]),
                 $contract,
                 ['meta' => ['author' => $value]],
                 $document
             );
-            self::assertSame(ConcretePreflightOperation::READY, $this->operation($ready, 'document_capability', 'metadata.author')->status());
+            self::assertSame(ConcretePreflightOperation::READY, $this->operation($ready, 'document_capability', 'metadata.creator')->status());
         }
         foreach ([[], new \stdClass()] as $value) {
             $invalid = (new ConcreteMappingPreflight())->preflight(
-                new MappingDefinition([], [], [new DocumentCapabilityMapping(ApplicationPath::parse('meta.author'), 'metadata', 'author')]),
+                new MappingDefinition([], [], [new DocumentCapabilityMapping(ApplicationPath::parse('meta.author'), 'metadata', 'creator')]),
                 $contract,
                 ['meta' => ['author' => $value]],
                 $document
@@ -270,6 +270,77 @@ final class ConcreteMappingPreflightTest extends TestCase
                 static fn ($diagnostic): string => $diagnostic->code(),
                 $invalid->diagnostics()
             ));
+        }
+    }
+
+    public function testMetadataPreflightUsesTargetSpecificPayloadSemantics(): void
+    {
+        [$contract, $document] = $this->inspect($this->fixture());
+        $preflight = new ConcreteMappingPreflight();
+        $cases = [
+            'title' => ['valid' => 'Title', 'invalid' => [42, false, 1.5, []]],
+            'subject' => ['valid' => 'Subject', 'invalid' => [42, false, 1.5, []]],
+            'description' => ['valid' => 'Description', 'invalid' => [42, false, 1.5, []]],
+            'creator' => ['valid' => 'Creator', 'invalid' => [42, false, 1.5, []]],
+            'initial_creator' => ['valid' => 'Original creator', 'invalid' => [42, false, 1.5, []]],
+            'generator' => ['valid' => 'Engine', 'invalid' => [42, false, 1.5, []]],
+            'coverage' => ['valid' => 'Coverage', 'invalid' => [42, false, 1.5, []]],
+            'keywords' => ['valid' => ['one', 'two'], 'invalid' => ['one,two', ['one', 2], ['named' => 'one']]],
+            'creation_date' => [
+                'valid' => '2026-09-18T10:30:00.125+02:00',
+                'invalid' => ['2026-02-30T10:30:00Z', '2026-09-18', 42],
+            ],
+            'date' => ['valid' => '2026-09-18T10:30:00Z', 'invalid' => ['not-a-date', false]],
+            'language' => ['valid' => 'en-US', 'invalid' => ['English US', 'en_US', 42]],
+            'editing_cycles' => ['valid' => 0, 'invalid' => [-1, '-1', 1.0, true]],
+            'editing_duration' => [
+                'valid' => 'P1Y2M3DT4H5M6.5S',
+                'invalid' => ['P', 'PT', '1H', 'P1D2Y', false],
+            ],
+        ];
+
+        foreach ($cases as $target => $case) {
+            $valid = $preflight->preflight(
+                new MappingDefinition([], [], [new DocumentCapabilityMapping(
+                    ApplicationPath::parse('payload.value'),
+                    'metadata',
+                    $target
+                )]),
+                $contract,
+                ['payload' => ['value' => $case['valid']]],
+                $document
+            );
+            self::assertSame(
+                ConcretePreflightOperation::READY,
+                $this->operation($valid, 'document_capability', 'metadata.' . $target)->status(),
+                'Expected valid payload for metadata.' . $target
+            );
+            self::assertNotSame(
+                'SCALAR',
+                $this->operation($valid, 'document_capability', 'metadata.' . $target)->payloadKind()
+            );
+
+            foreach ($case['invalid'] as $invalidValue) {
+                $invalid = $preflight->preflight(
+                    new MappingDefinition([], [], [new DocumentCapabilityMapping(
+                        ApplicationPath::parse('payload.value'),
+                        'metadata',
+                        $target
+                    )]),
+                    $contract,
+                    ['payload' => ['value' => $invalidValue]],
+                    $document
+                );
+                self::assertSame(
+                    ConcretePreflightOperation::ERROR,
+                    $this->operation($invalid, 'document_capability', 'metadata.' . $target)->status(),
+                    'Expected invalid payload for metadata.' . $target
+                );
+                self::assertContains('INCOMPATIBLE_DOCUMENT_CAPABILITY_PAYLOAD', array_map(
+                    static fn ($diagnostic): string => $diagnostic->code(),
+                    $invalid->diagnostics()
+                ));
+            }
         }
     }
 
@@ -383,7 +454,7 @@ final class ConcreteMappingPreflightTest extends TestCase
                 new NativeObjectActionMapping(ApplicationPath::parse('person.signature'), 'bookmark', 'Signature', 'replace-text'),
                 new NativeObjectActionMapping(ApplicationPath::parse('person.photo'), 'frame', 'Portrait', 'replace-image'),
             ],
-            [new DocumentCapabilityMapping(ApplicationPath::parse('person.author'), 'metadata', 'author')]
+            [new DocumentCapabilityMapping(ApplicationPath::parse('person.creator'), 'metadata', 'creator')]
         );
     }
 

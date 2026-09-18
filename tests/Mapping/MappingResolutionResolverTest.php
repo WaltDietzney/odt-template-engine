@@ -246,12 +246,12 @@ final class MappingResolutionResolverTest extends TestCase
                 'Portrait',
                 'replace-image'
             )],
-            [new DocumentCapabilityMapping(ApplicationPath::parse('person.author'), 'metadata', 'author')]
+            [new DocumentCapabilityMapping(ApplicationPath::parse('person.creator'), 'metadata', 'creator')]
         );
         $resolution = (new MappingResolutionResolver())->resolve(
             $definition,
             $this->contract(),
-            ['person' => ['photo' => $photo, 'author' => null]]
+            ['person' => ['photo' => $photo, 'creator' => null]]
         );
 
         self::assertCount(1, $resolution->nativeObjectActions());
@@ -264,7 +264,7 @@ final class MappingResolutionResolverTest extends TestCase
         self::assertSame('RESOLVED', $resolution->documentCapabilities()[0]->status());
         self::assertSame('EXPLICIT', $resolution->documentCapabilities()[0]->provenance());
         self::assertSame('metadata', $resolution->documentCapabilities()[0]->mapping()->group());
-        self::assertSame('author', $resolution->documentCapabilities()[0]->mapping()->target());
+        self::assertSame('creator', $resolution->documentCapabilities()[0]->mapping()->target());
         self::assertSame(ApplicationDataResolution::NULL, $resolution->documentCapabilities()[0]->dataResolution()->status());
     }
 

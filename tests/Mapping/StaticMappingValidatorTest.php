@@ -47,7 +47,7 @@ final class StaticMappingValidatorTest extends TestCase
                 new NativeObjectActionMapping(ApplicationPath::parse('signature'), 'bookmark', 'Signature', 'replace-text'),
                 new NativeObjectActionMapping(ApplicationPath::parse('person.photo'), 'frame', 'Portrait', 'replace-image'),
             ],
-            [new DocumentCapabilityMapping(ApplicationPath::parse('person.author'), 'metadata', 'author')]
+            [new DocumentCapabilityMapping(ApplicationPath::parse('person.author'), 'metadata', 'creator')]
         );
 
         $result = (new StaticMappingValidator())->validate($definition, $contract, $projection, $catalog);
@@ -58,6 +58,8 @@ final class StaticMappingValidatorTest extends TestCase
         )));
         self::assertCount(1, $result->deferredChecks());
         self::assertSame('native_action_applicability_unknown', $result->deferredChecks()[0]->code());
+        self::assertSame('STRING', $projection->documentCapability('metadata', 'creator')?->payloadKind());
+        self::assertSame('LIST<STRING>', $projection->documentCapability('metadata', 'keywords')?->payloadKind());
     }
 
     public function testOneApplicationSourceMayExplicitlyFeedDifferentTargetFamilies(): void
@@ -67,7 +69,7 @@ final class StaticMappingValidatorTest extends TestCase
         $definition = new MappingDefinition(
             [new DependencyMapping($source, 'name')],
             [new NativeObjectActionMapping($source, 'bookmark', 'Signature', 'replace-text')],
-            [new DocumentCapabilityMapping($source, 'metadata', 'author')]
+            [new DocumentCapabilityMapping($source, 'metadata', 'creator')]
         );
 
         $result = (new StaticMappingValidator())->validate($definition, $contract, $projection, $catalog);
@@ -126,8 +128,8 @@ final class StaticMappingValidatorTest extends TestCase
                 new NativeObjectActionMapping(ApplicationPath::parse('photo.backup'), 'frame', 'Portrait', 'replace-image'),
             ],
             [
-                new DocumentCapabilityMapping(ApplicationPath::parse('person.name'), 'metadata', 'author'),
-                new DocumentCapabilityMapping(ApplicationPath::parse('account.name'), 'metadata', 'author'),
+                new DocumentCapabilityMapping(ApplicationPath::parse('person.name'), 'metadata', 'creator'),
+                new DocumentCapabilityMapping(ApplicationPath::parse('account.name'), 'metadata', 'creator'),
             ]
         );
 

@@ -23,7 +23,7 @@ final class MappingDefinitionTest extends TestCase
                 'Portrait',
                 'replace-image'
             )],
-            [new DocumentCapabilityMapping(ApplicationPath::parse('person.author'), 'metadata', 'author')]
+            [new DocumentCapabilityMapping(ApplicationPath::parse('person.creator'), 'metadata', 'creator')]
         );
 
         self::assertCount(1, $definition->dependencies());
@@ -46,8 +46,8 @@ final class MappingDefinitionTest extends TestCase
                 new NativeObjectActionMapping(ApplicationPath::parse('image.backup'), 'frame', 'Portrait', 'replace-image'),
             ],
             [
-                new DocumentCapabilityMapping($sameSource, 'metadata', 'author'),
-                new DocumentCapabilityMapping(ApplicationPath::parse('customer.author'), 'metadata', 'author'),
+                new DocumentCapabilityMapping($sameSource, 'metadata', 'creator'),
+                new DocumentCapabilityMapping(ApplicationPath::parse('customer.creator'), 'metadata', 'creator'),
             ]
         );
 

@@ -6,7 +6,11 @@ namespace OdtTemplateEngine\Mapping;
 
 final readonly class ProjectedDocumentCapability
 {
-    public function __construct(private string $group, private string $target)
+    public function __construct(
+        private string $group,
+        private string $target,
+        private string $payloadKind = 'SCALAR'
+    )
     {
     }
 
@@ -27,7 +31,7 @@ final readonly class ProjectedDocumentCapability
 
     public function payloadKind(): string
     {
-        return 'SCALAR';
+        return $this->payloadKind;
     }
 
     public function mutationOwner(): string

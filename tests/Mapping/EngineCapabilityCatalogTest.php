@@ -25,10 +25,18 @@ final class EngineCapabilityCatalogTest extends TestCase
             $catalog->nativeActions()
         ));
         self::assertSame([
-            'title', 'subject', 'description', 'coverage', 'keywords', 'initial_author',
-            'author', 'language', 'creation_date', 'date', 'editing_cycles',
-            'editing_duration', 'generator',
+            'title', 'subject', 'description', 'keywords', 'initial_creator', 'creator',
+            'language', 'creation_date', 'date', 'editing_cycles', 'editing_duration',
+            'generator', 'coverage',
         ], $catalog->metadataTargets());
+        self::assertSame('STRING', $catalog->metadataPayloadKind('creator'));
+        self::assertSame('STRING', $catalog->metadataPayloadKind('initial_creator'));
+        self::assertSame('LIST<STRING>', $catalog->metadataPayloadKind('keywords'));
+        self::assertSame('DATETIME', $catalog->metadataPayloadKind('date'));
+        self::assertSame('LANGUAGE', $catalog->metadataPayloadKind('language'));
+        self::assertSame('NON_NEGATIVE_INTEGER', $catalog->metadataPayloadKind('editing_cycles'));
+        self::assertSame('DURATION', $catalog->metadataPayloadKind('editing_duration'));
+        self::assertSame('STRING', $catalog->metadataPayloadKind('coverage'));
         self::assertFalse($catalog->supportsDocumentTarget('metadata', 'unknown_field'));
         self::assertNull($catalog->action('populate'));
         self::assertNull($catalog->action('instantiate'));
