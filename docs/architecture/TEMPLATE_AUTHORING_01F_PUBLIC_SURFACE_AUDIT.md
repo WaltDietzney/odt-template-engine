@@ -97,11 +97,11 @@ Professional showcases demonstrate useful finished documents rather than isolate
 
 The showcase documents should be visually strong enough to use in repository and website presentation.
 
-## Proposed naming convention
+## Canonical naming convention
 
-The semantic role should be visible in repository filenames.
+The semantic role should be visible in repository filenames. Canonical version-1.0 public samples use the L/C/S naming convention. Historical names may coexist temporarily during migration, but they are not the final public information architecture.
 
-Preferred shape:
+Canonical shape:
 
 ```text
 sample_L01_variables_filters.php
@@ -153,7 +153,7 @@ The following classifications describe capability migration, not immediate delet
 | 21 CV Profile | `template_21_cvProfile.odt` | PHP-owned generated CV regions | S01a | KEEP / PROFESSIONALIZE |
 | 22 Bookmark demo | current native bookmark template | bounded bookmark replacement | L09 | KEEP / MIGRATE |
 | 23 Section content demo | current Section template | Section content replacement | L09 | KEEP / MIGRATE |
-| 24 Section image demo | research-oriented template | Section content/resource replacement | L09 or S03 | MIGRATE |
+| 24 Section image demo | research-oriented template | existing bounded Section content/image replacement semantics | L09; S03 only if naturally applicable | MIGRATE |
 | 25 Section Instantiation | `sample_25_sectionClone.odt` | native/nested Section collections | S01b + C04 | KEEP / NEW PROFESSIONAL TEMPLATE |
 | 26 Table Layout | `template_26_tableLayout.odt` | TABLE-LAYOUT-01 | C02 | KEEP / PROMOTE |
 | 27 Frame Layout | `template_27_frameLayout.odt` | FRAME-LAYOUT-01 | C03 | KEEP / PROMOTE |
