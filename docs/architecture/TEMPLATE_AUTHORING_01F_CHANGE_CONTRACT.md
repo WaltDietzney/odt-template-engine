@@ -1,6 +1,6 @@
 # TEMPLATE-AUTHORING-01F Change Contract
 
-**Status:** Proposed — requires review before implementation  
+**Status:** Accepted — implementation baseline  
 **Milestone:** TEMPLATE-AUTHORING-01F — Authoring Documentation & Samples  
 **Target:** Version 1.0  
 **Base:** Accepted Release 1.0 Planning Reconciliation and F0 Public Surface Audit
@@ -95,7 +95,9 @@ The F0 audit is authoritative for the initial migration map from historical samp
 
 ## 5. Naming contract
 
-The preferred public naming convention is:
+Canonical version-1.0 public samples use the L/C/S naming convention:
+
+
 
 ```text
 sample_<ROLE><NN>_<descriptive_name>.php
@@ -113,7 +115,7 @@ sample_S02_professional_invoice.php
 
 Variant suffixes are permitted where one semantic showcase has intentionally distinct implementations, for example `S01a` and `S01b`.
 
-The implementation slice must decide whether renaming existing public sample paths requires transitional documentation or compatibility handling. Historical numeric identity is not itself a version-1.0 product requirement.
+Historical names may coexist temporarily during migration, but Phase-F completion requires the canonical public suite to use this convention. The implementation slice must decide whether renaming existing public sample paths requires transitional documentation or compatibility handling. Historical numeric identity is not itself a version-1.0 product requirement.
 
 ## 6. Public sample unit
 
@@ -121,13 +123,15 @@ A canonical public sample consists of:
 
 1. executable PHP source using recommended public APIs;
 2. a self-contained public ODT template where a template is required;
-3. a canonical generated ODT result path;
+3. a canonical reproducible generated ODT result path;
 4. concise documentation describing the ownership model and primary lesson;
 5. inclusion in the common public-sample registry/discovery mechanism;
 6. automated smoke coverage;
 7. LibreOffice validation appropriate to its rendering sensitivity.
 
 A public sample must not depend on a test-only fixture for normal execution.
+
+The generated ODT belongs semantically to the sample and must be reproducible through the canonical output path. The generated binary itself is not required to be a version-controlled source artifact. Existing `samples/output/*.odt` policy remains unchanged unless a task explicitly changes it.
 
 Its name, source, template, output, and documentation must communicate one primary lesson.
 
@@ -142,6 +146,7 @@ The canonical definition must expose at least:
 - semantic ID;
 - title;
 - role/category;
+- primary authoring model / structure ownership;
 - PHP entry point;
 - template path when applicable;
 - canonical output path;
