@@ -12,6 +12,7 @@ use OdtTemplateEngine\Document\AmbiguousTemplateTargetException;
 use OdtTemplateEngine\Document\DocumentInspection;
 use OdtTemplateEngine\Document\DocumentInspector;
 use OdtTemplateEngine\Document\DependencyAutomationExecutor;
+use OdtTemplateEngine\Document\DeclarativeConditionExecutor;
 use OdtTemplateEngine\Document\DocumentCapabilityAutomationExecutor;
 use OdtTemplateEngine\Document\FillImageRequirementCollector;
 use OdtTemplateEngine\Document\FillImageRequirementMaterializer;
@@ -198,6 +199,24 @@ class OdtTemplate
         return (new TemplateContractInspector())->inspect(
             $this->package->sourceDom('content.xml'),
             $this->package->sourceDom('styles.xml')
+        );
+    }
+
+    /**
+     * Execute the inspected template's recognized declarative Section controls.
+     *
+     * Values use the template's own ROOT and collection-item vocabulary. This
+     * operation does not inspect, render, save, or invoke Phase-E mapping.
+     * Successful repeated execution is not generally guaranteed by Phase D.
+     *
+     * @param array<string, mixed> $values
+     */
+    public function executeDeclarative(TemplateContract $contract, array $values): void
+    {
+        (new DeclarativeConditionExecutor())->execute(
+            $this->documentContext(),
+            $contract,
+            $values
         );
     }
 

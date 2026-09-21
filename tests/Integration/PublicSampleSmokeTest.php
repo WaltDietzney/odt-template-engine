@@ -216,6 +216,97 @@ final class PublicSampleSmokeTest extends TestCase
                 self::assertStringContainsString('text:user-field-get', $content);
                 self::assertStringContainsString('text:user-field-get', $styles);
             }
+            if ($sample['id'] === 'C01') {
+                $content = $archive->getFromName('content.xml');
+                $styles = $archive->getFromName('styles.xml');
+                self::assertIsString($content);
+                self::assertIsString($styles);
+                self::assertStringNotContainsString('{{', $content, 'C01 left a template expression unresolved.');
+                $xpath = $this->contentXPath($content);
+                $flowStyles = $content . $styles;
+                foreach (['keep-with-next', 'keep-together', 'widows', 'orphans', 'break-before', 'break-after'] as $property) {
+                    self::assertStringContainsString('fo:' . $property . '=', $flowStyles, 'C01 did not materialize ' . $property . '.');
+                }
+                self::assertStringContainsString('style:name="First Page"', $styles);
+                self::assertStringContainsString('style:next-style-name="Standard"', $styles);
+                self::assertStringContainsString('style:master-page-name="First Page"', $content);
+                self::assertStringContainsString('text:page-number', $styles);
+                self::assertGreaterThanOrEqual(2, $xpath->query('//text:p')->length);
+            }
+            if ($sample['id'] === 'C02') {
+                $content = $archive->getFromName('content.xml');
+                $styles = $archive->getFromName('styles.xml');
+                self::assertIsString($content);
+                self::assertIsString($styles);
+                self::assertStringNotContainsString('{{', $content, 'C02 left an insertion expression unresolved.');
+                $xpath = $this->contentXPath($content);
+                self::assertCount(2, $xpath->query('//table:table'));
+                $tableStyles = $content . $styles;
+                self::assertStringContainsString('style:width="16cm"', $tableStyles);
+                self::assertStringContainsString('style:rel-width="82%"', $tableStyles);
+                self::assertStringContainsString('style:row-height="0.95cm"', $tableStyles);
+                self::assertStringContainsString('style:min-row-height="1.0cm"', $tableStyles);
+                self::assertStringContainsString('style:vertical-align="middle"', $tableStyles);
+                self::assertStringContainsString('€ 24,500', $content);
+            }
+            if ($sample['id'] === 'C03') {
+                $content = $archive->getFromName('content.xml');
+                $manifest = $archive->getFromName('META-INF/manifest.xml');
+                self::assertIsString($content);
+                self::assertIsString($manifest);
+                self::assertStringNotContainsString('{{', $content, 'C03 left an insertion expression unresolved.');
+                $xpath = $this->contentXPath($content);
+                self::assertGreaterThanOrEqual(4, $xpath->query('//draw:frame')->length);
+                self::assertGreaterThanOrEqual(2, $xpath->query('//draw:image')->length);
+                self::assertStringContainsString('draw:name="DeliveryCallout"', $content);
+                self::assertStringContainsString('Pictures/Logo.png', $manifest);
+                self::assertNotFalse($archive->locateName('Pictures/Logo.png'));
+            }
+            if ($sample['id'] === 'C04') {
+                $content = $archive->getFromName('content.xml');
+                $styles = $archive->getFromName('styles.xml');
+                self::assertIsString($content);
+                self::assertIsString($styles);
+                self::assertStringNotContainsString('text:name="#foreach:projects"', $content);
+                self::assertStringNotContainsString('text:name="#foreach:milestones"', $content);
+                self::assertStringContainsString('text:name="#foreach:projects_1"', $content);
+                self::assertStringContainsString('text:name="#foreach:projects_2"', $content);
+                self::assertStringContainsString('text:name="#foreach:milestones_1_1"', $content);
+                self::assertStringContainsString('text:name="#foreach:milestones_1_2"', $content);
+                self::assertStringContainsString('text:name="#foreach:milestones_2_1"', $content);
+                self::assertStringContainsString('Aurora', $content);
+                self::assertStringContainsString('Beacon', $content);
+                self::assertStringContainsString('Status: ON TRACK', $content);
+                self::assertStringContainsString('Status: PLANNED', $content);
+                self::assertStringContainsString('FEATURED PROJECT', $content);
+                self::assertStringContainsString('Current roadmap', $content);
+                self::assertStringNotContainsString('FEATURED PROJECT', substr($content, strpos($content, 'Beacon')));
+                self::assertStringNotContainsString('Current roadmap', substr($content, strpos($content, 'Beacon')));
+                self::assertLessThan(strpos($content, 'Beacon'), strpos($content, 'Aurora'));
+                self::assertLessThan(strpos($content, 'Template review'), strpos($content, 'Discovery complete'));
+                self::assertStringContainsString('style-name="Heading_20_2"', $content);
+                self::assertStringContainsString('Body_20_Text.foot', $content);
+                self::assertStringContainsString('style:name="Heading_20_2"', $styles);
+                self::assertStringNotContainsString('{{', $content);
+            }
+            if ($sample['id'] === 'C05') {
+                $content = $archive->getFromName('content.xml');
+                $metadata = $archive->getFromName('meta.xml');
+                $manifest = $archive->getFromName('META-INF/manifest.xml');
+                self::assertIsString($content);
+                self::assertIsString($metadata);
+                self::assertIsString($manifest);
+                self::assertStringContainsString('Northstar Studio', $content);
+                self::assertStringContainsString('Template modernization', $content);
+                self::assertStringContainsString('Anna Example', $content);
+                self::assertStringContainsString('Ben Example', $content);
+                self::assertStringContainsString('authored report structure in Writer', $content);
+                self::assertStringNotContainsString('#foreach:members"', $content);
+                self::assertStringContainsString('dc:creator', $metadata);
+                self::assertStringContainsString('Northstar Delivery Team', $metadata);
+                self::assertStringContainsString('Pictures/Logo.png', $manifest);
+                self::assertNotFalse($archive->locateName('Pictures/Logo.png'));
+            }
             $archive->close();
         }
 
@@ -323,6 +414,9 @@ final class PublicSampleSmokeTest extends TestCase
         self::assertTrue($dom->loadXML($content));
         $xpath = new \DOMXPath($dom);
         $namespaces = [
+            'office' => 'urn:oasis:names:tc:opendocument:xmlns:office:1.0',
+            'style' => 'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+            'fo' => 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0',
             'text' => 'urn:oasis:names:tc:opendocument:xmlns:text:1.0',
             'draw' => 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0',
             'xlink' => 'http://www.w3.org/1999/xlink',

@@ -163,3 +163,22 @@ per-edge cell border/padding examples; Sample 13 retains L07 for spans and
 its broader cell-configuration combinations. Sample 11's remaining target is
 C02 table geometry, while Sample 15's focused styled-table structure is
 represented by L07. C02 targets remain for actual geometry.
+
+## F6 — Capability Showcases
+
+F6 registers C01 Page & Flow Layout, C02 Advanced Table Layout, C03 Frame
+Layout, C04 Declarative Structured Collections, and C05 Mapping & Automation as Composer-distributed capability
+samples. The existing registry-driven Explorer and smoke test consume their
+explicit entry/template/output paths. Historical samples remain preserved.
+C01 contrasts paragraph-flow intent with Writer-owned master-page succession;
+C02 avoids incompatible positional column-style requirements; C03 uses the
+existing shared `DrawingLayout` API; C04 executes existing Phase-D Section
+semantics with template-shaped values; C05 demonstrates inspection, explicit
+mapping, concrete preflight, common atomic automation, and explicit save. Thus
+C04 is direct template-shaped execution, while C05 is application-shaped data
+mapped and preflighted before Phase-E automation.
+
+The additive `OdtTemplate::executeDeclarative()` facade exposes the already
+accepted Phase-D behavior while keeping `DeclarativeConditionExecutor`
+internal. Sample 25 remains migration evidence for imperative Section
+collections and S01b; it is not replaced by C04's declarative model.

@@ -148,6 +148,16 @@ transaction system.
 `instantiateMany()` accepts a list of associative arrays. Do not pass arbitrary
 scalar shorthand or use it as a declarative nested-data mapper.
 
+## Declarative Section controls
+
+For template-authored `#foreach`, `#if`, and `#ifnot` Section controls, inspect
+the authored source once and pass template-shaped values directly to
+`OdtTemplate::executeDeclarative($contract, $values)`. The
+[C04 sample](../../samples/sample_C04_declarative_structured_collections.php)
+demonstrates nested projects and milestones. This direct Phase-D path is
+distinct from C05's application-name mapping and atomic Phase-E `automate()`
+workflow; it neither maps values nor renders/saves implicitly.
+
 ## Choosing the operation
 
 | Operation | Binds data | Keeps prototype | Result |

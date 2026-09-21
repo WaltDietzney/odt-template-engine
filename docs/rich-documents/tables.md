@@ -187,5 +187,6 @@ When exact stable geometry matters, prefer defining that structure in the LibreO
 - [L08 — HTML Import](../../samples/sample_L08_html_import.php) converts a styled HTML table into native ODT table/cell structures.
 - Sample 19 — historical HTML table import, retained as migration evidence
 - Sample 20 — relative column-width ratios
+- [C02 — Advanced Table Layout](../../samples/sample_C02_advanced_table_layout.php) combines whole-table geometry, relative column ratios, row geometry, vertical cell alignment, and paragraph alignment. Its tables avoid incompatible positional column-style requirements; C02 does not resolve the open column-identity question.
 
 See [Table & Cell Styles](../styling/table-and-cell-styles.md) for the style-responsibility model.

@@ -31,6 +31,23 @@ the original template contract without producing an output document.
 | [L09](../../samples/sample_L09_native_objects.php) | Native Objects | [Addressable native structures](../rich-documents/addressable-document.md): bounded bookmark/Section mutation and read-only table/frame descriptors |
 | [L10](../../samples/sample_L10_writer_user_fields.php) | Writer User Fields | [String User Field binding](../advanced/template-inspection.md#native-writer-user-fields): bind a template-owned document-global field |
 | [L11](../../samples/sample_L11_template_inspection.php) | Template Inspection | [TemplateContract](../advanced/template-inspection.md): source-oriented bindings, controls, native objects, dependencies and capabilities |
+
+## Canonical capability samples
+
+The capability layer adds native ODF behavior above the Learn path.
+
+| ID | Sample | Additional capability |
+| --- | --- | --- |
+| [C01](../../samples/sample_C01_page_flow_layout.php) | Page & Flow Layout | Paragraph-flow intent with Writer-owned page/master-page structure; Writer computes pagination |
+| [C02](../../samples/sample_C02_advanced_table_layout.php) | Advanced Table Layout | Whole-table geometry, relative column proportions, row geometry, and separate vertical/horizontal alignment |
+| [C03](../../samples/sample_C03_frame_layout.php) | Frame Layout | Shared frame-layout semantics for floating and as-character text/image elements |
+| [C04](../../samples/sample_C04_declarative_structured_collections.php) | Declarative Structured Collections | Direct Phase-D execution of Writer-authored nested Sections with template-shaped data |
+| [C05](../../samples/sample_C05_mapping_automation.php) | Mapping & Automation | Explicit mapping, concrete preflight, and common atomic Phase-E execution |
+
+C04 and C05 intentionally take different data paths: C04 passes values already
+named like the template's dependencies to `executeDeclarative()`; C05 maps
+application-shaped names through MappingDefinition, preflights them, and then
+uses atomic `automate()`.
 L06 intentionally shows two ownership models, not two interchangeable APIs:
 `replaceImageByName()` replaces image content at a frame authored in
 LibreOffice; `ImageElement` creates a new frame/resource as part of the PHP
@@ -160,11 +177,17 @@ For **Writer User Fields**, start with [L10](../../samples/sample_L10_writer_use
 
 For **template inspection**, start with [L11](../../samples/sample_L11_template_inspection.php). Sample 28 remains historical output-format evidence, not a prerequisite for normal public learning.
 
-For **tables**, start with 11, then 13, and use 20 when you need relative table-column widths.
+For **tables**, start with [L07](../../samples/sample_L07_tables.php) for
+content and [C02](../../samples/sample_C02_advanced_table_layout.php) for
+advanced geometry. Samples 11, 20, and 26 remain migration evidence.
 
 For **HTML**, use 08 for general import and 19 for table import.
 
 For **images**, start with [L06](../../samples/sample_L06_images.php); Sample 24 remains historical combined Section-plus-ImageElement regression evidence. Sample 05 covers existing-position replacement, and Sample 21 embeds an image in a PHP-generated region.
+
+For **frame layout**, use [C03](../../samples/sample_C03_frame_layout.php).
+For integrated **mapping and automation**, use
+[C05](../../samples/sample_C05_mapping_automation.php).
 
 ## Two CV architecture showcases
 
