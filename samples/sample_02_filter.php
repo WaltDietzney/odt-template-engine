@@ -31,7 +31,7 @@ $template->assign(['kommentar' => "This is line 1\nAnd this is line 2."]);
 $template->assign(['geburtstag' => '1995-08-15']);
 
 // {{number:umsatz|2}} → formats '1345.5' as '1345.50'
-// {{currency:umsatz}} → formats '1345.5' as '1.345,50 €' (depending on locale)
+// {{currency:umsatz}} → formats '1345.5' as '1.345,50 €' with the current fixed formatter
 $template->assign(['umsatz' => '1345.5']);
 
 // [4] Assign a value for conditional logic inside the template
@@ -57,4 +57,3 @@ $template->render();
 
 // [7] Save the output to a new ODT file
 $template->save(__DIR__ . '/output/output_02_filter.odt');
-

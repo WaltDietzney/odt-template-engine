@@ -16,7 +16,10 @@ final class SampleRegistryTest extends TestCase
         $outputPaths = [];
 
         foreach ($samples as $sample) {
-            self::assertMatchesRegularExpression('/^[a-z][a-z0-9.-]+$/', $sample['id']);
+            self::assertMatchesRegularExpression(
+                '/^(?:[a-z][a-z0-9.-]+|(?:L|C|S)\d{2}[a-z]?)$/',
+                $sample['id']
+            );
             self::assertNotContains($sample['id'], $ids, 'Duplicate sample ID: ' . $sample['id']);
             $ids[] = $sample['id'];
 
@@ -114,6 +117,57 @@ final class SampleRegistryTest extends TestCase
         );
     }
 
+    public function testL01ThroughL03AreCanonicalSimpleTemplateLearnSamples(): void
+    {
+        $samples = [];
+        foreach ($this->registry()['samples'] as $sample) {
+            $samples[$sample['id']] = $sample;
+        }
+
+        $expected = [
+            'L01' => [
+                'samples/sample_L01_variables_filters.php',
+                'samples/templates/template_L01_variables_filters.odt',
+                'samples/output/output_L01_variables_filters.odt',
+            ],
+            'L02' => [
+                'samples/sample_L02_conditions.php',
+                'samples/templates/template_L02_conditions.odt',
+                'samples/output/output_L02_conditions.odt',
+            ],
+            'L03' => [
+                'samples/sample_L03_repeating_content.php',
+                'samples/templates/template_L03_repeating_content.odt',
+                'samples/output/output_L03_repeating_content.odt',
+            ],
+        ];
+
+        foreach ($expected as $id => [$entryPoint, $templatePath, $outputPath]) {
+            $sample = $samples[$id];
+            self::assertSame('canonical', $sample['status']);
+            self::assertSame('learn', $sample['role']);
+            self::assertSame('simple-template', $sample['ownership']);
+            self::assertSame('composer', $sample['distribution']);
+            self::assertSame('odt', $sample['execution_mode']);
+            self::assertSame($entryPoint, $sample['entry_point']);
+            self::assertSame($templatePath, $sample['template_path']);
+            self::assertSame($outputPath, $sample['output_path']);
+            self::assertSame([], $sample['migration_targets']);
+        }
+
+        self::assertSame(
+            ['L06'],
+            $samples['legacy.sample-01.simple-variables']['migration_targets'],
+            'Legacy Sample 01 still contains image behavior pending L06.'
+        );
+        self::assertSame(
+            [],
+            $samples['legacy.sample-02.filter']['migration_targets'],
+            'Legacy Sample 02 is retained, but its filters and conditional logic are represented canonically.'
+        );
+        self::assertSame([], $samples['legacy.sample-03.logic-elements']['migration_targets']);
+    }
+
     public function testSampleExplorerGeneratorRejectsUnregisteredAndRepositoryOnlyEntries(): void
     {
         $unregistered = $this->runGenerator('sample_999_arbitrary');
@@ -121,6 +175,25 @@ final class SampleRegistryTest extends TestCase
 
         $repositoryOnly = $this->runGenerator('legacy.sample-29.user-field-binding');
         self::assertStringContainsString('not a self-contained packaged ODT example', $repositoryOnly);
+    }
+
+    public function testSampleExplorerPresentsCanonicalLearnEntriesFromTheRegistry(): void
+    {
+        $html = $this->runExplorer();
+
+        foreach ([
+            'data-sample-id="L01"',
+            'data-sample-id="L02"',
+            'data-sample-id="L03"',
+            'Variables &amp; Filters',
+            'Conditions',
+            'Repeating Content',
+            'data-sample="L01"',
+            'data-sample="L02"',
+            'data-sample="L03"',
+        ] as $expected) {
+            self::assertStringContainsString($expected, $html);
+        }
     }
 
     /** @return array{version: int, samples: list<array<string, mixed>>} */
@@ -148,6 +221,28 @@ final class SampleRegistryTest extends TestCase
             . '; require "demo/sample-explorer/generate.php";';
         $process = proc_open(
             [PHP_BINARY, '-r', $phpCode],
+            [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+            $pipes,
+            $repositoryRoot
+        );
+
+        self::assertIsResource($process);
+        fclose($pipes[0]);
+        $stdout = stream_get_contents($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        self::assertSame(0, proc_close($process));
+        self::assertSame('', $stderr);
+
+        return $stdout;
+    }
+
+    private function runExplorer(): string
+    {
+        $repositoryRoot = dirname(__DIR__, 2);
+        $process = proc_open(
+            [PHP_BINARY, 'demo/sample-explorer/index.php'],
             [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
             $pipes,
             $repositoryRoot

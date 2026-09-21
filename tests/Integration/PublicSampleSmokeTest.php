@@ -75,6 +75,43 @@ final class PublicSampleSmokeTest extends TestCase
                 self::assertStringNotContainsString('text:name="ExperienceEntry"', $content);
                 self::assertSame(3, substr_count($content, 'text:name="ExperienceEntry_'));
             }
+            if (in_array($sample['id'], ['L01', 'L02', 'L03'], true)) {
+                $content = $archive->getFromName('content.xml');
+                self::assertIsString($content);
+                self::assertStringNotContainsString('{{', $content, $sample['id'] . ' left template expressions unresolved.');
+
+                if ($sample['id'] === 'L01') {
+                    foreach ([
+                        'Anna Beispiel',
+                        'ANNA BEISPIEL',
+                        'anna@example.com',
+                        '15.08.1995',
+                        '1.345,50',
+                        '1.345,50 €',
+                        'Thank you for your order.',
+                        'Your receipt is attached.',
+                    ] as $expectedText) {
+                        self::assertStringContainsString($expectedText, $content, 'L01 omitted ' . $expectedText);
+                    }
+                    self::assertStringContainsString('<text:line-break', $content);
+                } elseif ($sample['id'] === 'L02') {
+                    self::assertStringContainsString('Priority member · benefits are active.', $content);
+                    self::assertStringNotContainsString('Standard membership.', $content);
+                    self::assertStringContainsString('Paid in full. Thank you for your payment.', $content);
+                    self::assertStringContainsString('No additional review is required.', $content);
+                    self::assertStringNotContainsString('Payment is due.', $content);
+                    self::assertStringNotContainsString('credit balance.', $content);
+                } else {
+                    foreach (['Notebook', 'Fountain pen', 'Ink bottle'] as $item) {
+                        self::assertSame(1, substr_count($content, $item), 'L03 did not render exactly one ' . $item . ' item.');
+                    }
+                    foreach (['PAP-01', 'WR-14', 'INK-03'] as $sku) {
+                        self::assertStringContainsString($sku, $content);
+                    }
+                    self::assertStringNotContainsString('{{#foreach:items}}', $content);
+                    self::assertStringNotContainsString('{{#endforeach}}', $content);
+                }
+            }
             $archive->close();
         }
 

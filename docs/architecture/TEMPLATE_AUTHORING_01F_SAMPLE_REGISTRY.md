@@ -1,4 +1,4 @@
-# TEMPLATE-AUTHORING-01F — Sample Registry Foundation
+# TEMPLATE-AUTHORING-01F — Sample Registry and Migration Evidence
 
 F1 establishes `samples/sample-registry.php` as the explicit inventory of
 numbered sample artifacts. The file returns a small PHP data array so the
@@ -38,6 +38,39 @@ historical scripts are not promoted into the registry. Sample 21's existing
 CV hero remains a temporary presentation special case, while its card identity,
 role, title, purpose, and migration destination come from the registry.
 
-No canonical L/C/S sample is created or implied by this foundation. Actual
-sample migration, suite redesign, and the later Explorer presentation work
-remain subsequent Phase-F slices.
+## F2 — Canonical Learn Basics
+
+F2 introduces the first real L/C/S entries, `L01` Variables & Filters, `L02`
+Conditions, and `L03` Repeating Content. Each is a Composer-distributed
+`simple-template` sample with an explicit PHP entry point, LibreOffice ODT
+template, and reproducible output path. All remaining numbered examples stay
+registered as migration entries; no historical PHP sample or template was
+deleted.
+
+The migration records now reflect the remaining or corresponding canonical
+destinations:
+
+- legacy Sample 01 maps its remaining image-insertion behavior to L06; its
+  scalar and repeating lessons now have canonical L01/L03 examples;
+- legacy Sample 02's filters/`nl2br` map to L01 and its conditional branch
+  maps to L02; all of its demonstrated behavior is now covered, but the
+  historical entry remains until a later explicit retirement decision;
+- legacy Sample 03's comparison conditions and `ifnot` map to L02; it too
+  remains registered with no outstanding migration target.
+- the unnumbered `sample_nl2br.php` and `sample_repeating.php` artifacts remain
+  physically present; F2 does not perform historical cleanup.
+
+L03 uses separate template-authored paragraphs rather than repeated table
+rows. The active `assignRepeating()` renderer locates marker paragraphs and
+clones their intervening sibling nodes; existing evidence does not establish
+table-row repetition as the stable canonical mechanism. An explicitly
+assigned empty collection removes the prototype and creates zero item blocks;
+it does not synthesize an empty-state message.
+
+The three templates use the same restrained teal/blue heading and label
+language, with ordinary editable Writer paragraphs and tables. They avoid
+depending on Writer splitting template expressions across styled spans.
+
+The Sample Explorer and generator needed no F2-specific discovery logic:
+their F1 registry-driven metadata automatically exposes the three canonical
+Learn samples and their explicit paths.

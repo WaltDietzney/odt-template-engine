@@ -162,8 +162,9 @@ Older repeating-data methods remain for compatibility but are not the recommende
 
 ## Related samples
 
-- Sample 01 — variables and a simple repeating block
-- Sample 03 — `if`, `elseif`, `else`, and `ifnot`
+- [L02 — Conditions](../../samples/sample_L02_conditions.php) — canonical `if`, `elseif`, `else`, and `ifnot`
+- [L03 — Repeating Content](../../samples/sample_L03_repeating_content.php) — canonical `foreach` with `assignRepeating()`
+- Samples 01 and 03 — migration-era examples that combine or predate the canonical Learn path
 - Sample 10 — a larger document combining repeating data, conditions, rich content, images, and metadata
 
 For the overall division of responsibility between the LibreOffice template and PHP, see [How the Engine Works](../concepts/how-it-works.md).

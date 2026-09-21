@@ -176,8 +176,9 @@ Approved: {{checkbox:approved}}
 
 ## Related samples
 
-- Sample 01 — simple variables and repeating data
-- Sample 02 — filters, formatting, and conditional values
+- [L01 — Variables & Filters](../../samples/sample_L01_variables_filters.php) — canonical scalar assignment, formatting filters, and ODT line breaks
+- [L02 — Conditions](../../samples/sample_L02_conditions.php) — canonical template-controlled conditional content
+- [L03 — Repeating Content](../../samples/sample_L03_repeating_content.php) — canonical collection assignment and template repetition
 - Sample 10 — larger business-document example combining template syntax and generated content
 
 Continue with [Conditions & Loops](conditions-and-loops.md) for conditional sections and repeating blocks.
