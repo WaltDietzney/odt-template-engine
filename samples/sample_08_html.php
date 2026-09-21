@@ -14,7 +14,8 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
  * - Headers (h1, h2) with inline styles
  * - Paragraphs with spans and strong formatting
  * - External and internal links
- * - Local images (only local paths supported)
+ * - Local images from readable project paths
+ * - Data images; remote HTTP/HTTPS images require explicit opt-in
  * - Inline style attributes (color, text-decoration, font-style)
  */
 
@@ -58,10 +59,10 @@ function helloWorld() {
 }
   </pre>
   <li>Clickable <a href="https://example.com" style="color: #0000FF;">hyperlinks</a> to external resources</li>
-  <li>Local image embedding from your project files</li>
-  <li>Remote image loading from the web</li>
-  <li>Embedded base64 images (if enabled)</li>
-  <li>Structured lists with nested items</li>
+  <li>Local image embedding from project files</li>
+  <li>Embedded data images using valid data:image base64 URLs</li>
+  <li>Remote HTTP/HTTPS images are disabled unless allow_remote_images is explicitly enabled</li>
+  <li>Structured lists (nested-list extraction has limitations; see the HTML Import guide)</li>
 </ul>
 <h2 style="margin-top: 1cm;">Project Structure</h2>
 <ol>

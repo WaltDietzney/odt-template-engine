@@ -262,10 +262,12 @@ See [Lists](../rich-documents/lists.md) and
 The canonical Learn path makes the ownership progression explicit: L01–L03
 use LibreOffice-authored structure with PHP-supplied values; L04–L06 use a
 LibreOffice-authored shell/insertion point with PHP-generated native content
-or image resources. Start with [L04 Rich Content](../../samples/sample_L04_rich_content.php),
-[L05 Lists](../../samples/sample_L05_lists.php), or
-[L06 Images](../../samples/sample_L06_images.php) according to the structure
-PHP needs to own.
+or image resources; L07 generates native tables, and L08 imports substantial
+controlled HTML into editable native ODT content. Start with [L04 Rich Content](../../samples/sample_L04_rich_content.php),
+[L05 Lists](../../samples/sample_L05_lists.php), [L06 Images](../../samples/sample_L06_images.php),
+[L07 Tables](../../samples/sample_L07_tables.php), or
+[L08 HTML Import](../../samples/sample_L08_html_import.php) according to the
+structure PHP needs to own.
 
 ## Images and semantic elements
 

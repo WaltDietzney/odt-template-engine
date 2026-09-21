@@ -24,7 +24,7 @@ $template->setElement('content', $content);
 
 The importer parses the fragment with PHP's DOM extension and builds engine elements rather than embedding the original HTML into the ODT package.
 
-## Supported structure
+## Characterized structure
 
 The current importer handles common document-oriented HTML, including:
 
@@ -35,16 +35,36 @@ The current importer handles common document-oriented HTML, including:
 - additional text semantics such as `mark`, `del`, `sub`, `sup`, `code`, `tt`, `kbd`, `samp`, and `pre`;
 - `span` elements with supported inline CSS;
 - hyperlinks;
-- ordered and unordered lists, including nested structures;
+- ordered and unordered lists; nested-list input is recognized but its
+  structural extraction is currently partial (see the limitation below);
 - blockquotes;
 - images;
 - HTML tables with `td`/`th`, `colspan`, `rowspan`, and supported cell styling.
 
-Unknown elements are generally traversed so that supported child content can still be imported.
+These are the element families that the current implementation can translate.
+That is not a guarantee of browser-equivalent semantics: several input
+elements are reduced to simpler ODT structures.
+
+| Input family | Current conversion | Boundary |
+| --- | --- | --- |
+| `h1`–`h6` | `Paragraph` using the corresponding `Heading N` style reference | Heading text is imported as one run; child markup is not recursively styled. |
+| `p`, `div`, `article`, `section`, `header`, `footer`, `main` | Paragraph content; block inline CSS is split into paragraph/text options | These are not preserved as semantic HTML containers. |
+| `blockquote` | Plain text in a paragraph referencing `Quote` | Nested inline markup is flattened. |
+| `strong`/`b`, `em`/`i`, `u`, `mark`, `del`, `sub`, `sup`, `code`, `tt`, `kbd`, `samp`, `pre` | Styled text runs in paragraph content | A single semantic wrapper is supported; nested style composition and browser whitespace/layout are limited. `pre` remains paragraph text, not a browser layout box. |
+| `span` | Text runs with supported inline CSS | Only properties understood by `StyleMapper` apply. |
+| `a` | Native ODT hyperlink | Label is flattened from the element text. |
+| `br` | Native `text:line-break` when inside an active paragraph | A break outside an active paragraph has no output. |
+| `ul`, `ol`, `li` | Native `ListElement` / ODF lists | Flat lists import reliably. Nested-list extraction and adjacent list siblings are currently partial and can detach/reorder content; L08 does not claim them. |
+| `table`, `tr`, `th`, `td` | Native `RichTable` and `RichTableCell` | `th` is treated like a cell, not as a repeating ODF header-row group. `<thead>`/`<tbody>` wrappers are not retained. Explicit inline cell styles are needed for visual header treatment. |
+| `colspan`, `rowspan` | Span attributes on the imported `RichTableCell` | Physical layout/covered-cell normalization should be validated in LibreOffice for the target table. |
+| `img` | Native `ImageElement` in a paragraph | Missing/invalid image sources are skipped; the importer does not synthesize a fallback. |
+
+Unknown elements are generally traversed so supported child content may still
+be imported; this is not a promise that unknown element semantics are retained.
 
 ## Inline styles
 
-The importer uses `StyleMapper::parseInlineStyle()` and the normal ODT style pipeline for supported CSS-like properties.
+The importer uses `StyleMapper::parseInlineStyle()` and the normal ODT style pipeline for supported inline CSS-like properties. It does not implement selectors, cascading stylesheets, inheritance, or layout computation.
 
 For example:
 
@@ -57,7 +77,13 @@ $html = <<<'HTML'
 HTML;
 ```
 
-Only the subset understood by the engine can be translated meaningfully. Browser layout concepts, cascading stylesheets, selectors, JavaScript, and arbitrary web layout behavior are outside the scope of the importer.
+For text runs, the current mapper recognizes properties including color,
+background color, font weight/style, decoration, size, and family. Paragraph
+and block mapping recognizes a bounded set including margins, padding,
+alignment, line height, and borders. Table cells route background, border,
+and padding to cell style, and supported text/paragraph options to their
+content. Unsupported CSS declarations are ignored. This is not a general CSS
+renderer.
 
 ## HTML tables
 
@@ -78,13 +104,26 @@ $html = <<<'HTML'
 HTML;
 ```
 
-The importer separates supported cell decoration from paragraph/text styling before creating the ODT table cells.
+The importer creates a native table and separates supported cell decoration
+from paragraph/text styling before creating ODT cells. It imports rows found
+under the table, but does not preserve `<thead>` as `table:table-header-rows`;
+header appearance should be specified in the header cells' inline styles.
+Supported `colspan`/`rowspan` values are written as native cell span
+attributes. L08 includes an HTML table as part of its report; L07 teaches
+explicit `RichTable` construction directly.
 
 For tables requiring exact geometry, use the same caution as with programmatically created `RichTable` objects: HTML width rules do not imply browser-identical physical widths in LibreOffice.
 
 ## Images and security
 
-Local images can be imported through `<img>` elements. Remote HTTP/HTTPS images are disabled by default.
+Three source classes are supported by `HtmlImageResolver`:
+
+- readable local filesystem image paths;
+- valid `data:image/...;base64,...` resources, written to a temporary asset;
+- HTTP/HTTPS images only when explicitly enabled.
+
+Local and data images work without a network request. Invalid or missing
+sources resolve to no image and are skipped by the importer.
 
 ```php
 $content = HtmlImporter::fromHtml($html, [
@@ -92,9 +131,20 @@ $content = HtmlImporter::fromHtml($html, [
 ]);
 ```
 
-Enable remote images only for input and network destinations you trust. Remote image resolution creates a network boundary that does not exist when importing local application assets.
+Remote images are disabled by default and require the explicit
+`allow_remote_images` option shown above. When enabled, the current resolver
+uses a 5-second stream timeout, does not follow redirects, reads at most
+5,000,001 bytes to enforce a 5,000,000-byte maximum, and accepts the response
+only when PHP can recognize image data. A remote failure is ignored as a
+missing image; it does not mutate the document. Enabling this option creates
+a network boundary, so use it only for trusted input and destinations.
 
-The import pipeline uses `HtmlImageResolver` and temporary-asset tracking so resolved temporary images can participate in normal ODT image embedding and cleanup.
+The import pipeline uses `HtmlImageResolver` and `TemporaryAssetRegistry`.
+Importer-created files are tracked and removed at process shutdown; the
+structured-element pipeline embeds the resource when the RichText is inserted
+and the document is saved. The canonical L08 sample uses a local image and a
+deterministic data image and makes no live remote request. Its PHP source shows
+the explicit opt-in as a comment only.
 
 ## Recommended use
 
@@ -116,14 +166,27 @@ If your application already owns structured data, building `RichText` directly i
 
 ## Current limitations
 
-The importer intentionally supports a practical subset rather than full HTML/CSS rendering. In particular, do not expect browser-equivalent behavior for complex CSS layout, floats, advanced selectors, external stylesheets, scripts, or arbitrary web markup.
+The importer intentionally supports a practical subset rather than full
+HTML/CSS rendering. In particular, do not expect browser-equivalent behavior
+for complex CSS layout, floats, advanced selectors, external stylesheets,
+scripts, or arbitrary web markup. The older `sample_html_images.php` records
+image-layout experiments (`float`, `display`, absolute offsets); these remain
+layout-sensitive evidence for C03, not L08 guarantees.
 
-Nested lists and complex table styling are supported at a useful document level, but should be verified with representative LibreOffice output when exact visual behavior matters.
+Styled tables are useful document structures, but exact visual behavior
+should be verified with representative LibreOffice output. The current
+importer does not assign semantic repeating-header behavior to HTML `<thead>`
+rows, nor does it promise browser-like mixed list styles. The current
+recursive list importer can detach/re-attach a prior sibling while attempting
+to extract nested lists; adjacent and nested list combinations are therefore
+partial. L08 uses separated flat list types, and Sample 08 retains an L08
+migration target until nested-list behavior is resolved.
 
 ## Related samples
 
-- Sample 08 — HTML to editable ODT content
-- Sample 19 — HTML table import
+- [L08 — HTML Import](../../samples/sample_L08_html_import.php) is the canonical broad capability example.
+- Sample 08 — historical HTML-to-editable-ODT lineage, retained in the registry during migration.
+- Sample 19 — historical HTML table import, now represented within L08.
 - `sample_html_images.php` — HTML image import behavior
 
 See [RichText & Paragraphs](../rich-documents/richtext-and-paragraphs.md) to understand the native element model produced by the importer.

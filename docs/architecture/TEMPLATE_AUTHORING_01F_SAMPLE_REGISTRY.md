@@ -110,3 +110,34 @@ the visible paragraphs, nested lists, and both L06 images. Writer normalized
 list-style identifiers and renamed embedded image resources; the resulting
 image references and manifest entries remained consistent. These are package
 normalizations, not changes to the sample's ownership semantics.
+
+## F4 — Structured Content and HTML Import
+
+F4 adds canonical `L07` Tables and `L08` HTML Import. L07 uses a
+LibreOffice-authored shell/insertion point and constructs a native editable
+`RichTable` with a header-row group, styled `RichTableCell` values, and a
+multi-run `Paragraph` cell. It deliberately avoids table geometry, spans, and
+array-style convenience APIs; those remain migration evidence for C02 or later
+focused examples.
+
+L08 keeps the broad Sample 08 capability lineage and incorporates Sample 19's
+HTML-table-to-native-table behavior. Its deterministic input uses a local
+image and a data URL; it does not fetch remote resources. Remote HTTP/HTTPS
+images remain disabled unless `allow_remote_images` is explicitly true. The
+current resolver limits response reads to 5,000,000 bytes, uses a 5-second
+timeout, does not follow redirects, validates recognizable image content, and
+tracks temporary assets for shutdown cleanup.
+
+Characterization also recorded deliberate limits rather than promoting old
+claims as guarantees: HTML `th` is not distinguished from `td` by the importer,
+`thead` is not represented as repeating ODF header rows, inline CSS is a
+bounded `StyleMapper` subset, and nested/adjacent list extraction can detach
+or reorder content. Sample 08 therefore retains an L08 migration target for
+nested-list behavior. Sample 19's HTML-table behavior is represented in L08.
+`sample_html_images.php` float/display/absolute-position experiments are
+preserved for C03 review rather than claimed as browser-like layout support.
+Sample 12 retains an L07 target for its named paragraph alignment and
+per-edge cell border/padding examples; Sample 13 retains L07 for spans and
+its broader cell-configuration combinations. Sample 11's remaining target is
+C02 table geometry, while Sample 15's focused styled-table structure is
+represented by L07. C02 targets remain for actual geometry.
