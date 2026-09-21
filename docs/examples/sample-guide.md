@@ -2,6 +2,14 @@
 
 The `samples/` directory is both a runnable example collection and a map of the engine's public capabilities.
 
+This guide remains a historical numbered learning path during Phase-F
+migration; it is not the executable sample inventory. The current numbered
+entry points, explicit templates/outputs, ownership descriptions, and
+migration/package status are recorded in the
+[sample registry](../../samples/sample-registry.php). Samples 28 and 29 are
+repository-only because their templates are under `tests/fixtures/` and are
+not self-contained Composer-distributed examples.
+
 Start with the smallest sample that demonstrates the feature you need. The later samples deliberately combine more of the engine and are better suited to architectural study than first contact.
 
 ## Recommended path

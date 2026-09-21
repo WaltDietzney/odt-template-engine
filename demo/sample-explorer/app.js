@@ -4,38 +4,11 @@
     showcaseStyles.href = 'showcase.css';
     document.head.appendChild(showcaseStyles);
 
-    const cvSampleName = 'sample_21_cvProfile';
-    const cvCard = document.querySelector(`[data-sample="${cvSampleName}"]`)?.closest('.sample-card');
+    const cvSampleId = 'legacy.sample-21.cv-profile';
+    const cvCard = document.querySelector(`[data-sample-id="${cvSampleId}"]`);
 
     if (cvCard) {
-        cvCard.dataset.category = 'showcases';
         cvCard.dataset.search += ' showcase cv profile resume page layout editable odt real world';
-
-        const category = cvCard.querySelector('.category');
-        const title = cvCard.querySelector('h3');
-        const description = cvCard.querySelector('.description');
-
-        if (category) {
-            category.textContent = 'Showcases';
-        }
-
-        if (title) {
-            title.textContent = 'CV Profile';
-        }
-
-        if (description) {
-            description.textContent = 'Generate a complete two-column CV with page layout control, rich text, lists, images and editable ODT output.';
-        }
-
-        const filters = document.querySelector('.filters');
-        if (filters && !filters.querySelector('[data-filter="showcases"]')) {
-            const showcaseFilter = document.createElement('button');
-            showcaseFilter.className = 'filter-button';
-            showcaseFilter.type = 'button';
-            showcaseFilter.dataset.filter = 'showcases';
-            showcaseFilter.textContent = 'Showcases';
-            filters.appendChild(showcaseFilter);
-        }
     }
 
     const howItWorks = document.getElementById('how-it-works');
