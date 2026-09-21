@@ -6,25 +6,51 @@ header('Content-Type: application/json; charset=utf-8');
 
 $projectRoot = dirname(__DIR__, 2);
 $sampleDir = $projectRoot . '/samples';
-$outputDir = $sampleDir . '/output';
+$registry = require $sampleDir . '/sample-registry.php';
 
 require $projectRoot . '/vendor/autoload.php';
 
 $sample = $_GET['sample'] ?? '';
 
-if (!is_string($sample) || !preg_match('/^sample_[A-Za-z0-9_-]+$/', $sample)) {
+if (!is_string($sample) || $sample === '') {
     http_response_code(400);
-    echo json_encode(['status' => 'error', 'message' => 'Invalid sample name.']);
+    echo json_encode(['status' => 'error', 'message' => 'Invalid sample ID.']);
     exit;
 }
 
-$samplePath = $sampleDir . '/' . $sample . '.php';
+$sampleEntry = null;
+foreach ($registry['samples'] as $candidate) {
+    if ($candidate['id'] === $sample) {
+        $sampleEntry = $candidate;
+        break;
+    }
+}
 
-if (!is_file($samplePath)) {
+if ($sampleEntry === null) {
     http_response_code(404);
-    echo json_encode(['status' => 'error', 'message' => 'Sample file not found.']);
+    echo json_encode(['status' => 'error', 'message' => 'Sample is not registered for public discovery.']);
     exit;
 }
+
+if ($sampleEntry['distribution'] !== 'composer' || $sampleEntry['execution_mode'] !== 'odt') {
+    http_response_code(409);
+    echo json_encode(['status' => 'error', 'message' => 'This migration sample is not a self-contained packaged ODT example.']);
+    exit;
+}
+
+$samplePath = $projectRoot . '/' . $sampleEntry['entry_point'];
+$resolvedSamplePath = realpath($samplePath);
+if (
+    $resolvedSamplePath === false
+    || !str_starts_with($resolvedSamplePath, realpath($sampleDir) . DIRECTORY_SEPARATOR)
+    || !is_file($resolvedSamplePath)
+) {
+    http_response_code(404);
+    echo json_encode(['status' => 'error', 'message' => 'Registered sample file is unavailable.']);
+    exit;
+}
+$samplePath = $resolvedSamplePath;
+$outputPath = $projectRoot . '/' . $sampleEntry['output_path'];
 
 $previousWorkingDirectory = getcwd();
 
@@ -37,10 +63,7 @@ try {
     require $samplePath;
     ob_end_clean();
 
-    $sampleBase = preg_replace('/^sample_/', '', $sample);
-    $outputFile = $outputDir . '/output_' . $sampleBase . '.odt';
-
-    if (!is_file($outputFile)) {
+    if (!is_file($outputPath)) {
         http_response_code(500);
         echo json_encode(['status' => 'error', 'message' => 'Generated file not found.']);
         exit;
@@ -48,7 +71,7 @@ try {
 
     echo json_encode([
         'status' => 'success',
-        'file' => basename($outputFile),
+        'file' => basename($outputPath),
     ]);
 } catch (Throwable $exception) {
     if (ob_get_level() > 0) {

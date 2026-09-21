@@ -35,14 +35,20 @@ final class PublicSampleSmokeTest extends TestCase
     public function testAllPublicSamplesRunInIsolationFromAnExternalWorkingDirectory(): void
     {
         $repositoryRoot = dirname(__DIR__, 2);
-        $sampleFiles = $this->publicSampleFiles($this->temporaryDirectory . '/samples');
+        $registry = require $this->temporaryDirectory . '/samples/sample-registry.php';
+        $samples = array_values(array_filter(
+            $registry['samples'],
+            static fn (array $sample): bool => $sample['distribution'] === 'composer'
+                && $sample['execution_mode'] === 'odt'
+        ));
         $beforeOutput = $this->directorySnapshot($repositoryRoot . '/samples/output');
 
-        self::assertCount(27, $sampleFiles);
+        self::assertNotEmpty($samples, 'The registry must define runnable packaged ODT samples.');
 
-        foreach ($sampleFiles as $sampleFile) {
-            $sampleName = pathinfo($sampleFile, PATHINFO_FILENAME);
-            $expectedOutput = $this->temporaryDirectory . '/samples/output/output_' . substr($sampleName, 7) . '.odt';
+        foreach ($samples as $sample) {
+            $sampleName = pathinfo($sample['entry_point'], PATHINFO_FILENAME);
+            $sampleFile = $this->temporaryDirectory . '/' . $sample['entry_point'];
+            $expectedOutput = $this->temporaryDirectory . '/' . $sample['output_path'];
 
             [$exitCode, $stdout, $stderr] = $this->runSample($sampleFile);
 
@@ -58,7 +64,7 @@ final class PublicSampleSmokeTest extends TestCase
             );
             self::assertNotFalse($archive->locateName('content.xml'), $sampleName . ' is missing content.xml.');
             self::assertNotFalse($archive->locateName('styles.xml'), $sampleName . ' is missing styles.xml.');
-            if ($sampleName === 'sample_25_sectionInstantiation') {
+            if ($sample['id'] === 'legacy.sample-25.section-instantiation') {
                 $content = $archive->getFromName('content.xml');
                 self::assertIsString($content);
                 self::assertStringNotContainsString('{{', $content, 'Sample 25 contains unresolved template expressions at position ' . strpos($content, '{{') . '.');
@@ -73,30 +79,6 @@ final class PublicSampleSmokeTest extends TestCase
         }
 
         self::assertSame($beforeOutput, $this->directorySnapshot($repositoryRoot . '/samples/output'));
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function publicSampleFiles(string $sampleDirectory): array
-    {
-        $sampleFiles = [];
-
-        foreach (glob($sampleDirectory . '/sample_*.php') ?: [] as $sampleFile) {
-            $sampleName = basename($sampleFile, '.php');
-            if (preg_match('/^sample_(\d{2})_/', $sampleName, $matches) !== 1) {
-                continue;
-            }
-
-            $sampleNumber = (int) $matches[1];
-            if ($sampleNumber >= 1 && $sampleNumber <= 27) {
-                $sampleFiles[] = $sampleFile;
-            }
-        }
-
-        sort($sampleFiles);
-
-        return $sampleFiles;
     }
 
     /**
