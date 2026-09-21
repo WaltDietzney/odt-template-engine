@@ -193,8 +193,49 @@ final class PublicSampleSmokeTest extends TestCase
                     self::assertStringContainsString(basename($resource), $manifest);
                 }
             }
+            if ($sample['id'] === 'L09') {
+                $content = $archive->getFromName('content.xml');
+                self::assertIsString($content);
+                self::assertStringNotContainsString('{{', $content, 'L09 left a template insertion point unresolved.');
+                $xpath = $this->contentXPath($content);
+                self::assertCount(1, $xpath->query('//text:bookmark-start[@text:name="ClientName"]'));
+                self::assertCount(1, $xpath->query('//text:bookmark-end[@text:name="ClientName"]'));
+                self::assertCount(1, $xpath->query('//text:section[@text:name="ProjectSummary"]'));
+                self::assertCount(1, $xpath->query('//table:table[@table:name="ProjectMilestones"]'));
+                self::assertCount(1, $xpath->query('//draw:frame[@draw:name="ProjectNote"]'));
+                self::assertStringContainsString('Aurora Studio', $content);
+                self::assertStringContainsString('Project summary supplied by PHP.', $content);
+            }
+            if ($sample['id'] === 'L10') {
+                $content = $archive->getFromName('content.xml');
+                $styles = $archive->getFromName('styles.xml');
+                self::assertIsString($content);
+                self::assertIsString($styles);
+                self::assertStringContainsString('office:string-value="Aurora Studio"', $content);
+                self::assertStringContainsString('office:string-value="Aurora Studio"', $styles);
+                self::assertStringContainsString('text:user-field-get', $content);
+                self::assertStringContainsString('text:user-field-get', $styles);
+            }
             $archive->close();
         }
+
+        $inspectionSample = null;
+        foreach ($registry['samples'] as $sample) {
+            if ($sample['id'] === 'L11') {
+                $inspectionSample = $sample;
+                break;
+            }
+        }
+        self::assertIsArray($inspectionSample, 'L11 must be present as an inspection-only public sample.');
+        [$inspectionExit, $inspectionOutput, $inspectionError] = $this->runSample(
+            $this->temporaryDirectory . '/' . $inspectionSample['entry_point']
+        );
+        self::assertSame('', trim($inspectionError), 'L11 emitted stderr: ' . $inspectionError);
+        self::assertSame(0, $inspectionExit, 'L11 inspection sample failed: ' . $inspectionOutput);
+        foreach (["\"bindings\"", "\"controls\"", "\"native_objects\"", "\"dependencies\"", "\"capabilities\"", "\"diagnostics\""] as $key) {
+            self::assertStringContainsString($key, $inspectionOutput);
+        }
+        self::assertFileDoesNotExist($this->temporaryDirectory . '/samples/output/output_L11_template_inspection.odt');
 
         self::assertSame($beforeOutput, $this->directorySnapshot($repositoryRoot . '/samples/output'));
     }

@@ -40,6 +40,8 @@ assert($contract instanceof TemplateContract);
 
 Unlike `inspect()`, this contract is source-oriented. Rendering, saving, or mutating the working document does not redefine the authored template contract.
 
+The canonical introduction is [L11 — Template Inspection](../../samples/sample_L11_template_inspection.php). It prints a compact machine-readable view of bindings, controls, native objects, dependencies, capabilities, and diagnostics. It does not render, mutate, or save an ODT. The historical Sample 28 is retained as migration evidence, but is no longer needed for public learning.
+
 ## TemplateContract
 
 `TemplateContract` is immutable inspection metadata. It does not expose DOM nodes or live mutation handles.
@@ -197,6 +199,8 @@ $template->render();
 does not bind a same-named native User Field.
 
 Phase C v1 does not support Set/Get Variable or non-string User Field types. Those remain deferred work.
+
+The self-contained, Composer-distributed example is [L10 — Writer User Fields](../../samples/sample_L10_writer_user_fields.php). The older Sample 29 remains repository-only as historical fixture-based regression evidence; it is not required to run L10.
 
 Binding failures raise:
 

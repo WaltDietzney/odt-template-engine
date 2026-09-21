@@ -33,6 +33,28 @@ The repository's exact Sample 22–24 identities are:
   `sample_24_sectionImageReplacement.odt` and the image asset
   `sample_23_image.png`.
 
+## F5 — Canonical Native Objects, User Fields, and Inspection
+
+F5 completes the canonical Learn sequence with `L09` Native Objects, `L10`
+Writer User Fields, and `L11` Template Inspection. L09 exercises only the
+existing bounded bookmark and Section mutations; named tables and frames are
+resolved for descriptor/read-only use. L10 packages its own public template
+containing a real Writer string User Field referenced in the body and header,
+closing the public packaging gap exposed by historical Sample 29. Sample 29
+remains repository-only and explicitly points to L10 as its canonical
+migration destination. L11 is an inspection-mode sample with no output path:
+it shows the original source-oriented TemplateContract projections and does
+not render or mutate the document. Sample 28 remains as historical
+inspection-output evidence and points to L11.
+
+The registry now represents all Learn IDs L01–L11. Collection-oriented
+Section instantiation remains a C04/S01b concern; the L09 native-object lesson
+does not absorb Sample 25's structured collection behavior. Sample 24's
+combined Section-plus-ImageElement replacement remains registered with L09
+and L06 as migration targets because those lessons cover its target and
+generated-image components separately; the historical example remains the
+focused combined regression evidence.
+
 The Sample Guide remains historical during F1. Unnumbered development and
 historical scripts are not promoted into the registry. Sample 21's existing
 CV hero remains a temporary presentation special case, while its card identity,

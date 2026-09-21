@@ -10,12 +10,13 @@ Samples 28 and 29 remain repository-only because their templates are under
 
 ## Canonical Learn path
 
-The first eight canonical samples form the opening Learn path. L01–L03
+The first eleven canonical samples complete the Learn path. L01–L03
 keep document structure in LibreOffice and use PHP to supply data. L04–L06
 retain a LibreOffice-authored shell/insertion point while PHP generates native
 ODT subtrees or image resources where that is the appropriate owner. L07 adds
 native generated tables; L08 adapts substantial controlled HTML into editable
-ODT elements.
+ODT elements. L09–L10 address native Writer-authored structures; L11 inspects
+the original template contract without producing an output document.
 
 | ID | Sample | Learn about |
 | --- | --- | --- |
@@ -27,6 +28,9 @@ ODT elements.
 | [L06](../../samples/sample_L06_images.php) | Images | [Image ownership choices](../rich-documents/images.md): replace a template frame or insert an ImageElement |
 | [L07](../../samples/sample_L07_tables.php) | Tables | [RichTable and RichTableCell](../rich-documents/tables.md): PHP-generated native editable table structure |
 | [L08](../../samples/sample_L08_html_import.php) | HTML Import | [HtmlImporter](../advanced/html-import.md): substantial controlled HTML translated into native ODT elements |
+| [L09](../../samples/sample_L09_native_objects.php) | Native Objects | [Addressable native structures](../rich-documents/addressable-document.md): bounded bookmark/Section mutation and read-only table/frame descriptors |
+| [L10](../../samples/sample_L10_writer_user_fields.php) | Writer User Fields | [String User Field binding](../advanced/template-inspection.md#native-writer-user-fields): bind a template-owned document-global field |
+| [L11](../../samples/sample_L11_template_inspection.php) | Template Inspection | [TemplateContract](../advanced/template-inspection.md): source-oriented bindings, controls, native objects, dependencies and capabilities |
 L06 intentionally shows two ownership models, not two interchangeable APIs:
 `replaceImageByName()` replaces image content at a frame authored in
 LibreOffice; `ImageElement` creates a new frame/resource as part of the PHP
@@ -69,6 +73,8 @@ migration targets and package status.
 | 23 | Section content replacement | replacing the children of a native named section with structured ODT content |
 | 24 | Section image replacement | replacing section content with an image and package resource |
 | 25 | Native CV section collections | LibreOffice-authored repeatable sections, nested collections, and scalar binding |
+| 28 | Template Contract inspection | historical full contract dump; canonical compact introduction is L11 |
+| 29 | Writer User Field binding | historical fixture-dependent entry; the self-contained Composer example is L10 |
 
 The repository also contains additional focused or historical sample scripts outside the numbered sequence. Treat the numbered samples as the primary learning path.
 
@@ -148,13 +154,17 @@ For **template language**, start with L01–L03 and the Template Language docume
 
 For **programmatic content**, start with L04–L08. Samples 07, 09, 14, 16, and 18 remain migration-era comparisons for specialized tab/paragraph layouts, mixed blocks, and historical list patterns. Sample 08 and Sample 19 remain registered as historical L08 lineage; neither was deleted.
 
-For **addressable native ODT structures**, start with Sample 22, continue with 23 and 24, and then study Sample 25 together with [Addressable ODT Structures](../rich-documents/addressable-document.md) and [Named Sections](../rich-documents/named-sections.md).
+For **addressable native ODT structures**, start with [L09 Native Objects](../../samples/sample_L09_native_objects.php); use Samples 22–24 as historical regression evidence and Sample 25 for section collections together with [Named Sections](../rich-documents/named-sections.md).
+
+For **Writer User Fields**, start with [L10](../../samples/sample_L10_writer_user_fields.php). Historical Sample 29 remains repository-only because its original entry point still uses a test fixture; the canonical L10 template is self-contained and Composer-distributed.
+
+For **template inspection**, start with [L11](../../samples/sample_L11_template_inspection.php). Sample 28 remains historical output-format evidence, not a prerequisite for normal public learning.
 
 For **tables**, start with 11, then 13, and use 20 when you need relative table-column widths.
 
 For **HTML**, use 08 for general import and 19 for table import.
 
-For **images**, compare 05/06 with the generated-image use in Sample 21 and the native-section replacement in Sample 24. These show three different ownership models: replacing an existing image position, generating an image inside a PHP-owned content block, and replacing the content of a native named section.
+For **images**, start with [L06](../../samples/sample_L06_images.php); Sample 24 remains historical combined Section-plus-ImageElement regression evidence. Sample 05 covers existing-position replacement, and Sample 21 embeds an image in a PHP-generated region.
 
 ## Two CV architecture showcases
 
