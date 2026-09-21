@@ -2,17 +2,33 @@
 
 The `samples/` directory is both a runnable example collection and a map of the engine's public capabilities.
 
-This guide remains a historical numbered learning path during Phase-F
-migration; it is not the executable sample inventory. The current numbered
-entry points, explicit templates/outputs, ownership descriptions, and
-migration/package status are recorded in the
-[sample registry](../../samples/sample-registry.php). Samples 28 and 29 are
-repository-only because their templates are under `tests/fixtures/` and are
-not self-contained Composer-distributed examples.
+The canonical Learn path is being introduced incrementally. The current
+entry points, templates/outputs, ownership descriptions, and migration/package
+status are recorded in the [sample registry](../../samples/sample-registry.php).
+Samples 28 and 29 remain repository-only because their templates are under
+`tests/fixtures/` and are not self-contained Composer-distributed examples.
 
-Start with the smallest sample that demonstrates the feature you need. The later samples deliberately combine more of the engine and are better suited to architectural study than first contact.
+## Canonical Learn path
 
-## Recommended path
+These first three canonical samples progress from displaying values, to
+choosing template-authored content, to repeating template-authored structure.
+All three use the simple-template ownership model: LibreOffice owns the
+document structure and PHP supplies data.
+
+| ID | Sample | Learn about |
+| --- | --- | --- |
+| [L01](../../samples/sample_L01_variables_filters.php) | Variables & Filters | [`assign()` and filters](../template-language/variables-and-filters.md), including ODT line breaks |
+| [L02](../../samples/sample_L02_conditions.php) | Conditions | [`if`, `elseif`, `else`, and `ifnot`](../template-language/conditions-and-loops.md) |
+| [L03](../../samples/sample_L03_repeating_content.php) | Repeating Content | [`assignRepeating()` and `foreach`](../template-language/conditions-and-loops.md#repeating-blocks) |
+
+## Migration-era numbered samples
+
+The numbered examples below are historical migration entries, not the
+recommended canonical learning path. They remain available while later F
+slices account for their remaining behavior; consult the registry for current
+migration targets and package status.
+
+### Historical numbered examples
 
 | Sample | Focus | Read it when you need... |
 | --- | --- | --- |
@@ -46,10 +62,10 @@ The repository also contains additional focused or historical sample scripts out
 
 ## Run a sample
 
-From the repository root after Composer installation:
+From the repository root after Composer installation, run a canonical sample:
 
 ```bash
-php samples/sample_01_simple_variables.php
+php samples/sample_L01_variables_filters.php
 ```
 
 Generated documents are normally written below:
@@ -116,7 +132,7 @@ That distinction is central to the engine's design.
 
 ## Learning by feature
 
-For **template language**, read Samples 01–03 and 10 together with the Template Language documentation.
+For **template language**, start with L01–L03 and the Template Language documentation. Samples 01–03 and 10 remain useful migration-era comparisons.
 
 For **rich generated content**, read Samples 09, 14, and 18 before moving to Sample 21.
 

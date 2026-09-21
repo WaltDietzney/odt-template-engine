@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * The explicit inventory of current numbered sample artifacts.
+ * The explicit inventory of current public sample artifacts.
  *
  * Entries marked "migration" retain historical paths and are not canonical
  * L/C/S samples. Repository-only entries depend on files excluded from the
@@ -12,6 +12,48 @@ declare(strict_types=1);
 return [
     'version' => 1,
     'samples' => [
+        [
+            'id' => 'L01',
+            'title' => 'Variables & Filters',
+            'role' => 'learn',
+            'ownership' => 'simple-template',
+            'entry_point' => 'samples/sample_L01_variables_filters.php',
+            'template_path' => 'samples/templates/template_L01_variables_filters.odt',
+            'output_path' => 'samples/output/output_L01_variables_filters.odt',
+            'purpose' => 'Teaches scalar assignment and template-side formatting with filters and ODT line breaks.',
+            'status' => 'canonical',
+            'migration_targets' => [],
+            'distribution' => 'composer',
+            'execution_mode' => 'odt',
+        ],
+        [
+            'id' => 'L02',
+            'title' => 'Conditions',
+            'role' => 'learn',
+            'ownership' => 'simple-template',
+            'entry_point' => 'samples/sample_L02_conditions.php',
+            'template_path' => 'samples/templates/template_L02_conditions.odt',
+            'output_path' => 'samples/output/output_L02_conditions.odt',
+            'purpose' => 'Teaches template-authored if, elseif, else, and ifnot branches.',
+            'status' => 'canonical',
+            'migration_targets' => [],
+            'distribution' => 'composer',
+            'execution_mode' => 'odt',
+        ],
+        [
+            'id' => 'L03',
+            'title' => 'Repeating Content',
+            'role' => 'learn',
+            'ownership' => 'simple-template',
+            'entry_point' => 'samples/sample_L03_repeating_content.php',
+            'template_path' => 'samples/templates/template_L03_repeating_content.odt',
+            'output_path' => 'samples/output/output_L03_repeating_content.odt',
+            'purpose' => 'Teaches assignRepeating() over LibreOffice-authored repeatable paragraphs.',
+            'status' => 'canonical',
+            'migration_targets' => [],
+            'distribution' => 'composer',
+            'execution_mode' => 'odt',
+        ],
         [
             'id' => 'legacy.sample-01.simple-variables',
             'title' => 'Simple Variables (mixed legacy example)',
@@ -22,7 +64,7 @@ return [
             'output_path' => 'samples/output/output_01_simple_variables.odt',
             'purpose' => 'Combines scalar placeholders, repeating rows, and template image insertion.',
             'status' => 'migration',
-            'migration_targets' => ['L01', 'L03', 'L06'],
+            'migration_targets' => ['L06'],
             'distribution' => 'composer',
             'execution_mode' => 'odt',
         ],
@@ -36,7 +78,7 @@ return [
             'output_path' => 'samples/output/output_02_filter.odt',
             'purpose' => 'Demonstrates scalar values, formatting filters, and template conditions.',
             'status' => 'migration',
-            'migration_targets' => ['L01'],
+            'migration_targets' => [],
             'distribution' => 'composer',
             'execution_mode' => 'odt',
         ],
@@ -50,7 +92,7 @@ return [
             'output_path' => 'samples/output/output_03_logic_elements.odt',
             'purpose' => 'Demonstrates conditional template sections.',
             'status' => 'migration',
-            'migration_targets' => ['L02'],
+            'migration_targets' => [],
             'distribution' => 'composer',
             'execution_mode' => 'odt',
         ],
