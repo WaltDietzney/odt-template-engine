@@ -104,6 +104,17 @@ Prefer LibreOffice for stable design decisions such as:
 
 Use `PageLayoutOdtTemplate` when application data or a layout variant genuinely needs to change page geometry.
 
+### Flow is not pagination
+
+Paragraph options such as `keep-with-next`, `keep-together`, `widows`,
+`orphans`, `break-before`, and `break-after` express native paragraph-flow
+intent. They do not select a page style, define page geometry, or calculate
+physical page placement. Writer lays out content and computes pagination.
+The [C01 capability sample](../../samples/sample_C01_page_flow_layout.php)
+contrasts generated paragraph-flow properties with the authored master-page
+succession and page-number field in its template. This does not define a PHP
+page-style API.
+
 ## Why this is a separate class
 
 Page layout changes operate on `styles.xml` and have different responsibilities from normal placeholder replacement. Keeping them in `PageLayoutOdtTemplate` makes that advanced behavior explicit while preserving `OdtTemplate` as the normal entry point.

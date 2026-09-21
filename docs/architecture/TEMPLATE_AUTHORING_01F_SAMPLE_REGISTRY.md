@@ -163,3 +163,20 @@ per-edge cell border/padding examples; Sample 13 retains L07 for spans and
 its broader cell-configuration combinations. Sample 11's remaining target is
 C02 table geometry, while Sample 15's focused styled-table structure is
 represented by L07. C02 targets remain for actual geometry.
+
+## F6 — Capability Showcases (partial canonical layer)
+
+F6 registers C01 Page & Flow Layout, C02 Advanced Table Layout, C03 Frame
+Layout, and C05 Mapping & Automation as Composer-distributed capability
+samples. The existing registry-driven Explorer and smoke test consume their
+explicit entry/template/output paths. Historical samples remain preserved.
+C01 contrasts paragraph-flow intent with Writer-owned master-page succession;
+C02 avoids incompatible positional column-style requirements; C03 uses the
+existing shared `DrawingLayout` API; C05 demonstrates inspection, explicit
+mapping, concrete preflight, common atomic automation, and explicit save.
+
+C04 is intentionally not registered as canonical in this slice. The current
+declarative Section executor is internal and invoked by dependency automation;
+there is no standalone public Phase-D execution surface for a sample that must
+not use Phase-E mapping. Sample 25 remains migration evidence for imperative
+Section collections and the future C04/S01b distinction.
