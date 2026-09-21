@@ -209,6 +209,44 @@ final class SampleRegistryTest extends TestCase
         self::assertSame(['L05'], $legacy['legacy.sample-18.list-styles']['migration_targets']);
     }
 
+    public function testL07AndL08AreCanonicalProgrammaticLearnSamples(): void
+    {
+        $samples = [];
+        foreach ($this->registry()['samples'] as $sample) {
+            $samples[$sample['id']] = $sample;
+        }
+
+        foreach ([
+            'L07' => ['Tables', 'sample_L07_tables.php', 'template_L07_tables.odt', 'output_L07_tables.odt'],
+            'L08' => ['HTML Import', 'sample_L08_html_import.php', 'template_L08_html_import.odt', 'output_L08_html_import.odt'],
+        ] as $id => [$title, $entryPoint, $template, $output]) {
+            $sample = $samples[$id];
+            self::assertSame($title, $sample['title']);
+            self::assertSame('canonical', $sample['status']);
+            self::assertSame('learn', $sample['role']);
+            self::assertSame('programmatic-elements', $sample['ownership']);
+            self::assertSame('composer', $sample['distribution']);
+            self::assertSame('odt', $sample['execution_mode']);
+            self::assertSame('samples/' . $entryPoint, $sample['entry_point']);
+            self::assertSame('samples/templates/' . $template, $sample['template_path']);
+            self::assertSame('samples/output/' . $output, $sample['output_path']);
+            self::assertSame([], $sample['migration_targets']);
+        }
+
+        foreach ([
+            'legacy.sample-08.html' => ['L08'],
+            'legacy.sample-11.table' => ['C02'],
+            'legacy.sample-12.advanced-table' => ['L07'],
+            'legacy.sample-13.cell-settings' => ['L07'],
+            'legacy.sample-15.styled-table' => [],
+            'legacy.sample-19.html-table' => [],
+            'legacy.sample-20.table-ratio' => ['C02'],
+            'legacy.sample-26.table-layout' => ['C02'],
+        ] as $id => $targets) {
+            self::assertSame($targets, $samples[$id]['migration_targets'], $id . ' migration state changed unexpectedly.');
+        }
+    }
+
     public function testSampleExplorerGeneratorRejectsUnregisteredAndRepositoryOnlyEntries(): void
     {
         $unregistered = $this->runGenerator('sample_999_arbitrary');
@@ -232,6 +270,12 @@ final class SampleRegistryTest extends TestCase
             'data-sample="L01"',
             'data-sample="L02"',
             'data-sample="L03"',
+            'data-sample-id="L07"',
+            'data-sample-id="L08"',
+            'Tables',
+            'HTML Import',
+            'data-sample="L07"',
+            'data-sample="L08"',
         ] as $expected) {
             self::assertStringContainsString($expected, $html);
         }

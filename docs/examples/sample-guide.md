@@ -10,10 +10,12 @@ Samples 28 and 29 remain repository-only because their templates are under
 
 ## Canonical Learn path
 
-The first six canonical samples form two steps in the learning path. L01–L03
+The first eight canonical samples form the opening Learn path. L01–L03
 keep document structure in LibreOffice and use PHP to supply data. L04–L06
 retain a LibreOffice-authored shell/insertion point while PHP generates native
-ODT subtrees or image resources where that is the appropriate owner.
+ODT subtrees or image resources where that is the appropriate owner. L07 adds
+native generated tables; L08 adapts substantial controlled HTML into editable
+ODT elements.
 
 | ID | Sample | Learn about |
 | --- | --- | --- |
@@ -23,7 +25,8 @@ ODT subtrees or image resources where that is the appropriate owner.
 | [L04](../../samples/sample_L04_rich_content.php) | Rich Content | [RichText and Paragraph](../rich-documents/richtext-and-paragraphs.md): PHP-generated native paragraphs and inline content |
 | [L05](../../samples/sample_L05_lists.php) | Lists | [Native ODT lists](../rich-documents/lists.md), with numbered steps and a nested bullet-list hierarchy |
 | [L06](../../samples/sample_L06_images.php) | Images | [Image ownership choices](../rich-documents/images.md): replace a template frame or insert an ImageElement |
-
+| [L07](../../samples/sample_L07_tables.php) | Tables | [RichTable and RichTableCell](../rich-documents/tables.md): PHP-generated native editable table structure |
+| [L08](../../samples/sample_L08_html_import.php) | HTML Import | [HtmlImporter](../advanced/html-import.md): substantial controlled HTML translated into native ODT elements |
 L06 intentionally shows two ownership models, not two interchangeable APIs:
 `replaceImageByName()` replaces image content at a frame authored in
 LibreOffice; `ImageElement` creates a new frame/resource as part of the PHP
@@ -143,7 +146,7 @@ That distinction is central to the engine's design.
 
 For **template language**, start with L01–L03 and the Template Language documentation. Samples 01–03 and 10 remain useful migration-era comparisons.
 
-For **programmatic content**, start with L04–L06. Samples 07, 09, 14, 16, and 18 remain migration-era comparisons for specialized tab layouts, richer mixed blocks, and historical image options. Sample 21 shows these elements in a larger professional document.
+For **programmatic content**, start with L04–L08. Samples 07, 09, 14, 16, and 18 remain migration-era comparisons for specialized tab/paragraph layouts, mixed blocks, and historical list patterns. Sample 08 and Sample 19 remain registered as historical L08 lineage; neither was deleted.
 
 For **addressable native ODT structures**, start with Sample 22, continue with 23 and 24, and then study Sample 25 together with [Addressable ODT Structures](../rich-documents/addressable-document.md) and [Named Sections](../rich-documents/named-sections.md).
 

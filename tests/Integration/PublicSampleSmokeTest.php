@@ -152,6 +152,47 @@ final class PublicSampleSmokeTest extends TestCase
                 self::assertNotFalse($archive->locateName('Pictures/Logo.png'));
                 self::assertNotFalse($archive->locateName('Pictures/banner.png'));
             }
+            if ($sample['id'] === 'L07') {
+                $content = $archive->getFromName('content.xml');
+                self::assertIsString($content);
+                self::assertStringNotContainsString('{{', $content, 'L07 left its insertion marker unresolved.');
+                $xpath = $this->contentXPath($content);
+                self::assertCount(1, $xpath->query('//table:table'));
+                self::assertCount(4, $xpath->query('//table:table/table:table-header-rows/table:table-row | //table:table/table:table-row'));
+                self::assertCount(3, $xpath->query('//table:table-header-rows/table:table-row/table:table-cell'));
+                self::assertStringContainsString('Requirements', $content);
+                self::assertStringContainsString('Scope and stakeholders', $content);
+                self::assertStringContainsString('In progress', $content);
+                self::assertGreaterThanOrEqual(1, $xpath->query('//table:table-cell[@table:style-name]')->length);
+            }
+            if ($sample['id'] === 'L08') {
+                $content = $archive->getFromName('content.xml');
+                $manifest = $archive->getFromName('META-INF/manifest.xml');
+                self::assertIsString($content);
+                self::assertIsString($manifest);
+                self::assertStringNotContainsString('{{', $content, 'L08 left its insertion marker unresolved.');
+                $xpath = $this->contentXPath($content);
+                self::assertGreaterThanOrEqual(2, $xpath->query('//text:p')->length);
+                self::assertGreaterThanOrEqual(2, $xpath->query('//text:p[@text:style-name="Heading 1" or @text:style-name="Heading 2"]')->length);
+                self::assertGreaterThan(0, $xpath->query('//text:span[@text:style-name]')->length);
+                self::assertCount(1, $xpath->query('//text:a[@xlink:href="https://example.com/aurora"]'));
+                self::assertGreaterThan(0, $xpath->query('//text:line-break')->length);
+                self::assertGreaterThanOrEqual(2, $xpath->query('//text:list')->length);
+                self::assertGreaterThan(0, $xpath->query('//text:list[@text:style-name="Numbering_20_Symbol"]')->length);
+                self::assertGreaterThan(0, $xpath->query('//text:list[@text:style-name="Bullet_20_Symbol"]')->length);
+                self::assertCount(1, $xpath->query('//table:table'));
+                self::assertGreaterThanOrEqual(3, $xpath->query('//table:table-row')->length);
+                self::assertGreaterThanOrEqual(9, $xpath->query('//table:table-cell')->length);
+                self::assertStringContainsString('Contributor', $content);
+                self::assertStringContainsString('Implementation notes:', $content);
+                self::assertCount(2, $xpath->query('//draw:frame/draw:image'));
+
+                foreach ($xpath->query('//draw:frame/draw:image/@xlink:href') as $href) {
+                    $resource = (string) $href->nodeValue;
+                    self::assertNotFalse($archive->locateName($resource), 'L08 image resource is missing: ' . $resource);
+                    self::assertStringContainsString(basename($resource), $manifest);
+                }
+            }
             $archive->close();
         }
 
@@ -245,6 +286,7 @@ final class PublicSampleSmokeTest extends TestCase
             'draw' => 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0',
             'xlink' => 'http://www.w3.org/1999/xlink',
             'svg' => 'urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0',
+            'table' => 'urn:oasis:names:tc:opendocument:xmlns:table:1.0',
         ];
         foreach ($namespaces as $prefix => $namespace) {
             $xpath->registerNamespace($prefix, $namespace);
