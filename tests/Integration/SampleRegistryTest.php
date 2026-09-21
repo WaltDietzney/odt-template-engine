@@ -247,6 +247,37 @@ final class SampleRegistryTest extends TestCase
         }
     }
 
+    public function testL09ThroughL11AreCanonicalSamplesWithNativeOwnershipAndInspectionMode(): void
+    {
+        $samples = [];
+        foreach ($this->registry()['samples'] as $sample) {
+            $samples[$sample['id']] = $sample;
+        }
+
+        foreach ([
+            'L09' => ['Native Objects', 'addressable-native-odt', 'sample_L09_native_objects.php', 'template_L09_native_objects.odt', 'output_L09_native_objects.odt', 'odt'],
+            'L10' => ['Writer User Fields', 'addressable-native-odt', 'sample_L10_writer_user_fields.php', 'template_L10_writer_user_fields.odt', 'output_L10_writer_user_fields.odt', 'odt'],
+            'L11' => ['Template Inspection', 'mixed', 'sample_L11_template_inspection.php', 'template_L11_template_inspection.odt', null, 'inspection'],
+        ] as $id => [$title, $ownership, $entry, $template, $output, $mode]) {
+            $sample = $samples[$id];
+            self::assertSame($title, $sample['title']);
+            self::assertSame('canonical', $sample['status']);
+            self::assertSame('learn', $sample['role']);
+            self::assertSame($ownership, $sample['ownership']);
+            self::assertSame('composer', $sample['distribution']);
+            self::assertSame($mode, $sample['execution_mode']);
+            self::assertSame('samples/' . $entry, $sample['entry_point']);
+            self::assertSame('samples/templates/' . $template, $sample['template_path']);
+            self::assertSame($output === null ? null : 'samples/output/' . $output, $sample['output_path']);
+            self::assertSame([], $sample['migration_targets']);
+        }
+
+        self::assertSame(['L11'], $samples['legacy.sample-28.template-inspection']['migration_targets']);
+        self::assertSame(['L10'], $samples['legacy.sample-29.user-field-binding']['migration_targets']);
+        self::assertSame(['L09', 'L06'], $samples['legacy.sample-24.section-image-replacement']['migration_targets']);
+        self::assertSame(['C04', 'S01b'], $samples['legacy.sample-25.section-instantiation']['migration_targets']);
+    }
+
     public function testSampleExplorerGeneratorRejectsUnregisteredAndRepositoryOnlyEntries(): void
     {
         $unregistered = $this->runGenerator('sample_999_arbitrary');
@@ -254,6 +285,9 @@ final class SampleRegistryTest extends TestCase
 
         $repositoryOnly = $this->runGenerator('legacy.sample-29.user-field-binding');
         self::assertStringContainsString('not a self-contained packaged ODT example', $repositoryOnly);
+
+        $inspectionOnly = $this->runGenerator('L11');
+        self::assertStringContainsString('not a self-contained packaged ODT example', $inspectionOnly);
     }
 
     public function testSampleExplorerPresentsCanonicalLearnEntriesFromTheRegistry(): void
@@ -272,10 +306,19 @@ final class SampleRegistryTest extends TestCase
             'data-sample="L03"',
             'data-sample-id="L07"',
             'data-sample-id="L08"',
+            'data-sample-id="L09"',
+            'data-sample-id="L10"',
+            'data-sample-id="L11"',
             'Tables',
             'HTML Import',
+            'Native Objects',
+            'Writer User Fields',
+            'Template Inspection',
             'data-sample="L07"',
             'data-sample="L08"',
+            'data-sample="L09"',
+            'data-sample="L10"',
+            'Inspection only · no generated ODT.',
         ] as $expected) {
             self::assertStringContainsString($expected, $html);
         }

@@ -293,8 +293,10 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
                     <div class="card-actions">
                         <?php if ($canGenerate): ?>
                             <button class="button generate-button" type="button" data-sample="<?= htmlspecialchars($sampleEntry['id'], ENT_QUOTES, 'UTF-8') ?>">Generate &amp; download ODT</button>
+                        <?php elseif ($sampleEntry['execution_mode'] === 'inspection'): ?>
+                            <p class="meta-pill">Inspection only · no generated ODT.</p>
                         <?php else: ?>
-                            <p class="meta-pill">Repository-only <?= $sampleEntry['execution_mode'] === 'inspection' ? 'inspection sample; no ODT output.' : 'sample; template is excluded from the Composer archive.' ?></p>
+                            <p class="meta-pill">Repository-only sample; template is excluded from the Composer archive.</p>
                         <?php endif; ?>
                     </div>
                 </article>
