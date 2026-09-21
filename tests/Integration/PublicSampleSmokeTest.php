@@ -262,6 +262,33 @@ final class PublicSampleSmokeTest extends TestCase
                 self::assertStringContainsString('Pictures/Logo.png', $manifest);
                 self::assertNotFalse($archive->locateName('Pictures/Logo.png'));
             }
+            if ($sample['id'] === 'C04') {
+                $content = $archive->getFromName('content.xml');
+                $styles = $archive->getFromName('styles.xml');
+                self::assertIsString($content);
+                self::assertIsString($styles);
+                self::assertStringNotContainsString('text:name="#foreach:projects"', $content);
+                self::assertStringNotContainsString('text:name="#foreach:milestones"', $content);
+                self::assertStringContainsString('text:name="#foreach:projects_1"', $content);
+                self::assertStringContainsString('text:name="#foreach:projects_2"', $content);
+                self::assertStringContainsString('text:name="#foreach:milestones_1_1"', $content);
+                self::assertStringContainsString('text:name="#foreach:milestones_1_2"', $content);
+                self::assertStringContainsString('text:name="#foreach:milestones_2_1"', $content);
+                self::assertStringContainsString('Aurora', $content);
+                self::assertStringContainsString('Beacon', $content);
+                self::assertStringContainsString('Status: ON TRACK', $content);
+                self::assertStringContainsString('Status: PLANNED', $content);
+                self::assertStringContainsString('FEATURED PROJECT', $content);
+                self::assertStringContainsString('Current roadmap', $content);
+                self::assertStringNotContainsString('FEATURED PROJECT', substr($content, strpos($content, 'Beacon')));
+                self::assertStringNotContainsString('Current roadmap', substr($content, strpos($content, 'Beacon')));
+                self::assertLessThan(strpos($content, 'Beacon'), strpos($content, 'Aurora'));
+                self::assertLessThan(strpos($content, 'Template review'), strpos($content, 'Discovery complete'));
+                self::assertStringContainsString('style-name="Heading_20_2"', $content);
+                self::assertStringContainsString('Body_20_Text.foot', $content);
+                self::assertStringContainsString('style:name="Heading_20_2"', $styles);
+                self::assertStringNotContainsString('{{', $content);
+            }
             if ($sample['id'] === 'C05') {
                 $content = $archive->getFromName('content.xml');
                 $metadata = $archive->getFromName('meta.xml');

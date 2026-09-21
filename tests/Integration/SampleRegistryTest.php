@@ -289,6 +289,7 @@ final class SampleRegistryTest extends TestCase
             'C01' => ['Page & Flow Layout', 'mixed', 'page_flow_layout'],
             'C02' => ['Advanced Table Layout', 'programmatic-elements', 'advanced_table_layout'],
             'C03' => ['Frame Layout', 'programmatic-elements', 'frame_layout'],
+            'C04' => ['Declarative Structured Collections', 'addressable-native-odt', 'declarative_structured_collections'],
             'C05' => ['Mapping & Automation', 'mixed', 'mapping_automation'],
         ] as $id => [$title, $ownership, $slug]) {
             $sample = $samples[$id];
@@ -304,13 +305,38 @@ final class SampleRegistryTest extends TestCase
             self::assertSame([], $sample['migration_targets']);
         }
 
-        self::assertArrayNotHasKey('C04', $samples, 'C04 needs a public declarative Phase-D entry point before canonical publication.');
         self::assertSame(['C02'], $samples['legacy.sample-11.table']['migration_targets']);
         self::assertSame(['C03'], $samples['legacy.sample-17.text-field']['migration_targets']);
         self::assertSame(['C02'], $samples['legacy.sample-20.table-ratio']['migration_targets']);
-        self::assertSame(['C04', 'S01b'], $samples['legacy.sample-25.section-instantiation']['migration_targets']);
         self::assertSame(['C02'], $samples['legacy.sample-26.table-layout']['migration_targets']);
         self::assertSame(['C03'], $samples['legacy.sample-27.frame-layout']['migration_targets']);
+        self::assertSame(['C04', 'S01b'], $samples['legacy.sample-25.section-instantiation']['migration_targets']);
+    }
+
+    public function testC04TemplateContainsNativeNestedSectionControls(): void
+    {
+        $archive = new \ZipArchive();
+        self::assertTrue($archive->open($this->path('samples/templates/template_C04_declarative_structured_collections.odt')) === true);
+        $content = $archive->getFromName('content.xml');
+        $styles = $archive->getFromName('styles.xml');
+        $archive->close();
+        self::assertIsString($content);
+        self::assertIsString($styles);
+
+        $dom = new \DOMDocument();
+        self::assertTrue($dom->loadXML($content));
+        $xpath = new \DOMXPath($dom);
+        $xpath->registerNamespace('text', 'urn:oasis:names:tc:opendocument:xmlns:text:1.0');
+        self::assertSame(1, $xpath->query('//text:section[@text:name="#foreach:projects"]')->length);
+        self::assertSame(1, $xpath->query('//text:section[@text:name="#if:featured"]')->length);
+        self::assertSame(1, $xpath->query('//text:section[@text:name="#ifnot:archived"]')->length);
+        self::assertSame(1, $xpath->query('//text:section[@text:name="#foreach:milestones"]')->length);
+        self::assertSame(
+            1,
+            $xpath->query('//text:section[@text:name="#foreach:projects"]/text:section[@text:name="#foreach:milestones"]')->length
+        );
+        self::assertStringContainsString('Heading_20_2', $styles);
+        self::assertStringContainsString('Body_20_Text.foot', $content);
     }
 
     public function testSampleExplorerGeneratorRejectsUnregisteredAndRepositoryOnlyEntries(): void
@@ -352,10 +378,12 @@ final class SampleRegistryTest extends TestCase
             'data-sample-id="C01"',
             'data-sample-id="C02"',
             'data-sample-id="C03"',
+            'data-sample-id="C04"',
             'data-sample-id="C05"',
             'Page &amp; Flow Layout',
             'Advanced Table Layout',
             'Frame Layout',
+            'Declarative Structured Collections',
             'Mapping &amp; Automation',
             'data-sample="L07"',
             'data-sample="L08"',

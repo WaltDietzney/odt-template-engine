@@ -34,17 +34,20 @@ the original template contract without producing an output document.
 
 ## Canonical capability samples
 
-The capability layer adds native ODF behavior above the Learn path. C01, C02,
-C03, and C05 are canonical today; C04 remains deferred because the existing
-declarative Section executor has no standalone public Phase-D entry point that
-avoids invoking the Phase-E mapping path.
+The capability layer adds native ODF behavior above the Learn path.
 
 | ID | Sample | Additional capability |
 | --- | --- | --- |
 | [C01](../../samples/sample_C01_page_flow_layout.php) | Page & Flow Layout | Paragraph-flow intent with Writer-owned page/master-page structure; Writer computes pagination |
 | [C02](../../samples/sample_C02_advanced_table_layout.php) | Advanced Table Layout | Whole-table geometry, relative column proportions, row geometry, and separate vertical/horizontal alignment |
 | [C03](../../samples/sample_C03_frame_layout.php) | Frame Layout | Shared frame-layout semantics for floating and as-character text/image elements |
+| [C04](../../samples/sample_C04_declarative_structured_collections.php) | Declarative Structured Collections | Direct Phase-D execution of Writer-authored nested Sections with template-shaped data |
 | [C05](../../samples/sample_C05_mapping_automation.php) | Mapping & Automation | Explicit mapping, concrete preflight, and common atomic Phase-E execution |
+
+C04 and C05 intentionally take different data paths: C04 passes values already
+named like the template's dependencies to `executeDeclarative()`; C05 maps
+application-shaped names through MappingDefinition, preflights them, and then
+uses atomic `automate()`.
 L06 intentionally shows two ownership models, not two interchangeable APIs:
 `replaceImageByName()` replaces image content at a frame authored in
 LibreOffice; `ImageElement` creates a new frame/resource as part of the PHP

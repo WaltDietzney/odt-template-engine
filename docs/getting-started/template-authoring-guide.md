@@ -16,10 +16,13 @@ application code unless the content is genuinely application-generated.
 The canonical progression is [Learn samples L01–L11](../examples/sample-guide.md)
 followed by capability examples C01–C05, then professional showcases S01–S03.
 Learn samples introduce one authoring concept at a time; capability samples
-show the additional native ODF behavior each capability contributes. The
-capability layer is still migrating: C04 is not yet a canonical public sample.
+show the additional native ODF behavior each capability contributes.
 Inspection and mapping/automation are integration layers over the three
 authoring models, not a fourth model.
+
+C04 executes inspected Writer-authored Sections directly with template-shaped
+values via `executeDeclarative()`. C05 accepts application-shaped data and
+deliberately maps it to the template contract before atomic `automate()`.
 
 ## Fixed, variable, and repeatable content
 
