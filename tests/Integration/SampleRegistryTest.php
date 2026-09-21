@@ -168,6 +168,47 @@ final class SampleRegistryTest extends TestCase
         self::assertSame([], $samples['legacy.sample-03.logic-elements']['migration_targets']);
     }
 
+    public function testL04ThroughL06AreCanonicalProgrammaticLearnSamples(): void
+    {
+        $samples = [];
+        foreach ($this->registry()['samples'] as $sample) {
+            $samples[$sample['id']] = $sample;
+        }
+
+        $expected = [
+            'L04' => ['programmatic-elements', 'sample_L04_rich_content.php', 'template_L04_rich_content.odt', 'output_L04_rich_content.odt'],
+            'L05' => ['programmatic-elements', 'sample_L05_lists.php', 'template_L05_lists.odt', 'output_L05_lists.odt'],
+            'L06' => ['mixed', 'sample_L06_images.php', 'template_L06_images.odt', 'output_L06_images.odt'],
+        ];
+
+        foreach ($expected as $id => [$ownership, $entry, $template, $output]) {
+            $sample = $samples[$id];
+            self::assertSame('canonical', $sample['status']);
+            self::assertSame('learn', $sample['role']);
+            self::assertSame($ownership, $sample['ownership']);
+            self::assertSame('composer', $sample['distribution']);
+            self::assertSame('odt', $sample['execution_mode']);
+            self::assertSame('samples/' . $entry, $sample['entry_point']);
+            self::assertSame('samples/templates/' . $template, $sample['template_path']);
+            self::assertSame('samples/output/' . $output, $sample['output_path']);
+            self::assertSame([], $sample['migration_targets']);
+        }
+
+        $legacy = [];
+        foreach ($this->registry()['samples'] as $sample) {
+            $legacy[$sample['id']] = $sample;
+        }
+        self::assertSame(['L06'], $legacy['legacy.sample-01.simple-variables']['migration_targets']);
+        self::assertSame(['L06'], $legacy['legacy.sample-05.replace-image']['migration_targets']);
+        self::assertSame(['L06'], $legacy['legacy.sample-05b.replace-images']['migration_targets']);
+        self::assertSame(['L06'], $legacy['legacy.sample-06.image-settings']['migration_targets']);
+        self::assertSame(['L04'], $legacy['legacy.sample-07.contact-list']['migration_targets']);
+        self::assertSame(['L04', 'L05'], $legacy['legacy.sample-09.richtext-block']['migration_targets']);
+        self::assertSame(['L04', 'L06', 'S02'], $legacy['legacy.sample-14.advanced-tabs']['migration_targets']);
+        self::assertSame(['L04', 'C03'], $legacy['legacy.sample-16.tabs-basic']['migration_targets']);
+        self::assertSame(['L05'], $legacy['legacy.sample-18.list-styles']['migration_targets']);
+    }
+
     public function testSampleExplorerGeneratorRejectsUnregisteredAndRepositoryOnlyEntries(): void
     {
         $unregistered = $this->runGenerator('sample_999_arbitrary');

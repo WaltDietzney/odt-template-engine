@@ -236,6 +236,7 @@ This keeps application data separate from ODT rendering and prevents the LibreOf
 
 ## Related samples
 
+- [L04 — Rich Content](../../samples/sample_L04_rich_content.php) builds several native `Paragraph` objects in a `RichText` block and inserts them into a template-owned placeholder.
 - Sample 07 — paragraphs and tabular lines
 - Sample 09 — RichText blocks and paragraph styling
 - Sample 14 — advanced tabs, margins, borders, and paragraph styles

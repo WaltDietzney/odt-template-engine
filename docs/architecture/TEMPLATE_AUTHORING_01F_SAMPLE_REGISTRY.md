@@ -74,3 +74,39 @@ depending on Writer splitting template expressions across styled spans.
 The Sample Explorer and generator needed no F2-specific discovery logic:
 their F1 registry-driven metadata automatically exposes the three canonical
 Learn samples and their explicit paths.
+
+## F3 — Programmatic Content Fundamentals
+
+F3 adds canonical `L04` Rich Content and `L05` Lists as
+`programmatic-elements` samples, and `L06` Images as a `mixed` ownership
+sample. L04/L05 keep a LibreOffice-authored document shell and insertion point
+while PHP supplies native `RichText`/`Paragraph` or `ListElement` structures.
+L06 distinguishes replacement of an existing LibreOffice-authored named
+image frame from insertion of a PHP-generated `ImageElement`. Its
+placeholder-oriented `setImage()` API remains documented as a distinct
+convenience path, not presented as an equivalent third ownership model.
+
+Migration targets were updated conservatively. Sample 18 retains an L05
+target for its mixed-style nested-list example, which is not promoted as a
+stable canonical visual pattern. Samples 01, 05, 05b, and 06 retain L06
+targets because their placeholder image insertion, width-only legacy sizing,
+or multiple-frame behaviors are not all demonstrated by the small canonical
+sample. Samples 07, 09, 14, and 16 retain
+targets for specialized tab/paragraph or mixed-content behavior. Sample 14
+also retains L06 for its placeholder-oriented `setImage()` path and S02 for
+its integrated metadata/business-document concerns; Sample 16 points to C03
+for layout-oriented image positioning. No legacy sample or template is deleted
+in F3.
+
+Visual characterization found that a nested `ListElement` with a different
+type from its parent can be structurally nested but LibreOffice may display
+the child using the surrounding numbering style. L05 therefore uses numbered
+steps separately and a homogeneous nested bullet hierarchy; mixed-style
+nesting remains an explicitly unpromised layout combination and Sample 18 is
+retained for later review rather than declared fully migrated.
+
+LibreOffice headless open/save/reopen of the three generated outputs retained
+the visible paragraphs, nested lists, and both L06 images. Writer normalized
+list-style identifiers and renamed embedded image resources; the resulting
+image references and manifest entries remained consistent. These are package
+normalizations, not changes to the sample's ownership semantics.
