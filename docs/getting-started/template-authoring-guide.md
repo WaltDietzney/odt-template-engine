@@ -259,6 +259,14 @@ spaces or manually typed bullet characters when the list should grow.
 See [Lists](../rich-documents/lists.md) and
 [Tables](../rich-documents/tables.md) for element-level guidance.
 
+The canonical Learn path makes the ownership progression explicit: L01–L03
+use LibreOffice-authored structure with PHP-supplied values; L04–L06 use a
+LibreOffice-authored shell/insertion point with PHP-generated native content
+or image resources. Start with [L04 Rich Content](../../samples/sample_L04_rich_content.php),
+[L05 Lists](../../samples/sample_L05_lists.php), or
+[L06 Images](../../samples/sample_L06_images.php) according to the structure
+PHP needs to own.
+
 ## Images and semantic elements
 
 Choose who owns the image position:

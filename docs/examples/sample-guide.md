@@ -10,16 +10,25 @@ Samples 28 and 29 remain repository-only because their templates are under
 
 ## Canonical Learn path
 
-These first three canonical samples progress from displaying values, to
-choosing template-authored content, to repeating template-authored structure.
-All three use the simple-template ownership model: LibreOffice owns the
-document structure and PHP supplies data.
+The first six canonical samples form two steps in the learning path. L01–L03
+keep document structure in LibreOffice and use PHP to supply data. L04–L06
+retain a LibreOffice-authored shell/insertion point while PHP generates native
+ODT subtrees or image resources where that is the appropriate owner.
 
 | ID | Sample | Learn about |
 | --- | --- | --- |
 | [L01](../../samples/sample_L01_variables_filters.php) | Variables & Filters | [`assign()` and filters](../template-language/variables-and-filters.md), including ODT line breaks |
 | [L02](../../samples/sample_L02_conditions.php) | Conditions | [`if`, `elseif`, `else`, and `ifnot`](../template-language/conditions-and-loops.md) |
 | [L03](../../samples/sample_L03_repeating_content.php) | Repeating Content | [`assignRepeating()` and `foreach`](../template-language/conditions-and-loops.md#repeating-blocks) |
+| [L04](../../samples/sample_L04_rich_content.php) | Rich Content | [RichText and Paragraph](../rich-documents/richtext-and-paragraphs.md): PHP-generated native paragraphs and inline content |
+| [L05](../../samples/sample_L05_lists.php) | Lists | [Native ODT lists](../rich-documents/lists.md), with numbered steps and a nested bullet-list hierarchy |
+| [L06](../../samples/sample_L06_images.php) | Images | [Image ownership choices](../rich-documents/images.md): replace a template frame or insert an ImageElement |
+
+L06 intentionally shows two ownership models, not two interchangeable APIs:
+`replaceImageByName()` replaces image content at a frame authored in
+LibreOffice; `ImageElement` creates a new frame/resource as part of the PHP
+generated subtree. `setImage()` remains a placeholder-oriented convenience
+path documented with the image APIs, not a third equal model in this sample.
 
 ## Migration-era numbered samples
 
@@ -134,7 +143,7 @@ That distinction is central to the engine's design.
 
 For **template language**, start with L01–L03 and the Template Language documentation. Samples 01–03 and 10 remain useful migration-era comparisons.
 
-For **rich generated content**, read Samples 09, 14, and 18 before moving to Sample 21.
+For **programmatic content**, start with L04–L06. Samples 07, 09, 14, 16, and 18 remain migration-era comparisons for specialized tab layouts, richer mixed blocks, and historical image options. Sample 21 shows these elements in a larger professional document.
 
 For **addressable native ODT structures**, start with Sample 22, continue with 23 and 24, and then study Sample 25 together with [Addressable ODT Structures](../rich-documents/addressable-document.md) and [Named Sections](../rich-documents/named-sections.md).
 

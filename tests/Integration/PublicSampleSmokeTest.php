@@ -112,6 +112,46 @@ final class PublicSampleSmokeTest extends TestCase
                     self::assertStringNotContainsString('{{#endforeach}}', $content);
                 }
             }
+            if ($sample['id'] === 'L04') {
+                $content = $archive->getFromName('content.xml');
+                self::assertIsString($content);
+                self::assertStringNotContainsString('{{', $content, 'L04 left its insertion marker unresolved.');
+                $xpath = $this->contentXPath($content);
+                self::assertCount(4, $xpath->query('//text:p[contains(., "Project:") or contains(., "Status:") or contains(., "Summary:") or contains(., "More information:")]'));
+                self::assertCount(1, $xpath->query('//text:a[@xlink:href="https://example.com/aurora"]'));
+                self::assertCount(1, $xpath->query('//text:line-break'));
+                self::assertGreaterThanOrEqual(1, $xpath->query('//text:span[@text:style-name]')->length);
+            }
+            if ($sample['id'] === 'L05') {
+                $content = $archive->getFromName('content.xml');
+                self::assertIsString($content);
+                self::assertStringNotContainsString('{{', $content, 'L05 left its insertion marker unresolved.');
+                $xpath = $this->contentXPath($content);
+                self::assertGreaterThanOrEqual(5, $xpath->query('//text:list')->length);
+                self::assertGreaterThan(3, $xpath->query('//text:list-item')->length);
+                self::assertGreaterThan(0, $xpath->query('//text:list[text:list-item/text:list]')->length);
+                self::assertGreaterThan(0, $xpath->query('//text:list[@text:style-name="Numbering_20_Symbol"]')->length);
+                self::assertGreaterThan(0, $xpath->query('//text:list[@text:style-name="Bullet_20_Symbol"][parent::text:list-item]')->length);
+                self::assertStringContainsString('Prepare the project', $content);
+                self::assertStringContainsString('Create the template', $content);
+                self::assertStringNotContainsString('•', $content, 'L05 must use native lists, not typed bullet characters.');
+                self::assertStringNotContainsString('1. Prepare the project', $content, 'L05 must use native numbering, not typed numbers.');
+            }
+            if ($sample['id'] === 'L06') {
+                $content = $archive->getFromName('content.xml');
+                $manifest = $archive->getFromName('META-INF/manifest.xml');
+                self::assertIsString($content);
+                self::assertIsString($manifest);
+                self::assertStringNotContainsString('{{', $content, 'L06 left its insertion marker unresolved.');
+                $xpath = $this->contentXPath($content);
+                self::assertCount(1, $xpath->query('//draw:frame[@draw:name="LearnTemplatePosition"]/draw:image[@xlink:href="Pictures/Logo.png"]'));
+                self::assertCount(1, $xpath->query('//draw:frame[draw:image[@xlink:href="Pictures/banner.png"]]'));
+                self::assertCount(1, $xpath->query('//draw:frame[@draw:name="LearnTemplatePosition"][@svg:width="4.5cm"][@svg:height="2.4cm"]'));
+                self::assertStringContainsString('Pictures/Logo.png', $manifest);
+                self::assertStringContainsString('Pictures/banner.png', $manifest);
+                self::assertNotFalse($archive->locateName('Pictures/Logo.png'));
+                self::assertNotFalse($archive->locateName('Pictures/banner.png'));
+            }
             $archive->close();
         }
 
@@ -193,6 +233,24 @@ final class PublicSampleSmokeTest extends TestCase
         ksort($snapshot);
 
         return $snapshot;
+    }
+
+    private function contentXPath(string $content): \DOMXPath
+    {
+        $dom = new \DOMDocument();
+        self::assertTrue($dom->loadXML($content));
+        $xpath = new \DOMXPath($dom);
+        $namespaces = [
+            'text' => 'urn:oasis:names:tc:opendocument:xmlns:text:1.0',
+            'draw' => 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0',
+            'xlink' => 'http://www.w3.org/1999/xlink',
+            'svg' => 'urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0',
+        ];
+        foreach ($namespaces as $prefix => $namespace) {
+            $xpath->registerNamespace($prefix, $namespace);
+        }
+
+        return $xpath;
     }
 
     private function removeDirectory(string $directory): void
