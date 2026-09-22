@@ -133,7 +133,8 @@ foreach ([
     ['name' => 'Stakeholder engagement', 'level' => 4],
 ] as $skill) {
     $rating = str_repeat('★', $skill['level']) . str_repeat('☆', 5 - $skill['level']);
-    // Alignment is template-owned: S01bSidebarSkill defines the 5.2cm tab stop.\n    $paragraph = new Paragraph('S01bSidebarSkill');
+    // Alignment is template-owned: S01bSidebarSkill defines the 5.2cm tab stop.
+    $paragraph = new Paragraph('S01bSidebarSkill');
     $paragraph->addText($skill['name'])->addTab()->addText($rating);
     $sidebarPage1->addParagraph($paragraph);
 }
