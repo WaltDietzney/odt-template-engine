@@ -12,6 +12,12 @@ use OdtTemplateEngine\OdtTemplate;
 
 $template = new OdtTemplate(__DIR__ . '/templates/template_S01b_cv_structured.odt');
 
+$template->setDocumentDefaults([
+    'text' => [
+        'font-family' => 'Arial',
+    ],
+]);
+
 $cv = [
     'personal' => [
         'first_name' => 'Andrew',
@@ -79,25 +85,17 @@ $cv = [
     ],
 ];
 
-/** @param array<string, mixed> $textStyle */
-function cvParagraph(string $text, array $textStyle = [], ?string $paragraphStyle = null): Paragraph
+function cvParagraph(string $text, ?string $paragraphStyle = null): Paragraph
 {
     $paragraph = new Paragraph($paragraphStyle);
-    $paragraph->addText($text, array_merge([
-        'font-family' => 'Lato',
-    ], $textStyle));
+    $paragraph->addText($text);
 
     return $paragraph;
 }
 
 function addSidebarHeading(RichText $sidebar, string $heading): void
 {
-    $sidebar->addParagraph(cvParagraph($heading, [
-        'bold' => true,
-        'font-family' => 'Arial',
-        'font-size' => '8.5pt',
-        'color' => '#ffffff',
-    ], 'S01bSidebarHeading'));
+    $sidebar->addParagraph(cvParagraph($heading, 'S01bSidebarHeading'));
 }
 
 /** @param list<string> $items */
@@ -106,67 +104,16 @@ function addSidebarList(RichText $sidebar, string $heading, array $items): void
     addSidebarHeading($sidebar, $heading);
     $list = new ListElement('bullet');
     foreach ($items as $item) {
-        $list->addItem(cvParagraph($item, [
-            'font-family' => 'Arial',
-            'font-size' => '8pt',
-            'color' => '#ffffff',
-        ], 'S01bSidebarLine'));
+        $list->addItem(cvParagraph($item, 'S01bSidebarListItem'));
     }
     $sidebar->addElement($list);
 }
 
-foreach ([
-    'S01bSidebarName' => [
-        'margin-bottom' => '0.08cm',
-        'line-height' => '100%',
-        'font-family' => 'Lato',
-        'font-size' => '14pt',
-        'bold' => true,
-        'color' => '#ffffff',
-    ],
-    'S01bSidebarHeading' => [
-        'margin-top' => '0.16cm',
-        'margin-bottom' => '0.04cm',
-        'line-height' => '100%',
-        'font-family' => 'Lato',
-        'font-size' => '8.5pt',
-        'bold' => true,
-        'color' => '#ffffff',
-    ],
-    'S01bSidebarLine' => [
-        'margin-bottom' => '0.02cm',
-        'line-height' => '105%',
-        'font-family' => 'Lato',
-        'font-size' => '8pt',
-        'color' => '#ffffff',
-    ],
-] as $styleName => $styleOptions) {
-    $template->styles()->defineParagraph($styleName, $styleOptions);
-}
-
 $sidebarPage1 = new RichText();
-$sidebarPage1->addParagraph(cvParagraph('ANDREW THOMPSON', [
-    'bold' => true,
-    'font-family' => 'Arial',
-    'font-size' => '14pt',
-    'color' => '#ffffff',
-], 'S01bSidebarName'));
 addSidebarHeading($sidebarPage1, 'CONTACT');
-$sidebarPage1->addParagraph(cvParagraph($cv['personal']['email'], [
-    'font-family' => 'Arial',
-    'font-size' => '8pt',
-    'color' => '#ffffff',
-], 'S01bSidebarLine'));
-$sidebarPage1->addParagraph(cvParagraph($cv['personal']['phone'], [
-    'font-family' => 'Arial',
-    'font-size' => '8pt',
-    'color' => '#ffffff',
-], 'S01bSidebarLine'));
-$sidebarPage1->addParagraph(cvParagraph($cv['personal']['city'], [
-    'font-family' => 'Arial',
-    'font-size' => '8pt',
-    'color' => '#ffffff',
-], 'S01bSidebarLine'));
+$sidebarPage1->addParagraph(cvParagraph($cv['personal']['email'], 'S01bSidebarLine'));
+$sidebarPage1->addParagraph(cvParagraph($cv['personal']['phone'], 'S01bSidebarLine'));
+$sidebarPage1->addParagraph(cvParagraph($cv['personal']['city'], 'S01bSidebarLine'));
 addSidebarList($sidebarPage1, 'PLUS POINTS', [
     'Strategic project leadership',
     'International team coordination',
@@ -184,17 +131,8 @@ foreach ([
     ['name' => 'Stakeholder engagement', 'level' => 4],
 ] as $skill) {
     $rating = str_repeat('★', $skill['level']) . str_repeat('☆', 5 - $skill['level']);
-    $paragraph = new Paragraph('S01bSidebarLine');
-    $paragraph->addText($skill['name'] . '  ', [
-        'font-family' => 'Arial',
-        'font-size' => '8pt',
-        'color' => '#ffffff',
-    ]);
-    $paragraph->addText($rating, [
-        'font-family' => 'Arial',
-        'font-size' => '8pt',
-        'color' => '#B9D7EA',
-    ]);
+    $paragraph = new Paragraph('S01bSidebarSkill');
+    $paragraph->addText($skill['name'])->addTab()->addText($rating);
     $sidebarPage1->addParagraph($paragraph);
 }
 
@@ -208,32 +146,15 @@ addSidebarList($sidebarPage1, 'LANGUAGES', [
 ]);
 
 $sidebarPage2 = new RichText();
-$sidebarPage2->addParagraph(cvParagraph('ANDREW THOMPSON', [
-    'bold' => true,
-    'font-family' => 'Arial',
-    'font-size' => '14pt',
-    'color' => '#ffffff',
-], 'S01bSidebarName'));
-$sidebarPage2->addParagraph(cvParagraph('Senior Project Manager', [
-    'font-family' => 'Arial',
-    'font-size' => '8pt',
-    'color' => '#ffffff',
-], 'S01bSidebarLine'));
-$sidebarPage2->addParagraph(cvParagraph($cv['personal']['email'], [
-    'font-family' => 'Arial',
-    'font-size' => '8pt',
-    'color' => '#ffffff',
-], 'S01bSidebarLine'));
-$sidebarPage2->addParagraph(cvParagraph($cv['personal']['phone'], [
-    'font-family' => 'Arial',
-    'font-size' => '8pt',
-    'color' => '#ffffff',
-], 'S01bSidebarLine'));
+$sidebarPage2->addParagraph(cvParagraph('ANDREW THOMPSON', 'S01bSidebarName'));
+$sidebarPage2->addParagraph(cvParagraph('Senior Project Manager', 'S01bSidebarLine'));
+$sidebarPage2->addParagraph(cvParagraph($cv['personal']['email'], 'S01bSidebarLine'));
+$sidebarPage2->addParagraph(cvParagraph($cv['personal']['phone'], 'S01bSidebarLine'));
 
 // The authored CVImage frame owns its geometry and placement. The current
 // compatibility facade requires explicit authored dimensions to avoid its
 // legacy 5cm x 3cm defaults while replacing only the image resource.
-$template->replaceImageByName('CVImage', __DIR__ . '/../assets/WaltDietzney.png', [
+$template->replaceImageByName('CVImage', __DIR__ . '/../assets/BFoto.png', [
     'width' => '4.001cm',
     'height' => '3.799cm',
 ]);

@@ -36,13 +36,14 @@ final class S01bStructuredCvTest extends TestCase
             self::assertCount(1, $xpath->query('//text:section[@text:name="' . $name . '"]'));
         }
         self::assertCount(1, $xpath->query('//draw:frame[@draw:name="CVImage"]/draw:image'));
-        self::assertStringContainsString('CVSidebarPage1', $content);
-        self::assertStringContainsString('CVSidebarPage2', $content);
+        self::assertStringContainsString('CVSidebarPage1', $styles);
+        self::assertStringContainsString('CVSidebarPage', $styles);
         self::assertStringContainsString('First Page', $styles);
         self::assertStringContainsString('CV Continuation', $styles);
-        self::assertStringContainsString('style:name="P11"', $content);
-        self::assertStringContainsString('fo:font-size="11pt"', $content);
-        self::assertStringContainsString('style:font-name="Lato"', $content);
+        foreach (['S01bSidebarName', 'S01bSidebarHeading', 'S01bSidebarLine', 'S01bSidebarListItem', 'S01bSidebarSkill'] as $styleName) {
+            self::assertStringContainsString('style:name="' . $styleName . '"', $styles);
+        }
+        self::assertStringContainsString('style:position="5.2cm"', $styles);
     }
 
     public function testPreparedBookmarksReplaceProfileTextWithoutFlatteningAuthoredStyles(): void
@@ -60,7 +61,7 @@ final class S01bStructuredCvTest extends TestCase
         self::assertStringContainsString('Dynamic profile description', $content);
         self::assertStringNotContainsString('Erfahrener Projektmanager mit über 10 Jahren', $content);
         self::assertStringContainsString('text:style-name="P3"', $content);
-        self::assertStringContainsString('text:style-name="P1"', $content);
+        self::assertStringContainsString('text:style-name="P5"', $content);
     }
 
     public function testNestedCollectionsAndCompleteEmptyAreasUsePublicSectionApi(): void

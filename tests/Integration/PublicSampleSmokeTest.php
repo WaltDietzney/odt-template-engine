@@ -326,18 +326,19 @@ final class PublicSampleSmokeTest extends TestCase
                 self::assertStringContainsString('Senior Project Manager with 10+ years of delivery leadership', $content);
                 self::assertStringContainsString('Experienced project manager specialising in agile transformation', $content);
                 self::assertStringNotContainsString('Erfahrener Projektmanager mit über 10 Jahren', $content);
-                self::assertStringContainsString('text:style-name="P11"', $content);
-                self::assertStringContainsString('S01bSidebarHeading', $content);
-                self::assertStringContainsString('S01bSidebarLine', $content);
+                self::assertStringContainsString('S01bSidebarHeading', $styles);
+                self::assertStringContainsString('S01bSidebarLine', $styles);
+                self::assertStringContainsString('S01bSidebarSkill', $styles);
+                self::assertSame(3, substr_count($styles, 'text:tab'));
                 foreach (['JobSection"', 'ActivitySection"', 'EducationSection"', 'QualificationSection"'] as $prototype) {
                     self::assertStringNotContainsString('text:name="' . $prototype, $content, 'S01b retained prototype ' . $prototype . '.');
                 }
                 self::assertStringContainsString('draw:name="CVImage"', $content);
                 self::assertStringContainsString('svg:width="4.001cm"', $content);
                 self::assertStringContainsString('svg:height="3.799cm"', $content);
-                self::assertStringContainsString('Pictures/WaltDietzney.png', $content);
-                self::assertStringContainsString('Pictures/WaltDietzney.png', $manifest);
-                self::assertStringContainsString('ANDREW THOMPSON', $content);
+                self::assertStringContainsString('Pictures/BFoto.png', $content);
+                self::assertStringContainsString('Pictures/BFoto.png', $manifest);
+                self::assertStringContainsString('ANDREW THOMPSON', $styles);
                 self::assertStringContainsString('First Page', $styles);
                 self::assertStringContainsString('CV Continuation', $styles);
                 self::assertStringContainsString('style:next-style-name="CV_20_Continuation"', $styles);
