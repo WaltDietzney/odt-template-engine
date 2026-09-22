@@ -170,6 +170,16 @@ class OdtTemplate
     }
 
     /**
+     * Apply document-wide Writer defaults through the native Standard paragraph style.
+     *
+     * @param array{text?: array<string, mixed>, paragraph?: array<string, mixed>} $settings
+     */
+    public function setDocumentDefaults(array $settings): void
+    {
+        $this->styles()->setDocumentDefaults($settings);
+    }
+
+    /**
      * Inspect native named structures in the current document state.
      *
      * Each call creates a read-only snapshot. No DOM or package state is
