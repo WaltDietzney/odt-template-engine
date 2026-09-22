@@ -109,7 +109,7 @@ function addSidebarList(RichText $sidebar, string $heading, array $items): void
     $sidebar->addElement($list);
 }
 
-$sidebarPage1 = new RichText();
+// The sidebar is PHP-owned content inside template-authored Writer Frames.\n// Typography and spacing stay in the template's S01bSidebar* paragraph styles.\n$sidebarPage1 = new RichText();
 addSidebarHeading($sidebarPage1, 'CONTACT');
 $sidebarPage1->addParagraph(cvParagraph($cv['personal']['email'], 'S01bSidebarLine'));
 $sidebarPage1->addParagraph(cvParagraph($cv['personal']['phone'], 'S01bSidebarLine'));
@@ -131,7 +131,7 @@ foreach ([
     ['name' => 'Stakeholder engagement', 'level' => 4],
 ] as $skill) {
     $rating = str_repeat('★', $skill['level']) . str_repeat('☆', 5 - $skill['level']);
-    $paragraph = new Paragraph('S01bSidebarSkill');
+    // Alignment is template-owned: S01bSidebarSkill defines the 5.2cm tab stop.\n    $paragraph = new Paragraph('S01bSidebarSkill');
     $paragraph->addText($skill['name'])->addTab()->addText($rating);
     $sidebarPage1->addParagraph($paragraph);
 }
