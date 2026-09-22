@@ -109,8 +109,8 @@ S01b is the structured-template variant of this comparison. It deliberately
 composes multiple mechanisms: Sample-25-style native Sections for repeatable
 main-column structures, bounded bookmarks for the Writer-authored
 profile/extract text, named-image replacement for template-owned image
-geometry, and Sample-21-style RichText plus document-local styles for the
-sidebar text-box region. This mixed approach is intentional: the correct
+geometry, and Sample-21-style RichText inserted into template-authored Writer Frames.
+The sidebar paragraph styles and tab-stop geometry are owned by the template. This mixed approach is intentional: the correct
 ownership mechanism is chosen per document region rather than imposed on the
 whole file.
 
@@ -119,12 +119,26 @@ agents. Its implementation should make these ownership decisions obvious and
 should demonstrate the strongest appropriate existing engine capabilities,
 not merely generate a structurally valid ODT.
 
-S01b Its main CV is
-not rebuilt as one large RichText block. Its `Experience`, `Education`, and
+S01b's main CV is not rebuilt as one large RichText block. Its `Experience`, `Education`, and
 `AdditionalQualifications` areas remain authored native Sections, while the
 sidebar is an intentional PHP-owned dynamic region. Empty collection areas are
 removed through the existing public `instantiateMany([])` behavior, and Writer
 continues to determine physical pagination.
+
+A practical lesson from S01b is that visually similar LibreOffice containers
+are not interchangeable. The original text-box approach did not provide the
+ordinary named-paragraph-style behavior required by the generated sidebar.
+Writer Frames did. The final template therefore owns the first-page and
+continuation Frame geometry plus `S01bSidebar*` paragraph styles. PHP builds
+the sidebar structure and references those styles without duplicating their
+typography as direct formatting. Skill ratings use `Paragraph::addTab()` and
+a 5.2 cm tab stop defined by the template style rather than spaces.
+
+A normal table was also rejected for this sidebar design: tables participate
+in document flow and do not provide the page-positioned geometry needed beside
+the independently indented main Section. A header table remains constrained by
+header flow. This is a design-specific ownership lesson, not a general rule
+against tables.
 
 The models can also coexist in one document. A named section may contain ordinary placeholders, and PHP-generated elements can still be used where application-owned structure is appropriate.
 
