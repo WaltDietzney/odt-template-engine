@@ -44,6 +44,12 @@ The capability layer adds native ODF behavior above the Learn path.
 | [C04](../../samples/sample_C04_declarative_structured_collections.php) | Declarative Structured Collections | Direct Phase-D execution of Writer-authored nested Sections with template-shaped data |
 | [C05](../../samples/sample_C05_mapping_automation.php) | Mapping & Automation | Explicit mapping, concrete preflight, and common atomic Phase-E execution |
 
+## Professional showcase samples
+
+| ID | Sample | Ownership lesson |
+| --- | --- | --- |
+| [S01b](../../samples/sample_S01b_cv_structured.php) | Professional CV · Structured Template | LibreOffice owns the CV page design and native Section structure; PHP supplies collections, replaces the authored image resource, and owns bounded RichText sidebar regions |
+
 C04 and C05 intentionally take different data paths: C04 passes values already
 named like the template's dependencies to `executeDeclarative()`; C05 maps
 application-shaped names through MappingDefinition, preflights them, and then
@@ -210,6 +216,14 @@ Use this pattern when the repeatable structure should remain visually authored i
 Read [Named Sections](../rich-documents/named-sections.md) and the [Practical ODT template authoring guide](../getting-started/template-authoring-guide.md) for this approach.
 
 Neither sample replaces the other. They demonstrate two different ownership boundaries between the ODT template and PHP.
+
+The canonical [S01b structured CV](../../samples/sample_S01b_cv_structured.php)
+is the professional showcase continuation of Sample 25. It keeps the prepared
+CV page design and native Section ownership in LibreOffice while adding a full
+professional dataset, nested job activities, optional structural removal, a
+named image replacement, and intentionally PHP-owned sidebar RichText. Writer
+remains responsible for physical pagination; the template does not introduce a
+PHP page-layout or continuation-page API.
 
 ## Verification samples
 

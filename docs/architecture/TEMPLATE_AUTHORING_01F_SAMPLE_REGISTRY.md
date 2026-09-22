@@ -182,3 +182,21 @@ The additive `OdtTemplate::executeDeclarative()` facade exposes the already
 accepted Phase-D behavior while keeping `DeclarativeConditionExecutor`
 internal. Sample 25 remains migration evidence for imperative Section
 collections and S01b; it is not replaced by C04's declarative model.
+
+## F7 — S01b Professional CV
+
+`S01b` is the first professional showcase. Its prepared LibreOffice template
+owns the CV page geometry, native Sections, typography, image-frame geometry,
+and Writer page-flow structure. The sample supplies application collections to
+the existing `instantiateMany()` API, replaces the named `CVImage` resource,
+and inserts bounded RichText into the authored sidebar insertion points. This
+is intentionally a mixed ownership boundary: the main CV remains a native
+structured template while the sidebar is a PHP-owned generated region.
+
+Empty `Experience`, `Education`, and `AdditionalQualifications` containers are
+removed through the existing public `instantiateMany([])` finalization path;
+empty per-job `ActivitySection` prototypes are removed the same way. No direct
+ODT XML manipulation or new engine API is introduced. Writer remains
+responsible for physical pagination. The prepared template's page-two sidebar
+is an authored page-specific design element, not a new arbitrary continuation
+page API.

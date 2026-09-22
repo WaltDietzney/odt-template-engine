@@ -275,7 +275,7 @@ final class SampleRegistryTest extends TestCase
         self::assertSame(['L11'], $samples['legacy.sample-28.template-inspection']['migration_targets']);
         self::assertSame(['L10'], $samples['legacy.sample-29.user-field-binding']['migration_targets']);
         self::assertSame(['L09', 'L06'], $samples['legacy.sample-24.section-image-replacement']['migration_targets']);
-        self::assertSame(['C04', 'S01b'], $samples['legacy.sample-25.section-instantiation']['migration_targets']);
+        self::assertSame(['S01b'], $samples['legacy.sample-25.section-instantiation']['migration_targets']);
     }
 
     public function testF6CapabilitySamplesAreCanonicalAndRegistryDriven(): void
@@ -310,7 +310,36 @@ final class SampleRegistryTest extends TestCase
         self::assertSame(['C02'], $samples['legacy.sample-20.table-ratio']['migration_targets']);
         self::assertSame(['C02'], $samples['legacy.sample-26.table-layout']['migration_targets']);
         self::assertSame(['C03'], $samples['legacy.sample-27.frame-layout']['migration_targets']);
-        self::assertSame(['C04', 'S01b'], $samples['legacy.sample-25.section-instantiation']['migration_targets']);
+        self::assertSame(['S01b'], $samples['legacy.sample-25.section-instantiation']['migration_targets']);
+    }
+
+    public function testS01bIsTheCanonicalStructuredTemplateShowcase(): void
+    {
+        $samples = [];
+        foreach ($this->registry()['samples'] as $sample) {
+            $samples[$sample['id']] = $sample;
+        }
+
+        self::assertSame([
+            'Professional CV · Structured Template',
+            'showcase',
+            'mixed',
+            'samples/sample_S01b_cv_structured.php',
+            'samples/templates/template_S01b_cv_structured.odt',
+            'samples/output/output_S01b_cv_structured.odt',
+        ], [
+            $samples['S01b']['title'],
+            $samples['S01b']['role'],
+            $samples['S01b']['ownership'],
+            $samples['S01b']['entry_point'],
+            $samples['S01b']['template_path'],
+            $samples['S01b']['output_path'],
+        ]);
+        self::assertSame('canonical', $samples['S01b']['status']);
+        self::assertSame('composer', $samples['S01b']['distribution']);
+        self::assertSame('odt', $samples['S01b']['execution_mode']);
+        self::assertSame([], $samples['S01b']['migration_targets']);
+        self::assertSame(['S01b'], $samples['legacy.sample-25.section-instantiation']['migration_targets']);
     }
 
     public function testC04TemplateContainsNativeNestedSectionControls(): void

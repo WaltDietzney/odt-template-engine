@@ -8,6 +8,12 @@ The repository contains two complementary CV architecture showcases.
 
 Both produce editable ODT output. They differ mainly in **who owns the dynamic structure**.
 
+The canonical professional showcase is [S01b — Professional CV · Structured
+Template](../../samples/sample_S01b_cv_structured.php). It combines the two
+boundaries deliberately: the prepared template owns the page design, native
+Sections, and image-frame placement, while PHP expands the Section collections
+and supplies bounded RichText sidebar regions.
+
 ## Sample 21 — PHP-generated document regions
 
 Sample 21 combines:
@@ -89,6 +95,13 @@ A useful rule is:
 | PHP owns a dynamic region's internal composition | Sample 21 / `RichText` + `setElement()` |
 | LibreOffice owns a repeatable semantic block | Sample 25 / named sections + `instantiateMany()` |
 | only scalar values or lightweight logic change | normal template expressions |
+
+S01b is the structured-template variant of this comparison. Its main CV is
+not rebuilt as one large RichText block. Its `Experience`, `Education`, and
+`AdditionalQualifications` areas remain authored native Sections, while the
+sidebar is an intentional PHP-owned dynamic region. Empty collection areas are
+removed through the existing public `instantiateMany([])` behavior, and Writer
+continues to determine physical pagination.
 
 The models can also coexist in one document. A named section may contain ordinary placeholders, and PHP-generated elements can still be used where application-owned structure is appropriate.
 
