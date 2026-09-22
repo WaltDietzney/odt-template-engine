@@ -183,9 +183,52 @@ accepted Phase-D behavior while keeping `DeclarativeConditionExecutor`
 internal. Sample 25 remains migration evidence for imperative Section
 collections and S01b; it is not replaced by C04's declarative model.
 
+## F7 — Samples as Human- and AI-Readable Teaching Material
+
+The canonical sample suite is not only executable documentation and regression
+evidence. It is also architectural teaching material for human developers and
+AI coding agents. A canonical sample should therefore teach the intended
+problem-solving language of the engine: which ownership model fits a document
+region, which existing capability should be reused, and how multiple
+capabilities compose in a realistic editable ODT.
+
+Learn samples teach focused vocabulary. Capability samples teach larger native
+ODF behaviors. Professional showcases must teach composition and architectural
+judgement. They should use the strongest appropriate existing engine
+capabilities rather than simplified reimplementations that merely produce
+valid output. A technically passing sample is not sufficient if its code or
+rendered result teaches a weaker or misleading pattern.
+
+For professional showcases, review must therefore cover all four audiences:
+
+- developers need idiomatic public-API usage;
+- template authors need a clear LibreOffice/PHP ownership boundary;
+- end users need a credible professional rendered document;
+- AI coding agents need explicit, reusable architectural examples from which
+  the intended solution pattern can be inferred.
+
+Existing samples are architectural evidence, not just historical code. In
+particular, Sample 21 is the established reference for professionally styled
+PHP-owned RichText regions and document-local paragraph styles, while Sample
+25 is the established reference for preserving LibreOffice-authored repeatable
+Section structure through nested instantiation. New showcases should reuse
+these proven patterns where their ownership semantics match.
+
 ## F7 — S01b Professional CV
 
-`S01b` is the first professional showcase. Its prepared LibreOffice template
+S01b is the first professional showcase and is intended to compose several
+proven ownership patterns in one document. The main repeatable CV areas follow
+the Sample 25 lineage: LibreOffice-authored native Sections own their visual
+structure and formatting, while PHP supplies data and instantiates the
+prototypes. The profile/extract area should demonstrate bounded bookmark
+replacement inside Writer-authored content. The named CV image demonstrates
+resource replacement at template-owned geometry. The sidebar remains a
+PHP-owned RichText region because the authored text-box/frame context cannot
+use the same Section/bookmark structure; its formatting should follow the
+stronger Sample 21 RichText/style pattern rather than a reduced text-only
+implementation.
+
+Its prepared LibreOffice template
 owns the CV page geometry, native Sections, typography, image-frame geometry,
 and Writer page-flow structure. The sample supplies application collections to
 the existing `instantiateMany()` API, replaces the named `CVImage` resource,
