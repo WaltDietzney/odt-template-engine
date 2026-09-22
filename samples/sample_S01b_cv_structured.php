@@ -109,7 +109,9 @@ function addSidebarList(RichText $sidebar, string $heading, array $items): void
     $sidebar->addElement($list);
 }
 
-// The sidebar is PHP-owned content inside template-authored Writer Frames.\n// Typography and spacing stay in the template's S01bSidebar* paragraph styles.\n$sidebarPage1 = new RichText();
+// The sidebar is PHP-owned content inside template-authored Writer Frames.
+// Typography and spacing stay in the template's S01bSidebar* paragraph styles.
+$sidebarPage1 = new RichText();
 addSidebarHeading($sidebarPage1, 'CONTACT');
 $sidebarPage1->addParagraph(cvParagraph($cv['personal']['email'], 'S01bSidebarLine'));
 $sidebarPage1->addParagraph(cvParagraph($cv['personal']['phone'], 'S01bSidebarLine'));
