@@ -44,6 +44,28 @@ The capability layer adds native ODF behavior above the Learn path.
 | [C04](../../samples/sample_C04_declarative_structured_collections.php) | Declarative Structured Collections | Direct Phase-D execution of Writer-authored nested Sections with template-shaped data |
 | [C05](../../samples/sample_C05_mapping_automation.php) | Mapping & Automation | Explicit mapping, concrete preflight, and common atomic Phase-E execution |
 
+## Samples as architectural teaching material
+
+The public sample suite is designed for both human readers and AI coding
+agents. Samples should not merely prove that an API call works; they should
+make the engine's intended solution patterns visible. Learn samples introduce
+focused vocabulary, capability samples demonstrate larger behaviors, and
+professional showcases demonstrate how to compose those capabilities into
+credible editable documents.
+
+For a professional showcase, correctness therefore has four dimensions:
+idiomatic public-API usage for developers, a clear ownership boundary for
+LibreOffice template authors, professional rendered output for end users, and
+code/structure that an AI coding agent can use as reliable architectural
+precedent. Existing strong examples should be reused as references rather than
+reimplemented in a weaker form.
+
+## Professional showcase samples
+
+| ID | Sample | Ownership lesson |
+| --- | --- | --- |
+| [S01b](../../samples/sample_S01b_cv_structured.php) | Professional CV · Structured Template | LibreOffice owns the CV page design and native Section structure; PHP supplies collections, replaces the authored image resource, and owns bounded RichText sidebar regions |
+
 C04 and C05 intentionally take different data paths: C04 passes values already
 named like the template's dependencies to `executeDeclarative()`; C05 maps
 application-shaped names through MappingDefinition, preflights them, and then
@@ -210,6 +232,26 @@ Use this pattern when the repeatable structure should remain visually authored i
 Read [Named Sections](../rich-documents/named-sections.md) and the [Practical ODT template authoring guide](../getting-started/template-authoring-guide.md) for this approach.
 
 Neither sample replaces the other. They demonstrate two different ownership boundaries between the ODT template and PHP.
+
+For S01b specifically, Sample 21 is the formatting reference for PHP-owned
+RichText/sidebar content, while the final S01b template owns the sidebar's
+named paragraph styles and Writer Frame geometry; Sample 25 is the
+format-preservation reference for LibreOffice-authored repeatable Sections.
+The profile/extract area demonstrates bounded bookmark replacement, and the
+named CV image demonstrates replacement at template-owned geometry. These
+mechanisms intentionally coexist because different document regions have
+different ownership constraints.
+
+The canonical [S01b structured CV](../../samples/sample_S01b_cv_structured.php)
+is the professional showcase continuation of Sample 25. It keeps the prepared
+CV page design and native Section ownership in LibreOffice while adding a full
+professional dataset, nested job activities, optional structural removal, a
+named image replacement, and intentionally PHP-owned sidebar RichText inserted
+into template-authored Writer Frames. Use Frames rather than text boxes for
+this pattern when generated paragraphs must follow ordinary named paragraph
+styles. The template also owns the sidebar tab-stop geometry; PHP emits native
+tabs rather than spacing with literal spaces. Writer remains responsible for physical pagination; the template does not introduce a
+PHP page-layout or continuation-page API.
 
 ## Verification samples
 
