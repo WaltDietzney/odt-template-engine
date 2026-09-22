@@ -44,6 +44,22 @@ The capability layer adds native ODF behavior above the Learn path.
 | [C04](../../samples/sample_C04_declarative_structured_collections.php) | Declarative Structured Collections | Direct Phase-D execution of Writer-authored nested Sections with template-shaped data |
 | [C05](../../samples/sample_C05_mapping_automation.php) | Mapping & Automation | Explicit mapping, concrete preflight, and common atomic Phase-E execution |
 
+## Samples as architectural teaching material
+
+The public sample suite is designed for both human readers and AI coding
+agents. Samples should not merely prove that an API call works; they should
+make the engine's intended solution patterns visible. Learn samples introduce
+focused vocabulary, capability samples demonstrate larger behaviors, and
+professional showcases demonstrate how to compose those capabilities into
+credible editable documents.
+
+For a professional showcase, correctness therefore has four dimensions:
+idiomatic public-API usage for developers, a clear ownership boundary for
+LibreOffice template authors, professional rendered output for end users, and
+code/structure that an AI coding agent can use as reliable architectural
+precedent. Existing strong examples should be reused as references rather than
+reimplemented in a weaker form.
+
 ## Professional showcase samples
 
 | ID | Sample | Ownership lesson |
@@ -216,6 +232,14 @@ Use this pattern when the repeatable structure should remain visually authored i
 Read [Named Sections](../rich-documents/named-sections.md) and the [Practical ODT template authoring guide](../getting-started/template-authoring-guide.md) for this approach.
 
 Neither sample replaces the other. They demonstrate two different ownership boundaries between the ODT template and PHP.
+
+For S01b specifically, Sample 21 is the formatting reference for PHP-owned
+RichText/sidebar content and document-local paragraph styles; Sample 25 is the
+format-preservation reference for LibreOffice-authored repeatable Sections.
+The profile/extract area demonstrates bounded bookmark replacement, and the
+named CV image demonstrates replacement at template-owned geometry. These
+mechanisms intentionally coexist because different document regions have
+different ownership constraints.
 
 The canonical [S01b structured CV](../../samples/sample_S01b_cv_structured.php)
 is the professional showcase continuation of Sample 25. It keeps the prepared
