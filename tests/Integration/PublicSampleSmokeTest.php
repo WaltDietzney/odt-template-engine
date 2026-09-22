@@ -322,6 +322,13 @@ final class PublicSampleSmokeTest extends TestCase
                 foreach (['Andrew', 'Thompson', 'Senior Project Manager', 'Harbour Digital', 'University of Sydney', 'Volunteer work'] as $expected) {
                     self::assertStringContainsString($expected, $content, 'S01b omitted ' . $expected . '.');
                 }
+                self::assertStringContainsString('PROFILE', $content);
+                self::assertStringContainsString('Senior Project Manager with 10+ years of delivery leadership', $content);
+                self::assertStringContainsString('Experienced project manager specialising in agile transformation', $content);
+                self::assertStringNotContainsString('Erfahrener Projektmanager mit über 10 Jahren', $content);
+                self::assertStringContainsString('text:style-name="P11"', $content);
+                self::assertStringContainsString('S01bSidebarHeading', $content);
+                self::assertStringContainsString('S01bSidebarLine', $content);
                 foreach (['JobSection"', 'ActivitySection"', 'EducationSection"', 'QualificationSection"'] as $prototype) {
                     self::assertStringNotContainsString('text:name="' . $prototype, $content, 'S01b retained prototype ' . $prototype . '.');
                 }

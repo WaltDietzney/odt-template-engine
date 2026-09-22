@@ -40,6 +40,27 @@ final class S01bStructuredCvTest extends TestCase
         self::assertStringContainsString('CVSidebarPage2', $content);
         self::assertStringContainsString('First Page', $styles);
         self::assertStringContainsString('CV Continuation', $styles);
+        self::assertStringContainsString('style:name="P11"', $content);
+        self::assertStringContainsString('fo:font-size="11pt"', $content);
+        self::assertStringContainsString('style:font-name="Lato"', $content);
+    }
+
+    public function testPreparedBookmarksReplaceProfileTextWithoutFlatteningAuthoredStyles(): void
+    {
+        $template = new OdtTemplate($this->templatePath());
+        $template->bookmark('Extract')->replaceText('PROFILE');
+        $template->bookmark('ExtractJobHeadline')->replaceText('Dynamic headline');
+        $template->bookmark('ExtractJobDescription')->replaceText('Dynamic profile description');
+
+        $output = $this->temporaryPath('bookmarks');
+        $template->save($output);
+        $content = $this->readOutputPart($output, 'content.xml');
+
+        self::assertStringContainsString('Dynamic headline', $content);
+        self::assertStringContainsString('Dynamic profile description', $content);
+        self::assertStringNotContainsString('Erfahrener Projektmanager mit über 10 Jahren', $content);
+        self::assertStringContainsString('text:style-name="P3"', $content);
+        self::assertStringContainsString('text:style-name="P1"', $content);
     }
 
     public function testNestedCollectionsAndCompleteEmptyAreasUsePublicSectionApi(): void

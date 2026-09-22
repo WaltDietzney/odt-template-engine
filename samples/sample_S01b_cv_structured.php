@@ -18,7 +18,7 @@ $cv = [
         'last_name' => 'Thompson',
         'birth' => '12.04.1984',
         'city' => 'Sydney, Australia',
-        'email' => 'andrew.thompson@example.com',
+        'email' => 'andrew.t@example.com',
         'phone' => '+61 412 555 018',
     ],
     'experience' => [
@@ -79,13 +79,13 @@ $cv = [
     ],
 ];
 
-/** @param array<string, mixed> $style */
-function cvParagraph(string $text, array $style = []): Paragraph
+/** @param array<string, mixed> $textStyle */
+function cvParagraph(string $text, array $textStyle = [], ?string $paragraphStyle = null): Paragraph
 {
-    $paragraph = new Paragraph();
+    $paragraph = new Paragraph($paragraphStyle);
     $paragraph->addText($text, array_merge([
-        'font-family' => 'Arial',
-    ], $style));
+        'font-family' => 'Lato',
+    ], $textStyle));
 
     return $paragraph;
 }
@@ -95,9 +95,9 @@ function addSidebarHeading(RichText $sidebar, string $heading): void
     $sidebar->addParagraph(cvParagraph($heading, [
         'bold' => true,
         'font-family' => 'Arial',
-        'font-size' => '9pt',
+        'font-size' => '8.5pt',
         'color' => '#ffffff',
-    ]));
+    ], 'S01bSidebarHeading'));
 }
 
 /** @param list<string> $items */
@@ -110,22 +110,63 @@ function addSidebarList(RichText $sidebar, string $heading, array $items): void
             'font-family' => 'Arial',
             'font-size' => '8pt',
             'color' => '#ffffff',
-        ]));
+        ], 'S01bSidebarLine'));
     }
     $sidebar->addElement($list);
+}
+
+foreach ([
+    'S01bSidebarName' => [
+        'margin-bottom' => '0.08cm',
+        'line-height' => '100%',
+        'font-family' => 'Lato',
+        'font-size' => '14pt',
+        'bold' => true,
+        'color' => '#ffffff',
+    ],
+    'S01bSidebarHeading' => [
+        'margin-top' => '0.16cm',
+        'margin-bottom' => '0.04cm',
+        'line-height' => '100%',
+        'font-family' => 'Lato',
+        'font-size' => '8.5pt',
+        'bold' => true,
+        'color' => '#ffffff',
+    ],
+    'S01bSidebarLine' => [
+        'margin-bottom' => '0.02cm',
+        'line-height' => '105%',
+        'font-family' => 'Lato',
+        'font-size' => '8pt',
+        'color' => '#ffffff',
+    ],
+] as $styleName => $styleOptions) {
+    $template->styles()->defineParagraph($styleName, $styleOptions);
 }
 
 $sidebarPage1 = new RichText();
 $sidebarPage1->addParagraph(cvParagraph('ANDREW THOMPSON', [
     'bold' => true,
     'font-family' => 'Arial',
-    'font-size' => '13pt',
+    'font-size' => '14pt',
     'color' => '#ffffff',
-]));
+], 'S01bSidebarName'));
 addSidebarHeading($sidebarPage1, 'CONTACT');
-$sidebarPage1->addParagraph(cvParagraph($cv['personal']['email'], ['font-size' => '8pt', 'color' => '#ffffff']));
-$sidebarPage1->addParagraph(cvParagraph($cv['personal']['phone'], ['font-size' => '8pt', 'color' => '#ffffff']));
-$sidebarPage1->addParagraph(cvParagraph($cv['personal']['city'], ['font-size' => '8pt', 'color' => '#ffffff']));
+$sidebarPage1->addParagraph(cvParagraph($cv['personal']['email'], [
+    'font-family' => 'Arial',
+    'font-size' => '8pt',
+    'color' => '#ffffff',
+], 'S01bSidebarLine'));
+$sidebarPage1->addParagraph(cvParagraph($cv['personal']['phone'], [
+    'font-family' => 'Arial',
+    'font-size' => '8pt',
+    'color' => '#ffffff',
+], 'S01bSidebarLine'));
+$sidebarPage1->addParagraph(cvParagraph($cv['personal']['city'], [
+    'font-family' => 'Arial',
+    'font-size' => '8pt',
+    'color' => '#ffffff',
+], 'S01bSidebarLine'));
 addSidebarList($sidebarPage1, 'PLUS POINTS', [
     'Strategic project leadership',
     'International team coordination',
@@ -136,11 +177,27 @@ addSidebarList($sidebarPage1, 'SOFT SKILLS', [
     'Calm decision-making',
     'Collaborative leadership',
 ]);
-addSidebarList($sidebarPage1, 'PROFESSIONAL SKILLS', [
-    'Portfolio management',
-    'Risk and dependency planning',
-    'Stakeholder engagement',
-]);
+addSidebarHeading($sidebarPage1, 'PROFESSIONAL SKILLS');
+foreach ([
+    ['name' => 'Portfolio management', 'level' => 5],
+    ['name' => 'Risk planning', 'level' => 4],
+    ['name' => 'Stakeholder engagement', 'level' => 4],
+] as $skill) {
+    $rating = str_repeat('★', $skill['level']) . str_repeat('☆', 5 - $skill['level']);
+    $paragraph = new Paragraph('S01bSidebarLine');
+    $paragraph->addText($skill['name'] . '  ', [
+        'font-family' => 'Arial',
+        'font-size' => '8pt',
+        'color' => '#ffffff',
+    ]);
+    $paragraph->addText($rating, [
+        'font-family' => 'Arial',
+        'font-size' => '8pt',
+        'color' => '#B9D7EA',
+    ]);
+    $sidebarPage1->addParagraph($paragraph);
+}
+
 addSidebarList($sidebarPage1, 'LICENSES', [
     'PMP · 2018',
     'PRINCE2 Practitioner · 2016',
@@ -151,10 +208,27 @@ addSidebarList($sidebarPage1, 'LANGUAGES', [
 ]);
 
 $sidebarPage2 = new RichText();
-addSidebarHeading($sidebarPage2, 'ANDREW THOMPSON');
-$sidebarPage2->addParagraph(cvParagraph('Senior Project Manager', ['font-size' => '8pt', 'color' => '#ffffff']));
-$sidebarPage2->addParagraph(cvParagraph($cv['personal']['email'], ['font-size' => '8pt', 'color' => '#ffffff']));
-$sidebarPage2->addParagraph(cvParagraph($cv['personal']['phone'], ['font-size' => '8pt', 'color' => '#ffffff']));
+$sidebarPage2->addParagraph(cvParagraph('ANDREW THOMPSON', [
+    'bold' => true,
+    'font-family' => 'Arial',
+    'font-size' => '14pt',
+    'color' => '#ffffff',
+], 'S01bSidebarName'));
+$sidebarPage2->addParagraph(cvParagraph('Senior Project Manager', [
+    'font-family' => 'Arial',
+    'font-size' => '8pt',
+    'color' => '#ffffff',
+], 'S01bSidebarLine'));
+$sidebarPage2->addParagraph(cvParagraph($cv['personal']['email'], [
+    'font-family' => 'Arial',
+    'font-size' => '8pt',
+    'color' => '#ffffff',
+], 'S01bSidebarLine'));
+$sidebarPage2->addParagraph(cvParagraph($cv['personal']['phone'], [
+    'font-family' => 'Arial',
+    'font-size' => '8pt',
+    'color' => '#ffffff',
+], 'S01bSidebarLine'));
 
 // The authored CVImage frame owns its geometry and placement. The current
 // compatibility facade requires explicit authored dimensions to avoid its
@@ -179,6 +253,12 @@ $template->assign([
     'BDate' => $cv['personal']['birth'],
     'BTown' => $cv['personal']['city'],
 ]);
+
+$template->bookmark('Extract')->replaceText('PROFILE');
+$template->bookmark('ExtractJobHeadline')->replaceText('Senior Project Manager with 10+ years of delivery leadership');
+$template->bookmark('ExtractJobDescription')->replaceText(
+    'Experienced project manager specialising in agile transformation, multi-project delivery, and international teams.'
+);
 
 if ($cv['experience'] === []) {
     $template->section('Experience')->instantiateMany([]);
