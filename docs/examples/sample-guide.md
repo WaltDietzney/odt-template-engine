@@ -234,7 +234,8 @@ Read [Named Sections](../rich-documents/named-sections.md) and the [Practical OD
 Neither sample replaces the other. They demonstrate two different ownership boundaries between the ODT template and PHP.
 
 For S01b specifically, Sample 21 is the formatting reference for PHP-owned
-RichText/sidebar content and document-local paragraph styles; Sample 25 is the
+RichText/sidebar content, while the final S01b template owns the sidebar's
+named paragraph styles and Writer Frame geometry; Sample 25 is the
 format-preservation reference for LibreOffice-authored repeatable Sections.
 The profile/extract area demonstrates bounded bookmark replacement, and the
 named CV image demonstrates replacement at template-owned geometry. These
@@ -245,8 +246,11 @@ The canonical [S01b structured CV](../../samples/sample_S01b_cv_structured.php)
 is the professional showcase continuation of Sample 25. It keeps the prepared
 CV page design and native Section ownership in LibreOffice while adding a full
 professional dataset, nested job activities, optional structural removal, a
-named image replacement, and intentionally PHP-owned sidebar RichText. Writer
-remains responsible for physical pagination; the template does not introduce a
+named image replacement, and intentionally PHP-owned sidebar RichText inserted
+into template-authored Writer Frames. Use Frames rather than text boxes for
+this pattern when generated paragraphs must follow ordinary named paragraph
+styles. The template also owns the sidebar tab-stop geometry; PHP emits native
+tabs rather than spacing with literal spaces. Writer remains responsible for physical pagination; the template does not introduce a
 PHP page-layout or continuation-page API.
 
 ## Verification samples
