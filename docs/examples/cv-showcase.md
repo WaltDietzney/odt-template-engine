@@ -8,6 +8,15 @@ The repository contains two complementary CV architecture showcases.
 
 Both produce editable ODT output. They differ mainly in **who owns the dynamic structure**.
 
+These CV examples are also architectural teaching material. Sample 21 is the
+reference for a professionally styled PHP-owned region: it uses document-local
+paragraph styles, deliberate spacing and line-height, native lists, images,
+and skill ratings. Sample 25 is the reference for keeping repeatable visual
+structure in LibreOffice and preserving it while native Sections are
+instantiated. A professional showcase should reuse those proven patterns when
+their ownership boundary applies instead of reducing them to minimally styled
+content.
+
 The canonical professional showcase is [S01b — Professional CV · Structured
 Template](../../samples/sample_S01b_cv_structured.php). It combines the two
 boundaries deliberately: the prepared template owns the page design, native
@@ -96,7 +105,21 @@ A useful rule is:
 | LibreOffice owns a repeatable semantic block | Sample 25 / named sections + `instantiateMany()` |
 | only scalar values or lightweight logic change | normal template expressions |
 
-S01b is the structured-template variant of this comparison. Its main CV is
+S01b is the structured-template variant of this comparison. It deliberately
+composes multiple mechanisms: Sample-25-style native Sections for repeatable
+main-column structures, bounded bookmarks for the Writer-authored
+profile/extract text, named-image replacement for template-owned image
+geometry, and Sample-21-style RichText plus document-local styles for the
+sidebar text-box region. This mixed approach is intentional: the correct
+ownership mechanism is chosen per document region rather than imposed on the
+whole file.
+
+S01b is also expected to be readable as an architectural example by coding
+agents. Its implementation should make these ownership decisions obvious and
+should demonstrate the strongest appropriate existing engine capabilities,
+not merely generate a structurally valid ODT.
+
+S01b Its main CV is
 not rebuilt as one large RichText block. Its `Experience`, `Education`, and
 `AdditionalQualifications` areas remain authored native Sections, while the
 sidebar is an intentional PHP-owned dynamic region. Empty collection areas are
