@@ -138,6 +138,82 @@ XML);
         self::assertInstanceOf(DOMElement::class, $fontFace);
     }
 
+
+    public function testDocumentDefaultsModifyStandardAndPreserveUnspecifiedAuthoredProperties(): void
+    {
+        $context = $this->context(<<<'XML'
+<office:document-styles
+    xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+    xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
+    xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0">
+    <office:font-face-decls/>
+    <office:styles>
+        <style:style style:name="Standard" style:family="paragraph">
+            <style:text-properties fo:color="#123456" fo:font-size="11pt"/>
+            <style:paragraph-properties fo:margin-bottom="0.2cm"/>
+        </style:style>
+        <style:style style:name="CVText" style:family="paragraph" style:parent-style-name="Standard"/>
+    </office:styles>
+    <office:automatic-styles/>
+    <office:master-styles/>
+</office:document-styles>
+XML);
+        $styles = new DocumentStyles(static fn (): OdtDocumentContext => $context);
+
+        $styles->setDocumentDefaults([
+            'text' => [
+                'font-family' => 'Arial',
+                'font-size' => '10pt',
+            ],
+            'paragraph' => [
+                'line-height' => '115%',
+            ],
+        ]);
+
+        $standard = $this->paragraphStyle($context->stylesDom(), 'Standard');
+        self::assertInstanceOf(DOMElement::class, $standard);
+
+        $text = $standard->getElementsByTagNameNS(
+            'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+            'text-properties'
+        )->item(0);
+        self::assertInstanceOf(DOMElement::class, $text);
+        self::assertSame('Arial', $text->getAttribute('style:font-name'));
+        self::assertSame('Arial', $text->getAttribute('fo:font-family'));
+        self::assertSame('10pt', $text->getAttribute('fo:font-size'));
+        self::assertSame('#123456', $text->getAttribute('fo:color'));
+
+        $paragraph = $standard->getElementsByTagNameNS(
+            'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+            'paragraph-properties'
+        )->item(0);
+        self::assertInstanceOf(DOMElement::class, $paragraph);
+        self::assertSame('115%', $paragraph->getAttribute('fo:line-height'));
+        self::assertSame('0.2cm', $paragraph->getAttribute('fo:margin-bottom'));
+
+        $child = $this->paragraphStyle($context->stylesDom(), 'CVText');
+        self::assertInstanceOf(DOMElement::class, $child);
+        self::assertSame('Standard', $child->getAttribute('style:parent-style-name'));
+    }
+
+    public function testDocumentDefaultsCreateMissingStandardAndMaterializeFontFace(): void
+    {
+        $context = $this->context();
+        $styles = new DocumentStyles(static fn (): OdtDocumentContext => $context);
+
+        $styles->setDocumentDefaults([
+            'text' => ['font-family' => 'Arial'],
+        ]);
+
+        $standard = $this->paragraphStyle($context->stylesDom(), 'Standard');
+        self::assertInstanceOf(DOMElement::class, $standard);
+
+        $xpath = new DOMXPath($context->stylesDom());
+        $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
+        $fontFace = $xpath->query('//style:font-face[@style:name="Arial"]')->item(0);
+        self::assertInstanceOf(DOMElement::class, $fontFace);
+    }
+
     private function context(?string $stylesXml = null): OdtDocumentContext
     {
         return new OdtDocumentContext(
