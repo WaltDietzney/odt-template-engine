@@ -1,6 +1,6 @@
 # TEMPLATE-AUTHORING-01F — S02 Professional Invoice Change Contract
 
-Status: DRAFT — under architecture review
+Status: APPROVED DESIGN CONTRACT / implementation not started
 
 ## Purpose
 
