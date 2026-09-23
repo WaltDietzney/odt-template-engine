@@ -1,10 +1,10 @@
-# TEMPLATE-AUTHORING-01F — Invoice RichText Prototype Findings
+# TEMPLATE-AUTHORING-01F — B01 Invoice Template Builder Findings
 
-Status: Working architecture evidence for the professional invoice showcase (planned S02).
+Status: Canonical B01 Builder sample and architecture evidence for the planned S02 professional invoice showcase.
 
 ## Purpose
 
-The invoice RichText prototype precedes the final LibreOffice-authored S02 invoice. It tests whether existing structured PHP authoring can create a credible professional invoice without invoice-specific engine features, and whether the generated editable ODT can serve as an authoring reference for the later Writer-owned template.
+B01 Invoice Template Builder precedes the final LibreOffice-authored S02 invoice. It tests whether existing structured PHP authoring can create a credible professional invoice without invoice-specific engine features, and whether the generated editable ODT can serve as an authoring reference for the later Writer-owned template.
 
 It is architecture/authoring evidence, not an invoice calculation feature and not the final S02 template.
 
