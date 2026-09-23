@@ -1,6 +1,6 @@
 # TEMPLATE-AUTHORING-01F — S02 Professional Invoice Change Contract
 
-Status: APPROVED DESIGN CONTRACT / implementation not started
+Status: DRAFT — under architecture review
 
 ## Purpose
 
@@ -174,7 +174,23 @@ not be repeated for every item.
 
 ### Invoice items
 
-S02 uses the existing repeating-content mechanism for collection `items`.
+S02 uses the classic template repeating-content mechanism for collection `items`:
+
+```text
+{{#foreach:items}}
+...
+{{#endforeach}}
+```
+
+This choice is deliberate. S02 does not use native Writer `#foreach` Sections
+for invoice item repetition. B01 already established the classic
+paragraph/sibling-node repetition path as the appropriate existing mechanism
+for this item layout, while the salutation uses native Writer Sections for
+conditional structure.
+
+This distinction is architecture evidence: Simple Template Processing and
+Structured Template Processing coexist and are selected according to the
+semantics of the authored content.
 
 Required item fields:
 
@@ -372,10 +388,11 @@ The final registry entry should use:
 id: S02
 title: Professional Invoice
 role: showcase
-ownership: mixed
 status: canonical
 distribution: composer
 execution_mode: odt
+
+ownership: to be classified from the final implementation
 ```
 
 The exact purpose text and migration-target reconciliation belong to the
