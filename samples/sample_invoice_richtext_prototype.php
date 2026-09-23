@@ -453,4 +453,4 @@ $template->setElement('invoice_header', $table);
 $template->setElement('invoice_footer', $footer);
 $template->save(__DIR__ . '/output/output_invoice_richtext_prototype.odt');
 
-echo "Invoice upper-region prototype generated successfully.\n";
+echo "Invoice RichText prototype generated successfully.\n";
