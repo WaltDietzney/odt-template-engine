@@ -256,6 +256,22 @@ RESEARCH-01A already proved that Writer preserves names such as `#foreach:experi
 
 A bounded native-field binding capability is Phase C of `TEMPLATE-AUTHORING-01`. Broad support for every Writer field/conditional construct remains post-1.0 unless concrete evidence makes it necessary. `{{variable}}` remains the preferred general/portable scalar-binding mechanism where native semantics provide no concrete advantage.
 
+### CLASSIC-FOREACH-SCOPE-01 — Scoped placeholder resolution and shadowing
+
+**Priority:** Bounded architecture follow-up
+
+Current classic rendering applies globally assigned scalar placeholders before
+classic foreach item cloning and row-local replacement. A ROOT scalar and an
+item field with the same placeholder name therefore collide: the global value
+reaches the foreach prototype first, so item-over-ROOT shadowing is not
+available in the current public lifecycle.
+
+The S02 compatibility rule is to use distinct authored names, such as
+`items[].line_total` and `ROOT.total`, rather than relying on same-name scope
+shadowing. Future work may investigate true scoped placeholder resolution, but
+must first characterize existing template compatibility. Reordering render
+phases is not automatically the solution and is not prescribed by this note.
+
 
 ## FINALIZATION-01 — Final document/export semantics
 
