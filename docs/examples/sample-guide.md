@@ -44,14 +44,32 @@ The capability layer adds native ODF behavior above the Learn path.
 | [C04](../../samples/sample_C04_declarative_structured_collections.php) | Declarative Structured Collections | Direct Phase-D execution of Writer-authored nested Sections with template-shaped data |
 | [C05](../../samples/sample_C05_mapping_automation.php) | Mapping & Automation | Explicit mapping, concrete preflight, and common atomic Phase-E execution |
 
+## Canonical builder samples
+
+Builder samples demonstrate programmatic construction of substantial editable
+ODT documents or template candidates with the structured PHP API. They differ
+from Learn samples, which teach focused vocabulary; Capability samples, which
+demonstrate larger engine/ODF behaviors; and Professional Showcases, which
+demonstrate final composition with stable visual ownership in LibreOffice.
+
+| ID | Sample | Builder lesson |
+| --- | --- | --- |
+| [B01](../../samples/sample_B01_invoice_template_builder.php) | Invoice Template Builder | PHP constructs a credible editable invoice/template candidate with semantic paragraph styles, native tab stops, deliberate RichTable composition, and visible template syntax for later Writer refinement |
+
+A Builder sample does not replace the corresponding Professional Showcase.
+B01 is authoring/building evidence for the later S02 Professional Invoice,
+where stable visual structure moves to the LibreOffice-authored template.
+
+
 ## Samples as architectural teaching material
 
 The public sample suite is designed for both human readers and AI coding
 agents. Samples should not merely prove that an API call works; they should
 make the engine's intended solution patterns visible. Learn samples introduce
-focused vocabulary, capability samples demonstrate larger behaviors, and
-professional showcases demonstrate how to compose those capabilities into
-credible editable documents.
+focused vocabulary, capability samples demonstrate larger behaviors, Builder
+samples demonstrate structured programmatic document/template construction,
+and professional showcases demonstrate how to compose capabilities into
+credible editable documents with the intended LibreOffice/PHP ownership boundary.
 
 For a professional showcase, correctness therefore has four dimensions:
 idiomatic public-API usage for developers, a clear ownership boundary for
