@@ -271,19 +271,24 @@ gender = "male" | "female"
 customer_last_name
 ```
 
-Author two sibling conditional Sections:
+The implemented S02 template authors two sibling conditional Sections with
+semantic engine names and native Writer conditions:
 
 ```text
-#if:gender=="male"
+#if:male
+    hide if gender != "male"
     Dear Mr {{customer_last_name}},
 
-#if:gender=="female"
+#if:female
+    hide if gender != "female"
     Dear Ms {{customer_last_name}},
 ```
 
-The exact Section naming syntax must follow the already established Phase-D
-grammar as implemented on `develop`; do not approximate it from this
-blueprint if Writer/inspection evidence differs.
+The Section names follow the established Phase-D grammar. The engine controls
+structural keep/remove and scalar binding; the native Writer conditions use the
+document-global `gender` User Field for LibreOffice visibility reevaluation.
+The two inputs must select the same branch. A materialized `text:is-hidden`
+state is Writer evaluation data, not an engine-owned visibility flag.
 
 Both salutation paragraphs use the same semantic Writer paragraph style.
 

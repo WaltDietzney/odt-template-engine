@@ -8,6 +8,8 @@ use OdtTemplateEngine\OdtTemplate;
 
 $template = new OdtTemplate(__DIR__ . '/templates/template_S02_professional_invoice.odt');
 
+$template->setUserField('gender', 'male');
+
 $rootValues = [
     'customer_first_name' => 'Andrew',
     'customer_last_name' => 'Thompson',
@@ -26,7 +28,7 @@ $rootValues = [
     'paypal_mail' => 'billing@northstar.example',
     'subtotal' => '$4,800.00',
     'tax' => '$864.00',
-    'total' => '$5,664.00',
+    'total' => '$5,664.00'
 ];
 
 $items = [

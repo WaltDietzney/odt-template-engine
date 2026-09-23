@@ -151,6 +151,41 @@ needed, they must be expressed with supported conditions.
 The Section names and conditions must remain understandable in LibreOffice as
 template-authoring constructs.
 
+### Verified conditional-Section authoring practice
+
+The S02 template composes two independent mechanisms deliberately. The engine
+declarative controls `#if:male` and `#if:female`, executed through
+`executeDeclarative()`, own structural selection, removal, and scalar binding.
+The template also uses native Writer conditional Section visibility driven by
+the string User Field `gender`:
+
+```text
+#if:male     hide if gender != "male"
+#if:female   hide if gender != "female"
+```
+
+LibreOffice represents this native visibility with `text:condition` and
+`text:display="condition"`. A materialized `text:is-hidden` value may reflect
+the last Writer evaluation; it is not the authoritative runtime condition.
+`setUserField('gender', ...)` supplies the authoritative value and LibreOffice
+reevaluates the native condition when the document is opened or exported.
+
+The two mechanisms are complementary, not a general requirement for every
+conditional template. If both are used on one Section, their inputs must agree:
+
+```text
+gender = male    → male = true,   female = false
+gender = female  → male = false,  female = true
+```
+
+S02 validation showed that LibreOffice displays the female Section both when
+its materialized `text:is-hidden="true"` remains and when that state has been
+removed, provided the native `text:condition`/`text:display="condition"` and
+the `gender` User Field are correct. The engine therefore preserves authored
+Section display state for true declarative conditions and must not normalize
+native visibility merely to make the selected branch visible. Static Writer
+hiding is not a substitute for a runtime native condition.
+
 ### Introductory text
 
 Writer owns paragraph style and layout.
