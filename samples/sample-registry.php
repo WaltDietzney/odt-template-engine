@@ -6,7 +6,7 @@ declare(strict_types=1);
  * The explicit inventory of current public sample artifacts.
  *
  * Entries marked "migration" retain historical paths and are not canonical
- * L/C/S samples. Repository-only entries depend on files excluded from the
+ * L/C/B/S samples. Repository-only entries depend on files excluded from the
  * Composer archive and are not advertised as self-contained package examples.
  */
 return [
@@ -231,6 +231,20 @@ return [
             'template_path' => 'samples/templates/template_C05_mapping_automation.odt',
             'output_path' => 'samples/output/output_C05_mapping_automation.odt',
             'purpose' => 'Connects differently named application data and template dependencies through inspection, concrete preflight, all mapping families, and common atomic automation.',
+            'status' => 'canonical',
+            'migration_targets' => [],
+            'distribution' => 'composer',
+            'execution_mode' => 'odt',
+        ],
+        [
+            'id' => 'B01',
+            'title' => 'Invoice Template Builder',
+            'role' => 'builder',
+            'ownership' => 'programmatic-elements',
+            'entry_point' => 'samples/sample_B01_invoice_template_builder.php',
+            'template_path' => 'samples/templates/invoice-richtext-prototype.odt',
+            'output_path' => 'samples/output/output_B01_invoice_template_builder.odt',
+            'purpose' => 'Builds a complete editable invoice template candidate with structured PHP elements, semantic styles, native tabs, and visible template syntax for later LibreOffice refinement.',
             'status' => 'canonical',
             'migration_targets' => [],
             'distribution' => 'composer',

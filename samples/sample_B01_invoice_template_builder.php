@@ -451,6 +451,6 @@ $body->addTable($lowerTable);
 $template->setElement('invoice_body', $body);
 $template->setElement('invoice_header', $table);
 $template->setElement('invoice_footer', $footer);
-$template->save(__DIR__ . '/output/output_invoice_richtext_prototype.odt');
+$template->save(__DIR__ . '/output/output_B01_invoice_template_builder.odt');
 
 echo "Invoice RichText prototype generated successfully.\n";
