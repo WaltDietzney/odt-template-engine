@@ -193,8 +193,16 @@ region, which existing capability should be reused, and how multiple
 capabilities compose in a realistic editable ODT.
 
 Learn samples teach focused vocabulary. Capability samples teach larger native
-ODF behaviors. Professional showcases must teach composition and architectural
-judgement. They should use the strongest appropriate existing engine
+ODF behaviors. Builder samples teach structured programmatic construction of
+substantial editable documents or template candidates. Professional showcases
+must teach composition and architectural judgement with stable visual ownership
+kept in LibreOffice where appropriate.
+
+Builder and Showcase are deliberately distinct. A Builder sample may use PHP to
+construct the document/template candidate itself; a Professional Showcase
+demonstrates the intended template-driven composition model. B01 Invoice
+Template Builder therefore complements rather than replaces the planned S02
+Professional Invoice. They should use the strongest appropriate existing engine
 capabilities rather than simplified reimplementations that merely produce
 valid output. A technically passing sample is not sufficient if its code or
 rendered result teaches a weaker or misleading pattern.
