@@ -34,70 +34,6 @@ final class DeclarativeConditionExecutorTest extends TestCase
         self::assertSame('AuthoredSectionStyle', $section?->getAttribute('text:style-name'));
     }
 
-    public function testTrueConditionalSectionNormalizesAuthoredHiddenState(): void
-    {
-        [$context, $contract] = $this->fixture([
-            ['body', '#if:show', 'BODY {{name}}', null, [], [
-                'text:display' => 'none',
-                'text:is-hidden' => 'true',
-            ]],
-        ]);
-
-        (new DeclarativeConditionExecutor())->execute(
-            $context,
-            $contract,
-            ['show' => true, 'name' => 'Visible body']
-        );
-
-        $section = $this->findSection($context->contentDom(), '#if:show');
-        self::assertNotNull($section);
-        self::assertSame('BODY Visible body', $section?->textContent);
-        self::assertSame('', $section?->getAttributeNS(self::TEXT, 'display'));
-        self::assertSame('', $section?->getAttributeNS(self::TEXT, 'is-hidden'));
-    }
-
-    public function testFalseConditionalSectionWithAuthoredHiddenStateIsRemoved(): void
-    {
-        [$context, $contract] = $this->fixture([
-            ['body', '#if:show', 'BODY', null, [], ['text:display' => 'none']],
-        ]);
-
-        (new DeclarativeConditionExecutor())->execute($context, $contract, ['show' => false]);
-
-        self::assertNull($this->findSection($context->contentDom(), '#if:show'));
-    }
-
-    public function testTrueVisibleConditionalSectionDoesNotReceiveVisibilityAttributes(): void
-    {
-        [$context, $contract] = $this->fixture([
-            ['body', '#if:show', 'BODY', null],
-        ]);
-
-        (new DeclarativeConditionExecutor())->execute($context, $contract, ['show' => true]);
-
-        $section = $this->findSection($context->contentDom(), '#if:show');
-        self::assertNotNull($section);
-        self::assertFalse($section?->hasAttributeNS(self::TEXT, 'display'));
-        self::assertFalse($section?->hasAttributeNS(self::TEXT, 'is-hidden'));
-    }
-
-    public function testOrdinaryHiddenSectionIsNotChanged(): void
-    {
-        [$context, $contract] = $this->fixture([
-            ['body', 'OrdinarySection', 'ORDINARY', null, [], [
-                'text:display' => 'none',
-                'text:is-hidden' => 'true',
-            ]],
-        ]);
-
-        (new DeclarativeConditionExecutor())->execute($context, $contract, []);
-
-        $section = $this->findSection($context->contentDom(), 'OrdinarySection');
-        self::assertNotNull($section);
-        self::assertSame('none', $section?->getAttributeNS(self::TEXT, 'display'));
-        self::assertSame('true', $section?->getAttributeNS(self::TEXT, 'is-hidden'));
-    }
-
     public function testBodyIfFalseRemovesTheCompleteSectionSubtree(): void
     {
         [$context, $contract] = $this->fixture([
@@ -290,7 +226,7 @@ final class DeclarativeConditionExecutorTest extends TestCase
         (new DeclarativeConditionExecutor())->execute($context, $brokenContract, ['show' => true]);
     }
 
-    /** @param list<array{0:string,1:string,2:string,3:?string,4?:list<array>,5?:array<string,string>}> $sections */
+    /** @param list<array{0:string,1:string,2:string,3:?string,4?:list<array>}> $sections */
     private function fixture(array $sections): array
     {
         $sourceContent = $this->document('office:document-content');
@@ -298,13 +234,7 @@ final class DeclarativeConditionExecutorTest extends TestCase
         $text = $sourceContent->createElementNS(self::OFFICE, 'office:text');
         foreach ($sections as $definition) {
             if ($definition[0] === 'body') {
-                $text->appendChild($this->section(
-                    $sourceContent,
-                    $definition[1],
-                    $definition[2],
-                    $definition[4] ?? [],
-                    $definition[5] ?? []
-                ));
+                $text->appendChild($this->section($sourceContent, $definition[1], $definition[2], $definition[4] ?? []));
             }
         }
         $body->appendChild($text);
@@ -318,13 +248,7 @@ final class DeclarativeConditionExecutorTest extends TestCase
             }
             $masters[$definition[3]] ??= $this->masterPage($sourceStyles, $definition[3]);
             $carrier = $sourceStyles->createElementNS(self::STYLE, $definition[0] === 'header' ? 'style:header' : 'style:footer');
-            $carrier->appendChild($this->section(
-                $sourceStyles,
-                $definition[1],
-                $definition[2],
-                [],
-                $definition[5] ?? []
-            ));
+            $carrier->appendChild($this->section($sourceStyles, $definition[1], $definition[2]));
             $masters[$definition[3]]->appendChild($carrier);
         }
         foreach ($masters as $master) {
@@ -341,20 +265,11 @@ final class DeclarativeConditionExecutorTest extends TestCase
         ];
     }
 
-    private function section(
-        DOMDocument $dom,
-        string $name,
-        string $text,
-        array $children = [],
-        array $attributes = []
-    ): DOMElement
+    private function section(DOMDocument $dom, string $name, string $text, array $children = []): DOMElement
     {
         $section = $dom->createElementNS(self::TEXT, 'text:section');
         $section->setAttribute('text:name', $name);
         $section->setAttribute('text:style-name', 'AuthoredSectionStyle');
-        foreach ($attributes as $attribute => $value) {
-            $section->setAttributeNS(self::TEXT, $attribute, $value);
-        }
         $paragraph = $dom->createElementNS(self::TEXT, 'text:p');
         $paragraph->appendChild($dom->createTextNode($text));
         $section->appendChild($paragraph);

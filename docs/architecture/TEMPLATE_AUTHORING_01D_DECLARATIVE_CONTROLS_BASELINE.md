@@ -345,21 +345,7 @@ The Phase-D structural result is:
 
 #if / #ifnot true
     → preserve the native Section container and its contents
-    → normalize authored hidden state so the selected result is visible
 ```
-
-Phase-D originally preserved the authored display state for a true condition.
-S02 validation exposed an authoring-UX gap: a Section manually hidden in Writer
-could remain hidden after the engine selected it. The amended rule is that a
-recognized declarative conditional Section owns result visibility after
-evaluation. A true branch therefore removes only explicit authored hidden
-attributes (`text:display="none"` and `text:is-hidden="true"`); it preserves
-the Section, content, styles, and unrelated native attributes. A false branch
-is still removed as a complete subtree.
-
-Ordinary named Writer Sections remain Writer-owned: their authored visibility
-is not normalized by declarative execution. Native `text:condition` semantics
-are also not rewritten by this amendment.
 
 For a true condition, Section-owned styles/properties, nested native objects,
 and nested controls survive. Those nested controls are then eligible for

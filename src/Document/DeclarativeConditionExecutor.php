@@ -24,8 +24,6 @@ use OdtTemplateEngine\Template\TemplateContract;
  */
 final class DeclarativeConditionExecutor
 {
-    private const TEXT_NAMESPACE = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0';
-
     public function __construct(
         private SectionWorkingTargetResolver $resolver = new SectionWorkingTargetResolver(),
         private SectionRemovalService $removal = new SectionRemovalService(),
@@ -468,7 +466,6 @@ final class DeclarativeConditionExecutor
             return;
         }
 
-        $this->normalizeTrueConditionalVisibility($target->section());
         $this->instances->bindWorkingTargetScalars($target, $values);
         foreach ($children[$carrier->id()] ?? [] as $child) {
             $this->executeControl(
@@ -482,23 +479,6 @@ final class DeclarativeConditionExecutor
                 $carrier,
                 $contract
             );
-        }
-    }
-
-    /**
-     * A recognized conditional Section owns result visibility after evaluation.
-     * Preserve unrelated native conditional attributes and ordinary Sections.
-     */
-    private function normalizeTrueConditionalVisibility(DOMElement $section): void
-    {
-        $display = strtolower(trim($section->getAttributeNS(self::TEXT_NAMESPACE, 'display')));
-        if ($display === 'none') {
-            $section->removeAttributeNS(self::TEXT_NAMESPACE, 'display');
-        }
-
-        $hidden = strtolower(trim($section->getAttributeNS(self::TEXT_NAMESPACE, 'is-hidden')));
-        if ($hidden === 'true') {
-            $section->removeAttributeNS(self::TEXT_NAMESPACE, 'is-hidden');
         }
     }
 
