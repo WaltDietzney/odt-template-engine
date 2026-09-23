@@ -13,6 +13,7 @@ $sampleEntries = $sampleRegistry['samples'];
 $roleLabels = [
     'learn' => 'Learn',
     'capability' => 'Capabilities',
+    'builder' => 'Builders',
     'showcase' => 'Showcases',
 ];
 
