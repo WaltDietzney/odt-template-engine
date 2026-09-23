@@ -17,13 +17,13 @@ final class SampleRegistryTest extends TestCase
 
         foreach ($samples as $sample) {
             self::assertMatchesRegularExpression(
-                '/^(?:[a-z][a-z0-9.-]+|(?:L|C|S)\d{2}[a-z]?)$/',
+                '/^(?:[a-z][a-z0-9.-]+|(?:L|C|B|S)\d{2}[a-z]?)$/',
                 $sample['id']
             );
             self::assertNotContains($sample['id'], $ids, 'Duplicate sample ID: ' . $sample['id']);
             $ids[] = $sample['id'];
 
-            self::assertContains($sample['role'], ['learn', 'capability', 'showcase']);
+            self::assertContains($sample['role'], ['learn', 'capability', 'builder', 'showcase']);
             self::assertContains($sample['ownership'], [
                 'simple-template',
                 'programmatic-elements',
@@ -65,11 +65,11 @@ final class SampleRegistryTest extends TestCase
             if ($sample['status'] === 'migration') {
                 self::assertStringStartsWith('legacy.', $sample['id']);
             } else {
-                self::assertMatchesRegularExpression('/^(?:L|C|S)\d{2}[a-z]?$/', $sample['id']);
+                self::assertMatchesRegularExpression('/^(?:L|C|B|S)\d{2}[a-z]?$/', $sample['id']);
             }
 
             foreach ($sample['migration_targets'] as $target) {
-                self::assertMatchesRegularExpression('/^(?:L|C|S)\d{2}[a-z]?$/', $target);
+                self::assertMatchesRegularExpression('/^(?:L|C|B|S)\d{2}[a-z]?$/', $target);
             }
         }
     }
@@ -409,11 +409,13 @@ final class SampleRegistryTest extends TestCase
             'data-sample-id="C03"',
             'data-sample-id="C04"',
             'data-sample-id="C05"',
+            'data-sample-id="B01"',
             'Page &amp; Flow Layout',
             'Advanced Table Layout',
             'Frame Layout',
             'Declarative Structured Collections',
             'Mapping &amp; Automation',
+            'Invoice Template Builder',
             'data-sample="L07"',
             'data-sample="L08"',
             'data-sample="L09"',
