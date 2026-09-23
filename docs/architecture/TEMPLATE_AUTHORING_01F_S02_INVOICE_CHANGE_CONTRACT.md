@@ -199,19 +199,36 @@ name
 description
 price
 quantity
-total
+line_total
 ```
 
-The intended scope remains:
+The initial S02 draft described the intended semantic scope as:
 
 ```text
 items[].total   line/item total
 ROOT.total      document-level grand total
 ```
 
-Using the same dependency name `total` at item and ROOT scope is deliberate
-architecture evidence and must not be renamed solely to avoid the apparent
-name duplication.
+However, a characterization of the current classic rendering path establishes
+that this same-name arrangement is not executable through the existing public
+classic lifecycle. `render()` applies globally assigned scalar values to the
+document before the classic foreach block is cloned. Consequently, a ROOT
+assignment for `total` reaches the item prototype before row-local replacement,
+and item-local `total` values cannot shadow it.
+
+This is an evidence-driven amendment to the approved S02 contract. The
+compatibility-safe S02 authoring rule is therefore:
+
+```text
+items[].line_total   line/item total
+ROOT.total           document-level grand total
+```
+
+The current S02 template/sample must adopt that distinct item name in the
+following implementation slice. This characterization slice does not change
+the existing template or sample. Future scoped placeholder work is tracked
+separately; changing render order is not assumed to be a sufficient or safe
+solution without broader compatibility characterization.
 
 The final S02 item layout uses Writer-authored paragraphs and native tab stops,
 not repeated spaces.
@@ -467,7 +484,8 @@ At minimum verify:
 - its declared template exists;
 - generation produces a valid ODT;
 - expected dynamic values are present after rendering;
-- item repetition has the intended cardinality and item/ROOT `total` scope;
+- item repetition has the intended cardinality and distinct item `line_total` /
+  ROOT `total` scope;
 - the chosen conditional salutation branch survives and the other branch does
   not;
 - User Field values are updated consistently if User Fields are part of S02;

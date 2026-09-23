@@ -113,6 +113,37 @@ final class TemplateAuthoring01A13CompatibilityPathComparisonTest extends TestCa
         );
     }
 
+    public function testRenderPathCharacterizesSameNameRootAndItemCollision(): void
+    {
+        $body = '<text:p>{{#foreach:items}}</text:p>'
+            . '<text:p text:style-name="RepeatBody">{{total}}</text:p>'
+            . '<text:p>{{#endforeach}}</text:p>'
+            . '<text:p text:style-name="RootValue">{{total}}</text:p>';
+
+        $output = $this->renderPath(
+            $body,
+            ['total' => 'ROOT TOTAL'],
+            ['items' => [
+                ['total' => 'ITEM TOTAL 1'],
+                ['total' => 'ITEM TOTAL 2'],
+            ]]
+        );
+
+        $xpath = $this->contentXPath($output);
+
+        // Compatibility characterization: global scalar replacement runs
+        // before row cloning, so the item-local same-name values cannot bind.
+        self::assertSame(
+            ['ROOT TOTAL', 'ROOT TOTAL'],
+            $this->texts($xpath, '//text:p[@text:style-name="RepeatBody"]')
+        );
+        self::assertSame(
+            ['ROOT TOTAL'],
+            $this->texts($xpath, '//text:p[@text:style-name="RootValue"]')
+        );
+        self::assertStringNotContainsString('ITEM TOTAL', $this->documentText($xpath));
+    }
+
     public function testDirectRepeatingPathConsumesUnknownGlobalScalarBeforeLaterRender(): void
     {
         $body = '<text:p>{{#foreach:items}}</text:p>'
@@ -413,5 +444,14 @@ final class TemplateAuthoring01A13CompatibilityPathComparisonTest extends TestCa
         }
 
         return $texts;
+    }
+
+    private function documentText(DOMXPath $xpath): string
+    {
+        $nodes = $xpath->query('//office:text');
+        self::assertNotFalse($nodes);
+        self::assertSame(1, $nodes->length);
+
+        return $nodes->item(0)?->textContent ?? '';
     }
 }

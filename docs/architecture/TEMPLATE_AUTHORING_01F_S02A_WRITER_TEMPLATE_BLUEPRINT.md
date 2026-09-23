@@ -104,7 +104,7 @@ PAGE
 ├── Introductory paragraph
 ├── Item heading
 ├── {{#foreach:items}}
-│   ├── Item line: name / price / quantity / total
+│   ├── Item line: name / price / quantity / line_total
 │   └── Item description
 ├── {{#endforeach}}
 │
@@ -338,7 +338,7 @@ Use classic visible template syntax, each marker in its own paragraph:
 
 ```text
 {{#foreach:items}}
-{{name}}    {{price}}    {{quantity}}    {{total}}
+{{name}}    {{price}}    {{quantity}}    {{line_total}}
 {{description}}
 {{#endforeach}}
 ```
@@ -363,7 +363,7 @@ Dependencies:
 {{name}}
 {{price}}
 {{quantity}}
-{{total}}
+{{line_total}}
 ```
 
 Use native tabs between the four logical columns.
@@ -447,10 +447,21 @@ Author grand total as a separate orange emphasis paragraph:
 GRAND TOTAL    {{total}}
 ```
 
-The `{{total}}` here is ROOT-scoped. The identical `{{total}}` inside
-`items` remains item-scoped.
+The `{{total}}` here is ROOT-scoped. The original blueprint considered using
+the identical `{{total}}` inside `items` as item-scoped, but current classic
+rendering characterizes that arrangement as a collision: global scalar
+replacement occurs before foreach row cloning, so item values cannot shadow an
+already assigned ROOT value.
 
-No value is calculated by the engine.
+The compatibility-safe authored form is therefore:
+
+```text
+items[].line_total   line/item total
+ROOT.total           document-level grand total
+```
+
+The S02 implementation slice must use `{{line_total}}` for the repeated item
+line. No value is calculated by the engine.
 
 The tax label is stable representative Writer text. If the displayed rate is
 `Tax VAT 18%`, it must not imply that S02 derives `{{tax}}` from 18%.
@@ -568,7 +579,7 @@ items[]
     description
     price
     quantity
-    total
+    line_total
 ```
 
 No value in this inventory is calculated by the engine.
