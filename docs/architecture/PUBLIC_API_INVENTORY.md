@@ -318,6 +318,211 @@ and filter_options.
 the Template Authoring inspection history and current docs.
 
 
+## OdtTemplate verification log — tranche 2: historical contracts and classification
+
+This tranche resolves several questions left open by tranche 1 by following the
+accepted D5G compatibility work, STYLE-API-02 closeout, and
+TEMPLATE-AUTHORING-01B/D/E architecture history.
+
+### Classification baseline
+
+The evidence now supports this provisional 1.0 classification for the
+OdtTemplate facade itself. "Provisional" means the method's own architectural
+role is established; detailed parameter/option contracts may still be audited
+in their capability-specific sections.
+
+| Surface | 1.0 classification | Evidence-based reason |
+| --- | --- | --- |
+| __construct() | Recommended Public API | normal facade entry point; loads/prepares immediately |
+| assign() | Recommended Public API | canonical classic-template assignment in current quick start and guides |
+| assignRepeating() | Recommended Public API | canonical classic foreach data assignment in current quick start |
+| render() | Recommended Public API | established classic template-language execution; compatibility-sensitive lifecycle |
+| save() | Recommended Public API | explicit persistence/finalization boundary |
+| setElement() | Recommended Public API | authoritative semantic structured-content insertion facade |
+| styles() | Recommended Public API | STYLE-API-02 canonical document-style facade |
+| setDocumentDefaults() | Recommended Public API | canonical convenience over document-scoped style/default authoring; detailed options audited separately |
+| setUserField() | Recommended Public API | explicit Writer User Field binding; intentionally independent from classic assign/render |
+| bookmark()/section()/table()/frame() | Recommended Public API | typed current-document native target facades |
+| inspect() | Recommended Public API | current working-document native inspection |
+| inspectTemplate() | Recommended Public API | unified original-source semantic TemplateContract; explicitly designed for 1.0 |
+| inspectTemplateStructure() | Advanced Public API | retained focused low-level original-source expression/topology inspection |
+| automate() | Advanced Public API | canonical optional Phase-E atomic automation invocation |
+| executeDeclarative() | Advanced Public API | direct Phase-D declarative structural execution; additive and independent of Phase-E |
+| automateDependencies() | Advanced / specialized Public API | E3 specialized execution facade intentionally remains independently callable |
+| automateNativeObjectActions() | Advanced / specialized Public API | E4 specialized execution facade intentionally remains independently callable |
+| automateDocumentCapabilities() | Advanced / specialized Public API | E5 specialized execution facade intentionally remains independently callable |
+| setValues() | Compatibility API | same staging behavior as assign(); current public guidance favors assign(); retained historical surface |
+| setRepeating() | Compatibility API | same repeatStack staging role as assignRepeating(); canonical guidance favors assignRepeating() |
+| setRepeatingData() | Compatibility / historical API — detailed lifecycle still to document | immediate DOM mutation differs from canonical staged repeating workflow |
+| load() | Advanced lifecycle / Compatibility API | explicit reset-to-original-template boundary; constructor already loads for normal workflow |
+| refresh() | Compatibility lifecycle API | characterized legacy reset behavior; name is potentially misleading |
+| cleanup() | Advanced lifecycle API | explicit workspace cleanup; shutdown cleanup is also registered |
+| extractTemplateVariables() | Compatibility inspection API | older current-working-DOM extraction surface overlaps conceptually with newer source TemplateContract inspection but is not silently removed |
+| enableDebugMode()/getDebugLog() | Advanced diagnostic API | retained facade diagnostics, not primary authoring workflow |
+| ensureParagraphStylesExist() | Infrastructure/compatibility public surface | STYLE-API-02H explicitly retains it as lifecycle/template-preparation and sample compatibility helper, not canonical style authoring |
+| ensureDefaultListStylesForContentXml() | Infrastructure public surface | template preparation/finalization helper; not part of the canonical STYLE-API-02 application authoring model |
+
+This table does not classify capability-specific methods such as setMeta(),
+getMeta(), setImage(), or replaceImageByName() beyond their obvious public
+facade presence; their exact contracts are handled in their dedicated audits.
+
+### Legacy structured values through assign()/render()
+
+D5G-B proves that the following remains an observable public compatibility
+lifecycle:
+
+```php
+$template->assign(['placeholder' => $odtElement]);
+$template->render();
+$template->save($path);
+```
+
+It is **not** semantically equivalent to setElement(). Historically it can
+materialize the same element separately against content.xml and styles.xml,
+uses compatibility registration/finalization rather than the authoritative
+semantic pre-materialization lifecycle, and has producer-specific differences.
+
+The 1.0 API reference must therefore do both:
+
+1. teach setElement() as the recommended structured-content path; and
+2. document assign(OdtElement) only as retained compatibility behavior, with a
+   warning not to infer setElement() semantics from it.
+
+D5G deliberately preserved this compatibility path. It must not be silently
+"fixed" during documentation.
+
+### Style API question resolved
+
+STYLE-API-02 provides unusually strong historical evidence and changes the
+classification from the earlier first-pass uncertainty.
+
+The current canonical style story is:
+
+```text
+normal application authoring
+    -> friendly element style options
+
+reusable generated paragraph style
+    -> $template->styles()->defineParagraph(...)
+
+custom structured extension
+    -> semantic StyleRequirement / ownership hooks
+
+serialization
+    -> internal/narrow StyleWriter boundary
+```
+
+STYLE-API-02I explicitly states that StyleMapper is now a stateless
+mapping/identity utility and StyleWriter is a serialization helper rather than
+normal application authoring API. Historical registries and HasStyles were
+retired.
+
+Crucially, STYLE-API-02H explicitly retained
+ensureParagraphStylesExist() as a lifecycle/template-preparation and sample
+compatibility helper. Public visibility therefore does not make it a peer of
+$template->styles()->defineParagraph().
+
+### Inspection question resolved
+
+TEMPLATE-AUTHORING-01B deliberately designed the three inspection APIs as
+different first-class views, not accidental aliases:
+
+```text
+inspect()
+    current/live Working Document
+
+inspectTemplateStructure()
+    focused original-source classic-expression topology
+
+inspectTemplate()
+    unified original-source semantic TemplateContract
+```
+
+inspectTemplate() is the primary integration contract for generic
+applications. TemplateContract::toArray() is also a versioned tooling contract;
+its machine-readable keys/codes have compatibility implications independent of
+the Composer package version.
+
+extractTemplateVariables() predates this model and inspects the current working
+content/styles DOMs with a narrower regex-based projection. No reviewed
+architecture document promotes it as the modern replacement for
+inspectTemplate(). It is therefore classified as compatibility inspection,
+not removed.
+
+### Phase D and Phase E question resolved
+
+Phase D explicitly defines declarative execution as an additional capability,
+not a replacement for imperative APIs.
+
+Phase E explicitly defines automation as optional. Normal library usage must
+not require a mandatory global automation lifecycle; imperative operations may
+occur before and after automation, and automation neither renders nor saves.
+
+The current common advanced facade is:
+
+```php
+$template->automate($contract, $preflight);
+```
+
+Its accepted E6 semantics are:
+
+- consumes an already-inspected TemplateContract and READY concrete preflight;
+- does not reinspect or remap application data;
+- executes E4 native actions -> E3 dependency automation -> E5 document
+  capabilities under one rollback boundary;
+- permits one successful common invocation per load lifecycle;
+- failed invocation with successful rollback does not consume that lifecycle;
+- load() resets the success marker;
+- does not call render(), save(), refresh(), finalization, or close;
+- later imperative mutation and explicit save remain supported.
+
+The specialized E3/E4/E5 facade methods intentionally remain independently
+callable. They are therefore Advanced/specialized public API, not merely
+private implementation leakage. The common automate() method is the preferred
+high-level Phase-E entry point when invocation-wide atomicity is desired.
+
+### Important image-semantics separation discovered in Phase E
+
+The Phase-E Frame image-replacement path must not be documented as equivalent
+to legacy replaceImageByName().
+
+E4 deliberately established different semantics:
+
+- no dimensional options: preserve both existing dimensions;
+- one dimension: derive the other from intrinsic image ratio where geometry is
+  determinable;
+- two dimensions: apply both explicitly;
+- no legacy 5cm x 3cm default.
+
+The imperative replaceImageByName() compatibility behavior remains unchanged.
+This is a concrete example of why the final API reference must document methods
+by actual execution path rather than merging similarly named image operations
+into one conceptual contract.
+
+### Remaining OdtTemplate questions after tranche 2
+
+The facade-level architecture is now largely classifiable. The remaining
+questions are primarily exact behavior contracts:
+
+1. setRepeatingData(): historical intended audience, exact failure/repeat
+   semantics, and whether current tests still deliberately preserve it.
+2. render(): exact repeated-render behavior after the later D5G narrowing and
+   compatibility closeout, especially structured legacy values.
+3. load()/refresh()/cleanup(): exact exception/return contracts and whether
+   refresh() has any current recommended use case.
+4. debug APIs: what messages are actually emitted and whether debug state is
+   reset across load()/refresh().
+5. extractTemplateVariables(): exact parser limits versus TemplateContract
+   inspection.
+6. ensureDefaultListStylesForContentXml(): direct caller evidence and final
+   public-audience classification.
+7. capability-specific facade methods: metadata, image replacement, and their
+   complete option/failure contracts.
+
+These questions should be answered from current tests and final closeout
+documents before the OdtTemplate section is marked VERIFIED.
+
+
 ## 2. Native Writer targets
 
 ### BookmarkTarget
