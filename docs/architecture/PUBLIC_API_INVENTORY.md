@@ -1411,3 +1411,174 @@ First perform the Public API Verification Audit using the evidence stack defined
 
 The resulting classification is the basis for the 1.0 end-programmer API
 reference.
+
+
+## API-family verification — DrawTextBox / generated frames
+
+Status: **VERIFIED + DOCUMENTED-COMPLETE for current DrawTextBox source**.
+
+This family is the generated/programmatic text-box producer. It must not be
+confused with `OdtTemplate::frame($name)`, which addresses an existing
+Writer-authored frame.
+
+### Recommended semantic layout API
+
+```php
+$box = (new DrawTextBox('Sidebar'))
+    ->addElement($content)
+    ->setFrameLayout([
+        'anchor' => 'paragraph',
+        'width' => '6cm',
+        'height' => '4cm',
+        'horizontal' => [
+            'alignment' => 'right',
+            'relative-to' => 'page-content',
+        ],
+        'vertical' => [
+            'alignment' => 'top',
+            'relative-to' => 'paragraph',
+        ],
+        'wrap' => 'parallel',
+    ]);
+```
+
+The complete friendly `setFrameLayout()` top-level vocabulary is exactly:
+
+| key | accepted values / structure |
+|---|---|
+| `anchor` | `paragraph|char|as-char|page` |
+| `width` | positive absolute length, units `cm|mm|in|pt|pc` |
+| `height` | positive absolute length, same units |
+| `horizontal` | exactly one of `alignment` or `offset`, plus optional `relative-to` |
+| `vertical` | exactly one of `alignment` or `offset`, plus optional `relative-to` |
+| `wrap` | `none|left|right|parallel|dynamic|run-through` |
+
+Unknown keys throw InvalidArgumentException. Percent sizes are rejected.
+Offsets accept signed absolute lengths in `cm|mm|in|pt|pc`; percentages are
+not offsets in the semantic API.
+
+Horizontal alignments: `left|center|right`.
+Vertical alignments: `top|middle|bottom`.
+
+Relation matrix:
+
+| anchor | horizontal relative-to | vertical relative-to |
+|---|---|---|
+| paragraph | paragraph, paragraph-content, page, page-content | paragraph, paragraph-content, page, page-content |
+| char | char, paragraph, paragraph-content, page, page-content | char, paragraph, paragraph-content, page, page-content, baseline |
+| page | page, page-content | page, page-content |
+| as-char | no horizontal placement | baseline |
+
+When no relation is supplied by a convenience method, page anchor defaults to
+`page`; paragraph/char default to `paragraph`; as-char vertical defaults to
+`baseline`. As-char rejects horizontal friendly placement and vertical
+offset. Alignment and offset are mutually exclusive per axis; setting one later
+replaces the previous mode on that axis. Changing anchor revalidates retained
+axis state and can therefore throw.
+
+`setFrameLayout([])` deliberately clears semantic layout state and returns
+rendering to legacy constructor-option behavior.
+
+Semantic convenience methods, all fluent:
+
+```php
+setFrameAnchor(string $anchor): self
+setFrameHorizontalAlignment(string $alignment, ?string $relativeTo = null): self
+setFrameVerticalAlignment(string $alignment, ?string $relativeTo = null): self
+setFrameHorizontalOffset(string $offset, ?string $relativeTo = null): self
+setFrameVerticalOffset(string $offset, ?string $relativeTo = null): self
+setFrameWrap(string $wrap): self
+```
+
+They share one immutable DrawingLayout state and the same validation above.
+
+### Constructor and legacy frame options
+
+```php
+new DrawTextBox(string $name, array $options = [])
+```
+
+The name becomes `draw:name`. Without semantic DrawingLayout, anchor defaults
+to `paragraph`.
+
+The constructor/options path is older and deliberately permissive. The complete
+friendly keys interpreted by `StyleMapper::mapFrameStyleOptions()` are:
+
+| friendly key | native result / behavior |
+|---|---|
+| `background-color` | `fo:background-color`; also defaults `draw:fill=solid` and `draw:fill-color` to same value unless already mapped |
+| `border`, `border-top/right/bottom/left` | corresponding `fo:border*` |
+| `corner-radius-x` or `rx` | `svg:rx` |
+| `corner-radius-y` or `ry` | `svg:ry` |
+| `padding`, `padding-top/right/bottom/left` | corresponding `fo:padding*` |
+| `fill` | `draw:fill` |
+| `fill-color` | `draw:fill-color` |
+| `wrap-influence` | `draw:wrap-influence-on-position` |
+| `allow-overlap` | `loext:allow-overlap` |
+| `vertical-pos`, `vertical-rel` | corresponding `style:*` position properties |
+| `horizontal-pos`, `horizontal-rel` | corresponding `style:*` position properties |
+| `width`, `height` | used directly as `svg:width/svg:height` object attributes by DrawTextBox |
+| `anchor` | used directly as `text:anchor-type`; default paragraph |
+| any other key | mapper passes it through verbatim; this is compatibility behavior, not a validated semantic option |
+
+No general validation is performed on legacy option values. In particular the
+historical position path can preserve values such as `50%`, whereas the
+semantic DrawingLayout rejects percentage pseudo-positioning.
+
+When semantic layout is active, semantic anchor/width/height/axis placement
+wins over conflicting legacy geometry. Legacy non-layout graphic policy/style
+properties can coexist with semantic layout.
+
+### DrawTextBox public method reference
+
+| Method | Contract | Disposition |
+|---|---|---|
+| `__construct(string $name, array $options = [])` | Creates named generated draw:frame/draw:text-box; legacy options above. | Recommended constructor; options path Compatibility where semantic replacement exists |
+| `addElement(OdtElement $element): self` | Appends child in order inside draw:text-box. Overrides base storage with DrawTextBox-owned paragraph/element list. | Recommended |
+| `setFrameLayout(array $layout): self` | Complete semantic layout master API above; empty array resets to legacy layout. | Recommended |
+| six `setFrame*()` semantic convenience methods | Incrementally mutate shared semantic layout with same validation. | Recommended |
+| `setBackground(string $color): self` | Sets legacy `background-color`; mapper also derives solid fill + fill-color. No color validation. | Compatibility convenience; useful but semantically overlapping fill API |
+| `setFill(string $fill): self` | Sets draw:fill verbatim; no enum validation. | Advanced/Compatibility |
+| `setFillColor(string $color): self` | Sets draw:fill-color verbatim. | Advanced/Compatibility |
+| `setAllowOverlap(bool $allow = true): self` | Emits `loext:allow-overlap` string true/false. | Advanced/Compatibility policy |
+| `flowWithText(bool $enable = true): self` | Emits `style:flow-with-text` string true/false. | Advanced/Compatibility policy |
+| `setVerticalPos(string $pos, string $rel = 'baseline'): self` | Legacy pass-through position pair; no validation. | Compatibility / deprecation candidate |
+| `setHorizontalPos(string $pos, string $rel = 'char'): self` | Legacy pass-through position pair; no validation. | Compatibility / deprecation candidate |
+| `setHorizontalPosition(string $pos, string $rel = 'page'): self` | Alias-like wrapper around setHorizontalPos but with **different default relation** (`page` vs `char`). | Compatibility / deprecation candidate |
+| `setVerticalPosition(string $pos, string $rel = 'page'): self` | Alias-like wrapper around setVerticalPos but with **different default relation** (`page` vs `baseline`). | Compatibility / deprecation candidate |
+| `ownedElements(): iterable` | Returns DrawTextBox child list. | Extension/infrastructure |
+| `getOwnStyleRequirements(): iterable` | Emits semantic graphic style requirement when effective semantic graphic properties exist. | Extension/infrastructure |
+| `getFrameStyleRequirements(): array` | Legacy frame-style requirement map; refreshes legacy style first. | Compatibility/infrastructure |
+| `getOwnFrameStyleRequirements(): array` | Exact wrapper around getFrameStyleRequirements(). | Compatibility/infrastructure |
+| `structuredInsertionMode(): StructuredInsertionMode` | as-char => INLINE_TEXT_FLOW; otherwise BLOCK. | Infrastructure |
+| `toDomNode(DOMDocument $dom): DOMNode` | Materializes frame/text-box; as-char returns frame directly, other anchors wrap frame in text:p. | Infrastructure |
+| `toStyleDomNode(DOMDocument $dom): ?DOMElement` | Materializes legacy graphic style node. | Compatibility/infrastructure |
+
+### Compatibility-policy interaction
+
+The following can coexist with semantic frame layout and are retained when a
+later semantic wrap value changes:
+
+```text
+style:flow-with-text
+draw:wrap-influence-on-position
+loext:allow-overlap
+```
+
+Characterization tests deliberately preserve historical wrap-influence values
+without interpreting them. Equivalent effective policy/layout state produces a
+stable semantic style identity independent of setter order.
+
+### DrawingLayout and DrawingLayoutProjector classification
+
+Both classes are public PHP classes and fully characterize the semantic frame
+layout machinery, but normal end-programmer authoring does not require direct
+use: DrawTextBox and ImageElement expose the semantic layout API. For the 1.0
+documentation they belong under **Advanced / extension infrastructure**, not
+the primary tutorial surface.
+
+DrawingLayout's public constructors/factories/getters/with-methods/toArray are
+therefore retained in the complete inventory, but the recommended end-user path
+is through the frame-backed element methods rather than manually projecting
+native carriers.
+
