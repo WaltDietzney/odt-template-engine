@@ -313,6 +313,51 @@ final class SampleRegistryTest extends TestCase
         self::assertSame(['S01b'], $samples['legacy.sample-25.section-instantiation']['migration_targets']);
     }
 
+    public function testBuilderSamplesAreCanonicalAndRegistryDriven(): void
+    {
+        $samples = [];
+        foreach ($this->registry()['samples'] as $sample) {
+            $samples[$sample['id']] = $sample;
+        }
+
+        self::assertSame([
+            'Invoice Template Builder',
+            'builder',
+            'programmatic-elements',
+            'samples/sample_B01_invoice_template_builder.php',
+            'samples/templates/invoice-richtext-prototype.odt',
+            'samples/output/output_B01_invoice_template_builder.odt',
+        ], [
+            $samples['B01']['title'],
+            $samples['B01']['role'],
+            $samples['B01']['ownership'],
+            $samples['B01']['entry_point'],
+            $samples['B01']['template_path'],
+            $samples['B01']['output_path'],
+        ]);
+
+        self::assertSame([
+            'Professional Report Builder',
+            'builder',
+            'programmatic-elements',
+            'samples/sample_B02_report_builder.php',
+            'samples/templates/template_B02_report_builder.odt',
+            'samples/output/output_B02_report_builder.odt',
+        ], [
+            $samples['B02']['title'],
+            $samples['B02']['role'],
+            $samples['B02']['ownership'],
+            $samples['B02']['entry_point'],
+            $samples['B02']['template_path'],
+            $samples['B02']['output_path'],
+        ]);
+
+        self::assertSame('canonical', $samples['B02']['status']);
+        self::assertSame([], $samples['B02']['migration_targets']);
+        self::assertSame('composer', $samples['B02']['distribution']);
+        self::assertSame('odt', $samples['B02']['execution_mode']);
+    }
+
     public function testS01bIsTheCanonicalStructuredTemplateShowcase(): void
     {
         $samples = [];

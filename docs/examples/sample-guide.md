@@ -55,6 +55,7 @@ demonstrate final composition with stable visual ownership in LibreOffice.
 | ID | Sample | Builder lesson |
 | --- | --- | --- |
 | [B01](../../samples/sample_B01_invoice_template_builder.php) | Invoice Template Builder | PHP constructs a credible editable invoice/template candidate with semantic paragraph styles, native tab stops, deliberate RichTable composition, and visible template syntax for later Writer refinement |
+| [B02](../../samples/sample_B02_report_builder.php) | Professional Report Builder | PHP composes a fictional multi-page annual report from existing RichText, tables, images, page-flow, and frame-layout capabilities |
 
 A Builder sample does not replace the corresponding Professional Showcase.
 B01 is authoring/building evidence for the later S02 Professional Invoice,
