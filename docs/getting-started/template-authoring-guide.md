@@ -13,8 +13,9 @@ Prefer visual layout in LibreOffice, semantic structure in ODT, and data
 binding/manipulation in PHP. Do not recreate LibreOffice's layout system in
 application code unless the content is genuinely application-generated.
 
-The canonical progression is [Learn samples L01–L11](../examples/sample-guide.md)
-followed by capability examples C01–C05, then professional showcases S01–S03.
+The canonical progression is [Learn samples L01–L12](../examples/sample-guide.md)
+followed by capability examples C01–C05, builders B01–B02, and the current
+professional showcases S01b and S03.
 Learn samples introduce one authoring concept at a time; capability samples
 show the additional native ODF behavior each capability contributes.
 Inspection and mapping/automation are integration layers over the three
