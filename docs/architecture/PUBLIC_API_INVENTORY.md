@@ -3410,3 +3410,490 @@ Facade image operations
 No implementation semantics were changed. In particular, the legacy named
 replacement defaults and duplicate-name behavior remain intact, and the
 Writer-native/Phase-E image semantics remain deliberately separate.
+
+
+## API-family completion — Writer-native Targets: Bookmark, Section, Table, Frame
+
+Status: **VERIFIED + DOCUMENTED-COMPLETE for the current Writer-native typed
+target facade, target handles, descriptors, mutation operations, and their
+public failure contracts**.
+
+This family implements the Writer-owned side of the 1.0 mental model. PHP does
+not reconstruct these objects from scratch: the user gives a native Writer
+object a name and the engine resolves that identity in the current working
+document.
+
+### Common typed-target model
+
+The facade entry points are:
+
+```php
+bookmark(string $name): BookmarkTarget
+section(string $name): SectionTarget
+table(string $name): TableTarget
+frame(string $name): FrameTarget
+```
+
+All four are strict typed lookups. The same native name may independently name
+different object types. Within one type, no match throws
+`TargetNotFoundException`; multiple matching descriptors throw
+`AmbiguousAddressableTargetException`. Malformed bookmarks additionally
+throw `MalformedTargetException` during typed resolution.
+
+The public structured resolution failure hierarchy is:
+
+```php
+abstract class AddressableTargetException extends RuntimeException
+{
+    public function targetType(): string;
+    public function targetName(): string;
+}
+
+final class TargetNotFoundException extends AddressableTargetException {}
+final class AmbiguousAddressableTargetException extends AddressableTargetException {}
+final class MalformedTargetException extends AddressableTargetException {}
+```
+
+Targets are **identity-backed handles, not captured DOM nodes**. `name()`
+returns the stored identity; `descriptor()` resolves again against the
+handle's own current `OdtDocumentContext`. Consequently a handle observes a
+replacement working DOM if its identity still exists and fails deterministically
+if `load()` or `refresh()` removes that identity. Handles from separate
+OdtTemplate instances do not share document state.
+
+`AbstractAddressableTarget` and `TypedTargetResolver` are public PHP classes
+but are **Infrastructure / HIDE FROM NORMAL USER DOCUMENTATION**. The normal
+entry point is the OdtTemplate facade.
+
+### BookmarkTarget — bounded Writer range text replacement
+
+Public surface:
+
+```php
+name(): string
+type(): string                         // "bookmark"
+descriptor(): BookmarkDescriptor
+replaceText(string $value): self
+```
+
+`BookmarkDescriptor` is an immutable snapshot with:
+
+```php
+name(): string
+documentPart(): string
+hasStart(): bool
+hasEnd(): bool
+topology(): string
+text(): ?string
+diagnostics(): array
+toArray(): array
+```
+
+Stable topology constants:
+
+```text
+collapsed
+inline
+paragraph_spanning
+list_spanning
+table_spanning
+mixed_block
+malformed
+```
+
+Current bookmark inspection/typed mutation is content.xml scoped.
+`replaceText()` deliberately supports only a safely bounded inline textual
+range. Start and end markers must be the unique paired markers and must share
+one supported parent text context: `text:p`, `text:h`, or `text:span`.
+The selected payload must be either direct text nodes or exactly one
+`text:span` containing text-only children. In the latter case the span and
+its attributes are preserved and only its textual payload is replaced.
+
+The bookmark markers themselves remain intact, so identity survives repeated
+replacement and subsequent inspection. XML-special characters in the supplied
+PHP string are inserted as literal text, not parsed markup. The operation does
+not invoke classic template processing.
+
+The replacement value may not contain CR, LF or TAB, and may not contain
+leading, trailing or repeated spaces. Collapsed bookmarks, empty paired
+ranges, cross-paragraph/list/table/mixed ranges and structured inline payloads
+are outside this first mutation boundary and fail atomically.
+
+A valid-but-unsupported mutation throws:
+
+```php
+BookmarkMutationException
+  bookmarkName(): string
+  operation(): string       // current public operation: "replaceText"
+  topology(): string
+  reason(): string
+```
+
+Malformed identity resolution remains the separate
+`MalformedTargetException` contract.
+
+**Disposition:** `bookmark()`, BookmarkTarget read surface and
+`replaceText()` are **KEEP / RECOMMENDED**. BookmarkDescriptor and
+BookmarkMutationException are **KEEP / RECOMMENDED supporting contract**.
+BookmarkMutationService is **Infrastructure / hidden**.
+
+### SectionTarget — Writer-owned structured container
+
+Public surface:
+
+```php
+name(): string
+type(): string                           // "section"
+descriptor(): SectionDescriptor
+text(): string
+nestedNamedObjects(): array
+replaceContent(OdtElement $content): self
+clone(): self
+instantiate(array $values): self
+instantiateMany(array $items): array
+section(string $name): self
+```
+
+`SectionDescriptor` exposes:
+
+```php
+name(): string
+documentPart(): string
+childSummary(): array
+nestedNamedObjects(): array
+diagnostics(): array
+toArray(): array
+```
+
+Current public SectionTarget resolution is deliberately **content.xml scoped**.
+A same-named section in styles.xml/master-page content does not make the
+ordinary facade Section ambiguous. The descriptor child summary reports
+descendant paragraph, heading, list, table and frame counts.
+`nestedNamedObjects()` exposes compact `NamedObjectReference` values for
+nested sections, bookmarks, tables and frames.
+
+`text()` is a conservative plain-text view in document order. It collects
+textual block content, trims block lines, drops empty lines and joins retained
+lines with `"\n"`. Images do not contribute text. It is a read view, not an
+ODF serialization API.
+
+#### replaceContent()
+
+`replaceContent(OdtElement $content)` preserves the native
+`text:section` container and its identity/attributes while replacing its
+children. Accepted materialized top-level block forms are:
+
+```text
+text:p
+text:h
+text:list
+table:table
+draw:frame
+```
+
+A top-level frame is hosted in a paragraph to preserve text-flow legality.
+Empty RichText can clear the section while keeping the section addressable.
+
+Replacement is staged and validates same-type native identity collisions.
+Nested named sections/bookmarks/tables/frames introduced by the replacement
+must not collide with same-type identities outside the section or duplicate
+one another; different object types may reuse a name. Bookmark pairing inside
+the replacement is validated.
+
+Resource-bearing content requires package ownership and exposed image assets;
+the OdtTemplate facade supplies that package ownership. Resource preparation
+and live-DOM mutation are rollback-aware. Inline-only/non-block
+materialization and unsupported/resource-incoherent content fail atomically.
+
+Failures specific to replacement use:
+
+```php
+SectionMutationException
+  sectionName(): string
+  operation(): string
+  reason(): string
+  conflictingType(): ?string
+  conflictingName(): ?string
+```
+
+#### clone()
+
+`clone()` clones the **unsuffixed prototype** and rewrites native identities
+so the returned clone is uniquely addressable. The engine allocates the next
+document-safe numeric suffix and rewrites identities inside the cloned subtree,
+including sections, bookmark markers, tables, frames/custom shapes and
+template-expression identities covered by the clone contract.
+
+Calling `clone()` on an already suffixed clone is unsupported in the current
+slice. Clone failures use `SectionCloneException`, exposing
+`sectionName()` and `reason()`.
+
+This is intentionally not the historical internal exact-clone operation that
+can temporarily create duplicate names. Public SectionTarget::clone() is the
+identity-safe rewritten operation.
+
+#### instantiate()
+
+`instantiate(array $values)` clones the section with rewritten identities and
+binds clone-owned scalar/filter expressions. Caller keys use the unsuffixed
+logical variable names; generated identity suffixes remain internal.
+
+Binding values must be scalar or null and keys must be non-empty. Every
+clone-owned scalar variable requires a supplied value; missing required values
+fail. Extra supplied values are ignored. Null binds as the empty string.
+Existing scalar filter semantics are reused. Conditions and foreach/control
+expressions in this bounded instantiation path are explicitly unsupported.
+
+Failures use:
+
+```php
+SectionInstantiationException
+  sectionName(): string
+  reason(): string
+  variableName(): ?string
+```
+
+The operation is atomic: a failed bind does not leave the rewritten clone
+inserted.
+
+#### instantiateMany()
+
+`instantiateMany(array $items): array` expands an ordered collection and is a
+**terminal prototype operation**: each item is instantiated in caller order,
+then the prototype is removed. An empty collection therefore removes the
+prototype and returns an empty list.
+
+Each item must be an array acceptable to the scalar instantiation semantics.
+If any item fails, already-created collection instances are rolled back and
+the prototype remains usable. Successful returned targets are ordered like the
+input.
+
+This is materially different from repeated `instantiate()`: singular
+instantiation preserves the prototype; collection instantiation finalizes the
+collection by removing it.
+
+#### nested section targeting
+
+`$section->section($name)` resolves a descendant section relative to the
+current section instance. For generated outer instances, the caller continues
+to use the prototype's logical nested name while the implementation resolves
+the appropriate physical suffixed identity. No match throws
+TargetNotFoundException; multiple local matches throw
+AmbiguousAddressableTargetException.
+
+Nested `instantiate()` and `instantiateMany()` remain scoped to that owner
+instance, so clone families in separate outer instances are independent.
+
+**Disposition:** the SectionTarget surface above is **KEEP / RECOMMENDED**.
+SectionDescriptor, NamedObjectReference and the three public Section mutation/
+clone/instantiation exceptions are **KEEP / RECOMMENDED supporting
+contracts**. SectionReader, mutation/clone/instantiation/collection/removal
+services and working-target resolver types are **Infrastructure / hidden**.
+
+### TableTarget — native Writer table population
+
+Public surface:
+
+```php
+name(): string
+type(): string                         // "table"
+descriptor(): TableDescriptor
+populate(array $rows, array $options = []): self
+```
+
+`TableDescriptor` exposes:
+
+```php
+name(): string
+documentPart(): string
+rowCount(): int
+columnCount(): ?int
+containingSection(): ?string
+diagnostics(): array
+toArray(): array
+```
+
+Table descriptors can describe tables discovered in content.xml or styles.xml.
+Typed identity is strict across that inspected table set. **Population itself
+is narrower:** only a uniquely addressable content.xml table can be populated.
+
+The complete population data contract is
+`list<list<scalar|null>>`. The outer and every inner array must be PHP lists.
+String cells may not contain newline or tab characters. Every supplied row
+must have exactly the writable cell count of the authored mutable row
+structure. Null is written as an empty string; other scalar values are cast to
+string.
+
+The complete option vocabulary is:
+
+```php
+['keepRows' => list<int>]
+```
+
+No other option key is accepted. `keepRows` defaults to `[]`. Its indices
+refer to the **original authored ordinary rows**, not generated/current row
+positions. Indices must be integers in range; duplicates normalize to one kept
+source index.
+
+Header rows are preserved and consume no data. Kept ordinary rows retain their
+authored position/content. Mutable rows are replaced from the captured
+authored source; surplus mutable rows shrink away, while growth clones an
+authored mutable row. Repeated population deliberately reuses the originally
+captured source rows, so generated rows do not accumulate and changing
+`keepRows` between calls still refers to the authored source.
+
+Supported mutable Writer rows are deliberately simple:
+
+- no repeated mutable row;
+- direct `table:table-cell` children only; covered/non-cell topology fails;
+- no repeated or row/column-spanned mutable cells;
+- no protected mutable cells;
+- no formula/non-string typed mutable cell payload;
+- each mutable cell has exactly one simple Writer paragraph;
+- the scalar carrier is either direct text or one optional styled
+  `text:span`; ambiguous fragmented/multiple formatted runs fail.
+
+The authored row/cell/paragraph/span formatting is retained while the scalar
+payload changes. All mutable source rows must have compatible authored
+structure and writable-cell count. Non-empty input requires at least one real
+mutable source row.
+
+Population stages the table and commits atomically. Contract failures use:
+
+```php
+NativeTablePopulationException
+  tableName(): string
+  operation(): string       // "populate"
+  reason(): string
+```
+
+**Disposition:** `table()`, TableTarget read surface and `populate()` are
+**KEEP / RECOMMENDED** for Writer-owned tables. TableDescriptor and
+NativeTablePopulationException are **KEEP / RECOMMENDED supporting contract**.
+NativeTablePopulationService and logical-row/state helpers are
+**Infrastructure / hidden**.
+
+This remains distinct from `RichTable`: Writer owns the native table here;
+PHP owns a generated RichTable.
+
+### FrameTarget — typed Writer frame identity/read surface
+
+Public surface in the current target class is intentionally small:
+
+```php
+name(): string
+type(): string                         // "frame"
+descriptor(): FrameDescriptor
+```
+
+`FrameDescriptor` exposes:
+
+```php
+name(): string
+documentPart(): string
+payloadType(): string
+width(): ?string
+height(): ?string
+containingSection(): ?string
+diagnostics(): array
+toArray(): array
+```
+
+Frame inspection covers content.xml and styles.xml. `payloadType()` is the
+bounded classification `image`, `text-box`, or `other`; a direct
+draw:image takes precedence if both recognized child types are present.
+Width/height are the current `svg:width` / `svg:height` strings or null.
+
+**Important public-surface boundary:** current `FrameTarget` has no direct
+`replaceImage()` method. Image replacement for Writer-owned frames currently
+exists through the mapped/native-object Phase-E `replace-image` operation,
+not through an invented fluent FrameTarget method. The legacy
+`replaceImageByName()` facade is a separate compatibility API with different
+dimension and ambiguity semantics.
+
+Therefore the 1.0 target reference must not imply:
+
+```php
+$template->frame('Portrait')->replaceImage(...); // does not exist
+```
+
+The typed FrameTarget is nevertheless the recommended strict identity/read
+handle and the descriptor is part of the public Writer-native model. The
+Phase-E mapped frame action will be documented in the Mapping/Preflight/
+Automation family with its own payload and failure semantics.
+
+**Disposition:** `frame()`, FrameTarget and FrameDescriptor are
+**KEEP / RECOMMENDED** for typed Writer-frame identity/inspection.
+FrameImageReplacementService remains **Infrastructure / hidden**.
+
+### Descriptor and reference serialization contracts
+
+The four descriptor `toArray()` shapes are stable machine-readable supporting
+contracts:
+
+```text
+BookmarkDescriptor
+  type, name, document_part, has_start, has_end, topology, text, diagnostics
+
+SectionDescriptor
+  type, name, document_part, child_summary, nested_named_objects, diagnostics
+
+TableDescriptor
+  type, name, document_part, row_count, column_count,
+  containing_section, diagnostics
+
+FrameDescriptor
+  type, name, document_part, payload_type, width, height,
+  containing_section, diagnostics
+
+NamedObjectReference
+  type, name, document_part
+```
+
+Diagnostic object details belong to the Inspection-family audit; this section
+records only that descriptor diagnostics are exposed and serialized.
+
+### Completion result for Writer-native Targets
+
+```text
+COMMON
+  OdtTemplate::bookmark/section/table/frame    KEEP / RECOMMENDED
+  strict addressable failure hierarchy         KEEP / RECOMMENDED contract
+  AbstractAddressableTarget/TypedTargetResolver INFRASTRUCTURE / HIDDEN
+
+BOOKMARK
+  BookmarkTarget + BookmarkDescriptor           KEEP / RECOMMENDED
+  replaceText()                                 KEEP / RECOMMENDED bounded mutation
+  BookmarkMutationException                     KEEP / RECOMMENDED failure contract
+  status                                        VERIFIED + DOCUMENTED-COMPLETE
+
+SECTION
+  SectionTarget + SectionDescriptor             KEEP / RECOMMENDED
+  text()/nestedNamedObjects()                   KEEP / RECOMMENDED read views
+  replaceContent()                              KEEP / RECOMMENDED
+  clone()                                       KEEP / RECOMMENDED
+  instantiate()/instantiateMany()               KEEP / RECOMMENDED
+  nested section()                              KEEP / RECOMMENDED
+  Section mutation/clone/instantiation errors   KEEP / RECOMMENDED contracts
+  implementation services                       INFRASTRUCTURE / HIDDEN
+  status                                        VERIFIED + DOCUMENTED-COMPLETE
+
+TABLE
+  TableTarget + TableDescriptor                 KEEP / RECOMMENDED
+  populate()                                    KEEP / RECOMMENDED
+  NativeTablePopulationException                KEEP / RECOMMENDED failure contract
+  implementation/state/structure services       INFRASTRUCTURE / HIDDEN
+  status                                        VERIFIED + DOCUMENTED-COMPLETE
+
+FRAME
+  FrameTarget + FrameDescriptor                 KEEP / RECOMMENDED read/identity
+  direct fluent image mutation                  NOT PRESENT
+  mapped Phase-E replace-image                  separate Automation family
+  low-level replacement service                 INFRASTRUCTURE / HIDDEN
+  status                                        VERIFIED + DOCUMENTED-COMPLETE
+```
+
+No new API or 1.0 architecture is introduced by this audit. In particular,
+FrameTarget has not been retrofitted with a convenience mutation, Section
+collection semantics remain prototype-finalizing, and Table population remains
+bounded to the already implemented simple scalar Writer-row model.
