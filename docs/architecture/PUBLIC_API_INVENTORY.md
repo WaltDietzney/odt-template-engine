@@ -3142,3 +3142,271 @@ For 01F, the generic OdtTemplate/classic block is now closed:
 No implementation behavior was changed. Findings that would require semantic
 redesign remain outside 1.0; in particular classic foreach row-local condition
 scope remains CLASSIC-FOREACH-SCOPE-01.
+
+
+## API-family completion — Metadata, Writer User Fields, and facade image operations
+
+Status: **VERIFIED + DOCUMENTED-COMPLETE for the public Metadata and Writer
+User Field families and for the current imperative `setImage()` /
+`replaceImageByName()` facade operations**.
+
+This pass closes the capability-specific OdtTemplate questions intentionally
+left outside the generic lifecycle audit. It does not merge the three distinct
+image models: PHP-generated `ImageElement`, classic placeholder image
+insertion, and Writer-owned named-frame replacement remain separate contracts.
+
+### Metadata completion
+
+The earlier Metadata section already captures the complete supported field set,
+aliases, keyword collection semantics, Phase-E type distinction and
+document-local lifecycle. Rechecking current `MetadataManager`, integration
+coverage and package lifecycle introduces no additional public option keys.
+
+Exact public signatures:
+
+```php
+setMeta(array $meta): void
+getMeta(): array
+```
+
+Supported canonical keys are exactly:
+
+```text
+title
+subject
+description
+coverage
+keywords
+initial_creator
+creator
+language
+creation_date
+date
+editing_cycles
+editing_duration
+generator
+```
+
+Input aliases remain `author -> creator` and
+`initial_author -> initial_creator`. Unknown keys are silently ignored.
+
+All singular imperative values are cast to string. `keywords` accepts either
+one string (one keyword, never delimiter-split) or a PHP list containing only
+strings. Any other keyword shape, including a non-list associative array or a
+list containing a non-string, throws `InvalidArgumentException`. An empty
+list removes all existing `meta:keyword` elements.
+
+`getMeta()` omits supported fields absent from meta.xml. Keywords, when
+present, are returned as a list in document order. Creator fields additionally
+return their established aliases `author` and `initial_author`.
+
+Mutation updates the first existing singular carrier or creates it below
+`office:document-meta/office:meta`. The facade does not expose arbitrary
+meta.xml element creation. If that expected root is absent, the current manager
+does not invent a replacement root; mutation of a missing singular/keyword
+carrier then has no insertion target.
+
+**Disposition:** `setMeta()` and `getMeta()` are **KEEP / RECOMMENDED**.
+The two author aliases are **KEEP / COMPATIBILITY**. MetadataManager is the
+document-local implementation owner and is not a second normal end-programmer
+API.
+
+### Writer User Field completion
+
+Exact recommended facade:
+
+```php
+setUserField(string $name, string $value): void
+```
+
+The earlier User Field section remains accurate and is now
+**DOCUMENTED-COMPLETE** for the supported v1 binder.
+
+The bounded source regions are exactly:
+
+- `office:body/office:text` in content.xml;
+- direct header/header-* and footer/footer-* children of each
+  `style:master-page` in styles.xml.
+
+The supported declaration type is exactly Writer
+`office:value-type="string"`. A successful bind updates
+`office:string-value` on every authoritative declaration belonging to the
+supported logical field. It does not rewrite `text:user-field-get` display
+text.
+
+The complete public failure object is:
+
+```php
+final class UserFieldBindingException extends RuntimeException
+{
+    public const NOT_FOUND = 'NOT_FOUND';
+    public const UNSUPPORTED_TYPE = 'UNSUPPORTED_TYPE';
+    public const MALFORMED = 'MALFORMED';
+    public const AMBIGUOUS = 'AMBIGUOUS';
+
+    public function fieldName(): string;
+    public function reason(): string;
+}
+```
+
+An empty requested name is MALFORMED; an absent name is NOT_FOUND; unsupported
+non-string declarations are UNSUPPORTED_TYPE; conflicting declarations/values
+or other ambiguous logical states are AMBIGUOUS. Validation finishes before
+mutation; focused tests protect atomic failure for these states.
+
+Repeated binding is supported. `load()` restores the original template
+declaration values. Binding survives classic `render()`, `save()`, and
+reopen. Classic `assign()/render()` deliberately does not bind a same-named
+Writer User Field.
+
+**Disposition:** `setUserField()` and `UserFieldBindingException`'s stable
+reason constants/accessors are **KEEP / RECOMMENDED**. `UserFieldBinder` and
+`UserFieldAnalyzer` are **HIDE FROM USER DOCUMENTATION / Infrastructure**.
+
+### setImage(): classic placeholder image insertion
+
+Exact signature:
+
+```php
+setImage(string $key, string $imagePath, array $options = []): void
+```
+
+This is an immediate imperative operation. It does not stage an ImageElement
+and does not require `render()`. It copies the source file to
+`Pictures/<basename>`, then attempts replacement in both current content.xml
+and styles.xml.
+
+Complete recognized option vocabulary:
+
+| key | default | current behavior |
+| --- | --- | --- |
+| `width` | none | explicit width; with no height derives height from intrinsic pixel ratio |
+| `height` | none | explicit height; with no width derives width from intrinsic pixel ratio |
+| `anchor` | `paragraph` | written directly as `text:anchor-type`; no facade validation |
+| `wrap` | `none` | only `left|right|parallel` cause the historical child `style:wrap` node to be emitted; other values have no wrap-node effect |
+
+With neither dimension, the legacy default is `5cm × 3cm`. With one
+dimension, autosizing uses `getimagesize()` and the same historical
+`(float) rtrim($dimension, 'cm')` conversion pattern as generated images;
+the derived dimension is emitted in centimetres. This is not unit-aware
+geometry. The safe documented proportional input is therefore a numeric
+centimetre dimension.
+
+The source path must exist or generic `Exception("Image file not found: ...")`
+is thrown. The implementation does not provide an additional public
+validation/error contract for unreadable/non-image data beyond the underlying
+filesystem/`getimagesize()` behavior.
+
+Replacement is intentionally narrow. The XPath targets `text:p` elements
+whose **direct text node** contains `{{key}}`. For every match, the **entire
+paragraph** is replaced by a new `text:p` containing a `draw:frame`; text or
+inline structure elsewhere in that paragraph is not preserved. The generated
+frame uses `draw:name="$key"`, the chosen anchor/dimensions and z-index 0,
+with one `draw:image` referencing `Pictures/<basename>`.
+
+If no placeholder matches, no dedicated not-found exception is thrown. The
+image has nevertheless already been copied to the working Pictures directory.
+Unknown option keys are ignored because the facade reads only the four keys
+above.
+
+**1.0 disposition:** **KEEP / RECOMMENDED as the simple classic placeholder
+image convenience**, but document its paragraph-replacement and centimetre
+autosizing limits explicitly. Use `ImageElement` when PHP owns a structured
+image element and its semantic frame layout; use Writer-native Frame operations
+when Writer owns an existing frame.
+
+### replaceImageByName(): legacy named-frame replacement
+
+Exact signature:
+
+```php
+replaceImageByName(string $name, string $imagePath, array $options = []): void
+```
+
+This operation targets existing `draw:frame[@draw:name=...]` objects in both
+current content.xml and styles.xml. It copies the source to
+`Pictures/<basename>` and updates the frame geometry plus the `xlink:href`
+of each direct child `draw:image`.
+
+Complete recognized options:
+
+| key | default | current behavior |
+| --- | --- | --- |
+| `width` | `5cm` | replaces frame width |
+| `height` | `3cm` | replaces frame height |
+
+The defaults are established **before** the old one-dimensional proportional
+branches. Consequently a caller supplying only width still receives the
+default height `3cm`, and a caller supplying only height still receives the
+default width `5cm`. The public method therefore does **not** proportionally
+derive the missing dimension in normal option use. This legacy behavior is
+directly protected by ARCH-05G characterization.
+
+The source path must exist or a generic Exception is thrown. Unknown option
+keys are ignored.
+
+Target behavior is compatibility-sensitive:
+
+- no matching named frame: no dedicated not-found exception; copied resource
+  remains in the working package;
+- exactly one matching frame in a DOM: update that frame;
+- duplicate same-name frames in a DOM: legacy behavior updates **all** matching
+  frames rather than failing ambiguity;
+- a matching frame without a direct `draw:image`: width/height are still
+  mutated, but no image child is created;
+- other frame attributes/style/anchor/z-index are left intact by the low-level
+  replacement service.
+
+This is materially different from the Writer-native typed Frame
+`replace-image` semantics used by Phase E. Phase E can preserve both
+dimensions when none are supplied and derive the other dimension
+proportionally when exactly one is supplied; it also participates in typed
+target/preflight failure semantics. These APIs must not be documented as
+aliases.
+
+**1.0 disposition:** **KEEP / COMPATIBILITY** for
+`replaceImageByName()`. For new Writer-owned template integration, teach the
+typed `frame($name)` / mapped native-frame model where its supported operation
+surface applies. Do not change the legacy 5cm × 3cm or duplicate-name behavior
+during 1.0 final review.
+
+### Protected image facade compatibility seams
+
+The public image operations retain protected OdtTemplate wrappers used by the
+legacy facade, notably `replaceImageInDom()` and
+`replaceImageInNamedDom()`. These are **Compatibility/Extension** surface for
+subclasses, not normal end-programmer APIs. Their protected visibility should
+not be collapsed casually during future extraction/refactoring.
+
+`FrameImageReplacementService::updateFrame()` is a low-level document service
+used by named-frame and Writer-native execution. Although public in PHP, it is
+**Infrastructure / HIDE FROM USER DOCUMENTATION**; direct callers would bypass
+target resolution, resource copying and higher-level failure semantics.
+
+### Completion result for this block
+
+The three families are now closed for 01F:
+
+```text
+Metadata
+  setMeta()/getMeta()                    KEEP / RECOMMENDED
+  author aliases                         KEEP / COMPATIBILITY
+  status                                 VERIFIED + DOCUMENTED-COMPLETE
+
+Writer User Fields
+  setUserField()                         KEEP / RECOMMENDED
+  UserFieldBindingException              KEEP / RECOMMENDED failure contract
+  analyzer/binder                        INFRASTRUCTURE / HIDDEN
+  status                                 VERIFIED + DOCUMENTED-COMPLETE
+
+Facade image operations
+  setImage()                             KEEP / RECOMMENDED bounded convenience
+  replaceImageByName()                   KEEP / COMPATIBILITY
+  protected replacement wrappers         COMPATIBILITY / EXTENSION
+  FrameImageReplacementService           INFRASTRUCTURE / HIDDEN
+  status                                 VERIFIED + DOCUMENTED-COMPLETE
+```
+
+No implementation semantics were changed. In particular, the legacy named
+replacement defaults and duplicate-name behavior remain intact, and the
+Writer-native/Phase-E image semantics remain deliberately separate.
