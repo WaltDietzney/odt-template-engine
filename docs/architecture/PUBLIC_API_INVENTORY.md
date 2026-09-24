@@ -3897,3 +3897,531 @@ No new API or 1.0 architecture is introduced by this audit. In particular,
 FrameTarget has not been retrofitted with a convenience mutation, Section
 collection semantics remain prototype-finalizing, and Table population remains
 bounded to the already implemented simple scalar Writer-row model.
+
+
+## API-family completion — Style API
+
+Status: **VERIFIED + DOCUMENTED-COMPLETE for the current 1.0 style authoring
+surface, option mappers/splitter, semantic extension boundary, and remaining
+low-level serialization helper**.
+
+STYLE-API-02 is already architecturally closed by its own A–I series. This 01F
+pass does not redesign it; it reconciles that accepted baseline with current
+source/tests and records the complete public-documentation boundary.
+
+### Canonical 1.0 style model
+
+There are three intentional levels:
+
+1. normal application authoring through element-local friendly options and
+   named style references;
+2. document-local reusable paragraph style authoring through
+   `$template->styles()`;
+3. semantic style requirements/dependencies for custom structured elements.
+
+There is no process-global style registry in the current architecture.
+`HasStyles`, `LegacyStyleRegistry`, old StyleMapper registration/getter
+facades and the protected generic `OdtTemplate::registerStyles(array)` were
+intentionally retired by STYLE-API-02. Historical architecture documents that
+describe them are evidence of the migration, not current API documentation.
+
+### OdtTemplate::styles()
+
+Exact facade:
+
+```php
+styles(): DocumentStyles
+```
+
+The returned `DocumentStyles` instance is stable for the OdtTemplate object,
+but owns no detached style state. It resolves the current
+`OdtDocumentContext` for every operation. A retained facade therefore follows
+the document after `load()`/document replacement instead of leaking style
+definitions from the previous logical document.
+
+**Disposition:** **KEEP / RECOMMENDED**.
+
+### DocumentStyles::defineParagraph()
+
+Exact signature:
+
+```php
+defineParagraph(string $name, array $options): void
+```
+
+This is the sole current generic document-style definition method. No symmetric
+`defineText()`, `defineTable()`, `defineFrame()` or similar API exists or
+is implied for 1.0.
+
+The mixed option array is split in paragraph context. The effective friendly
+paragraph keys are:
+
+```text
+align
+text-align
+text-indent
+line-height
+margin
+margin-top
+margin-right
+margin-bottom
+margin-left
+padding
+padding-top
+padding-right
+padding-bottom
+padding-left
+border
+border-top
+border-right
+border-bottom
+border-left
+keep-with-next
+break-before
+break-after
+writing-mode
+number-lines
+line-number
+tab-stops
+```
+
+The effective friendly text keys are:
+
+```text
+bold
+weight
+font-weight
+italic
+font-style
+underline
+text-decoration
+text-line-through
+color
+font-size
+font-family
+font-variant
+monospace
+style:text-position
+```
+
+In paragraph context, `align` is normalized to paragraph
+`text-align`. Native-prefixed values classified by the splitter are retained
+as advanced escape-hatch input according to their property responsibility.
+
+The resulting style is a common paragraph-family definition in styles.xml with
+parent style `Standard`. Paragraph options become
+`style:paragraph-properties`; text options become
+`style:text-properties`. A discovered font-family dependency is registered
+and materialized into the current document's font-face declarations.
+
+An equivalent same-name document-local semantic definition is idempotent.
+A different same-name semantic definition conflicts and throws
+`LogicException`. If an authored same-name paragraph style already exists in
+the ODT, authored document data remains authoritative and is not overwritten by
+the generated definition materializer.
+
+A generated style is immediately materialized; `save()` is not required to
+make it part of the working styles DOM. Repeated save is characterized as
+stable.
+
+Named style **reference** remains distinct from named style **definition**:
+
+```php
+new Paragraph('Heading')                    // reference existing style
+$template->styles()->defineParagraph(...)   // define document-local style
+```
+
+A reference alone does not register or synthesize a style.
+
+**Disposition:** **KEEP / RECOMMENDED**.
+
+### DocumentStyles::setDocumentDefaults()
+
+Exact signature:
+
+```php
+setDocumentDefaults(array $settings): void
+```
+
+Accepted top-level keys are:
+
+```php
+[
+    'text' => array,
+    'paragraph' => array,
+]
+```
+
+Both are optional and default to empty arrays. If either supplied value is not
+an array, `InvalidArgumentException` is thrown.
+
+The operation modifies the named paragraph style `Standard` in styles.xml.
+If that style does not exist it is created below `office:styles`; if
+`office:styles` itself is absent, `RuntimeException` is thrown.
+
+Only explicitly supplied mapped attributes are merged. Existing authored
+properties not addressed by the call are preserved, so Writer inheritance from
+Standard continues to apply to child paragraph styles. A supplied text
+font-family also materializes its font-face dependency.
+
+The effective text option semantics are those of
+`StyleMapper::mapTextStyleOptions()`; effective paragraph semantics are those
+of `StyleMapper::mapParagraphStyle()`. During final property merge only
+mapped `fo:*` and `style:*` attributes are accepted and every mapped value
+must be scalar; unsupported namespaces/non-scalar mapped properties throw
+`InvalidArgumentException`.
+
+This API belongs conceptually to **Document Defaults** as well as Styles. It is
+recorded here so the Style API is mechanically complete; the Page/Document
+Layout/Defaults audit must reference rather than rediscover it.
+
+**Disposition:** **KEEP / RECOMMENDED**.
+
+### Complete text option mapping
+
+`StyleMapper::mapTextStyleOptions(array $options): array` maps:
+
+| input | output / rule |
+| --- | --- |
+| native `fo:*`, `style:*` | preserved first |
+| `bold` truthy | `fo:font-weight=bold` |
+| `italic` truthy | `fo:font-style=italic` |
+| `font-weight` non-empty | `fo:font-weight` |
+| `font-style` non-empty | `fo:font-style` |
+| `underline` truthy | solid/single/auto underline attributes |
+| `text-decoration` non-empty | also establishes underline; value `line-through` additionally establishes strike-through |
+| `color` | `fo:color` |
+| `background-color` | `fo:background-color` |
+| `font-size` | friendly size mapping or lower-cased pass-through |
+| `font-family` | both `style:font-name` and `fo:font-family` |
+| `text-line-through` truthy | `style:text-line-through-style=solid` |
+| `style:text-position` | preserved |
+| `font-variant=small-caps` | `fo:font-variant=small-caps` |
+| `monospace === true` | font name/family `Courier New` |
+
+Friendly font-size values are exactly
+`xx-small=6pt`, `x-small=7pt`, `small=9pt`, `medium=11pt`,
+`large=13pt`, `x-large=15pt`, `xx-large=17pt`.
+Other non-empty values are lower-cased and passed through.
+
+Note the splitter/mapping distinction: `background-color` is supported by the
+text mapper, but `StyleOptionSplitter` does not classify it as a friendly text
+key in paragraph context. Direct Paragraph text styles can therefore use it as
+documented in the Structured Content audit, while a mixed RichText/
+defineParagraph convenience array follows splitter responsibility.
+
+### Complete paragraph option mapping
+
+`StyleMapper::mapParagraphStyle(array $options): array` maps the friendly
+keys:
+
+```text
+margin-left/right/top/bottom -> fo:margin-*
+text-align                   -> fo:text-align
+text-indent                  -> fo:text-indent
+line-height                  -> fo:line-height
+background-color             -> fo:background-color
+keep-with-next               -> fo:keep-with-next
+keep-together                -> fo:keep-together
+widows                       -> fo:widows
+orphans                      -> fo:orphans
+break-before/after           -> fo:break-before/after
+writing-mode                 -> style:writing-mode
+padding[-side]               -> fo:padding[-side]
+border[-side]                -> fo:border[-side]
+number-lines                 -> style:number-lines
+line-number                  -> style:line-number
+```
+
+`tab-stops` is a list of definitions; each entry emits
+`style:position = position . "cm"` and
+`style:type = alignment ?? "left"`. There is no additional alignment or
+position validation in this mapper.
+
+Every other key is passed through unchanged. That permissive fallback is an
+**Advanced/Compatibility native escape hatch**, not a promise that arbitrary
+CSS-like keys have ODF meaning.
+
+The splitter does not classify `keep-together`, `widows`, `orphans` or
+`background-color` as friendly paragraph keys, although the paragraph mapper
+recognizes them. They can reach the mapper through direct/compatibility paths;
+this mismatch is current behavior, not a reason to broaden 1.0 syntax during
+01F.
+
+### Table style mapping
+
+`StyleMapper::mapTableStyleOptions(array $options): array` has a deliberately
+strict friendly vocabulary:
+
+```text
+width          -> style:width
+relative-width -> style:rel-width
+alignment      -> table:align
+```
+
+Native `fo:*`, `style:*` and `table:*` keys pass through as the advanced
+escape hatch. Any other friendly key throws `InvalidArgumentException`.
+
+This mapping is consumed by the already documented RichTable API; it is not a
+second table-authoring API.
+
+### Table-cell style mapping
+
+`StyleMapper::mapTableCellStyleOptions(array $options): array` recognizes:
+
+```text
+background-color | background -> fo:background-color
+padding[-side]                 -> fo:padding[-side]
+border[-side]                  -> fo:border[-side]
+vertical-align                 -> style:vertical-align
+align | text-align             -> fo:text-align
+weight                         -> fo:font-weight
+color                          -> fo:color
+```
+
+Native `fo:*` and `style:*` pass through. `vertical-align` must be a
+string and normalizes by trim/lowercase to exactly
+`top|middle|bottom|automatic`; otherwise `InvalidArgumentException` is
+thrown.
+
+Unlike table-level mapping, unknown friendly cell keys are silently ignored.
+That is existing compatibility behavior and should not be presented as a
+general extension mechanism.
+
+### Frame style mapping
+
+`StyleMapper::mapFrameStyleOptions(array $options): array` recognizes:
+
+```text
+background-color | fo:background-color
+border[-side]
+corner-radius-x | rx
+corner-radius-y | ry
+padding[-side]
+fill | draw:fill
+fill-color | draw:fill-color
+wrap-influence
+allow-overlap
+vertical-pos
+vertical-rel
+horizontal-pos
+horizontal-rel
+```
+
+Background color additionally establishes `draw:fill=solid` and
+`draw:fill-color` unless already set in the mapped result. The position/
+relation and overlap/wrap-influence aliases map to their current ODF
+style/draw/loext attributes.
+
+Unknown keys pass through unchanged. This is a permissive
+**Advanced/Compatibility** mapper. Semantic DrawingLayout remains the
+recommended positioning model where applicable; this mapper must not be used
+to redefine DrawingLayout's validated contract.
+
+### Image style mapping
+
+`StyleMapper::mapImageStyleOptions(array $options): array` recognizes:
+
+- non-empty `width` / `height` -> `svg:width` / `svg:height`;
+- `wrap` only when exactly `none|left|right|run-through`;
+- `align` only when exactly `left|right|center|absolute`, retained as
+  non-ODF helper key `align`;
+- `anchor` only when exactly `paragraph|page|char|as-char`;
+- non-empty `horizontal-pos`, `horizontal-rel`, `vertical-pos`,
+  `vertical-rel` -> corresponding style attributes.
+
+Invalid enumerated values are silently omitted. Unknown keys are ignored.
+This mapper is **Compatibility/Infrastructure for historical image option
+projection**, not the canonical semantic frame-layout API. The ImageElement
+audit remains authoritative for effective public image behavior.
+
+### StyleOptionSplitter
+
+Exact public helper:
+
+```php
+StyleOptionSplitter::split(array $options, string $context = 'paragraph'): array
+```
+
+Return shape is always:
+
+```php
+[
+    'cell' => [],
+    'paragraph' => [],
+    'text' => [],
+]
+```
+
+Supported contexts are `paragraph` and `table-cell`. It classifies the
+friendly text/paragraph/cell keys used by the structured convenience APIs and
+routes native-prefixed keys according to the current ODF responsibility
+rules. `align` normalizes to paragraph `text-align` when routed there.
+
+**Disposition:** **KEEP / ADVANCED utility**. Normal users should supply style
+options to Paragraph/RichText/RichTableCell/DocumentStyles rather than invoke
+the splitter directly.
+
+### Style identity/CSS helpers
+
+Remaining public stateless StyleMapper helpers are:
+
+```php
+generateStyleName(array $style): string
+generateParagraphStyleName(): string
+parseInlineStyle(string $css): array
+splitCssProperties(array $rawCss): array
+```
+
+`generateStyleName()` removes only `align` and `style-name`, sorts
+remaining keys and returns `auto_` plus the first eight hex characters of
+the MD5 of the JSON representation. It is deterministic for equivalent
+top-level key/value arrays after key sorting.
+
+`generateParagraphStyleName()` takes **no arguments** and returns
+`para_` plus eight random hexadecimal characters. Despite historical
+wording, it is not content-derived/deterministic.
+
+`parseInlineStyle()` is a small CSS-declaration lexer: split on semicolons,
+retain rules containing a colon, split each at the first colon, lowercase/trim
+the property name and trim the value. It does no CSS validation/cascade.
+
+`splitCssProperties()` recognizes a bounded CSS-like text/paragraph subset
+and returns `[$textStyle, $paragraphStyle]`; unrecognized keys are dropped.
+It exists primarily for HtmlImporter compatibility.
+
+**Disposition:** style-name generators are **Advanced/Infrastructure identity
+helpers**; CSS helpers are **Advanced/Importer compatibility**. They are not
+the primary end-programmer style API.
+
+### StyleRequirement — canonical custom-element extension value
+
+`StyleRequirement` is the semantic style description consumed by the
+document-local pipeline. The current architecture closeout makes
+`getOwnStyleRequirements()` the canonical custom-element style hook and
+collector-owned `ownedElements()` traversal the canonical recursion model.
+
+The StyleRequirement public constructor/accessors/constants are therefore
+**KEEP / ADVANCED extension contract**, not normal application authoring.
+A custom element may produce its own semantic requirements; application code
+should normally use element options or DocumentStyles.
+
+The stable conceptual dimensions are:
+
+- kind: definition or reference;
+- scope: common or automatic where applicable;
+- ODF family;
+- document part;
+- style name;
+- optional parent style name;
+- grouped ODF properties.
+
+`StyleContext`, requirement collectors/materializers/resolvers and
+font-dependency discovery/materialization are document infrastructure. Their
+public PHP methods are **HIDE FROM NORMAL USER DOCUMENTATION** unless a future
+explicit low-level extension API promotes them.
+
+### FontFaceRequirement
+
+`FontFaceRequirement` and its conflict/resolution machinery support semantic
+style dependencies. They are **Infrastructure / HIDDEN** for normal
+end-programmer documentation. Users request a font through supported
+`font-family` style options; they do not normally construct or materialize
+font-face requirements themselves.
+
+### StyleContext
+
+Current source confirms the STYLE-API-02 closeout:
+
+- document-local semantic definitions/references;
+- resolution against authored current-document styles first, then
+  document-local definitions;
+- no process-global paragraph/text fallback;
+- graphic/fill compatibility stores remain bounded internal compatibility;
+- reset/snapshot/restore support document lifecycle and rollback.
+
+Although `StyleContext` has many public PHP methods, it is
+**Infrastructure / HIDE FROM USER DOCUMENTATION**. Public visibility supports
+engine collaboration/testing and does not create a parallel application style
+API.
+
+### StyleWriter
+
+Current StyleWriter has been narrowed to exactly one public method:
+
+```php
+StyleWriter::writeColumnStyles(DOMDocument $doc, array $columnWidths): array
+```
+
+For each list entry it creates an automatic table-column style named
+`co0`, `co1`, ... with `style:column-width` equal to the supplied value
+and returns those names in order. If `office:automatic-styles` is missing it
+creates that container.
+
+No width validation, collision detection or replacement semantics are added by
+this helper. It serializes explicit data into the supplied DOM.
+
+**Disposition:** **Infrastructure / HIDE FROM NORMAL USER DOCUMENTATION**.
+It is not a registry and not an application-facing style facade.
+
+### Retired APIs must not reappear in 1.0 documentation
+
+The current source/accepted STYLE-API-02 baseline intentionally retired:
+
+- `HasStyles`;
+- `LegacyStyleRegistry`;
+- StyleMapper paragraph/text register/getter APIs and mutable registry facade;
+- process-global paragraph/text reference fallback;
+- redundant transitive paragraph/text/table style getter families;
+- protected generic `OdtTemplate::registerStyles(array)`.
+
+Historical samples/docs mentioning those APIs describe older architecture.
+They must not be copied into the future website API reference as compatibility
+APIs that still exist.
+
+Bounded graphic/resource compatibility getters that remain on OdtElement are
+already classified in the OdtElement audit. They are not a second style
+ownership model.
+
+### Style API completion result
+
+```text
+APPLICATION AUTHORING
+  element-local friendly style options          KEEP / RECOMMENDED
+  named existing Writer style references        KEEP / RECOMMENDED
+
+DOCUMENT STYLE AUTHORING
+  OdtTemplate::styles()                          KEEP / RECOMMENDED
+  DocumentStyles::defineParagraph()              KEEP / RECOMMENDED
+  DocumentStyles::setDocumentDefaults()          KEEP / RECOMMENDED
+  status                                         VERIFIED + DOCUMENTED-COMPLETE
+
+CUSTOM ELEMENT EXTENSION
+  getOwnStyleRequirements() / StyleRequirement   KEEP / ADVANCED
+  ownedElements() collector traversal            KEEP / ADVANCED
+  typed resource/dependency hooks                KEEP / ADVANCED
+
+STATELESS UTILITIES
+  StyleMapper mapping methods                    ADVANCED / INFRASTRUCTURE
+  StyleOptionSplitter::split()                   KEEP / ADVANCED
+  style identity helpers                         ADVANCED / INFRASTRUCTURE
+  CSS helpers                                    ADVANCED / IMPORTER COMPATIBILITY
+
+INTERNAL OWNERSHIP/MATERIALIZATION
+  StyleContext                                   INFRASTRUCTURE / HIDDEN
+  collectors/materializers/resolvers             INFRASTRUCTURE / HIDDEN
+  FontFaceRequirement pipeline                   INFRASTRUCTURE / HIDDEN
+  StyleWriter::writeColumnStyles()                INFRASTRUCTURE / HIDDEN
+
+RETIRED — DO NOT DOCUMENT AS CURRENT API
+  HasStyles
+  LegacyStyleRegistry
+  global StyleMapper registries
+  old paragraph/text registry getters
+  protected generic OdtTemplate::registerStyles()
+```
+
+No style architecture or behavior was changed by this 01F audit. The current
+source confirms the accepted STYLE-API-02I model: normal users style elements,
+define reusable generated paragraph styles through the document facade, and
+let document-local semantic ownership/materialization handle persistence.
