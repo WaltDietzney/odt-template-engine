@@ -28,6 +28,30 @@ Problem annotations may include **QUESTION**, **LEGACY**, **DEFECT**, and
 Final audience classification is pending and may distinguish Recommended,
 Advanced, Compatibility, Extension, and Infrastructure API.
 
+### 1.0 API closure policy
+
+For the remainder of the 01F audit, architectural redesign is explicitly out
+of scope for 1.0. The audit classifies the current surface rather than repairing
+it opportunistically.
+
+Use this disposition:
+
+- **Recommended Public API** — document prominently for 1.0.
+- **Advanced Public API** — document when needed, with its narrower lifecycle
+  and preconditions.
+- **Compatibility API** — expose only when existing users need it; mark the
+  preferred replacement and its limitations.
+- **Deprecated / poor historical API** — do not teach as normal 1.0 API. Retain
+  only where backward compatibility requires it.
+- **Infrastructure / public-for-technical-reasons** — omit from the normal
+  end-programmer reference unless extension authors genuinely need it.
+- **Missing capability requiring architecture** — do not invent a 1.0 API.
+  Record it in FUTURE_DEVELOPMENT for post-1.0 design.
+
+The objective is therefore a small, trustworthy 1.0 public story over the
+existing implementation, while the audit findings become concrete input for
+the next architecture milestone (for example 1.1).
+
 ## Verification methodology
 
 The verification audit uses an evidence stack rather than treating current
