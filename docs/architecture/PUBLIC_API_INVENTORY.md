@@ -2734,3 +2734,411 @@ No new 1.0 architecture is introduced by this pass. The two notable
 compatibility findings are the styled `addHyperlink()` style-registration gap
 and the non-rendering `ListElement::setLevel()` state. They are recorded as
 current behavior rather than silently repaired.
+
+
+## API-family verification — OdtTemplate lifecycle and Classic Template Processing completion
+
+Status: **VERIFIED + DOCUMENTED-COMPLETE for the OdtTemplate classic
+assignment/render lifecycle and the classic template-language implementation on
+the audited branch**.
+
+This completion pass closes the generic lifecycle questions left by the three
+earlier OdtTemplate tranches and records the exact classic-language execution
+contract. Capability-specific facade families (metadata, images, styles/page
+defaults, Writer-native targets, inspection DTOs, mapping/preflight/automation)
+remain governed by their own audits and are not falsely marked complete here.
+
+### Canonical classic lifecycle
+
+The recommended classic workflow is:
+
+```php
+$template = new OdtTemplate($templatePath);
+$template->assign($values);
+$template->assignRepeating('items', $rows);
+$template->render();
+$template->save($outputPath);
+```
+
+`__construct()` loads/prepares the source immediately and registers
+`cleanup()` for PHP shutdown. `assign()` and `assignRepeating()` stage
+data only; `render()` mutates the current working content.xml and styles.xml;
+`save()` finalizes the current document-owned graphic/font state and writes
+the ODT package. `save()` does not implicitly call `render()`.
+
+`assign(array $values)` merges into the existing value stack with later keys
+overwriting earlier keys. `setValues(array $values)` performs the same merge
+and is retained as a **Compatibility alias**. Neither clears keys omitted by a
+later call.
+
+`assignRepeating(string $key, array $rows)` replaces the staged row
+collection for that foreach key. `setRepeating()` has the same implementation
+but is explicitly deprecated in source: **DEPRECATE / Compatibility; use
+assignRepeating() + render()**.
+
+`setRepeatingData(array $data)` is not an alias. It immediately repairs
+broken variables and mutates both working DOMs through an older direct foreach
+algorithm; it does not populate repeatStack and does not require render().
+There is no focused current characterization test or repository caller beyond
+the definition. **1.0 disposition: DEPRECATE / historical Compatibility and
+HIDE FROM NORMAL USER DOCUMENTATION.** Its current behavior is retained, not
+redesigned during 01F.
+
+### render() ordering and mutation semantics
+
+One render pass currently performs, independently for content.xml and
+styles.xml:
+
+1. normalize only structured placeholders staged as OdtElement values;
+2. repair broken variable fragments;
+3. materialize `nl2br` special placeholders;
+4. materialize `ul`/`ol` special placeholders;
+5. replace staged scalar values and legacy staged OdtElement values;
+6. run the historical text-box scalar pass;
+7. apply every staged foreach block;
+8. apply paragraph-based conditionals.
+
+This ordering is observable compatibility behavior. In particular, foreach
+row substitution occurs before the final conditional pass. Current
+characterization shows that condition markers cloned inside foreach blocks are
+consumed by row substitution rather than evaluated row-locally. Therefore
+classic foreach does **not** provide a supported row-local conditional scope.
+This is the already-known post-1.0 CLASSIC-FOREACH-SCOPE-01 concern, not a 1.0
+redesign opportunity.
+
+`render()` is destructive against the working DOM. It is not a
+"re-render-from-original-source" operation. Once ordinary scalar placeholders
+or classic control markers have been consumed, assigning new values and
+calling render again does not reconstruct them. The reset boundary is
+`load()`.
+
+The legacy `assign(['x' => $odtElement]) -> render()` path remains
+Compatibility behavior and has focused repeated-render characterization for
+representative structured producers. It must not be presented as equivalent to
+the recommended `setElement()` semantic lifecycle.
+
+### Classic scalar syntax
+
+Plain variables use:
+
+```text
+{{name}}
+```
+
+The scalar replacement implementation iterates staged values and performs
+literal token replacement. Values that are not OdtElement instances are passed
+to PHP string replacement semantics; the public classic contract should
+therefore teach scalar/string-compatible values rather than arbitrary object or
+collection values.
+
+Filtered variables use:
+
+```text
+{{filter:name}}
+{{filter:name|option}}
+```
+
+Names are word-character identifiers in the parser/replacement grammar.
+Unknown/missing filtered variables resolve to the empty string before filter
+application. Unknown filter names return the value unchanged.
+
+Exact built-in filter behavior:
+
+| filter | option/default | current result |
+|---|---|---|
+| `upper` | none | `mb_strtoupper(value)` |
+| `lower` | none | `mb_strtolower(value)` |
+| `trim` | none | `trim(value)` |
+| `date` | PHP date format; default `d.m.Y` | `date(format, strtotime(value))` |
+| `number` | decimal count; default `2` | decimal comma + dot thousands separator |
+| `currency` | option ignored | exactly 2 decimals, decimal comma + dot thousands separator + ` €` |
+| `checkbox` | option ignored | truthy value -> `☑`, falsy -> `☐` |
+| `nl2br` | none | special DOM materialization; ordinary filter callback itself returns value unchanged |
+| `ul` | none | special DOM materialization for unordered list |
+| `ol` | none | special DOM materialization for ordered list; it is handled by list replacement even though the scalar filter callback has no explicit `ol` branch |
+| unknown | any | value unchanged |
+
+`number` and `currency` first replace comma with dot and cast to float.
+No locale object is involved. `date` uses PHP `strtotime()` and the process
+date/time environment; invalid-date behavior is therefore the current PHP
+conversion behavior, not a separately validated date contract.
+
+### nl2br and classic list placeholders
+
+`{{nl2br:name}}` splits the staged value on CRLF/LF/CR and inserts native
+`text:line-break` elements between parts. Empty parts do not create text
+nodes, but intervening line-break nodes are retained.
+
+`{{ul:name}}` and `{{ol:name}}` split the staged string on line endings and
+replace the containing `text:p` with a native `text:list`.
+The styles are `Bullet_20_Symbol` and `Numbering_20_Symbol` respectively.
+Each line becomes one list item, including an empty line as an empty paragraph
+item. The replacement only occurs when the matched text node's direct parent is
+`text:p`; this is a bounded classic convenience, not a general structured-list
+templating language.
+
+### Classic foreach syntax and limits
+
+```text
+{{#foreach:items}}
+... {{name}} ...
+{{#endforeach}}
+```
+
+Recommended data staging is:
+
+```php
+$template->assignRepeating('items', [
+    ['name' => 'Alpha'],
+    ['name' => 'Beta'],
+]);
+```
+
+The active algorithm locates a start marker in a `text:p`, then searches
+following siblings for the first element containing `{{#endforeach}}`.
+Nodes between the marker paragraphs are removed, cloned once per row and
+inserted in source order. With an empty row array the complete block, including
+markers, is removed.
+
+Row substitution is deliberately simple and differs from root scalar
+replacement: every `{{...}}` token in cloned row text is interpreted as a
+literal row key; a missing row key becomes the empty string. It does not parse
+classic filters or structural-control semantics inside the row substitution
+step.
+
+The clone preserves authored ODF subtree structure/styles, but it also clones
+native identities unchanged. Characterization explicitly records duplicate
+Writer table names, bookmark identities, and Section names when such objects
+are inside a classic foreach. Classic foreach therefore must not be advertised
+as identity-safe native-object cloning.
+
+Malformed foreach with no following end marker is not reported through a
+dedicated exception; the current algorithm stops processing that occurrence.
+Nested/complex scope semantics are not promoted beyond what current
+characterization proves.
+
+### Classic condition syntax and exact grammar
+
+Supported paragraph marker forms are:
+
+```text
+{{#if:expression}}
+{{#elseif:expression}}
+{{#else}}
+{{#endif}}
+
+{{#ifnot:expression}}
+...
+{{#endif}}
+```
+
+Markers are paragraph-based. The selected branch's existing paragraph/span
+structure is preserved. Unselected **paragraphs** are removed; surrounding
+non-paragraph structures are not generically removed. Characterization
+therefore deliberately records that an unselected table may retain its table
+shell while the paragraphs inside it are removed.
+
+Condition expressions support either a bare reference or one binary comparison:
+
+```text
+name
+count >= 2
+name == "Anna"
+state != 'closed'
+price < 100
+```
+
+Supported operators are `== != > < >= <=`. The left side must be a
+word-character reference name. The right side is the remaining expression text
+with surrounding single/double quote characters trimmed. If both operands are
+numeric they are cast to float; otherwise PHP's existing loose comparison
+semantics are used.
+
+A bare reference uses:
+
+```php
+filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+```
+
+with missing value defaulting to false. The method has a declared `bool`
+return, so the classic public contract should teach boolean-compatible values
+rather than promise general PHP "truthiness". `ifnot` negates the evaluated
+result. `elseif` uses normal `if` evaluation. The first matching branch is
+selected; else is used only when no condition matched.
+
+An unterminated conditional block (no discovered `{{#endif}}`) is left
+unprocessed rather than raising a dedicated malformed-template exception.
+
+### Format-preservation boundary
+
+Current Template Authoring characterization establishes a deliberately bounded
+claim:
+
+- selected conditional paragraphs preserve their existing paragraph/span
+  styles;
+- foreach clones preserve authored subtree/style structure;
+- classic foreach does not rebuild cloned structures from PHP.
+
+It does **not** establish that arbitrary classic controls can wrap every ODF
+structure with browser/template-engine block semantics. The table-shell
+characterization and duplicated native identities are explicit counterexamples.
+Public documentation must keep the phrase "lightweight logic" literal.
+
+### load(), refresh(), save(), cleanup()
+
+`load(): void` resets the package working state from the **original template
+source**, resets legacy-structured and successful Phase-E lifecycle flags, then
+reruns template preparation. It discards unsaved working mutations. It does not
+clear the PHP valueStack or repeatStack in current source; because the working
+DOM is restored, a later explicit render may consume those still-staged values
+again. This stack-retention detail is current implementation behavior and should
+not be turned into a stronger application workflow guarantee.
+
+`refresh()` has no declared return type and currently returns null. It
+finalizes document-owned graphic/font state, persists core documents, and then
+calls `load()`; characterization proves the observable working state is still
+reset to the original template. **Compatibility lifecycle API; do not teach it
+as a normal refresh/preserve-mutations operation.**
+
+`save(string $outputPath): void` finalizes image/graphic/font state, applies
+the historical bullet-indentation adjustment and delegates package writing.
+Repeated save after semantic `setElement()` is characterized as stable for
+representative resources and without cross-document leakage. Save does not
+reset the document and does not render staged classic values automatically.
+
+`cleanup(): void` releases the temporary package workspace. Construction also
+registers it for shutdown. Independent OdtTemplate instances have isolated
+workspaces. Reuse of an object after explicit cleanup is **not** a documented
+contract.
+
+### extractTemplateVariables() exact projection
+
+`extractTemplateVariables(): array` scans serialization of the **current
+working content.xml and styles.xml** and merges unique discoveries from both.
+It always returns:
+
+```php
+[
+    'variables' => [],
+    'loops' => [],
+    'conditions' => [],
+    'negated_conditions' => [],
+    'filters' => [],
+    'filter_options' => [],
+]
+```
+
+The lexical parser recognizes scalar/filter expressions matching
+`{{filter?:name|wordOption?}}`, foreach names matching `\w+`, if/elseif
+expression text up to `}`, and ifnot names matching `\w+`.
+`filter_options` is keyed by variable name and contains unique captured
+word-only options.
+
+Because the scalar regex is lexical, classic control tokens can also contribute
+incidental variable/filter-looking matches depending on their serialized text.
+The method provides no scope, provenance, native-object or diagnostic model.
+**Classification: Compatibility/tooling inspection API; use
+`inspectTemplate()` for the semantic source contract.**
+
+### Debug surface
+
+`enableDebugMode(): void` only changes the debug flag from false to true.
+There is no public disable/reset method. `getDebugLog(): array` returns the
+current accumulated list. The protected `log()` appends only when debug mode
+is enabled.
+
+No stable set of emitted debug messages or debug-log lifecycle across
+load()/refresh() is established by current focused tests. **Classification:
+Advanced diagnostic/Compatibility API; message strings are not a stable
+machine-readable contract.**
+
+### TemplateProcessor and ConditionExpression visibility
+
+The mechanical public-surface audit also records the extracted classic-language
+collaborators rather than letting public PHP visibility silently become user
+documentation.
+
+`TemplateProcessor` exposes public stateless DOM operations for normalization,
+scalar replacement/discovery, bounded subtree replacement, special nl2br/list
+materialization, foreach, conditionals, filters, and condition evaluation.
+These methods exist so the facade and Writer-native/declarative subsystems can
+reuse established classic semantics against bounded DOM regions.
+
+**Classification: Advanced/Infrastructure.** They are not the normal
+end-programmer template API and should be hidden from the primary website
+reference. Their public visibility is an extension/integration seam, not a
+second recommended facade.
+
+Public methods mechanically accounted for:
+
+```php
+normalizeTemplateDom(DOMDocument $dom): void
+fixBrokenVariables(DOMNode $node): void
+replaceScalarText(string $text, array $values, callable $applyFilter): string
+scalarVariableNames(DOMNode $root): array
+scalarVariableNamesOwnedBy(DOMElement $section): array
+unsupportedExpressions(DOMNode $root): array
+replaceScalarTextInSubtree(DOMNode $root, array $values, callable $applyFilter, bool $excludeNestedSections = false, bool $excludeSpecialExpressions = false): void
+replaceScalarTextOwnedBy(DOMElement $section, array $values, callable $applyFilter): void
+applyFilter(string $filter, string $value, ?string $option = null): string
+replaceNl2brInDom(DOMDocument $dom, array $values): void
+replaceNl2brInNode(DOMNode $root, array $values, bool $excludeNestedSections = false, ?array $allowedNames = null): void
+replaceListsInDom(DOMDocument $dom, array $values): void
+replaceListsInNode(DOMNode $root, array $values, bool $excludeNestedSections = false, ?array $unorderedNames = null, ?array $orderedNames = null): void
+applyRepeatingInDom(DOMDocument $dom, string $key, array $rows, callable $replacePlaceholders): void
+applyConditionalsInDom(DOMDocument $dom, array $values, callable $evaluateCondition): void
+evaluateCondition(string $expression, array $values): bool
+```
+
+`ConditionExpression` is the parsed value object for the existing condition
+grammar. Its public constructor, `parse()`, scalar accessors, and
+`evaluate()` are **Advanced/Infrastructure**, not a separately recommended
+user expression API. Its semantics are intentionally those documented above;
+the class must not be interpreted as an invitation to extend the 1.0 grammar.
+
+### Protected OdtTemplate compatibility facade
+
+The protected methods on OdtTemplate are not end-programmer calls, but they are
+part of subclass compatibility and therefore cannot be treated as private
+implementation during 1.0 documentation/refactoring.
+
+Classic-relevant protected wrappers include
+`setValuesInDom()`, `fixBrokenVariables()`,
+`replacePlaceholdersInNode()`, `replaceInText()`,
+`replaceNl2brInDom()`, `replaceListsInDom()`,
+`applyConditionalsInDom()`, `evaluateCondition()`,
+`applyRepeatingInDom()`, `applyAllRepeatingBlocksInDom()`,
+`normalizeTemplateDom()`, `renderTextBoxes()`, plus the historical
+text-based conditional/repeating helpers.
+
+Current architecture deliberately delegates many of these wrappers to
+TemplateProcessor so subclass overrides at the OdtTemplate facade remain
+observable. **Classification: protected Compatibility/Extension surface.**
+Future refactors must preserve polymorphic dispatch where existing facade
+callbacks rely on it.
+
+### OdtTemplate / Classic completion result
+
+For 01F, the generic OdtTemplate/classic block is now closed:
+
+- constructor + canonical assign/assignRepeating/render/save lifecycle:
+  **VERIFIED + DOCUMENTED-COMPLETE**;
+- `setValues()`: **Compatibility**;
+- `setRepeating()`: **DEPRECATE / Compatibility**;
+- `setRepeatingData()`: **DEPRECATE / historical Compatibility; hidden from
+  normal user docs**;
+- `load()`: **Advanced lifecycle / Compatibility**;
+- `refresh()`: **Compatibility lifecycle**;
+- `cleanup()`: **Advanced lifecycle**;
+- classic variables/filters/nl2br/lists/foreach/conditions:
+  **VERIFIED + DOCUMENTED-COMPLETE with bounded format/scope claims**;
+- legacy `assign(OdtElement)`: **Compatibility**, not a replacement for
+  `setElement()`;
+- `extractTemplateVariables()`: **Compatibility/tooling**;
+- debug API: **Advanced diagnostic/Compatibility**;
+- TemplateProcessor + ConditionExpression: **Advanced/Infrastructure**;
+- protected OdtTemplate wrappers: **Compatibility/Extension**.
+
+No implementation behavior was changed. Findings that would require semantic
+redesign remain outside 1.0; in particular classic foreach row-local condition
+scope remains CLASSIC-FOREACH-SCOPE-01.
