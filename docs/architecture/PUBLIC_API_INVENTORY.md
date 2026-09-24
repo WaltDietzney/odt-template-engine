@@ -1582,3 +1582,174 @@ therefore retained in the complete inventory, but the recommended end-user path
 is through the frame-backed element methods rather than manually projecting
 native carriers.
 
+
+
+## API-family verification — ImageElement
+
+Status: **VERIFIED + DOCUMENTED-COMPLETE for current ImageElement source**.
+
+This section covers PHP-generated image frames. Template-level
+`setImage()`, `replaceImageByName()`, and Phase-E mapped `replace-image`
+remain separate APIs with different ownership and failure semantics.
+
+### Constructor and complete legacy option vocabulary
+
+```php
+new ImageElement(string $imagePath, array $options = [])
+```
+
+When `enabled` is omitted it defaults to `true`. If enabled, the source must
+exist and be readable or the constructor throws generic `Exception` with the
+current "Image not found" message. The constructor then calls `getimagesize()`
+and uses the intrinsic pixel aspect ratio for one-dimensional autosizing.
+
+Sizing behavior:
+
+| width | height | result |
+|---|---|---|
+| omitted | omitted | `5cm × 3cm` |
+| supplied | omitted | supplied width; height derived from intrinsic ratio |
+| omitted | supplied | width derived from intrinsic ratio; supplied height |
+| supplied | supplied | exact supplied pair |
+
+**Compatibility caveat:** the autoscaling implementation converts the supplied
+dimension with `(float) rtrim($value, 'cm')` and always writes the derived
+dimension in `cm`. It therefore does not implement unit-aware conversion.
+The safe documented autoscaling input is a numeric centimetre value such as
+`4cm`. Other units can be numerically misinterpreted. This behavior must not
+be silently "fixed" during the 1.0 documentation audit.
+
+If `enabled => false`, source existence/readability and intrinsic sizing are
+skipped. Materialization returns an empty `text:p` and no draw:image. The
+element still reports its image asset through `getImageAssets()`; this is
+observable compatibility behavior and should not be presented as a general
+conditional-resource guarantee.
+
+The complete constructor/`setStyle()` friendly vocabulary interpreted by
+`StyleMapper::mapImageStyleOptions()` is:
+
+| key | accepted/effective values | behavior |
+|---|---|---|
+| `width` | non-empty value; no mapper validation | `svg:width` |
+| `height` | non-empty value; no mapper validation | `svg:height` |
+| `wrap` | exactly `none|left|right|run-through` | `style:wrap`; invalid values are silently ignored |
+| `align` | exactly `left|right|center|absolute` | stored compatibility control; invalid values silently ignored |
+| `anchor` | exactly `paragraph|page|char|as-char` | `text:anchor-type`; invalid values silently ignored |
+| `horizontal-pos` | any non-empty value | `style:horizontal-pos`, no validation |
+| `horizontal-rel` | any non-empty value | `style:horizontal-rel`, no validation |
+| `vertical-pos` | any non-empty value | `style:vertical-pos`, no validation |
+| `vertical-rel` | any non-empty value | `style:vertical-rel`, no validation |
+| `enabled` | constructor reads truthily/falsily; mapper itself ignores it | controls constructor validation/materialization |
+
+Unknown keys are ignored by the image mapper. There is **no native-prefixed
+general escape hatch** in `mapImageStyleOptions()`.
+
+Legacy `align` has additional frame-materialization semantics:
+
+| align | emitted frame compatibility attributes |
+|---|---|
+| `left` | wrap right; horizontal-pos left; horizontal-rel paragraph |
+| `right` | wrap left; horizontal-pos right; horizontal-rel paragraph |
+| `center` | wrap none; horizontal-pos center; horizontal-rel paragraph |
+| `absolute` | wrap none; horizontal-pos from-left; horizontal-rel page-content |
+
+Without `align`, mapped wrap/horizontal/vertical values are copied directly
+onto the frame. A supplied vertical-pos defaults vertical-rel to `paragraph`
+when vertical-rel is absent.
+
+### Recommended semantic frame layout
+
+`ImageElement` exposes the same semantic DrawingLayout API as DrawTextBox:
+
+```php
+setFrameLayout(array $layout): self
+setFrameAnchor(string $anchor): self
+setFrameHorizontalAlignment(string $alignment, ?string $relativeTo = null): self
+setFrameVerticalAlignment(string $alignment, ?string $relativeTo = null): self
+setFrameHorizontalOffset(string $offset, ?string $relativeTo = null): self
+setFrameVerticalOffset(string $offset, ?string $relativeTo = null): self
+setFrameWrap(string $wrap): self
+```
+
+The complete keys, value domains, relation matrix, signed-offset rules,
+alignment/offset mutual exclusion and as-char restrictions are the
+DrawingLayout contract documented in the DrawTextBox audit.
+
+When semantic layout is active:
+
+- semantic anchor/size/position/wrap override conflicting legacy frame geometry;
+- omitted semantic width/height retain the constructor-established dimensions,
+  including autoscaled dimensions;
+- layout graphic properties become a semantic `StyleRequirement` rather than
+  direct frame style attributes;
+- `toDomNode()` updates observable `getImageOptions()` compatibility state
+  with projected wrap/horizontal/vertical graphic properties;
+- repeated materialization is stable;
+- `setFrameLayout([])` clears semantic layout and restores legacy alignment/
+  positioning behavior.
+
+### ImageElement public method reference
+
+| Method | Contract | Disposition |
+|---|---|---|
+| `__construct(string $imagePath, array $options = [])` | Local generated image; source validation/autosizing/options above. | Recommended |
+| `setFrameLayout(array $layout): self` | Semantic layout master API; empty resets semantic layout. | Recommended |
+| six `setFrame*()` methods | Incremental semantic frame-layout API with DrawingLayout validation. | Recommended |
+| `setStyle(array $options): self` | **Replaces**, rather than merges, raw/mapped legacy image option state and regenerates compatibility style-name. It does not recompute intrinsic autosizing, update protected width/height/anchor/wrap fields, or alter `enabled`. Calling it after construction can therefore replace constructor-established mapped dimensions unless width/height are supplied again. | Compatibility/legacy style mutator; document carefully |
+| `getImagePath(): string` | Returns original source path. | Secondary accessor |
+| `getImageOptions(): array` | Returns current mapped/observable compatibility option state, not necessarily original constructor input. Semantic materialization can add projected style properties. | Secondary/diagnostic accessor |
+| `getImageAssets(): array` | Returns one `['id' => basename(path), 'path' => path]` asset entry, including for disabled element. | Compatibility/resource accessor |
+| `getOwnImageAssets(): array` | Exact wrapper around getImageAssets(). | Infrastructure/resource ownership |
+| `getOwnStyleRequirements(): iterable` | With semantic layout, emits common graphic StyleRequirement in styles.xml for projected graphic properties; otherwise empty. | Extension/infrastructure |
+| `getImageStyleRequirements(): array` | Returns legacy style-name => imageOptions map. | Compatibility/infrastructure |
+| `getOwnImageStyleRequirements(): array` | Exact wrapper around getImageStyleRequirements(). | Compatibility/infrastructure |
+| `structuredInsertionMode(): StructuredInsertionMode` | Effective anchor `as-char` => INLINE_TEXT_FLOW; otherwise PRESERVE_TEXT_CONTAINER. Semantic anchor wins over mapped legacy anchor. | Infrastructure, but lifecycle-relevant |
+| `toDomNode(DOMDocument $dom): DOMNode` | Disabled => empty text:p. Enabled => draw:frame + embedded draw:image href `Pictures/<basename>`. | Infrastructure/materialization |
+
+### Style-name compatibility caveat
+
+Legacy `setStyle()` generates a style name from mapped image options, excluding
+`align` and `style-name` from the hash. `toDomNode()` can attach that
+generated name even though `getOwnStyleRequirements()` intentionally returns
+no semantic StyleRequirement when DrawingLayout is absent. The separate legacy
+`getImageStyleRequirements()` API exposes the historical style requirement
+map. This is compatibility architecture; do not describe it as equivalent to
+the semantic requirement pipeline.
+
+### Resource identity caveat
+
+The embedded package href and reported asset id use `basename($imagePath)`.
+ImageElement itself does not create a collision-safe logical asset name. Any
+collision handling/ownership belongs to the surrounding document resource
+pipeline and must be documented from that pipeline rather than inferred from
+ImageElement.
+
+### 1.0 disposition
+
+```text
+RECOMMENDED
+  ImageElement constructor
+  semantic setFrameLayout()
+  semantic setFrame*() convenience methods
+
+SECONDARY / DIAGNOSTIC
+  getImagePath()
+  getImageOptions()
+
+COMPATIBILITY / LEGACY
+  constructor align/wrap/low-level position options where semantic layout supersedes them
+  setStyle()
+  getImageStyleRequirements()
+
+INFRASTRUCTURE / RESOURCE PIPELINE
+  getOwnStyleRequirements()
+  getImageAssets()/getOwnImageAssets()
+  getOwnImageStyleRequirements()
+  structuredInsertionMode()
+  toDomNode()
+
+FUTURE / SEPARATE
+  custom-shape bitmap-fill replacement belongs to
+  CUSTOM-SHAPE-FILL-IMAGE-REPLACEMENT-01, not ImageElement 1.0 redesign
+```
+
