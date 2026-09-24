@@ -5484,3 +5484,457 @@ MAPPING VALIDATION/RESOLUTION
 No new API or execution order was introduced. Inspection remains read-only,
 TemplateContract remains source-oriented, and Mapping remains an optional
 relationship/resolution layer rather than a renderer.
+
+
+## API-family completion — Concrete Preflight
+
+Status: **VERIFIED + DOCUMENTED-COMPLETE for the current Phase-E concrete
+preflight / dry-run boundary**.
+
+Preflight is the final non-mutating gate between Mapping Resolution and
+Automation:
+
+```text
+TemplateContract + MappingDefinition + Application Data
+        ↓
+mapping resolution / static validation
+        ↓
+ConcreteMappingPreflight
+        + current DocumentInspection
+        ↓
+ConcretePreflightResult
+        ↓ READY only
+Automation
+```
+
+It does not mutate the document, application data, image source files, or
+template source.
+
+### ConcreteMappingPreflight
+
+Exact public entry point:
+
+```php
+preflight(
+    MappingDefinition $definition,
+    TemplateContract $contract,
+    array $data,
+    DocumentInspection $workingDocument
+): ConcretePreflightResult
+```
+
+The optional constructor dependencies are implementation/test injection seams:
+
+```php
+__construct(
+    ?MappingResolutionResolver $resolver = null,
+    ?DependencyConcretePreflightValidator $dependencyValidator = null,
+    ?FrameImageReplacementPreflightValidator $frameValidator = null,
+    ?MetadataPayloadValidator $metadataValidator = null
+)
+```
+
+Normal application code should use the default constructor.
+
+The supplied `DocumentInspection` is an already-created read-only snapshot
+of the **current Working Document**. It is currently required for concrete
+named-frame image applicability. It is not substituted by TemplateContract,
+because source evidence and current working-state applicability are distinct.
+
+**Disposition:** `ConcreteMappingPreflight::preflight()` and its result model
+are **KEEP / RECOMMENDED for Phase-E automation users**. Constructor service
+injection is **Advanced**.
+
+### Preflight result
+
+`ConcretePreflightResult` has stable aggregate statuses:
+
+```text
+READY
+ERROR
+```
+
+Public surface:
+
+```php
+status(): string
+ready(): bool
+mappingResolution(): MappingResolution
+operations(): array
+diagnostics(): array
+```
+
+`status()` is ERROR if any operation is ERROR; otherwise READY.
+`diagnostics()` flattens all operation diagnostics in operation order.
+
+The constructor requires every supplied operation to be a
+`ConcretePreflightOperation`; invalid list members throw
+`InvalidArgumentException`.
+
+### Operation result
+
+Every resolved dependency/native action/document capability becomes one
+`ConcretePreflightOperation`.
+
+Stable statuses:
+
+```text
+READY
+ERROR
+```
+
+Public surface:
+
+```php
+targetFamily(): string
+targetIdentity(): string
+resolution(): DependencyMappingResolution
+    | NativeObjectActionResolution
+    | DocumentCapabilityResolution
+capabilityId(): ?string
+payloadKind(): ?string
+applicability(): ?string
+status(): string
+diagnostics(): array
+```
+
+Invalid constructor status values throw `InvalidArgumentException`.
+
+Current target-family/identity conventions are:
+
+```text
+dependency
+    identity = TemplateContract dependency path
+
+native_action
+    identity = "<targetKind>:<targetName>"
+
+document_capability
+    identity = "<group>.<target>"
+```
+
+The operation records the already-resolved Mapping result; preflight does not
+create a second mapping graph.
+
+### ConcretePreflightDiagnostic
+
+Public fields/accessors:
+
+```php
+code(): string
+message(): string
+targetFamily(): string
+targetIdentity(): string
+sourcePath(): ?string
+context(): array
+```
+
+`context` is machine-readable `array<string, scalar|null>`. For nested
+collection failures it can contain `item_path` as a dot-separated zero-based
+index path.
+
+Diagnostic **codes**, target identities and structured context are the
+machine-oriented contract. Human-readable messages explain the failure but
+should not be treated as a separate stable programmatic protocol.
+
+### Dependency concrete validation
+
+Preflight derives concrete payload requirements from the dependency's actual
+TemplateContract consumers rather than assigning one universal scalar type.
+
+Current payload kinds are:
+
+```text
+NAMED_RECORD_COLLECTION
+STRING
+SCALAR
+CONDITION_VALUE
+DEPENDENCY_VALUE
+```
+
+Consumer rules:
+
+- COLLECTION dependencies use `NAMED_RECORD_COLLECTION`;
+- SPECIAL and native Writer User Field bindings require STRING;
+- SCALAR / FILTERED_SCALAR accept string, int, float or bool;
+- pure IF/IFNOT dependencies use CONDITION_VALUE;
+- otherwise the fallback description is DEPENDENCY_VALUE.
+
+Important null/empty semantics:
+
+- unresolved dependency -> error;
+- missing source -> error;
+- NULL is an error for collections and ordinary bindings;
+- NULL is accepted for a dependency consumed **only** by IF/IFNOT;
+- an empty collection is valid for a COLLECTION dependency consumed by
+  FOREACH;
+- missing, null, scalar/wrong-shape and empty collection remain distinct;
+- collection items used for foreach must be arrays with **string keys only**;
+  an empty record `[]` is valid;
+- nested failures retain item-index provenance.
+
+Representative dependency diagnostic codes currently emitted:
+
+```text
+UNRESOLVED_APPLICATION_SOURCE
+MISSING_APPLICATION_RESOLUTION
+MISSING_SOURCE_VALUE
+NULL_SOURCE_VALUE
+WRONG_APPLICATION_SHAPE
+INVALID_COLLECTION_ITEM_RECORD
+INCOMPATIBLE_DEPENDENCY_PAYLOAD
+```
+
+The dependency validator is marked `@internal`.
+
+**Disposition:** DependencyConcretePreflightValidator =
+**Infrastructure / HIDE FROM NORMAL USER DOCUMENTATION**. Its observable
+result semantics belong to ConcreteMappingPreflight.
+
+### Native Section and Bookmark payload boundaries
+
+For current explicit native actions:
+
+```text
+section:<name> + replace-content
+    requires PRESENT scalar payload instanceof OdtElement
+
+bookmark:<name> + replace-text
+    requires PRESENT scalar string payload
+```
+
+Incompatible values produce `INCOMPATIBLE_NATIVE_ACTION_PAYLOAD`.
+
+Their concrete applicability is currently projected as APPLICABLE after
+static mapping/capability validation; no second Working-Document structural
+probe is performed here for these two action families.
+
+This differs intentionally from named-frame image replacement below.
+
+### Named Frame replace-image preflight
+
+The current replace-image application payload is deliberately bounded:
+
+```php
+[
+    'source' => '/local/readable/image.png',
+    'options' => [
+        'width'  => '4cm',   // optional
+        'height' => '25mm',  // optional
+    ],
+]
+```
+
+Required/allowed shape:
+
+- payload must be an array;
+- `source` must exist and be a string;
+- only top-level `source` and optional `options` are supported;
+- `options` must be an array;
+- only `width` and `height` are accepted options;
+- each dimension must be a **positive** ODF-style length with unit
+  `cm|mm|in|pt|pc|px`;
+- whitespace-normalized or alternative units are not silently accepted by
+  this boundary;
+- source must be an existing readable local file;
+- supported extensions are png, jpg/jpeg, gif, svg, bmp, webp;
+- raster format must agree with detected MIME;
+- SVG must parse as an SVG document in the SVG namespace.
+
+Typical failures:
+
+```text
+INCOMPATIBLE_NATIVE_ACTION_PAYLOAD
+INVALID_REPLACEMENT_OPTION
+INVALID_IMAGE_SOURCE
+ACTION_NOT_APPLICABLE
+```
+
+Concrete frame applicability additionally requires that the source-derived
+frame can be resolved **exactly once** in the supplied current
+DocumentInspection, in the same document part, and that its payload type is
+`image` (direct draw:image child).
+
+Applicability values used by this validator are:
+
+```text
+APPLICABLE
+NOT_APPLICABLE
+```
+
+This current concrete check is why preflight receives both TemplateContract
+(source truth) and DocumentInspection (working-state truth).
+
+`ImageReplacementPreflightPayload` is explicitly documented in source as an
+`@internal` E2-C projection and **not** an application-facing/future
+replacement payload API.
+
+**Disposition:** FrameImageReplacementPreflightValidator and
+ImageReplacementPreflightPayload = **Infrastructure / hidden**. The payload
+shape above is nevertheless part of the observable current
+ConcreteMappingPreflight contract.
+
+### Metadata concrete payload validation
+
+Current Phase-E metadata preflight uses target-specific payload kinds from the
+engine capability catalog:
+
+```text
+title              STRING
+subject            STRING
+description        STRING
+keywords           LIST<STRING>
+initial_creator    STRING
+creator            STRING
+language           LANGUAGE
+creation_date      DATETIME
+date               DATETIME
+editing_cycles     NON_NEGATIVE_INTEGER
+editing_duration   DURATION
+generator          STRING
+coverage           STRING
+```
+
+Concrete rules:
+
+**STRING**
+: PHP string only.
+
+**LIST<STRING>**
+: PHP list array only; every item must be a string. A comma-separated string
+is not equivalent.
+
+**LANGUAGE**
+: string matching the bounded hyphenated language-tag grammar currently used
+by the validator; values such as `en-US` are accepted while `en_US` is
+not.
+
+**DATETIME**
+: bounded ISO-like date-time string including calendar/day validation, time
+limits, optional fractional seconds and optional Z/offset. Date-only strings
+are not accepted.
+
+**NON_NEGATIVE_INTEGER**
+: non-negative PHP int or digit string with optional leading `+`.
+Floats and booleans are not accepted.
+
+**DURATION**
+: bounded ISO-8601-style duration syntax implemented by the validator;
+at least one date/time component must be present and a present `T` must
+introduce an actual time component.
+
+Incompatible values produce
+`INCOMPATIBLE_DOCUMENT_CAPABILITY_PAYLOAD`.
+
+MetadataPayloadValidator is an implementation service rather than a second
+public metadata API.
+
+**Disposition:** **Infrastructure / hidden**; its observable accepted payload
+semantics are documented through preflight.
+
+### Capability/applicability relationship
+
+Concrete preflight builds on, rather than replaces, the Phase-E
+`EngineCapabilityCatalog` and mapping capability projection.
+
+Current native capabilities are:
+
+```text
+section  / replace-content / ODT_ELEMENT
+bookmark / replace-text    / STRING
+frame    / replace-image   / IMAGE_REPLACEMENT
+```
+
+and dependency automation capability id is:
+
+```text
+dependency.automation
+```
+
+The general capability-projection enum remains:
+
+```text
+APPLICABLE
+NOT_APPLICABLE
+UNKNOWN
+```
+
+while the concrete frame validator resolves its own bounded working-state
+decision to APPLICABLE or NOT_APPLICABLE.
+
+The capability catalog and individual capability DTOs are
+**Infrastructure / Advanced introspection**, not an invitation for callers to
+register arbitrary new Phase-E actions in 1.0.
+
+### Non-mutation guarantee
+
+The focused ConcreteMappingPreflight tests explicitly characterize the dry-run
+boundary: preflight leaves unchanged the supplied application data,
+DocumentInspection snapshot, image source file and fixture/template file.
+
+No document operation is executed by `preflight()`.
+
+A READY result is therefore an authorization/readiness input for a later
+automation call, not evidence that anything has already been changed.
+
+### Lifecycle and stale snapshots
+
+Preflight evaluates the **supplied** TemplateContract, MappingDefinition,
+application data and DocumentInspection snapshot. The method does not
+automatically re-inspect the Working Document.
+
+Consequently callers performing imperative Working Document mutations between
+inspection/preflight and automation must treat the snapshot/result as
+belonging to that preflight state. The current API does not define a general
+live/staleness-tracking object.
+
+This is a lifecycle boundary, not a reason to add new 1.0 architecture.
+
+### Public-documentation model
+
+Recommended Phase-E usage should present preflight as a complete dry run, for
+example conceptually:
+
+```php
+$contract = $template->inspectTemplate();
+$working = $template->inspect();
+
+$preflight = (new ConcreteMappingPreflight())->preflight(
+    $mapping,
+    $contract,
+    $applicationData,
+    $working
+);
+
+if (!$preflight->ready()) {
+    // inspect $preflight->diagnostics()
+    // do not automate
+}
+```
+
+Automation execution is documented separately and must enforce its own READY
+precondition rather than relying on application discipline alone.
+
+### Completion result
+
+```text
+ConcreteMappingPreflight::preflight()       KEEP / RECOMMENDED (Phase-E)
+ConcretePreflightResult                     KEEP / RECOMMENDED result
+ConcretePreflightOperation                  KEEP / RECOMMENDED support
+ConcretePreflightDiagnostic                 KEEP / RECOMMENDED support
+
+DependencyConcretePreflightValidator        INFRASTRUCTURE / HIDDEN
+FrameImageReplacementPreflightValidator     INFRASTRUCTURE / HIDDEN
+ImageReplacementPreflightPayload            INTERNAL / HIDDEN
+MetadataPayloadValidator                    INFRASTRUCTURE / HIDDEN
+
+Dependency concrete semantics               VERIFIED + DOCUMENTED-COMPLETE
+Section/bookmark payload boundaries         VERIFIED + DOCUMENTED-COMPLETE
+Frame image payload/applicability            VERIFIED + DOCUMENTED-COMPLETE
+Metadata payload semantics                  VERIFIED + DOCUMENTED-COMPLETE
+Dry-run/non-mutation boundary               VERIFIED + DOCUMENTED-COMPLETE
+```
+
+No new validation semantics, payload conversion, or execution behavior was
+introduced. This audit records the concrete gate that already exists between
+Mapping and Automation.
