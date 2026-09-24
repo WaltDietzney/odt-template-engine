@@ -557,6 +557,63 @@ Completion of S03-B completes the two required S03 proofs. It does **not** start
 FINALIZATION-01 directly. The next milestone is the explicit
 TEMPLATE-AUTHORING-01F Final Review.
 
+### 16.13 S03-B2 post-1.0 architecture findings
+
+The completed S03-B2 correction and preflight exposed three bounded findings
+that are recorded for post-1.0 design work. None is a 1.0 blocker.
+
+#### Image replacement sizing and fitting
+
+The existing `replaceImageByName()` behavior is an established compatibility
+contract: no dimensions use `5cm × 3cm`; width-only uses the supplied width and
+the legacy `3cm` height; height-only uses the legacy `5cm` width and the
+supplied height; and two explicit dimensions are used exactly. S03-B retained
+that behavior and therefore supplies the replacement cover image explicitly as
+`15cm × 8.452cm`.
+
+This does not yet define an intentional image-fitting model for intrinsic-ratio
+preservation, fitting inside or filling a Writer-authored frame, containment,
+cover/crop behavior, or replacing only a frame's image resource while keeping
+its authored geometry. Those questions belong to the existing post-1.0
+`IMAGE-LAYOUT-01` direction and must begin with actual ODF/Writer
+representation and compatibility research. S03 does not redefine the legacy
+dimensions or prescribe a future API.
+
+#### Writer-native structured collection items
+
+S03 confirms that native Writer lists inside Sections such as
+`ProgramObjectivesContent`, `ChallengesContent`, and
+`RecommendationsContent` can remain fully Writer-owned when the application
+does not own their item collection. Replacing an entire Section with
+application-generated structured content is supported, but it is a different
+operation from populating the item collection of an existing Writer-authored
+list while preserving its list structure and formatting.
+
+That future question is analogous in ownership terms to TABLE-ROW-01, but it
+is not classic `{{#foreach}}`, and S03 does not approve copying the table API
+or any list-population API. It requires separate post-1.0 ODF/Writer research.
+
+#### Structured replacement styling
+
+S03-B successfully cloned `FindingDigitalConfidence` and replaced the clone's
+content through the existing structured mutation path. The initial typography
+difference in the generated finding was caused by application-created
+`Paragraph` content not requesting the bold character formatting used by the
+Writer-authored content. Explicit text styling corrected the sample; no engine
+defect was established.
+
+The finding remains an open post-1.0 question under
+`TEMPLATE-FORMAT-PRESERVATION-01`, informed by the completed
+`STYLE-CONTEXT-01` and `STYLE-API-02` foundations: when structured application
+content replaces Writer-authored content, which style context, inherited
+formatting, or authored-content semantics—if any—should be preserved,
+referenced, inherited, or explicitly requested. S03 does not make automatic
+style inheritance a requirement.
+
+S03-B2 automated preflight completed with 1,003 tests and 8,877 assertions.
+The corrected visual output was accepted by the human reviewer. This record
+does not make any additional claim about a LibreOffice save/reopen gate.
+
 ## 17. Explicit non-goals
 
 S03 does not, by itself, authorize a universal Named Element API, programmatic Writer Section creation / `SectionElement`, a new style/theme switching API, native table-row semantic markers, TEMPLATE-FORMAT-PRESERVATION-01, TEMPLATE-AUTHORING-UX-01, STYLE-API-02, STYLE-CONTEXT-01, or changes to classic foreach scope semantics.

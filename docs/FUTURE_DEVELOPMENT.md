@@ -187,6 +187,17 @@ The bounded 1.0 frame core now covers:
 
 `FRAME-LAYOUT-02`, `IMAGE-LAYOUT-01`, broader Writer drawing options, and future specialized draw elements must build on this shared model rather than introduce incompatible positioning semantics.
 
+S03-B2 also recorded a post-1.0 image replacement question for
+`IMAGE-LAYOUT-01`. The current named-image replacement contract intentionally
+retains legacy dimensions: no options produce `5cm × 3cm`, width-only means
+the supplied width with `3cm` height, height-only means `5cm` width with the
+supplied height, and two explicit dimensions are used exactly. S03-B therefore
+uses explicit `15cm × 8.452cm` dimensions for its cover asset. Future work
+must investigate intrinsic-ratio preservation, fitting or filling a
+Writer-authored frame, contain/cover/crop behavior, and replacement of only a
+frame's image resource from actual ODF/Writer structures. This is not a 1.0
+blocker and does not authorize redefining `replaceImageByName()`.
+
 ### GRAPHIC-PART-COMPAT-01 — RESOLVED BY FRAME-LAYOUT-01
 
 The PAGE-FLOW-01D discrepancy was investigated and closed during FRAME-LAYOUT-01.
@@ -398,6 +409,16 @@ Continue documenting and, where justified, simplifying lifecycle semantics aroun
 
 The former TEMPLATE-AUTHORING-UX-01, DECLARATIVE-SECTION-01, and bounded NATIVE-FIELDS-01 topics are coordinated by the mandatory TEMPLATE-AUTHORING-01 milestone above. Broader native Writer semantics remain future work after the bounded 1.0 contract is established.
 
+S03-B2 provides a concrete `TEMPLATE-FORMAT-PRESERVATION-01` follow-up:
+application-created structured content supplied through `SectionTarget::replaceContent()`
+does not automatically inherit character formatting from the replaced
+Writer-authored content. In S03, a generated finding needed to request bold
+text explicitly. No engine defect was established. The post-1.0 question is
+what authored style context, inheritance, or preservation semantics should be
+available during structured replacement, if any; this does not reopen the
+completed `STYLE-CONTEXT-01` or `STYLE-API-02` foundations and does not approve
+an automatic inheritance API.
+
 ### HTML-IMPORT-01 — Extended HTML import
 
 **Priority:** Later
@@ -436,6 +457,25 @@ Treat dynamic graphics initially as content supplied to or replacing content in 
 **Priority:** Medium / bounded independent follow-up
 
 Provide reliable list indentation and nested list style control using native list/paragraph semantics. May be inserted before 1.0 only if it is independent and does not destabilize the mandatory sequence or if PAGE-FLOW/TEMPLATE-RELIABILITY exposes a concrete dependency.
+
+### LIST-ITEM-POPULATION-01 — Application-owned items in Writer-native lists
+
+**Priority:** Post-1.0 architecture/research; not a 1.0 blocker
+
+S03 demonstrated that Writer-native lists can remain Writer-owned, and that a
+whole containing Section can be replaced with application-generated structured
+content. It did not establish a capability for populating an existing
+Writer-authored list/list-item collection while preserving the authored list
+structure, item prototype, numbering, indentation, and formatting.
+
+Future work should determine, from actual ODF and LibreOffice Writer
+structures, whether and how Writer authors a mutable item region, how zero or
+more application items reconcile with preserved authored items, and which list
+and paragraph semantics remain template-owned. This is conceptually analogous
+to TABLE-ROW-01's separation of Writer-owned structure from application-owned
+data, but it is not a table API and must not be collapsed into classic
+`{{#foreach}}` or `CLASSIC-FOREACH-SCOPE-01`, which concern template-expression
+iteration and scope resolution. No public list-population API is approved.
 
 ## Document import and round-trip workflows
 
