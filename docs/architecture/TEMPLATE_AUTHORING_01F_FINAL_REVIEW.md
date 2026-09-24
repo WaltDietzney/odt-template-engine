@@ -2,9 +2,9 @@
 
 ## Status
 
-This document records the evidence and open work for the final review of
-TEMPLATE-AUTHORING-01F. It is a review record, not a declaration that Phase F
-is closed.
+This document records the completed final review of TEMPLATE-AUTHORING-01F.
+Phase F is **CLOSED / FINAL GO**. No unresolved Phase-F implementation or
+public-authoring blocker remains.
 
 The review is performed against the current repository state. Semantics must
 be established from implementation and tests before documentation is treated
@@ -79,15 +79,9 @@ Legacy samples may remain as repository/regression evidence where useful.
 Retention in the repository does not make them part of the public learning
 path.
 
-### Migration cleanup still required
+### Migration cleanup closure
 
-The registry still contains migration-era state and stale targets. Examples
-include empty targets for legacy samples now covered by canonical samples,
-references to S01a, and historical S02 references around invoice work.
-
-These are migration/documentation issues, not evidence for a missing new S02
-implementation. Final taxonomy must describe the work that actually exists
-rather than recreate an obsolete planning label.
+The registry retains historical entries deliberately, but stale S01a/S02 migration targets have been reconciled to canonical artifacts that actually exist. Historical entries remain repository/regression evidence; the public Sample Explorer now presents canonical entries only.
 
 ## Sample Explorer review
 
@@ -199,22 +193,31 @@ branches and therefore behaves differently:
 Richer fitting behavior remains post-1.0 IMAGE-LAYOUT-01 work and must not be
 silently introduced during documentation cleanup.
 
-## Open 01F work
+## 01F closure
 
-1. Preserve the public API inventory in a dedicated review artifact.
-2. Verify each candidate public API against implementation and tests.
-3. Characterize all option-array contracts.
-4. Classify surfaces as recommended, advanced, compatibility, extension, or
-   infrastructure.
-5. Build the end-programmer API reference from verified contracts.
-6. Reconcile registry migration state and canonical taxonomy.
-7. Align Sample Explorer, Sample Guide, Authoring Guide, README, docs index,
-   and CV documentation.
-8. Perform the canonical sample documentation pass.
-9. Perform a final public-coherence review before declaring 01F complete.
+The former open-work checklist is complete:
 
-No new engine capability has yet been identified by this final review as a
-required Phase-F implementation gap.
+1. `PUBLIC_API_INVENTORY.md` is the dedicated verified API review artifact.
+2. Candidate public API families were checked against current source/tests.
+3. Option-array contracts, defaults, validation and lifecycle boundaries were
+   captured for the 1.0 authoring surface.
+4. Surfaces are classified as Recommended, Advanced, Compatibility,
+   Deprecated/Extension, or Infrastructure/Hidden as appropriate.
+5. The inventory is sufficiently complete to serve as the factual basis for a
+   future end-programmer API reference without inventing semantics.
+6. Registry migration state and canonical taxonomy were reconciled.
+7. Sample Explorer, Sample Guide, Template Authoring Guide, README and docs
+   index were aligned to the canonical L01-L12 / C01-C05 / B01-B02 /
+   S01b+S03 path.
+8. B02 now states its programmatic ownership role explicitly; canonical
+   showcase documentation states the Writer/PHP ownership boundary.
+9. A final mechanical scan of every public source symbol classified remaining
+   PHP-public support/infrastructure surfaces and found no unclassified 1.0
+   capability.
+
+No new engine capability was identified as a required Phase-F implementation
+gap. Findings requiring new semantics remain post-1.0 work rather than being
+silently designed inside 01F.
 
 
 ### API closure rule clarified during Image audit
@@ -231,3 +234,38 @@ are recorded in FUTURE_DEVELOPMENT instead. The custom-shape bitmap-fill
 replacement use case discovered during the image audit is now tracked there as
 CUSTOM-SHAPE-FILL-IMAGE-REPLACEMENT-01 rather than being designed inside 01F.
 
+
+
+## Final decision
+
+**TEMPLATE-AUTHORING-01F: FINAL GO / CLOSED.**
+
+The 1.0 authoring story is coherent around three complementary ownership
+models:
+
+1. simple visible template processing;
+2. PHP-owned structured ODT construction;
+3. Writer-owned native document structures with inspection, optional mapping,
+   concrete preflight and bounded atomic automation.
+
+Canonical public learning now proceeds through L01-L12, C01-C05, B01-B02 and
+the actual professional showcases S01b and S03. Historical numbered samples
+remain evidence, not a competing curriculum.
+
+The complete public API inventory has been reconciled mechanically against
+`src/`. No new architecture is authorized by this closeout. Known future
+topics remain in FUTURE_DEVELOPMENT and completed architecture baselines remain
+closed unless contradictory evidence appears.
+
+### Handoff
+
+The next milestone is **FINALIZATION-01 — Final document/export semantics**.
+This closeout does not start, design or implement FINALIZATION-01; it only
+establishes the completed TEMPLATE-AUTHORING-01F handoff.
+
+### Verification note
+
+This closeout consists of documentation/public-surface reconciliation and one
+sample comment-only clarification. No engine behavior was changed. The
+family-level audits relied on existing source and test evidence; this closeout
+did not claim a new local `composer test` or LibreOffice regression run.
