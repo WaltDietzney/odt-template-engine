@@ -146,6 +146,178 @@ Questions include:
   surface;
 - which automation layers are intended as direct end-programmer API.
 
+## OdtTemplate verification log — tranche 1
+
+This tranche reviewed the current facade implementation together with
+ARCH-07 facade closeout evidence, D5F/D5G lifecycle evidence, current package
+lifecycle tests, integration usage, and Phase-F public-surface history. It
+does not yet close the complete OdtTemplate audit.
+
+### Facade and package lifecycle
+
+**CHARACTERIZED / strong evidence**
+
+- Construction creates an OdtPackage, prepares the loaded template, and
+  registers cleanup for shutdown.
+- load() is a reset operation: it resets the working package from the original
+  template, resets legacy structured lifecycle state and successful Phase-E
+  invocation state, and prepares the template again.
+- save() finalizes current document state and writes a package. Current
+  lifecycle tests prove assign -> render -> save -> cleanup -> reopen.
+- cleanup() delegates package workspace cleanup. Independent OdtTemplate
+  instances have isolated workspaces in current integration coverage.
+- refresh() is not a generic "reload current mutations" operation. It persists
+  current core documents and then calls load(); current characterization
+  explicitly proves its legacy observable result is a reset to the original
+  template state.
+- ARCH-07 final review records construction, render, save, load, refresh, and
+  repeated operations as compatibility-covered public workflows.
+
+**Documentation risk:** refresh() is easy to misread from its name. The public
+reference must document its established reset behavior rather than imply an
+in-memory refresh preserving rendered values.
+
+### Scalar assignment aliases
+
+Current implementation shows:
+
+```php
+setValues(array $values): void
+assign(array $values): void
+```
+
+Both currently perform the same operation: merge values into valueStack.
+Neither method itself renders.
+
+Repository public guidance and current samples favor assign(), while older
+samples use setValues(). ARCH-07 explicitly preserves both recommended and
+legacy assignment paths as public compatibility behavior.
+
+**Status:** CHARACTERIZED implementation; classification pending final
+historical/API-policy review. Working hypothesis: assign() is the recommended
+surface and setValues() is a compatibility alias. Do not deprecate/remove from
+this finding alone.
+
+### Repeating assignment
+
+```php
+assignRepeating(string $key, array $rows): void
+setRepeating(string $key, array $rows): void
+setRepeatingData(array $data): void
+```
+
+assignRepeating() and setRepeating() both currently store rows in repeatStack
+for later render(). Public guides/tests favor assignRepeating().
+
+setRepeatingData() is materially different: it immediately normalizes and
+mutates both content.xml and styles.xml by applying all supplied repeating
+blocks. It does not merely stage data for render().
+
+The source around setRepeating() contains legacy/deprecation commentary, but
+the duplicated DocBlock placement is ambiguous enough that classification
+must be based on broader evidence rather than that comment alone.
+
+**Status:** assignRepeating/setRepeating CHARACTERIZED at implementation level;
+setRepeatingData marked QUESTION pending historical characterization and
+tests.
+
+### render() and structured compatibility
+
+render() consumes the staged valueStack and repeatStack and mutates both
+content.xml and styles.xml. It performs placeholder repair, nl2br, list/scalar
+replacement, text-box handling, repeating blocks, and conditionals.
+
+D5G documents a historically important distinction: assigning an OdtElement
+through assign()/render() is a legacy structured lifecycle, while
+setElement() is the authoritative semantic structured-element lifecycle.
+Compatibility work deliberately preserved the observable legacy path instead
+of silently treating both as identical.
+
+**Status:** render() is established public behavior. Exact repeat-call
+semantics and the remaining legacy structured-value contract must still be
+read from the later D5G characterization/closeout before final classification
+text is written.
+
+### setElement()
+
+setElement() is explicitly identified by ARCH-07 as a genuine public
+structured-content facade operation. Current implementation performs semantic
+state preparation, resource preparation, structured materialization, and
+bounded compatibility finalization.
+
+D5F/D5G identify this as the authoritative structured-element lifecycle,
+distinct from legacy OdtElement values passed through assign()/render().
+
+**Status:** VERIFIED as intended public facade capability; complete option/
+element-specific behavior belongs to the structured-content audit.
+
+### Inspection views
+
+Current facade semantics distinguish three views:
+
+- inspect() snapshots named native structures from the **current working
+  document** and does not expose mutable DOM nodes;
+- inspectTemplateStructure() inspects the **original content.xml source**;
+- inspectTemplate() builds a unified TemplateContract from the **original
+  authored content.xml and styles.xml source**, independent of current
+  working-document mutations.
+
+This distinction is architecturally significant and must be explicit in the
+public reference.
+
+**Status:** implementation CHARACTERIZED; detailed contract/DTO verification
+remains in the Inspection audit.
+
+### Phase-D / Phase-E execution
+
+executeDeclarative() directly executes recognized declarative Section controls
+against the working document. Its own source contract states that successful
+repeated execution is not generally guaranteed by Phase D.
+
+automate() is the atomic Phase-E facade. It requires a READY
+ConcretePreflightResult and permits only one successful Phase-E invocation per
+document lifecycle. A successful invocation runs native-object actions,
+dependency consumers, and document capabilities inside the Phase-E executor.
+load() resets the successful-invocation guard.
+
+automateDependencies(), automateNativeObjectActions(), and
+automateDocumentCapabilities() are also public and are used as the component
+stages of automate(). Whether these lower-level stages are intended direct
+end-programmer Advanced API or exposed orchestration seams remains a
+classification question.
+
+**Status:** high-level semantics CHARACTERIZED; detailed Mapping/Automation
+audit still required before CLASSIFIED.
+
+### Public style/finalization helpers
+
+ARCH-07 explicitly records retained public style/default helpers as part of
+the migrated facade API, while also describing style registration/default
+style/finalization code as transitional technical facade implementation at
+that milestone.
+
+This is important evidence against treating
+ensureParagraphStylesExist()/ensureDefaultListStylesForContentXml() as
+ordinary recommended user API merely because they are public. Later
+STYLE-API-02 and STYLE-CONTEXT work must be inspected before their final 1.0
+classification.
+
+### Debug and variable extraction
+
+extractTemplateVariables(), enableDebugMode(), and getDebugLog() remain public
+facade methods. ARCH-07 treats template inspection/debug APIs as retained
+public behavior, but this tranche has not yet established whether
+extractTemplateVariables() is recommended alongside the newer TemplateContract
+inspection model or is a compatibility inspection surface.
+
+Current extractTemplateVariables() parses the current working content/styles
+DOMs and returns variables, loops, conditions, negated_conditions, filters,
+and filter_options.
+
+**Status:** CHARACTERIZED implementation; classification pending inspection of
+the Template Authoring inspection history and current docs.
+
+
 ## 2. Native Writer targets
 
 ### BookmarkTarget
