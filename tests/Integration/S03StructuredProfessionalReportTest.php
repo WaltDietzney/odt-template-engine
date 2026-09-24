@@ -37,6 +37,7 @@ final class S03StructuredProfessionalReportTest extends TestCase
             self::assertStringContainsString('ParticipantOutcomesImage', $outputContent);
             self::assertStringContainsString('svg:width="15.799cm"', $outputContent);
             self::assertStringContainsString('svg:height="10.007cm"', $outputContent);
+            self::assertSame(1, substr_count($outputContent, 'Employer engagement proved most effective when'));
             self::assertCount(1, $outputXPath->query('//text:bookmark-start[@text:name="ExecutiveSummaryIntro"]'));
             self::assertCount(1, $outputXPath->query('//text:bookmark-end[@text:name="ExecutiveSummaryIntro"]'));
             self::assertStringContainsString('Bridgeway Skills', $outputContent);
@@ -61,6 +62,9 @@ final class S03StructuredProfessionalReportTest extends TestCase
             foreach (['MERIDIAN', 'Community Pathways Performance Report', '2027', 'Meridian Learning Foundation'] as $value) {
                 self::assertStringContainsString($value, $styles);
             }
+            self::assertStringContainsString('text:name="program_name"', $styles);
+            self::assertStringContainsString('text:user-field-get text:name="program_name"', $styles);
+            self::assertStringNotContainsString('Pathways 360 Demo Program</text:span>', $styles);
 
             $manifest = $this->part($output, 'META-INF/manifest.xml');
             self::assertStringContainsString('s03-participant-outcomes-2027.png', $manifest);
