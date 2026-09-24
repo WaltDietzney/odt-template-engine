@@ -247,7 +247,7 @@ final class SampleRegistryTest extends TestCase
         }
     }
 
-    public function testL09ThroughL11AreCanonicalSamplesWithNativeOwnershipAndInspectionMode(): void
+    public function testL09ThroughL12AreCanonicalSamplesWithNativeOwnershipAndInspectionMode(): void
     {
         $samples = [];
         foreach ($this->registry()['samples'] as $sample) {
@@ -258,6 +258,7 @@ final class SampleRegistryTest extends TestCase
             'L09' => ['Native Objects', 'addressable-native-odt', 'sample_L09_native_objects.php', 'template_L09_native_objects.odt', 'output_L09_native_objects.odt', 'odt'],
             'L10' => ['Writer User Fields', 'addressable-native-odt', 'sample_L10_writer_user_fields.php', 'template_L10_writer_user_fields.odt', 'output_L10_writer_user_fields.odt', 'odt'],
             'L11' => ['Template Inspection', 'mixed', 'sample_L11_template_inspection.php', 'template_L11_template_inspection.odt', null, 'inspection'],
+            'L12' => ['Writer Table Population', 'addressable-native-odt', 'sample_L12_writer_table_population.php', 'template_L12_writer_table_population.odt', 'output_L12_writer_table_population.odt', 'odt'],
         ] as $id => [$title, $ownership, $entry, $template, $output, $mode]) {
             $sample = $samples[$id];
             self::assertSame($title, $sample['title']);

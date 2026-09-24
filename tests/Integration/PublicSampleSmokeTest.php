@@ -216,6 +216,20 @@ final class PublicSampleSmokeTest extends TestCase
                 self::assertStringContainsString('text:user-field-get', $content);
                 self::assertStringContainsString('text:user-field-get', $styles);
             }
+            if ($sample['id'] === 'L12') {
+                $content = $archive->getFromName('content.xml');
+                self::assertIsString($content);
+                self::assertStringNotContainsString('{{', $content, 'L12 left a template expression unresolved.');
+                $xpath = $this->contentXPath($content);
+                self::assertCount(1, $xpath->query('//table:table[@table:name="L12_ResultTable"]'));
+                self::assertCount(1, $xpath->query('//table:table[@table:name="L12_ResultTable"]/table:table-header-rows/table:table-row'));
+                self::assertCount(6, $xpath->query('//table:table[@table:name="L12_ResultTable"]//table:table-row'));
+                self::assertStringContainsString('KEEP · Writer source row 0', $content);
+                self::assertStringContainsString('Participant outcomes', $content);
+                self::assertStringContainsString('Further training', $content);
+                self::assertGreaterThanOrEqual(1, $xpath->query('//table:table[@table:name="L12_ResultTable"]//table:table-cell[@table:style-name]')->length);
+                self::assertGreaterThanOrEqual(1, $xpath->query('//table:table[@table:name="L12_ResultTable"]//text:span[@text:style-name]')->length);
+            }
             if ($sample['id'] === 'C01') {
                 $content = $archive->getFromName('content.xml');
                 $styles = $archive->getFromName('styles.xml');
