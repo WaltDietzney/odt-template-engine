@@ -2121,3 +2121,249 @@ Whether the class should later be moved out of src/ or removed is cleanup/API
 surface work, not required for the 1.0 documentation audit. No replacement API
 is needed.
 
+
+
+## API-family verification — HtmlImporter
+
+Status: **VERIFIED + DOCUMENTED-COMPLETE for current HtmlImporter public
+surface and supported import options.**
+
+HtmlImporter is an important end-programmer adapter. It converts controlled
+HTML fragments into native RichText/Paragraph/ListElement/RichTable/
+RichTableCell/ImageElement structures. It is not a browser renderer and does
+not preserve an HTML DOM as such.
+
+### Public API
+
+```php
+HtmlImporter::fromHtml(string $html, array $options = []): RichText
+HtmlImporter::parseStyleAttribute(DOMElement $node): array
+```
+
+`fromHtml()` is the Recommended public entry point.
+
+`parseStyleAttribute()` is public but is an image-layout compatibility parser
+used internally by the importer. It should be classified Advanced/
+Compatibility rather than taught as the normal import API.
+
+All other HtmlImporter methods are protected/private implementation hooks.
+
+### fromHtml() options
+
+The complete current option vocabulary contains one option:
+
+| option | default | behavior |
+|---|---|---|
+| `allow_remote_images` | `false` | truthy value enables HTTP/HTTPS image retrieval through HtmlImageResolver |
+
+Unknown options are currently ignored. The option is cast to bool rather than
+strictly type-validated.
+
+The HTML fragment is wrapped in a body and parsed with DOMDocument::loadHTML()
+using internal libxml errors. Parser warnings/errors are cleared rather than
+surfaced as importer exceptions. The resulting body children are translated
+into a new RichText.
+
+### Supported element translation
+
+| HTML | Current translation / exact boundary |
+|---|---|
+| text node | Added when trim(text) is non-empty; original wholeText is normally retained. A Paragraph is created if needed. |
+| p, div, article, section, header, footer, main | Flattened to a Paragraph via block-style splitting; original container semantics are not retained. |
+| br | addLineBreak() only when a current Paragraph exists; otherwise no output. |
+| strong, b | bold text style |
+| em, i | italic text style |
+| u | underline |
+| mark | background #ffff99 |
+| del | line-through |
+| sub/sup | style:text-position sub/super |
+| code, tt, kbd, samp, pre | monospace + #f4f4f4 background; pre is not browser preformatted layout |
+| span | inline style parsed and mapped as text style; nested nodes processed through styled-node path |
+| a | Native Paragraph hyperlink; label is trim(textContent), so child markup is flattened. Defaults color #0000ff and underline=true unless importer style array already supplies them. |
+| h1-h6 | New Paragraph referencing `Heading N`; trim(textContent) imported as one run with mapped inline style. Child markup is flattened. |
+| ul/ol | ListElement bullet/numbered. Flat lists are reliable; nested extraction is partial and uses RichText popLastElementIfList() compatibility behavior. |
+| li | Consumed only by parent list logic; not a standalone switch case. |
+| blockquote | New Paragraph referencing Quote; trim(textContent), child markup flattened. |
+| table | RichTable built from all descendant tr nodes. thead/tbody/tfoot structure is not retained. |
+| td/th | RichTableCell; th has no semantic header-row behavior. |
+| img | ImageElement inside Paragraph when source resolves; invalid/missing source is silently skipped. |
+| unknown element | Element semantics ignored; children recursively traversed. |
+| non-element/non-text nodes | Ignored. |
+
+### Block CSS subset
+
+For p/div/article/section/header/footer/main, StyleMapper::splitCssProperties()
+recognizes this exact current subset.
+
+Text:
+- color
+- background-color
+- font-weight
+- font-style
+- text-decoration
+- font-size
+- font-family
+
+Paragraph:
+- margin, margin-top, margin-bottom, margin-left, margin-right
+- padding, padding-top, padding-bottom, padding-left, padding-right
+- align, text-align
+- line-height
+- border, border-left, border-top, border-right, border-bottom
+
+Other declarations parsed by parseInlineStyle() are discarded by the split.
+
+A block with paragraph CSS gets a generated paragraph style. Text CSS is
+applied to direct text nodes. Nested semantic nodes are processed by their own
+logic, so CSS inheritance/composition is not browser-equivalent.
+
+The block handler has historical whitespace behavior: for a direct non-empty
+text node, when previousWasText is false and the source text does not start
+with a space, it prepends one space. Do not promise browser whitespace
+equivalence.
+
+### Inline semantic/style behavior
+
+Semantic wrappers use getRawStyleForTag() then mapTextStyleOptions().
+processStyledNode() recursively applies that one supplied style array to text
+descendants; it does not compose a new style when it encounters nested
+semantic elements. Therefore nested emphasis/style composition is limited.
+
+Span style input goes through parseInlineStyle() then mapTextStyleOptions().
+The effective text mapper supports the normal mapped text vocabulary, but
+arbitrary CSS is not preserved.
+
+Hyperlinks use the style array produced by parseStyleAttribute(), not the
+general inline-CSS text mapper. parseStyleAttribute() is primarily an
+image-layout parser, so hyperlink inline CSS should not be documented as a
+complete styling surface. The importer supplies blue/underline defaults.
+
+### HTML tables
+
+A table is built from every descendant tr returned by getElementsByTagName().
+For each direct td/th child of each tr:
+
+1. table inline CSS is parsed and used as default cell-style input;
+2. cell inline CSS is merged over it;
+3. paragraph/text style is independently built from the cell;
+4. cell decoration is filtered to this exact allow-list:
+   background, background-color, border, padding, padding-left,
+   padding-right, padding-top, padding-bottom, border-left, border-right,
+   border-top, border-bottom;
+5. colspan/rowspan are integer-cast and passed to RichTableCell aliases, whose
+   setters clamp values below 1 to 1.
+
+Table-level CSS therefore does **not** become RichTable geometry/style. It is
+used only as inherited/default cell-style input and only the allow-listed cell
+properties survive that path.
+
+Cell text/paragraph CSS uses the same splitCssProperties() vocabulary above.
+For text-align center/right, buildStyledParagraphFromCellNode() additionally
+references hard-coded named styles CenterPara/RightPara. Left has no analogous
+forced named style in this helper.
+
+Nested supported content in a cell is processed into the cell Paragraph.
+Table header semantics, browser layout, covered-cell normalization and exact
+geometry are not supplied by the HTML importer.
+
+### Image sources and security boundary
+
+HtmlImageResolver accepts:
+
+- readable local filesystem files, returned as realpath;
+- valid data:image/<extension>;base64,... payloads recognized by
+  getimagesizefromstring(), materialized to a temporary asset;
+- HTTP/HTTPS only when allow_remote_images is truthy.
+
+Remote behavior is exact:
+- 5 second stream timeout;
+- redirects disabled;
+- maximum accepted body 5,000,000 bytes (reads limit + 1 to detect excess);
+- response must be recognized as image data;
+- failure returns null and the img is skipped.
+
+Temporary extensions are normalized to png/jpg/jpeg/gif/bmp; unknown
+extensions become png. Temporary files are registered with
+TemporaryAssetRegistry.
+
+### img attributes and parseStyleAttribute()
+
+For a resolved img:
+- width attribute default: 5cm
+- height attribute default: 3cm
+- parseStyleAttribute() options are merged **after** attribute defaults, so
+  CSS width/height override width/height attributes.
+- the resulting options are passed to ImageElement.
+
+parseStyleAttribute() exact recognized CSS:
+
+| CSS | output |
+|---|---|
+| no style attribute | anchor=as-char |
+| display:none | ignore=true and immediate return |
+| width / height | same friendly option |
+| float:right | anchor=paragraph, wrap=none, align=right |
+| float:left | anchor=paragraph, wrap=none, align=left |
+| float:none | anchor=as-char |
+| position:absolute | anchor=paragraph plus keys style:horizontal-pos=from-left and style:horizontal-rel=page-content |
+| left | svg:x |
+| top | svg:y |
+| margin-left | svg:x, overriding earlier left |
+| margin-top | svg:y, overriding earlier top |
+| display:block | anchor=paragraph |
+| display:inline | anchor=as-char |
+
+If no rule established anchor, it falls back to as-char.
+
+Important compatibility limitations:
+- display processing occurs after float/position and can overwrite their anchor;
+- display:none produces ignore=true, but the img import path never checks
+  ignore. It still constructs ImageElement if the source resolves. Therefore
+  display:none is **not currently a reliable hide-image feature**.
+- style:horizontal-pos/style:horizontal-rel and svg:x/svg:y are not part of
+  ImageElement's friendly mapper keys (which expects horizontal-pos/
+  horizontal-rel without style: prefix and has no svg:x/svg:y handling).
+  These parseStyleAttribute outputs therefore must not be advertised as a
+  verified effective absolute-positioning API.
+- the historical sample_html_images.php is experimental evidence, not a
+  guarantee of these layout mappings.
+
+### Failure/fallback semantics
+
+HtmlImporter generally favors omission/degradation over exceptions:
+- malformed HTML is left to DOMDocument recovery;
+- invalid/missing/disallowed image sources are skipped;
+- unsupported elements lose their semantics but recurse into children;
+- unsupported CSS is ignored by bounded mapping/splitting;
+- remote failures do not fail the import.
+
+Exceptions can still originate from downstream element/style construction for
+inputs that reach stricter APIs; fromHtml() does not establish a transactional
+validation boundary.
+
+### 1.0 disposition
+
+RECOMMENDED:
+- HtmlImporter::fromHtml() for controlled HTML-to-native-ODT adaptation
+- option allow_remote_images only with explicit security/network caveat
+
+ADVANCED / COMPATIBILITY:
+- HtmlImporter::parseStyleAttribute(), primarily historical image-layout parser
+
+IMPLEMENTATION, NOT PUBLIC AUTHORING API:
+- processNode()
+- processStyledNode()
+- parseInlineCss()
+- getRawStyleForTag()
+- handleStyledBlockElement()
+- buildStyledParagraphFromCellNode()
+- HtmlImageResolver as importer infrastructure unless direct resolver use is
+  intentionally promoted separately
+
+DOCUMENTATION BOUNDARY:
+- no browser-equivalent HTML/CSS promise
+- no external stylesheet/selectors/cascade/layout engine
+- nested list behavior partial
+- HTML table header/geometry semantics partial
+- historical HTML image layout mappings must not be overstated
+
