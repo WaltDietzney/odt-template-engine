@@ -215,3 +215,19 @@ silently introduced during documentation cleanup.
 
 No new engine capability has yet been identified by this final review as a
 required Phase-F implementation gap.
+
+
+### API closure rule clarified during Image audit
+
+The 01F review does not open new architecture work for 1.0. Poor, obsolete, or
+misleading public methods are not promoted merely because PHP marks them
+public. The final 1.0 reference should prioritize Recommended API, document
+Advanced API where genuinely useful, constrain Compatibility API to necessary
+legacy guidance, and omit infrastructure surfaces from normal end-programmer
+documentation.
+
+Capabilities that are genuinely needed but require a new semantic/API design
+are recorded in FUTURE_DEVELOPMENT instead. The custom-shape bitmap-fill
+replacement use case discovered during the image audit is now tracked there as
+CUSTOM-SHAPE-FILL-IMAGE-REPLACEMENT-01 rather than being designed inside 01F.
+
