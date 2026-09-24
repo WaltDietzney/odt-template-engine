@@ -1941,3 +1941,104 @@ FUTURE
 
 No new 1.0 API is introduced by this finding.
 
+
+
+## API-family verification — OdtElement base contract
+
+Status: **VERIFIED + DOCUMENTED-COMPLETE for current OdtElement source**.
+
+OdtElement is the abstract base contract behind structured generated content.
+Most methods are extension/document-pipeline contracts rather than ordinary
+template-author calls.
+
+### Ownership contract
+
+There are two related concepts: embeddedElements is the historical/default
+storage supplied by OdtElement; ownedElements() is the semantic ownership view
+used by modern recursive collectors. The default ownedElements() returns
+getEmbeddedElements(), but composite subclasses may override it.
+
+Modern StyleRequirementCollector, FillImageRequirementCollector, and
+StructuredResourceCollector recurse through ownedElements(). A custom element
+that stores children elsewhere must therefore override ownedElements() for
+transitive style/dependency/resource discovery.
+
+### Complete public method reference
+
+| Method | Exact base behavior | Disposition |
+|---|---|---|
+| addElement(OdtElement $element): self | Appends to protected embeddedElements; fluent. Subclasses may override. | Extension API; use where concrete element documents it |
+| getEmbeddedElements(): array | Returns historical embedded-elements array. | Compatibility/secondary extension API |
+| ownedElements(): iterable | Default returns getEmbeddedElements(); semantic ownership hook. | Advanced extension contract |
+| toDomNode(DOMDocument $dom): DOMNode | Abstract; concrete element must materialize itself. | Required extension/materialization contract |
+| structuredInsertionMode(): StructuredInsertionMode | Default BLOCK. | Advanced extension contract |
+| toStyleDomNode(DOMDocument $dom): ?DOMElement | Default null; historical optional style-node producer. | Compatibility/infrastructure |
+| getOwnStyleRequirements(): iterable | Default empty; current element only, no child recursion. | Advanced semantic producer contract |
+| getOwnFillImageDependencies(): iterable | Default empty; current element typed FillImageRequirement dependencies only. | Advanced semantic producer contract |
+| getOwnFrameStyleRequirements(): array | Default empty; historical current-element frame-style map. | Compatibility/infrastructure |
+| getOwnImageStyleRequirements(): array | Default empty; historical current-element image-style map. | Compatibility/infrastructure |
+| getOwnFillImageRequirements(): array | Default empty; historical current-element fill-image map. | Compatibility/infrastructure |
+| getFrameStyleRequirements(): array | Recursively merges descendant same-method results through ownedElements(). | Historical Compatibility collector |
+| getImageStyleRequirements(): array | Same recursive compatibility collector for image styles. | Historical Compatibility collector |
+| getFillImageRequirements(): array | Same recursive compatibility collector for fill-image requirements. | Historical Compatibility collector |
+| getPlaceholderName(): ?string | Always null in base; no current subclass override/call site found in audited branch. | Deprecated candidate / likely dead |
+| getOwnImageAssets(): array | Default empty; current-element physical-resource hook. | Advanced resource producer contract |
+| getImageAssets(): array | Recursively concatenates descendant getImageAssets() results through ownedElements(). | Historical Compatibility collector |
+
+### Modern versus historical recursion
+
+The modern pattern is: getOwn...() describes only the current element,
+ownedElements() describes children, and a document collector performs recursion
+exactly once. New semantic producers must not recursively collect children
+inside getOwn...(), or the collector would double-count them.
+
+The historical getFrameStyleRequirements(), getImageStyleRequirements(),
+getFillImageRequirements(), and getImageAssets() instead put recursion on
+OdtElement itself.
+
+### Structured insertion modes
+
+The base default is BLOCK. Current StructuredElementMaterializer behavior:
+
+- BLOCK normally replaces the containing text:p; historical inline nodes
+  text:span, text:s, and text:line-break have special inline replacement.
+- INLINE_TEXT_FLOW preserves insertion inside text:p/text:h text flow.
+- PRESERVE_TEXT_CONTAINER currently uses the same replace-inside-text-container
+  path as INLINE_TEXT_FLOW.
+- If insertion splits an inline wrapper with text on both sides, the
+  materializer clones/splits that wrapper to preserve surrounding formatting.
+
+This is extension behavior, not a normal document-authoring option.
+
+### Compatibility collector behavior
+
+The compatibility style/fill collectors merge arrays repeatedly. Equal string
+keys from later owned children therefore overwrite earlier keys; the base
+collector performs no semantic conflict detection. Base getImageAssets()
+concatenates arrays and performs no deduplication.
+
+### getPlaceholderName()
+
+Its docblock describes a historical model in which an element could declare
+the placeholder it should replace. Current structured insertion is externally
+addressed (for example setElement(key, element)); no subclass override or
+current call site was found. It should not be taught as normal 1.0 API and is a
+strong DEPRECATE candidate, subject to final compatibility classification.
+
+### 1.0 disposition
+
+NORMAL END-PROGRAMMER SURFACE: none at OdtElement level by itself; use concrete
+element APIs.
+
+ADVANCED EXTENSION CONTRACT: addElement() where meaningful on the concrete
+subclass, ownedElements(), toDomNode(), structuredInsertionMode(),
+getOwnStyleRequirements(), getOwnFillImageDependencies(), getOwnImageAssets().
+
+COMPATIBILITY / INFRASTRUCTURE: getEmbeddedElements(), toStyleDomNode(),
+getOwnFrameStyleRequirements(), getOwnImageStyleRequirements(),
+getOwnFillImageRequirements(), getFrameStyleRequirements(),
+getImageStyleRequirements(), getFillImageRequirements(), getImageAssets().
+
+DEPRECATED CANDIDATE: getPlaceholderName().
+
+No 1.0 API change is required by this audit.
