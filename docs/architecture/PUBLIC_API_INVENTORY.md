@@ -2367,3 +2367,370 @@ DOCUMENTATION BOUNDARY:
 - HTML table header/geometry semantics partial
 - historical HTML image layout mappings must not be overstated
 
+
+## API-family verification — Structured content completion pass
+
+Status: **VERIFIED + DOCUMENTED-COMPLETE for Paragraph, RichText, ListElement,
+DrawingLayout, and DrawingLayoutProjector on the audited branch**.
+
+This pass mechanically compared every public method in `src/Elements/*.php`
+and `src/Import/HtmlImporter.php` with this inventory. Previously completed
+OdtElement, ImageElement, CircularImageElement, RichTable, RichTableCell,
+DrawTextBox, TableExampleGenerator, and HtmlImporter audits were not reopened.
+No missing public method was found in Paragraph, RichText, ListElement, or
+DrawingLayout. The three public DrawingLayoutProjector methods were the only
+surface missing from the earlier inventory and are recorded below.
+
+### Paragraph — complete public contract
+
+All mutators below return `self` unless a different return type is shown.
+
+```php
+__construct(?string $paragraphStyle = null, array $paragraphStyleOptions = [])
+addText(string $text, array $style = []): self
+applyTextStyle(array $style): self
+addLineBreak(int $count = 1): self
+addTab(): self
+addTabStop(float $position, string $alignment = 'left', ?string $text = null, array $style = []): self
+addTabularLines(array $lines, array $tabDefs, array $headerStyle = []): self
+addPHyperLink(string $text, string $href, array $style = []): self
+addElement(OdtElement $element): self
+getEmbeddedElements(): array
+setParagraphStyle(string $styleName): self
+setParagraphStyleOptions(array $options): self
+addTabStopDefinition(float $position, string $alignment = 'left'): self
+addKeyValueLine(string $key, string $value, float $tabPosition = 10.0, ?array $style = null): self
+addTabsWithTexts(array $tabs): self
+addHyperlink(string $text, string $href, array $style = []): self
+setBulleted(): self
+setNumbered(): self
+isList(): bool
+getOwnStyleRequirements(): iterable
+toDomNode(DOMDocument $dom, bool $insideTextBox = false): DOMNode
+```
+
+Construction semantics:
+
+- A non-null paragraph style name is referenced directly.
+- Paragraph options without an explicit style name create a generated paragraph
+  style name.
+- `setParagraphStyleOptions()` replaces, rather than merges, the stored option
+  array and creates a generated paragraph style name when needed.
+- A named paragraph style with no options is emitted as an unresolved style
+  reference; a named/generated style with options is emitted as a common
+  paragraph style definition with parent `Standard`.
+
+Paragraph option splitting is performed by StyleOptionSplitter in paragraph
+context. Friendly paragraph keys are:
+
+`align` (normalized to `text-align`), `text-align`, `text-indent`,
+`line-height`, `margin`, `margin-top`, `margin-right`,
+`margin-bottom`, `margin-left`, `padding`, `padding-top`,
+`padding-right`, `padding-bottom`, `padding-left`, `border`,
+`border-top`, `border-right`, `border-bottom`, `border-left`,
+`keep-with-next`, `break-before`, `break-after`, `writing-mode`,
+`number-lines`, `line-number`, and `tab-stops`.
+
+The underlying paragraph mapper additionally recognizes
+`background-color`, `keep-together`, `widows`, and `orphans`.
+Because StyleOptionSplitter does not classify those four as friendly paragraph
+keys, they are preserved through its compatibility fallback rather than through
+the bounded friendly-key list. Native-prefixed `fo:`, `style:`, `draw:`,
+`svg:`, and `loext:` keys are also preserved to the paragraph/native side.
+Unknown keys likewise currently fall through to that side. This permissiveness
+is a Compatibility escape hatch, not evidence that arbitrary keys are a
+recommended style API.
+
+Direct `Paragraph::addText()`, hyperlink style arrays, tab-stop text style
+arrays, and `applyTextStyle()` use the text mapper directly. Effective text
+keys are `bold`, `italic`, `font-weight`, `font-style`, `underline`,
+`text-decoration`, `color`, `background-color`, `font-size`,
+`font-family`, `text-line-through`, `style:text-position`,
+`font-variant=small-caps`, and `monospace=true`, plus native `fo:` and
+`style:` properties. Friendly font-size names map as follows:
+`xx-small=6pt`, `x-small=7pt`, `small=9pt`, `medium=11pt`,
+`large=13pt`, `x-large=15pt`, `xx-large=17pt`; other non-empty values are
+passed through. `monospace=true` maps to Courier New.
+
+`addLineBreak($count)` appends exactly `$count` line-break parts when count
+is positive; zero/negative counts append none. `addTab()` emits one
+`text:tab`.
+
+Tab helper behavior is historical and must be documented literally:
+
+- `addTabStopDefinition($position, $alignment)` appends a paragraph
+  `tab-stops` definition. Position is later serialized as
+  `$position . 'cm'`; alignment defaults to `left`. There is no validation
+  of the alignment string.
+- `addTabStop($position, $alignment, $text, $style)` stores position and
+  alignment on a content part, but rendering emits only a `text:tab` and the
+  optional following text. It does **not** itself create the paragraph tab-stop
+  definition. Its position/alignment fields therefore have no direct rendering
+  effect unless a definition is supplied separately.
+- `addTabularLines()` first creates definitions from each tab definition
+  (`position` required, `alignment` default `left`), then emits rows using
+  tabs and line breaks. It emits an initial tab before each row. Header style is
+  applied only to row index 0.
+- `addKeyValueLine()` creates a right-aligned tab definition (default 10.0cm),
+  then key + tab + value with the same optional text style.
+- `addTabsWithTexts()` requires `position` per entry, defaults alignment to
+  `left`, defaults text to empty and style to empty; each entry creates both a
+  definition and a tab followed by text.
+
+Hyperlinks have an important 1.0 compatibility distinction:
+
+- `addHyperlink()` is the normal spelling and correctly renders an unstyled
+  ODF hyperlink with `xlink:href`, `xlink:type="simple"`, and
+  `xlink:show="new"`.
+- Both hyperlink methods render a supplied style by wrapping the label in a
+  generated `text:span`.
+- `addPHyperLink()` additionally registers that generated text style in the
+  paragraph's semantic style requirements.
+- `addHyperlink()` currently does **not** register the supplied style in
+  `textStyleMap`. Consequently a styled `addHyperlink()` can reference a
+  generated style name without ensuring its definition is materialized by the
+  current semantic style collector.
+
+Disposition: `addHyperlink()` is Recommended for unstyled links.
+`addPHyperLink()` is retained as Compatibility for styled-link persistence.
+It is **not** deprecated in 1.0 while it remains the working styled-link path.
+The missing style registration in styled `addHyperlink()` is a defect/
+compatibility finding, not a reason to redesign the API during 01F.
+
+`applyTextStyle()` merges the supplied style into existing `text`,
+`hyperlink`, and `tab-stop` parts only, regenerating and registering their
+text style names. Line breaks/tabs and embedded elements are unaffected.
+
+`setBulleted()` and `setNumbered()` set both paragraph style and list style
+to `Bullet_20_Symbol` / `Numbering_20_Symbol`. `isList()` reports whether
+that internal list style is non-empty. Outside text boxes, materialization then
+wraps the paragraph in `text:list/text:list-item`; inside a text box the list
+wrapper and paragraph style attribute are suppressed.
+
+`addElement()`, `getEmbeddedElements()`, `getOwnStyleRequirements()`, and
+`toDomNode()` are Advanced/Extension or materialization surface rather than
+normal authoring helpers. Embedded elements are appended after paragraph parts.
+
+**Paragraph disposition:** Recommended authoring API for paragraph/text,
+breaks, tabs, named/options styles, unstyled hyperlinks, and legacy paragraph
+list convenience; Compatibility for `addPHyperLink()` and the historical tab
+helpers where their literal behavior is required; Advanced/Infrastructure for
+ownership/style/materialization methods.
+
+### RichText — complete public contract
+
+```php
+addParagraph(string|Paragraph $text = '', ?string $styleName = null, array $styleOptions = []): self
+addTable(RichTable $table): self
+addImage(ImageElement $image): self
+addParagraphBreak(int $count = 1): self
+addMultiParagraph(array $lines, ?array $style = null, bool $firstBold = false): self
+addText(string $text, array $style = []): self
+addLineBreak(): self
+addTab(): self
+addBulletList(array $items, array $style = []): self
+addNumberedList(array $items, array $style = []): self
+toDomNode(DOMDocument $dom, bool $insideTextBox = false): DOMNode
+addElement(OdtElement $element): self
+ownedElements(): iterable
+applyParagraphStyleOptions(array $options): self
+applyTextStyle(array $style): self
+getImageAssets(): array
+popLastElementIfList(): ?ListElement
+```
+
+RichText is an ordered composite. `addParagraph(Paragraph)` appends the
+object unchanged and ignores the separate styleName/styleOptions arguments.
+For string input it creates a Paragraph, optionally references `$styleName`,
+splits `$styleOptions` in paragraph context, applies the paragraph portion to
+the paragraph and the text portion to the new text run.
+
+`addText()` operates on the last Paragraph or creates one. Its mixed style
+array is split in paragraph context. This means `background-color`, although
+supported by Paragraph::addText() as a direct text key, is not classified as a
+RichText text convenience key by StyleOptionSplitter and falls to the paragraph
+side. Users requiring direct run background styling should construct/use a
+Paragraph rather than infer browser/CSS semantics from RichText convenience
+arrays.
+
+`addLineBreak()` and `addTab()` target the last Paragraph or create one.
+`addParagraphBreak($count)` appends empty Paragraph objects for positive
+counts and none for zero/negative counts.
+
+`addMultiParagraph()` creates one Paragraph per supplied line. `$style`
+defaults to empty; when `$firstBold` is true, `bold => true` is merged over
+the first line's supplied style.
+
+`addBulletList()` / `addNumberedList()` accept arrays of values that are
+passed to `Paragraph::addText(string $text,...)`; under PHP's declared string
+parameter contract non-string values are therefore not a documented input.
+The supplied style is a direct Paragraph text style for every item.
+
+`addImage()` creates a new Paragraph containing the ImageElement.
+`addTable()` and generic `addElement()` append directly.
+
+`applyParagraphStyleOptions()` and `applyTextStyle()` affect **direct
+Paragraph children only**. They do not recursively style Paragraphs inside
+lists, tables, frames, or other composites. They are Compatibility helpers for
+mixed convenience style arrays, not general recursive styling APIs.
+
+`ownedElements()` exposes the complete ordered child set and is the modern
+ownership hook used by recursive document collectors.
+
+`toDomNode()` returns a DocumentFragment and materializes each child in order.
+Its `$insideTextBox` parameter is currently not forwarded to child
+`toDomNode()` calls; it therefore has no observable effect in RichText itself
+on the audited source.
+
+`getImageAssets()` is a historical Compatibility collector with deliberately
+recorded limitations: it inspects only direct Paragraph children and only
+direct embedded ImageElement children of those paragraphs. It does not provide
+the modern transitive ownership/resource traversal guarantee and must not be
+taught as the preferred resource-discovery API.
+
+`popLastElementIfList()` removes and returns the final child only when it is a
+ListElement, otherwise returns null without mutation. Its current repository
+purpose is HtmlImporter nested-list compatibility and it should be classified
+Compatibility/Importer helper rather than normal document-authoring API.
+
+**RichText disposition:** Recommended composite authoring API for adding
+paragraphs, text, breaks, tables, images, lists, and generic structured
+elements; Advanced for `ownedElements()`/materialization; Compatibility for
+the apply-style helpers, historical `getImageAssets()`, and
+`popLastElementIfList()`.
+
+### ListElement — complete public contract
+
+```php
+__construct(string $type = 'bullet', ?string $styleName = null)
+addItem(Paragraph|self $item): self
+setLevel(int $level): self
+addSubList(ListElement $list): self
+ownedElements(): iterable
+toDomNode(DOMDocument $dom): DOMNode
+getImageAssets(): array
+```
+
+The constructor stores `$type` without validation. Exactly `numbered`
+selects default style `Numbering_20_Symbol`; every other type value falls back
+to `Bullet_20_Symbol`. A non-null `$styleName` overrides that default.
+
+`addItem()` accepts only Paragraph or ListElement. `addSubList()` sets the
+child list's internal level to parent level + 1 and appends it as an item.
+`setLevel()` clamps to the inclusive range 1..10.
+
+Important current limitation: the stored level is not read by
+`toDomNode()`. Nesting is represented structurally by nested `text:list`
+nodes, but changing `setLevel()` by itself has no rendering effect. The level
+value is therefore Compatibility state, not a supported visual indentation/
+numbering control.
+
+Materialization creates one `text:list` with `text:style-name` and one
+`text:list-item` per item. Paragraph items materialize as paragraphs; nested
+ListElement items materialize as nested lists inside their list item.
+
+`ownedElements()` returns all items and is the modern recursive ownership
+hook. `getImageAssets()` recursively calls item `getImageAssets()` when
+available and concatenates results without deduplication; it is historical
+Compatibility resource collection.
+
+Programmatic ListElement construction remains distinct from
+LIST-ITEM-POPULATION-01, which concerns population of Writer-authored lists.
+
+**ListElement disposition:** Recommended for simple programmatic bullet/
+numbered list construction and explicit nesting; `setLevel()` Compatibility
+because it currently does not affect output; ownership/materialization/resource
+methods Advanced/Compatibility as described above.
+
+### DrawingLayout — complete semantic contract
+
+DrawingLayout is immutable semantic layout state. `empty()` returns an
+all-null layout. `fromArray()` accepts exactly these top-level keys:
+`anchor`, `width`, `height`, `horizontal`, `vertical`, `wrap`.
+Unknown keys throw InvalidArgumentException.
+
+Accepted values are:
+
+- anchor: `paragraph|char|as-char|page`;
+- width/height: positive absolute ODF lengths in `cm|mm|in|pt|pc`;
+- horizontal alignment: `left|center|right`;
+- vertical alignment: `top|middle|bottom`;
+- offsets: signed absolute lengths in the same units;
+- wrap: `none|left|right|parallel|dynamic|run-through`;
+- each axis group must define exactly one of `alignment` or `offset`, plus
+  optional `relative-to`.
+
+Relation matrix:
+
+| anchor | horizontal relative-to | vertical relative-to |
+|---|---|---|
+| paragraph | paragraph, paragraph-content, page, page-content | paragraph, paragraph-content, page, page-content |
+| char | char, paragraph, paragraph-content, page, page-content | char, paragraph, paragraph-content, page, page-content, baseline |
+| page | page, page-content | page, page-content |
+| as-char | none | baseline |
+
+A null anchor is validated as paragraph for relation purposes. Horizontal
+placement is rejected for `as-char`; vertical offsets are also rejected for
+`as-char`. Default relation for convenience setters is page for page anchor,
+baseline for as-char vertical placement, otherwise paragraph.
+
+`withAnchor()`, `withHorizontalAlignment()`, `withHorizontalOffset()`,
+`withVerticalAlignment()`, `withVerticalOffset()`, and `withWrap()`
+return new validated instances. Changing one axis from alignment to offset (or
+vice versa) replaces the previous mode on that axis. Because setters rebuild
+through `fromArray()`, changing an anchor can fail when retained axis state is
+invalid for the new anchor.
+
+The scalar getters expose the normalized semantic state. `toArray()` emits
+only non-null authored state and round-trips axis mode as either
+`alignment` or `offset` plus `relative-to`.
+
+**DrawingLayout disposition:** Recommended semantic value object indirectly
+through frame-backed element APIs such as `setFrameLayout()`; direct
+construction/manipulation is Advanced but supported. Native ODF carrier keys
+are intentionally not accepted by `fromArray()`.
+
+### DrawingLayoutProjector — complete public contract
+
+```php
+objectAttributes(DrawingLayout $layout): array
+graphicLayoutProperties(DrawingLayout $layout): array
+requiresInlineTextFlow(DrawingLayout $layout): bool
+```
+
+This stateless projector is **Infrastructure/Advanced**, not normal
+end-programmer authoring API.
+
+`objectAttributes()` projects semantic state to object-level carriers:
+anchor -> `text:anchor-type`, width/height -> `svg:width/svg:height`,
+horizontal offset -> `svg:x`, vertical offset -> `svg:y`. Null/unset values
+are omitted.
+
+`graphicLayoutProperties()` projects alignment to
+`style:horizontal-pos/style:horizontal-rel` and
+`style:vertical-pos/style:vertical-rel`; offset modes use
+`from-left` / `from-top` respectively while the actual coordinate remains
+on the object attribute. Wrap maps to `style:wrap`. Unset axes/wrap are
+omitted.
+
+`requiresInlineTextFlow()` returns true exactly when anchor is `as-char`.
+Frame-backed elements use this distinction to select inline insertion
+semantics.
+
+### Structured-content completion result
+
+The structured-content block is mechanically closed for the current branch:
+
+- Paragraph: VERIFIED + DOCUMENTED-COMPLETE
+- RichText: VERIFIED + DOCUMENTED-COMPLETE
+- ListElement: VERIFIED + DOCUMENTED-COMPLETE
+- DrawingLayout: VERIFIED + DOCUMENTED-COMPLETE
+- DrawingLayoutProjector: VERIFIED + DOCUMENTED-COMPLETE, Infrastructure
+- previously completed OdtElement, ImageElement, CircularImageElement,
+  RichTable, RichTableCell, DrawTextBox, TableExampleGenerator, and
+  HtmlImporter remain closed.
+
+No new 1.0 architecture is introduced by this pass. The two notable
+compatibility findings are the styled `addHyperlink()` style-registration gap
+and the non-rendering `ListElement::setLevel()` state. They are recorded as
+current behavior rather than silently repaired.
