@@ -250,10 +250,60 @@ Cloning rewrites bookmark identities deterministically; expression binding does
 not guess that a data key should mutate a bookmark. Explicit bookmark
 replacement and template-expression replacement are separate operations.
 
+### Bookmark boundaries follow semantic ownership
+
+A bookmark should contain only the content that the application owns and is
+allowed to replace. Do not include punctuation, separators, labels, or other
+Writer-owned text in the bookmark merely because selecting the whole visible
+phrase is convenient in LibreOffice.
+
+For example, if Writer owns the separator in a caption, prefer:
+
+```text
+[ParticipantOutcomesCaption]Participant outcomes[/ParticipantOutcomesCaption] · 2027
+```
+
+over:
+
+```text
+[ParticipantOutcomesCaption]Participant outcomes · 2027[/ParticipantOutcomesCaption]
+```
+
+when the application is intended to replace only the caption text. A bookmark
+replacement replaces the complete bookmarked range; an accidentally oversized
+range therefore silently transfers ownership of Writer-authored punctuation or
+text to the application.
+
+This is an authoring concern rather than a replacement-engine defect. After
+creating a bookmark in Writer, verify its exact start/end range before treating
+the template as canonical. This is especially important around punctuation,
+adjacent fields, styled spans, and text-box content.
+
 LibreOffice can place bookmark markers between fragments of one expression.
 The engine preserves marker topology where it cannot prove that moving markers
 would preserve the intended range. Avoid overlapping bookmark and placeholder
 boundaries unless that topology is deliberate and tested.
+
+### Document-wide values belong in User Fields
+
+When one logical scalar value occurs in several document regions, including
+headers or footers, prefer one Writer User Field rather than several bookmarks
+that must be kept in sync by application code. Use bookmarks for bounded local
+content and User Fields for one document-wide value with multiple native
+occurrences.
+
+### Cloned Sections containing bookmarks
+
+Section cloning already rewrites contained bookmark identities so cloned native
+objects remain structurally distinct. The current public API does not,
+however, provide an instance-relative bookmark accessor for addressing the
+logical bookmark inside a particular returned Section instance.
+
+Treat this as a known capability boundary. Do not address generated bookmark
+suffixes from application code and do not infer a new public API from the
+limitation. Collection data that requires native bookmark-based per-instance
+binding needs separate architecture characterization before it is presented as
+a supported authoring pattern.
 
 ## Tables and lists
 
