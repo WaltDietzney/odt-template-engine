@@ -69,6 +69,76 @@ final class TableRow01PopulationTest extends TestCase
         self::assertSame($keptBefore, $this->bodyRows($template)[3]->C14N());
     }
 
+    public function testRepeatedPopulationWithSameKeepRowsUsesOriginalSourceRows(): void
+    {
+        $template = $this->template();
+        $target = $template->table('PopulationTable');
+
+        $target->populate([['First A', '1'], ['First B', '2']], ['keepRows' => [0, 2]]);
+        $target->populate([['Second A', '3'], ['Second B', '4']], ['keepRows' => [0, 2]]);
+
+        self::assertSame(['Header', 'Row 0', 'Second A', 'Second B', 'Row 2'], $this->firstColumn($template));
+    }
+
+    public function testRepeatedPopulationWithDifferentKeepRowsUsesOriginalSourceRows(): void
+    {
+        $template = $this->template();
+        $target = $template->table('PopulationTable');
+
+        $target->populate([['First A', '1'], ['First B', '2']], ['keepRows' => [0]]);
+        $target->populate([['Second A', '3'], ['Second B', '4']], ['keepRows' => [2]]);
+
+        self::assertSame(['Header', 'Second A', 'Second B', 'Row 2'], $this->firstColumn($template));
+    }
+
+    public function testSingleStyledSpanPreservesItsFormattingWhileReplacingScalarPayload(): void
+    {
+        $template = $this->template('styled-span');
+        $template->table('PopulationTable')->populate([['Updated', '1']]);
+
+        $paragraph = $this->bodyRows($template)[0]->getElementsByTagNameNS($this->textNs(), 'p')->item(0);
+        self::assertInstanceOf(DOMElement::class, $paragraph);
+        $span = $paragraph->getElementsByTagNameNS($this->textNs(), 'span')->item(0);
+        self::assertInstanceOf(DOMElement::class, $span);
+        self::assertSame('Value', $span->getAttribute('text:style-name'));
+        self::assertSame('Updated', $span->textContent);
+        self::assertSame('BodyParagraph', $paragraph->getAttribute('text:style-name'));
+    }
+
+    public function testEmptyParagraphReceivesScalarWithoutLosingParagraphFormatting(): void
+    {
+        $template = $this->template('empty-paragraph');
+        $template->table('PopulationTable')->populate([['Filled', '1']]);
+
+        $paragraph = $this->bodyRows($template)[0]->getElementsByTagNameNS($this->textNs(), 'p')->item(0);
+        self::assertInstanceOf(DOMElement::class, $paragraph);
+        self::assertSame('BodyParagraph', $paragraph->getAttribute('text:style-name'));
+        self::assertSame('Filled', $paragraph->textContent);
+    }
+
+    public function testEmptyStyledSpanReceivesScalarWithoutLosingSpanFormatting(): void
+    {
+        $template = $this->template('empty-span');
+        $template->table('PopulationTable')->populate([['Filled', '1']]);
+
+        $span = $this->bodyRows($template)[0]->getElementsByTagNameNS($this->textNs(), 'span')->item(0);
+        self::assertInstanceOf(DOMElement::class, $span);
+        self::assertSame('Value', $span->getAttribute('text:style-name'));
+        self::assertSame('Filled', $span->textContent);
+    }
+
+    public function testMultipleFormattedTextRunsAreRejectedAtomically(): void
+    {
+        $template = $this->template('ambiguous-spans');
+        $before = $this->table($template)->C14N();
+
+        $this->expectPopulationFailure(
+            static fn (): mixed => $template->table('PopulationTable')->populate([['Rejected', '1']])
+        );
+
+        self::assertSame($before, $this->table($template)->C14N());
+    }
+
     public function testShrinkRemovesSurplusMutableRows(): void
     {
         $template = $this->template();
@@ -321,6 +391,7 @@ final class PopulationTemplate extends OdtTemplate
 
         if ($variant !== 'header-only') {
             $bodyGroup = $dom->createElementNS($this->tableNs(), 'table:table-rows');
+            $bodyRows = [];
             $count = 3;
             for ($index = 0; $index < $count; ++$index) {
                 $row = $this->row($dom, 'Row ' . $index, (string) $index, 'BodyRow', 'BodyCell', 'BodyParagraph');
@@ -328,8 +399,10 @@ final class PopulationTemplate extends OdtTemplate
                     $row->getElementsByTagNameNS($this->tableNs(), 'table-cell')->item(0)?->setAttribute('table:number-columns-repeated', '2');
                 }
                 $bodyGroup->appendChild($row);
+                $bodyRows[] = $row;
             }
             $table->appendChild($bodyGroup);
+            $this->applyPayloadVariant($dom, $bodyRows, $variant);
         }
 
         if ($variant === 'section') {
@@ -339,6 +412,45 @@ final class PopulationTemplate extends OdtTemplate
             $text->appendChild($section);
         } else {
             $text->appendChild($table);
+        }
+    }
+
+    /** @param list<DOMElement> $rows */
+    private function applyPayloadVariant(DOMDocument $dom, array $rows, string $variant): void
+    {
+        if (!in_array($variant, ['styled-span', 'empty-paragraph', 'empty-span', 'ambiguous-spans'], true)) {
+            return;
+        }
+        foreach ($rows as $row) {
+            $cell = $row->getElementsByTagNameNS($this->tableNs(), 'table-cell')->item(0);
+            $paragraph = $cell?->getElementsByTagNameNS($this->textNs(), 'p')->item(0);
+            if (!$cell instanceof DOMElement || !$paragraph instanceof DOMElement) {
+                throw new \RuntimeException('Unable to prepare scalar payload fixture.');
+            }
+            while ($paragraph->firstChild !== null) {
+                $paragraph->removeChild($paragraph->firstChild);
+            }
+            if ($variant === 'empty-paragraph') {
+                continue;
+            }
+            $first = $dom->createElementNS($this->textNs(), 'text:span');
+            $first->setAttribute('text:style-name', 'Value');
+            if ($variant === 'styled-span') {
+                $first->appendChild($dom->createTextNode('Original'));
+                $paragraph->appendChild($first);
+                continue;
+            }
+            if ($variant === 'empty-span') {
+                $paragraph->appendChild($first);
+                continue;
+            }
+            $first->setAttribute('text:style-name', 'ValueA');
+            $first->appendChild($dom->createTextNode('Old'));
+            $second = $dom->createElementNS($this->textNs(), 'text:span');
+            $second->setAttribute('text:style-name', 'ValueB');
+            $second->appendChild($dom->createTextNode(' value'));
+            $paragraph->appendChild($first);
+            $paragraph->appendChild($second);
         }
     }
 

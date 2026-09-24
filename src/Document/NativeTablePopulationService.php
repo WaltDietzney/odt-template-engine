@@ -7,6 +7,7 @@ namespace OdtTemplateEngine\Document;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
+use DOMText;
 use OdtTemplateEngine\OdtDocumentContext;
 
 /**
@@ -15,7 +16,6 @@ use OdtTemplateEngine\OdtDocumentContext;
  */
 final class NativeTablePopulationService
 {
-    private const OFFICE_NS = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0';
     private const TABLE_NS = 'urn:oasis:names:tc:opendocument:xmlns:table:1.0';
 
     /**
@@ -262,7 +262,7 @@ final class NativeTablePopulationService
                     $this->fail($name, 'complex mutable cell content is unsupported');
                 }
             }
-            if (count($paragraphs) !== 1 || !$this->supportsParagraph($paragraphs[0])) {
+            if (count($paragraphs) !== 1 || !$this->supportsParagraph($paragraphs[0], $name)) {
                 $this->fail($name, 'mutable cells require one simple Writer paragraph');
             }
             $cells[] = $cell;
@@ -274,30 +274,52 @@ final class NativeTablePopulationService
         return $cells;
     }
 
-    private function supportsParagraph(DOMElement $paragraph): bool
+    private function supportsParagraph(DOMElement $paragraph, string $name): bool
     {
-        foreach ($paragraph->childNodes as $child) {
-            if ($child->nodeType === XML_TEXT_NODE) {
-                continue;
-            }
-            if ($child instanceof DOMElement && $child->nodeName === 'text:span' && $this->supportsSpan($child)) {
-                continue;
-            }
-            return false;
-        }
+        $this->scalarPayloadCarrier($paragraph, $name);
 
         return true;
     }
 
-    private function supportsSpan(DOMElement $span): bool
+    private function scalarPayloadCarrier(DOMElement $paragraph, string $name): DOMNode
     {
-        foreach ($span->childNodes as $child) {
-            if ($child->nodeType !== XML_TEXT_NODE) {
-                return false;
+        $directText = [];
+        $spans = [];
+        foreach ($paragraph->childNodes as $child) {
+            if ($child instanceof DOMText) {
+                $directText[] = $child;
+                continue;
             }
+            if ($child instanceof DOMElement && $child->nodeName === 'text:span') {
+                $spans[] = $child;
+                continue;
+            }
+            $this->fail($name, 'mutable cells require one simple scalar text carrier');
         }
 
-        return true;
+        if ($spans === []) {
+            if (count($directText) > 1) {
+                $this->fail($name, 'mutable cells contain ambiguous fragmented scalar text');
+            }
+
+            return $directText[0] ?? $paragraph;
+        }
+        if ($directText !== [] || count($spans) !== 1) {
+            $this->fail($name, 'mutable cells contain ambiguous formatted scalar text');
+        }
+
+        $spanText = [];
+        foreach ($spans[0]->childNodes as $child) {
+            if (!$child instanceof DOMText) {
+                $this->fail($name, 'mutable cells require one simple scalar text carrier');
+            }
+            $spanText[] = $child;
+        }
+        if (count($spanText) > 1) {
+            $this->fail($name, 'mutable cells contain ambiguous fragmented scalar text');
+        }
+
+        return $spanText[0] ?? $spans[0];
     }
 
     private function structureSignature(DOMElement $row): string
@@ -429,32 +451,14 @@ final class NativeTablePopulationService
             if (!$paragraph instanceof DOMElement) {
                 $this->fail($name, 'mutable cell paragraph disappeared during staging');
             }
-            $textNodes = $this->textNodes($paragraph);
             $value = $values[$index] === null ? '' : (string) $values[$index];
-            if ($textNodes === []) {
-                $paragraph->appendChild($paragraph->ownerDocument->createTextNode($value));
-                continue;
-            }
-            $textNodes[0]->nodeValue = $value;
-            foreach (array_slice($textNodes, 1) as $textNode) {
-                $textNode->parentNode?->removeChild($textNode);
+            $carrier = $this->scalarPayloadCarrier($paragraph, $name);
+            if ($carrier instanceof DOMText) {
+                $carrier->nodeValue = $value;
+            } else {
+                $carrier->appendChild($paragraph->ownerDocument->createTextNode($value));
             }
         }
-    }
-
-    /** @return list<DOMNode> */
-    private function textNodes(DOMNode $node): array
-    {
-        $nodes = [];
-        foreach ($node->childNodes as $child) {
-            if ($child->nodeType === XML_TEXT_NODE) {
-                $nodes[] = $child;
-            } elseif ($child instanceof DOMElement) {
-                $nodes = [...$nodes, ...$this->textNodes($child)];
-            }
-        }
-
-        return $nodes;
     }
 
     /** @param list<DOMElement> $rows */
