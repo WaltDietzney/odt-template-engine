@@ -2042,3 +2042,82 @@ getImageStyleRequirements(), getFillImageRequirements(), getImageAssets().
 DEPRECATED CANDIDATE: getPlaceholderName().
 
 No 1.0 API change is required by this audit.
+
+
+## API-family verification — TableExampleGenerator
+
+Status: **VERIFIED + DOCUMENTED-COMPLETE for current source; classified as
+non-product example/demo helper.**
+
+TableExampleGenerator is a public class only because it currently lives under
+src/Elements. It is not an OdtElement, is not referenced anywhere else in the
+audited repository, has no tests/call sites, and contains fixed German demo
+data. It therefore must not be presented as part of the 1.0 end-programmer
+document-generation API.
+
+The class has one unused private property,
+`$summaryKeywords = ['summe', 'total', 'gesamt']`; no method reads it.
+
+### Complete public method reference
+
+| Method | Exact current behavior | Classification |
+|---|---|---|
+| `createStatusBadge(string $status): Paragraph` | Creates a Paragraph containing the original status text in bold. Case-insensitive exact German status mapping: `in arbeit` => #ffcc00, `abgeschlossen` => #00cc66, `geplant` => #3399ff, otherwise #cccccc. Also supplies `padding => '2px 4px'` and `border-radius => '4px'` in the text style array. | Demo helper; hide from public API |
+| `createCourseParagraph(string $title, string $subtitle): Paragraph` | Adds title bold, then literal `' - '` + subtitle italic with `font-size => 'smaller'`. | Demo helper; hide |
+| `generateSimpleTable(): array` | Returns fixed six-row German Position/Beschreibung/Betrag example data ending in Summe. | Demo fixture/helper; hide |
+| `generateCourseTable(): array` | Returns fixed four-row German course table; cells include Paragraphs produced by the two helper methods. | Demo fixture/helper; hide |
+| `generateFinancialSummary(): array` | Returns fixed five-row German Kategorie/Monat/Betrag example data for April. | Demo fixture/helper; hide |
+
+### Styling caveat in createStatusBadge()
+
+The method appears intended to produce a badge, but not every supplied
+CSS-like key is part of the current Paragraph text-style vocabulary.
+
+The supplied style array is:
+
+```php
+[
+    'background-color' => <status color>,
+    'font-weight' => 'bold',
+    'padding' => '2px 4px',
+    'border-radius' => '4px',
+]
+```
+
+Under the current Paragraph/StyleOptionSplitter path:
+
+- `font-weight` is a text property;
+- `padding` is classified as a paragraph property rather than a text-run
+  badge property;
+- `background-color` is not in StyleOptionSplitter's text-key list and falls
+  through to the paragraph/native side in paragraph context;
+- `border-radius` is likewise not a recognized text key and falls through.
+
+Consequently the method name/implementation should not be treated as evidence
+of a supported generic CSS badge API. This is another reason not to promote the
+class as product API.
+
+### 1.0 disposition
+
+```text
+HIDE FROM USER DOCUMENTATION
+  TableExampleGenerator
+  createStatusBadge()
+  createCourseParagraph()
+  generateSimpleTable()
+  generateCourseTable()
+  generateFinancialSummary()
+
+RATIONALE
+  demo-specific fixed data
+  no repository call sites
+  no tests
+  not an OdtElement
+  misleading placement under src/Elements
+  no reusable document-model responsibility
+```
+
+Whether the class should later be moved out of src/ or removed is cleanup/API
+surface work, not required for the 1.0 documentation audit. No replacement API
+is needed.
+
