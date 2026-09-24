@@ -4425,3 +4425,367 @@ No style architecture or behavior was changed by this 01F audit. The current
 source confirms the accepted STYLE-API-02I model: normal users style elements,
 define reusable generated paragraph styles through the document facade, and
 let document-local semantic ownership/materialization handle persistence.
+
+
+## API-family completion — Page / Document Layout / Defaults
+
+Status: **VERIFIED + DOCUMENTED-COMPLETE for the current 1.0 page-geometry,
+paragraph-flow, page-owned-content preservation, and document-default
+surfaces**.
+
+This audit deliberately preserves the native ownership boundaries established
+by PAGE-FLOW-01:
+
+```text
+paragraph flow semantics
+        !=
+master-page/page-style identity
+        !=
+referenced page-layout geometry
+        !=
+Writer-computed physical pagination
+```
+
+No broad page-style authoring API or PHP pagination model is introduced.
+
+### PageLayoutOdtTemplate
+
+`PageLayoutOdtTemplate extends OdtTemplate` is the current public advanced
+facade for mutating selected geometry of an **existing Writer-authored page
+layout**.
+
+Public additions:
+
+```php
+setPageMargins(
+    string $top,
+    string $right,
+    string $bottom,
+    string $left,
+    string $masterPage = 'Standard'
+): static
+
+setPageLayout(
+    array $options,
+    string $masterPage = 'Standard'
+): static
+```
+
+Both mutate the current working styles.xml immediately and return `$this`
+for fluent use.
+
+**Disposition:** **KEEP / ADVANCED**. This is a useful supported facade, but
+the template-first model remains preferred for stable page design.
+
+### setPageMargins()
+
+`setPageMargins()` is a convenience wrapper over `setPageLayout()` and
+passes exactly:
+
+```text
+margin-top
+margin-right
+margin-bottom
+margin-left
+```
+
+The fifth argument selects the Writer master page by native
+`style:name`; default is `Standard`.
+
+The method intentionally dispatches through `$this->setPageLayout(...)`
+rather than directly to PageLayoutManager. That polymorphic seam is covered by
+integration tests and is part of subclass compatibility.
+
+There is no length parser or unit validation in this facade/manager. Values
+are strings; after trim they must only be non-empty. Their ODF/Writer validity
+is otherwise the caller's responsibility.
+
+**Disposition:** **KEEP / ADVANCED**.
+
+### setPageLayout()
+
+Complete supported friendly option vocabulary:
+
+```text
+margin-top
+margin-right
+margin-bottom
+margin-left
+page-width
+page-height
+orientation
+```
+
+The first six values are trimmed strings and are written respectively as:
+
+```text
+fo:margin-top
+fo:margin-right
+fo:margin-bottom
+fo:margin-left
+fo:page-width
+fo:page-height
+```
+
+An explicitly supplied empty/whitespace-only value for any of those keys
+throws `RuntimeException`.
+
+`orientation` is trim/lowercase normalized and must be exactly
+`portrait` or `landscape`; otherwise `RuntimeException` is thrown. It is
+written as `style:print-orientation`.
+
+**Current compatibility detail:** unknown option keys are silently ignored.
+This is existing behavior, not an open-ended page-layout extension contract.
+Future user documentation should list only the seven supported keys above.
+
+The API does **not** automatically swap page width/height when orientation
+changes. Size and orientation are independent supplied properties. For an A4
+landscape request, for example, the caller supplies the intended width/height
+as well as `orientation=landscape` if both changes are desired.
+
+### Native resolution and structural failures
+
+The supplied `$masterPage` identifies an existing
+`style:master-page` in styles.xml. The implementation then follows its
+`style:page-layout-name` reference to the corresponding
+`style:page-layout` and finally mutates its
+`style:page-layout-properties`.
+
+Failures are explicit `RuntimeException` when:
+
+- the requested master page does not exist;
+- the master page has no page-layout reference;
+- the referenced page layout does not exist;
+- the page layout has no `style:page-layout-properties`;
+- a supported geometry value is empty;
+- orientation is not portrait/landscape.
+
+The manager does not synthesize missing master pages, page layouts or
+properties nodes. This is **mutation of authored geometry**, not page-style
+definition.
+
+### PageLayoutManager
+
+Public PHP surface:
+
+```php
+__construct(OdtDocumentContext $context)
+setMargins(
+    string $top,
+    string $right,
+    string $bottom,
+    string $left,
+    string $masterPage = 'Standard'
+): void
+setLayout(array $options, string $masterPage = 'Standard'): void
+```
+
+Its semantics are the implementation semantics described above.
+
+**Disposition:** **Infrastructure / HIDE FROM NORMAL USER DOCUMENTATION**.
+Normal callers use PageLayoutOdtTemplate. Public visibility does not establish
+a second application-facing page-layout API.
+
+### Page style/master-page identity is not page layout
+
+PAGE-FLOW-01 established the current semantic baseline:
+
+```text
+style:master-page
+    = page/master style identity, succession and page-owned content
+
+style:page-layout
+    = referenced page/header/footer geometry
+```
+
+Therefore `setPageLayout()` must not be documented as defining, selecting or
+assigning a Writer page style. It only follows a selected existing master
+page's reference and mutates bounded geometry.
+
+Likewise:
+
+```text
+fo:break-before / fo:break-after
+    !=
+style:master-page-name
+```
+
+A page break is paragraph-flow intent; requesting a particular page style is a
+different native operation.
+
+There is currently no approved public:
+
+```text
+pageStyle()
+masterPage()
+definePageStyle()
+setPageStyle()
+assignPageStyle()
+setNextPageStyle()
+```
+
+API.
+
+Programmatic page/master-style reference, definition, mutation and transition
+remain the explicitly documented future capability
+`PAGE-STYLE-AUTHORING-01`. 01F must not infer one from the geometry facade.
+
+### Paragraph flow — current 1.0 baseline
+
+Generated paragraph styles can express/preserve the native flow properties:
+
+```text
+keep-with-next -> fo:keep-with-next
+keep-together  -> fo:keep-together
+widows         -> fo:widows
+orphans        -> fo:orphans
+break-before   -> fo:break-before
+break-after    -> fo:break-after
+```
+
+These are style values; the engine does not interpret them to predict page
+placement. Writer/LibreOffice computes actual pagination.
+
+The exact mapper behavior/options are already captured in the Style and
+Paragraph audits. This section records their **page-flow semantics**, not a
+second API.
+
+Sections likewise do not gain generic `keepSectionOnPage()` or
+break/page-style ownership. Their contained paragraphs/tables/lists/frames
+retain their own native flow semantics.
+
+### Authored page relationships and page-owned content
+
+The 1.0 contract preserves Writer-authored relationships such as:
+
+- paragraph style -> `style:master-page-name`;
+- master page -> `style:next-style-name`;
+- First Page -> Standard succession;
+- first/left/right header/footer variants where authored.
+
+The engine does not normalize these into one page model.
+
+Header/footer content owned by `style:master-page` participates in the
+normal document/template lifecycle. PAGE-FLOW characterization establishes
+that page-owned content can participate in scalar processing and established
+structured/resource paths while native Writer fields such as page-number
+fields remain preserved.
+
+There is no separate header/footer template language or general header/footer
+authoring facade in the current 1.0 API.
+
+A bounded historical finding remains: generic ImageElement materialization in
+page-owned header content was not Writer-visible in the PAGE-FLOW regression,
+while the established `setImage()` path was. That finding is not silently
+resolved or generalized by this audit.
+
+### Document defaults
+
+The current source contains a real public document-default operation:
+
+```php
+$template->styles()->setDocumentDefaults(array $settings): void
+```
+
+Its exact accepted shape and StyleMapper behavior are documented in the Style
+API audit. Semantically it mutates/creates the Writer paragraph style
+`Standard` in styles.xml and merges only explicitly supplied text/paragraph
+properties, preserving unspecified authored properties and native inheritance.
+
+This creates an important source/documentation distinction:
+
+- `FUTURE_DEVELOPMENT.md` still describes `DOCUMENT-DEFAULTS-01` as
+  “DEFERRED UNLESS DEPENDENCY EMERGES” and says no generic default API should
+  be invented;
+- current source/tests already provide the narrower
+  `DocumentStyles::setDocumentDefaults()` API that operates specifically
+  through Writer's `Standard` paragraph style.
+
+For 1.0, **current source and tests are authoritative**. The implemented
+bounded operation is therefore documented and retained; the deferred future
+topic should be read as the broader unresolved question of ODF
+`style:default-style`, LibreOffice/application defaults, authored base
+styles, page defaults and precedence—not as evidence that the existing
+`setDocumentDefaults()` method is absent.
+
+No public `setDefaultFont()`, generic ODF default-style API, or page-layout
+default API is inferred.
+
+**Disposition:** `DocumentStyles::setDocumentDefaults()` =
+**KEEP / RECOMMENDED bounded document-default API**. Broader defaults
+architecture remains future work.
+
+### Template-first ownership guidance
+
+The supported 1.0 division of responsibility is:
+
+```text
+Writer / LibreOffice template owns:
+  page/master style identity
+  succession
+  stable headers/footers
+  multi-column/page composition
+  durable branding/layout structures
+
+PHP may:
+  mutate selected existing page-layout geometry
+  express generated paragraph flow semantics
+  modify bounded Standard paragraph defaults
+  preserve/process content within authored page-owned structures
+
+Writer layout engine owns:
+  physical pagination
+  page assignment consequences
+  actual line/page fitting
+```
+
+This is why PageLayoutOdtTemplate remains an advanced facade rather than being
+expanded into a general page composition framework.
+
+### Documentation discrepancy found
+
+`docs/advanced/page-layout.md` correctly describes the current public
+geometry API and native master-page -> page-layout relationship, but its
+“Why this is a separate class” section still says that PageLayoutOdtTemplate
+“also overrides list-indentation adjustment”.
+
+That statement is stale. ARCH-07G and current source confirm that the unrelated
+`adjustBulletIndentation()` override was removed; the subclass now contains
+only the two page-layout convenience methods. The stale guide text should be
+corrected during the 01F documentation-cleanup pass rather than treated as
+current behavior.
+
+### Completion result
+
+```text
+PAGE GEOMETRY
+  PageLayoutOdtTemplate                     KEEP / ADVANCED
+  setPageMargins()                          KEEP / ADVANCED
+  setPageLayout()                           KEEP / ADVANCED
+  PageLayoutManager                         INFRASTRUCTURE / HIDDEN
+  status                                    VERIFIED + DOCUMENTED-COMPLETE
+
+PARAGRAPH PAGE FLOW
+  keep-with-next / keep-together
+  widows / orphans
+  break-before / break-after                KEEP / RECOMMENDED style semantics
+  physical pagination                       WRITER OWNERSHIP
+
+DOCUMENT DEFAULTS
+  styles()->setDocumentDefaults()           KEEP / RECOMMENDED, bounded
+  broader ODF/default-style abstraction     FUTURE DEVELOPMENT
+
+PAGE STYLE / MASTER PAGE AUTHORING
+  authored identity/relationships           PRESERVE
+  generated definition/assignment/
+  transition API                            FUTURE DEVELOPMENT
+  PAGE-STYLE-AUTHORING-01                   retained future capability
+
+PAGE-OWNED CONTENT
+  existing scalar/structured lifecycle      PRESERVE
+  separate header/footer language/API       NOT PRESENT / NOT NEEDED FOR 1.0
+```
+
+No new 1.0 architecture was introduced. The current API remains deliberately
+native-first: Writer owns page composition and pagination; PHP has bounded
+geometry, flow and Standard-style default controls.
