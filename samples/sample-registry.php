@@ -300,7 +300,7 @@ return [
             'entry_point' => 'samples/sample_S03_structured_professional_report.php',
             'template_path' => 'samples/templates/template_S03_structured_professional_report.odt',
             'output_path' => 'samples/output/output_S03_structured_professional_report.odt',
-            'purpose' => 'Updates a professional LibreOffice Writer-authored report through native User Fields, bookmarks, named tables, and image-frame replacement without PHP-owned layout construction; B02 is the contrasting programmatic report builder.',
+            'purpose' => 'Demonstrates two different professional report outcomes from one LibreOffice Writer-authored template: S03-A updates native User Fields, bookmarks, tables, and image frames, while S03-B composes a strategic review through Section cloning and bounded Section content replacement; B02 is the contrasting programmatic report builder.',
             'status' => 'canonical',
             'migration_targets' => [],
             'distribution' => 'composer',
