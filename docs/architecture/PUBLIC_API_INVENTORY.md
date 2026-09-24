@@ -6411,3 +6411,124 @@ Automation lifecycle/atomicity              VERIFIED + DOCUMENTED-COMPLETE
 
 No new action, lifecycle rule, fallback, or mutation behavior was introduced by
 this audit.
+
+## Final mechanical public-symbol reconciliation
+
+Status: **COMPLETE for TEMPLATE-AUTHORING-01F**.
+
+After the family-by-family audits, the final pass enumerated every PHP source
+file under `src/` and mechanically compared public classes/methods against
+this inventory. The purpose was deliberately broader than the end-programmer
+reference: PHP visibility alone must not accidentally promote infrastructure
+into the 1.0 authoring API.
+
+The scan found no additional Recommended 1.0 capability. The symbols that had
+not previously been named individually fall into the already-established
+support/infrastructure boundaries below.
+
+### Advanced/support accessors that complete already-audited value objects
+
+The following omitted accessors are part of their already-classified value
+objects; they do not introduce new behavior:
+
+- `RichTableCell::getColspan()`, `getRowspan()`, `getStyle()`,
+  `getStyleName()` — **KEEP / ADVANCED supporting inspection**.
+- `ApplicationDataResolution::value()`, `itemIndex()`, `items()` —
+  **KEEP / ADVANCED mapping support**.
+- `DocumentCapabilityMapping::group()`,
+  `DocumentCapabilityResolution::mapping()`,
+  `NativeObjectActionMapping::targetKind()`, `actionId()`, and
+  `NativeObjectActionResolution::mapping()` — **KEEP / ADVANCED mapping
+  support**.
+- additional immutable descriptor/diagnostic accessors such as
+  `ControlDescriptor::markerEvidence()`, `dependencyIds()`,
+  `NativeObjectDescriptor::ownerIds()`,
+  `TemplateContractDiagnostic::subjectId()`,
+  `TemplateExpressionDescriptor::fragmentCount()`, `isSplit()`,
+  `styleNames()`, `bookmarkNames()`, `classification()`,
+  `physicalNormalization()`, `TemplateStructureDiagnostic::classification()`,
+  `expression()`, `TemplateStructureInspection::expressions()`, and
+  `TemplateStructureNormalizationResult::repairs()` / `skipped()` are
+  **KEEP / ADVANCED supporting DTO surface**.
+
+### Explicit Infrastructure / hidden classes
+
+The remaining mechanically discovered public PHP surfaces are implementation
+services or state carriers and are **HIDE FROM USER DOCUMENTATION**. Public
+visibility is not an endorsement as application API.
+
+This classification includes:
+
+- declarative execution services/exceptions and dependency execution services:
+  `DeclarativeConditionExecutor`, `DeclarativeConditionExecutionException`,
+  `DeclarativeForeachExecutionException`, `DependencyAutomationExecutor`,
+  `DependencyScopeProjector` and its projection/value carriers;
+- Phase-E orchestration/capability internals:
+  `PhaseEAutomationExecutor`, `NativeObjectActionExecutor`,
+  `DocumentCapabilityAutomationExecutor`, `DependencyAutomationCapability`,
+  `EngineCapabilityCatalog`, `NativeActionCapability`,
+  `ProjectedDependencyTarget`, `ProjectedDocumentCapability`,
+  `ProjectedNativeAction`, `ProjectedNativeObjectTarget`,
+  `TemplateCapabilityProjector`, image/metadata preflight helpers;
+- working-target and mutation implementation services:
+  `BookmarkMutationService`, `SectionCloneService`,
+  `SectionCollectionInstantiationService`, `SectionInstantiationService`,
+  `SectionMutationService`, `SectionRemovalService`,
+  `SectionWorkingTarget`, `SectionWorkingTargetResolver`,
+  `TemplateTarget`, `TemplateTargetResolver`, `TypedTargetResolver`,
+  `TemplateExpressionIdentityRewriter`;
+- table implementation state/readers:
+  `LogicalTableRow`, `LogicalTableStructure`,
+  `LogicalTableStructureReader`, `NativeTablePopulationState`;
+- style/resource implementation:
+  FillImage requirement collectors/registries/materializers,
+  FontFace discovery/registry/resolver/materializer and their conflict
+  exceptions, `StyleRequirementMaterializer`, requirement collectors and
+  `StyleContext` state/registry methods;
+- document/package state:
+  `OdtDocumentContext`, `OdtDocumentContextSnapshot`, `OdtPackage`,
+  `OdtPackageSnapshot` and their public state/package methods;
+- template implementation:
+  `TemplateExpressionProjector`, `TemplateExpressionReplacementService`,
+  `TemplateStructureNormalizer`, `UserFieldAnalyzer`, `UserFieldBinder`;
+- `TemporaryAssetRegistry::register()` and importer/resource plumbing.
+
+The related public exception types that exist only to report failures from
+these hidden services remain **Infrastructure / hidden** unless separately
+documented as an observable exception of a Recommended/Advanced facade.
+Examples include `AmbiguousTemplateTargetException`,
+`SectionResolutionException`, font/fill requirement conflict exceptions and
+the declarative execution exceptions.
+
+### Infrastructure methods on already-known classes
+
+The scan also found public implementation methods on classes already named by
+earlier audits. Examples include resource `collect()/materialize()/register()`
+methods, `StyleContext` snapshot/restore and compatibility stores,
+`OdtPackage` DOM/workspace/resource methods, `StructuredElementMaterializer`
+insertion helpers, `StructuredResourceCollector::collect()`, low-level
+`StyleRequirement` accessors and resolver/executor `execute()/project()`
+methods.
+
+These remain **Infrastructure / hidden**. Their public PHP visibility is
+primarily composition/test/legacy architecture and does not create an
+end-programmer contract.
+
+### Mechanical-scan conclusion
+
+Every public symbol under `src/` is therefore accounted for by one of the
+01F dispositions:
+
+```text
+A  Recommended end-programmer API
+B  Advanced / Compatibility / Deprecated / Extension support
+C  Infrastructure / Hidden
+```
+
+The scan did **not** identify a fourth category, an unclassified 1.0 feature,
+or a reason to introduce new architecture. Where a symbol is public only
+because current implementation composition requires it, classification C is
+intentional.
+
+This closes the mechanical completeness requirement for the 1.0 API inventory.
+
