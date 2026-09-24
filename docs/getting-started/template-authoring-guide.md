@@ -331,7 +331,7 @@ controlled HTML into editable native ODT content. Start with [L04 Rich Content](
 [L08 HTML Import](../../samples/sample_L08_html_import.php) according to the
 structure PHP needs to own.
 
-For template-authored native structures, use [L09 Native Objects](../../samples/sample_L09_native_objects.php): bookmarks support bounded text replacement and Sections support bounded content replacement, while named tables and frames currently provide read-only descriptors. [L10 Writer User Fields](../../samples/sample_L10_writer_user_fields.php) demonstrates the separately bounded string User Field binding. [L11 Template Inspection](../../samples/sample_L11_template_inspection.php) shows the source-oriented TemplateContract; inspection is an integration activity, not a fourth authoring model.
+For template-authored native structures, use [L09 Native Objects](../../samples/sample_L09_native_objects.php): bookmarks support bounded text replacement and Sections support bounded content replacement, while named tables and frames provide typed native addressing. [L10 Writer User Fields](../../samples/sample_L10_writer_user_fields.php) demonstrates the separately bounded string User Field binding. [L11 Template Inspection](../../samples/sample_L11_template_inspection.php) shows the source-oriented TemplateContract; inspection is an integration activity, not a fourth authoring model. [L12 Writer Table Population](../../samples/sample_L12_writer_table_population.php) demonstrates bounded population of a Writer-authored named table while preserving its authored structure and formatting.
 
 ## Images and semantic elements
 
