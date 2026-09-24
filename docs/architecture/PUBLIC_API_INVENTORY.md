@@ -523,6 +523,198 @@ These questions should be answered from current tests and final closeout
 documents before the OdtTemplate section is marked VERIFIED.
 
 
+## OdtTemplate verification log — tranche 3: behavior forensics
+
+This tranche checks the remaining facade-lifecycle questions against direct
+call-site evidence and focused characterization tests. Where no direct test or
+call site exists, the absence is recorded rather than filled by inference.
+
+### Repeating APIs: one deprecated alias and one orphaned direct mutator
+
+Current source contains an explicit deprecation annotation on setRepeating():
+
+```php
+/** @deprecated Use assignRepeating() and render() instead. */
+public function setRepeating(string $key, array $rows): void
+```
+
+Its implementation only stages rows in repeatStack, exactly like
+assignRepeating(). The canonical documentation and quick start use
+assignRepeating().
+
+**Classification strengthened:** setRepeating() is a deprecated Compatibility
+alias; assignRepeating() is the Recommended API.
+
+setRepeatingData() is different. Repository search currently finds no caller
+outside its own definition and no focused test. It:
+
+1. repairs broken variables in current content.xml and styles.xml;
+2. immediately calls applyAllRepeatingBlocksInDom() on both DOMs;
+3. does not populate repeatStack;
+4. does not require render().
+
+The direct implementation is an older sibling-walking foreach algorithm. It
+finds paragraph markers with XPath, searches a following sibling end marker,
+removes the marker pair and template nodes, clones the captured nodes per row,
+and replaces row placeholders immediately. If no matching end marker is found,
+the loop simply breaks rather than reporting a deterministic malformed-template
+error.
+
+No reviewed current architecture document promotes this path and no repository
+call site demonstrates a current intended audience.
+
+**Status:** CHARACTERIZED from implementation but **not VERIFIED as a supported
+behavioral contract** because it lacks current characterization tests. For 1.0
+it is a strong legacy/deprecation candidate, but removal or semantic cleanup
+requires an explicit compatibility decision.
+
+### load() and refresh(): reset semantics are directly protected
+
+OdtTemplatePackageLifecycleTest proves that load() discards unsaved working
+mutation and restores the original template source.
+
+The same test explicitly names and protects
+testRefreshKeepsItsLegacyResetBehavior(): after assign + render + refresh, the
+rendered value is absent and the original placeholder is present again.
+
+D5G legacy lifecycle characterization independently proves the same reset for a
+structured assigned Paragraph and confirms that refresh resets the
+legacyStructuredValuesMaterialized flag.
+
+Implementation explains why:
+
+```text
+refresh()
+    -> graphic/font finalization
+    -> persistCoreDocuments()
+    -> load()
+         -> OdtPackage::resetFromTemplate()
+         -> prepareLoadedTemplate()
+```
+
+Therefore persistCoreDocuments() inside refresh() must not be interpreted as
+"make current mutations the new loaded state"; the subsequent load boundary
+resets from the package's original template source.
+
+**VERIFIED contract:** load() and refresh() both return the working document to
+the original template state. refresh() additionally performs its historical
+pre-reset persistence/finalization sequence. The public reference must warn
+that refresh() is not a preserve-current-state reload operation.
+
+### cleanup(): what is and is not proved
+
+Current implementation delegates directly to OdtPackage::cleanup().
+Package-lifecycle integration coverage proves two template instances have
+independent workspaces and can be cleaned independently. Normal tests also call
+cleanup() after save/reopen workflows.
+
+The constructor registers cleanup() as a shutdown function, so explicit cleanup
+is not required solely to obtain shutdown cleanup.
+
+This tranche found no evidence establishing that arbitrary authoring calls
+after explicit cleanup() are supported. The public reference should therefore
+describe cleanup() as releasing the temporary package workspace and should not
+promise object reuse after cleanup without additional characterization.
+
+### Repeated render(): scalar versus structured evidence
+
+For the legacy structured lifecycle, D5G characterization is strong. Current
+tests explicitly execute:
+
+```text
+assign(OdtElement)
+render()
+save(A)
+render()
+save(B)
+```
+
+for representative structured producers. After D5G-C narrowing, the focused
+tests require stable content.xml and styles.xml for the characterized producer
+set. ImageElement additionally has explicit repeated-state assertions. This is
+compatibility protection, not evidence that assign(OdtElement) is the
+recommended structured lifecycle.
+
+For ordinary scalar/classic render(), this tranche found the normal
+assign -> render -> save coverage and extensive public sample use, but no
+equally explicit general contract saying that calling render() repeatedly with
+new scalar assignments reconstructs consumed placeholders. Since render()
+mutates the working DOM, a placeholder removed by the first render is not
+implicitly restored by a second render. load() is the explicit reset boundary.
+
+**Documentation rule:** do not advertise render() as a re-render-from-source
+operation. The safe canonical lifecycle is stage assignments/repeaters, call
+render(), then save. Re-render guarantees should only be stated for scenarios
+covered by characterization.
+
+### extractTemplateVariables(): exact current limits
+
+Current implementation scans the **current working content.xml and styles.xml**
+serialization, not the immutable original source contract.
+
+It returns exactly these top-level keys:
+
+- variables
+- loops
+- conditions
+- negated_conditions
+- filters
+- filter_options
+
+Its parser uses regular expressions with word-character restrictions for
+ordinary variable/filter names and foreach/ifnot names. It separately captures
+if/elseif expression text. It is therefore a lexical convenience extractor,
+not a substitute for TemplateContract scope, provenance, native-object,
+capability, coverage, or diagnostic semantics.
+
+The Sample Explorer currently calls this API to display variables from sample
+templates. That is real repository usage, but it is tooling usage rather than
+evidence that this should be the primary modern application inspection model.
+
+**Status:** VERIFIED as a narrow compatibility/tooling API. Prefer
+inspectTemplate() for semantic integration work.
+
+### Debug API: exposed but weakly evidenced
+
+enableDebugMode() only sets the debugMode flag to true. getDebugLog() returns
+the accumulated log array. The protected log() helper appends only while debug
+mode is enabled.
+
+Repository search finds a historical test_fonts.php sample enabling debug mode,
+but no current focused test establishing a stable set of emitted messages, no
+disable method, and no evidence in this tranche of a documented reset contract
+across load()/refresh().
+
+**Status:** public diagnostic compatibility surface, but **message contents and
+lifecycle are not a stable documented contract on current evidence**. Do not
+publish individual debug strings as machine-readable API.
+
+### Behavioral-forensics decision
+
+The facade lifecycle can now be documented conservatively without pretending
+that all public methods have equal maturity:
+
+- canonical classic lifecycle: assign/assignRepeating -> render -> save;
+- canonical structured insertion: setElement -> save (render only when classic
+  staged work is also present);
+- load is an explicit reset to original template;
+- refresh is a legacy reset operation with pre-reset finalization/persistence,
+  not a normal refresh abstraction;
+- repeated legacy structured render has focused compatibility tests;
+- generic "rerender from source" semantics do not exist;
+- setRepeating is explicitly deprecated;
+- setRepeatingData is currently an untested/orphaned historical direct mutator;
+- extractTemplateVariables is useful compatibility/tooling inspection but
+  inspectTemplate is the semantic integration API;
+- debug facilities are best treated as diagnostic compatibility surface until
+  stronger contracts exist.
+
+The remaining OdtTemplate facade work is now capability-specific rather than
+generic lifecycle forensics: metadata, images, document defaults/style options,
+and exact exception/validation behavior. Those should be verified in their own
+API-family audits.
+
+
 ## 2. Native Writer targets
 
 ### BookmarkTarget
