@@ -253,7 +253,68 @@ Automated tests do not replace visual Writer regression. Open the generated S03-
 9. pagination and page flow remain credible;
 10. save, close, and reopen succeeds without structural damage.
 
-## 15. S03-B boundary
+## 15. S03-A authoring findings and regression evidence
+
+S03-A exposed three authoring findings that are now part of the Phase-F
+documentation baseline.
+
+### Bookmark range ownership
+
+Bookmark replacement is intentionally range-based. The exact Writer-authored
+bookmark boundaries therefore define the application's mutation authority.
+Template authors should bookmark only the semantic value the application owns,
+not adjacent punctuation, labels, separators, or other Writer-owned text.
+
+An oversized bookmark is easy to create visually in LibreOffice and may still
+be structurally valid ODF. The resulting replacement can therefore look like an
+engine mutation defect even though the engine correctly replaced the authored
+range. Canonical templates must verify bookmark start/end boundaries as part of
+authoring review.
+
+### Repeated document identity
+
+A scalar that represents one document-wide fact and occurs in several regions
+should be authored once as a Writer User Field and referenced wherever needed,
+including master-page headers and footers. Duplicating the same logical value as
+separate bookmarks creates unnecessary synchronization responsibility in
+application code.
+
+### Section clones and contained bookmarks
+
+The repository establishes the following chain:
+
+```text
+Writer-authored Section
+-> Section clone
+-> deterministic rewriting of contained bookmark identities
+-> structurally distinct bookmarks in each clone
+```
+
+What is not currently established is a public instance-relative addressing
+operation that lets application code take a returned Section instance and
+address the logical contained bookmark without knowing its generated rewritten
+name.
+
+This is a concrete capability gap, not evidence that Section cloning with
+bookmarks is invalid. S03 must not work around it by coupling application code
+to generated bookmark suffixes. The semantics and public surface for
+instance-relative native-object addressing require separate characterization
+before any API is approved.
+
+### S03-A regression gate
+
+The S03-A implementation passed its repository test/preflight work and the
+rendering-sensitive result was accepted through the project visual-regression
+workflow and manual LibreOffice inspection. The Writer-owned multi-page layout,
+native tables, image-frame geometry, bookmark mutations, User Field display,
+page flow, and save/reopen behavior form the accepted baseline for the next S03
+slice.
+
+This evidence closes the S03-A implementation gate. It does not close S03 as a
+whole: S03-B remains required, followed by the explicit TEMPLATE-AUTHORING-01F
+Final Review.
+
+## 16. S03-B boundary
 
 S03-B follows only after S03-A is accepted.
 
@@ -263,13 +324,13 @@ S03-B must not be used as justification for a universal named-element mutation A
 
 The exact S03-B structural operations will be fixed after S03-A regression evidence and after the contained-bookmark/Section-collection behavior has been characterized.
 
-## 16. Explicit non-goals
+## 17. Explicit non-goals
 
 S03 does not, by itself, authorize a universal Named Element API, programmatic Writer Section creation / `SectionElement`, a new style/theme switching API, native table-row semantic markers, TEMPLATE-FORMAT-PRESERVATION-01, TEMPLATE-AUTHORING-UX-01, STYLE-API-02, STYLE-CONTEXT-01, or changes to classic foreach scope semantics.
 
 Those remain separate architecture topics.
 
-## 17. Completion gate
+## 18. Completion gate
 
 S03-A is complete only when implementation, focused tests, repository preflight, and manual LibreOffice regression all pass.
 
