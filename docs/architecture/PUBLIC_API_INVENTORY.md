@@ -4789,3 +4789,698 @@ PAGE-OWNED CONTENT
 No new 1.0 architecture was introduced. The current API remains deliberately
 native-first: Writer owns page composition and pagination; PHP has bounded
 geometry, flow and Standard-style default controls.
+
+
+## API-family completion — Inspection, Template Contract, and Mapping
+
+Status: **VERIFIED + DOCUMENTED-COMPLETE for the current public 1.0
+Inspection, source Template Contract, and optional Mapping/Resolution model**.
+
+These three families are intentionally documented together because they form
+one non-mutating information pipeline while retaining distinct semantic views:
+
+```text
+current Working Document
+    -> inspect()
+    -> DocumentInspection
+
+original authored source
+    -> inspectTemplateStructure()
+    -> physical expression topology
+
+original authored source
+    -> inspectTemplate()
+    -> TemplateContract
+          +
+application mapping definition/data
+          -> mapping validation/resolution
+```
+
+None of these operations authorizes document mutation by inspection alone.
+
+### Inspection view 1 — OdtTemplate::inspect()
+
+Exact facade:
+
+```php
+inspect(): DocumentInspection
+```
+
+This inspects the **current Working Document**, not the immutable original
+source. Every call returns a new read-only snapshot and exposes no DOM nodes.
+It inspects both current content.xml and styles.xml according to
+DocumentInspector's bounded native-object coverage.
+
+`DocumentInspection` public surface:
+
+```php
+sections(): array
+bookmarks(): array
+tables(): array
+frames(): array
+diagnostics(): array
+
+section(string $name): ?SectionDescriptor
+bookmark(string $name): ?BookmarkDescriptor
+table(string $name): ?TableDescriptor
+frame(string $name): ?FrameDescriptor
+
+toArray(): array
+```
+
+The collection methods return descriptor lists. Singular lookup is a
+convenience lookup in the snapshot and returns null when no matching descriptor
+is present; strict mutation/addressing semantics belong to the typed target
+facade documented separately.
+
+The four descriptor contracts are already completed in the Writer-native
+Targets audit. `DocumentInspection::toArray()` serializes the four descriptor
+collections plus diagnostics.
+
+`InspectionDiagnostic` exposes:
+
+```php
+code(): string
+severity(): string
+message(): string
+targetType(): ?string
+targetName(): ?string
+toArray(): array
+```
+
+Stable severities are exactly `warning` and `error`.
+
+**Disposition:** `inspect()`, DocumentInspection, the native descriptors and
+InspectionDiagnostic are **KEEP / RECOMMENDED** for tooling/native working
+document introspection. DocumentInspector is **Infrastructure / hidden**.
+
+### Inspection view 2 — inspectTemplateStructure()
+
+Exact facade:
+
+```php
+inspectTemplateStructure(): TemplateStructureInspection
+```
+
+This is deliberately different from `inspect()`: it inspects the **original
+source content.xml**, not the current Working Document, and focuses on visible
+template-expression topology/normalization safety rather than native object
+inventory.
+
+`TemplateStructureInspection` exposes:
+
+```php
+valid(): bool
+repairable(): array
+unsafe(): array
+expressionsByVariable(string $name): array
+expressionsInScope(string $scope): array
+toArray(): array
+```
+
+The contained `TemplateExpressionDescriptor` exposes raw text, expression
+kind, variable/filter information, physical scope, fragment count/split state,
+classification and physical-normalization state through its public accessors
+and `toArray()`. Style/bookmark/native-owner evidence is represented in the
+serialized descriptor rather than as mutable document objects.
+
+`TemplateStructureDiagnostic` is the associated immutable diagnostic value,
+including code, severity, message, classification, repairability, optional
+expression and scope.
+
+`TemplateStructureNormalizationResult` exposes `changed()` and
+`toArray()`; it belongs to the lower-level normalization/repair machinery,
+not the primary inspection facade.
+
+**Disposition:** `inspectTemplateStructure()` and its inspection DTOs are
+**KEEP / ADVANCED tooling/diagnostic API**. TemplateStructureInspector,
+projector and normalizer implementation services are **Infrastructure /
+hidden** unless an integration deliberately works at that low level.
+
+### Inspection view 3 — OdtTemplate::inspectTemplate()
+
+Exact facade:
+
+```php
+inspectTemplate(): TemplateContract
+```
+
+This is the canonical **semantic source-template contract**. It reads the
+original authored source DOMs from the package, so current Working Document
+mutations, render operations and imperative target changes do not redefine the
+contract.
+
+Its source regions are bounded to:
+
+- `office:body/office:text` in content.xml;
+- direct header/header-* and footer/footer-* content under each
+  `style:master-page` in styles.xml.
+
+Coverage explicitly reports excluded parts:
+`meta.xml`, `settings.xml`, `META-INF/manifest.xml`, and embedded
+objects.
+
+This distinction is foundational:
+
+```text
+inspect()          = current native document state
+inspectTemplate()  = original authored semantic contract
+```
+
+### TemplateContract
+
+Stable contract version:
+
+```php
+TemplateContract::CONTRACT_VERSION === 1
+```
+
+Public surface:
+
+```php
+bindings(): array
+controls(): array
+nativeObjects(): array
+dependencies(): array
+diagnostics(): array
+coverage(): TemplateContractCoverage
+capabilities(): TemplateContractCapabilities
+toArray(): array
+```
+
+Serialized top-level shape:
+
+```text
+contract_version
+coverage
+bindings
+controls
+native_objects
+dependencies
+capabilities
+diagnostics
+```
+
+The contract preserves the architecture distinction:
+
+```text
+authored evidence
+    -> interpreted template meaning
+    -> logical data dependency
+```
+
+A native object name by itself is **not** an application-data dependency.
+
+### BindingDescriptor
+
+Public semantic fields/accessors:
+
+```php
+kind()
+rawText()
+variableName()
+filterName()
+filterOption()
+supportState()
+provenance()
+dependencyId()
+toArray()
+```
+
+Bindings represent visible scalar/filtered/special semantics and supported
+native field evidence. A dependency id is present only when the binding
+participates in a supported logical dependency.
+
+### ControlDescriptor
+
+Public surface:
+
+```php
+id()
+kind()
+representation()
+supportState()
+scope()
+createdScope()
+carrierNativeObjectId()
+toArray()
+```
+
+Controls remain distinct from bindings. The contract can represent classic
+controls and recognized declarative/native Section controls without claiming
+that every recognized representation has identical execution semantics.
+
+### DependencyDescriptor and DataScopeDescriptor
+
+`DependencyDescriptor` exposes:
+
+```php
+id()
+kind()
+name()
+scope()
+path()
+evidenceIds()
+toArray()
+```
+
+The important dependency kinds in the current contract are VALUE and
+COLLECTION.
+
+`DataScopeDescriptor` exposes the stable scope constants:
+
+```text
+ROOT
+COLLECTION_ITEM
+```
+
+and:
+
+```php
+root()
+collectionItem(...)
+id()
+kind()
+parentId()
+collectionDependencyId()
+pathPrefix()
+dependencyPath(string $name, bool $collection = false)
+toArray()
+```
+
+This is the source of semantic paths such as:
+
+```text
+name
+experience[]
+experience[].company
+experience[].projects[]
+experience[].projects[].title
+```
+
+The path is template data-scope identity, not a DOM path.
+
+### NativeObjectDescriptor and SourceProvenance
+
+`NativeObjectDescriptor` exposes kind, optional native name, provenance,
+stable semantic id, owner-id chain and `toArray()`. Current source-native
+families include Section, Bookmark, Table and Frame evidence.
+
+`SourceProvenance` exposes:
+
+```php
+evidenceId()
+sourcePart()
+regionKind()
+regionOwner()
+carrierKind()
+representationKind()
+sourceOrder()
+physicalScope()
+nativeOwnerChain()
+toArray()
+```
+
+This is explanation/provenance data. It deliberately does not expose XPath or
+mutable DOM nodes.
+
+### Contract coverage, capabilities and diagnostics
+
+`TemplateContractCoverage` exposes `inspectedRegions()`,
+`excludedParts()`, and `toArray()`.
+
+`TemplateContractCapabilities` has stable readiness values:
+
+```text
+READY
+LIMITED
+BLOCKED
+NOT_APPLICABLE
+```
+
+and `readiness(string $capability): ?string` plus `toArray()`.
+
+Current inspector readiness includes the semantic capabilities used by the
+authoring/mapping pipeline, including inspection, dependency mapping and native
+field binding as applicable. Callers must not reinterpret LIMITED/BLOCKED as
+READY.
+
+`TemplateContractDiagnostic` exposes code, severity, message, optional
+subject id, optional SourceProvenance and `toArray()`.
+
+**Disposition:** TemplateContract and its descriptor/coverage/capability/
+diagnostic value objects are **KEEP / RECOMMENDED machine-readable contract**.
+TemplateContractInspector is **Infrastructure / hidden**; normal callers use
+`inspectTemplate()`.
+
+---
+
+## Mapping — optional application-to-template relationship
+
+Mapping remains optional. It does not replace imperative APIs and does not
+become a second template schema, document AST or renderer.
+
+The three supported target families are:
+
+```text
+Dependency Target
+Native Object Action Target
+Document Capability Target
+```
+
+A mapping definition describes an application/template relationship; it does
+not alter TemplateContract.
+
+### ApplicationPath
+
+Create paths through:
+
+```php
+ApplicationPath::parse(string $path): ApplicationPath
+```
+
+Grammar is dot-separated named segments:
+
+```text
+segment      := [A-Za-z_][A-Za-z0-9_-]*
+collection   := segment[]
+path         := segment(.segment)*
+```
+
+Examples:
+
+```text
+person.name
+jobs[]
+jobs[].employer
+jobs[].projects[]
+jobs[].projects[].title
+```
+
+Empty or malformed paths throw `InvalidArgumentException`.
+
+Public read surface:
+
+```php
+segments(): array
+canonical(): string
+terminalKind(): string
+hasCollections(): bool
+collectionPrefixes(): array
+__toString(): string
+```
+
+`ApplicationPathSegment` has stable kinds `VALUE` and `COLLECTION`,
+with `name()`, `kind()`, `isCollection()`, and `toString()`.
+
+**Disposition:** ApplicationPath is **KEEP / RECOMMENDED** mapping vocabulary.
+ApplicationPathSegment is **KEEP / ADVANCED supporting value**.
+
+### MappingDefinition
+
+Exact constructor:
+
+```php
+new MappingDefinition(
+    array $dependencies = [],
+    array $nativeObjectActions = [],
+    array $documentCapabilities = []
+)
+```
+
+Every list is type-checked at construction. Wrong element types throw
+`InvalidArgumentException`.
+
+Accessors:
+
+```php
+dependencies(): array
+nativeObjectActions(): array
+documentCapabilities(): array
+```
+
+It is immutable explicit configuration only; it performs no validation,
+resolution or mutation itself.
+
+### DependencyMapping
+
+```php
+new DependencyMapping(
+    ApplicationPath $source,
+    string $dependencyPath
+)
+```
+
+The target dependency path must be non-empty. Accessors are `source()` and
+`dependencyPath()`.
+
+Collection boundaries are semantically significant. A collection target must
+be mapped from an application path whose terminal segment is a collection.
+
+### NativeObjectActionMapping
+
+```php
+new NativeObjectActionMapping(
+    ApplicationPath $source,
+    string $targetKind,
+    string $targetName,
+    string $actionId
+)
+```
+
+All three target strings must be non-empty. This rule requests one explicitly
+registered action against one named source-native object. Discovering a native
+object never implicitly authorizes an action.
+
+The actual Phase-E action catalog/applicability is documented with Automation;
+Mapping merely carries the explicit relationship.
+
+### DocumentCapabilityMapping
+
+```php
+new DocumentCapabilityMapping(
+    ApplicationPath $source,
+    string $group,
+    string $target
+)
+```
+
+Group and target must be non-empty. The current Phase-E bounded document
+capability family includes metadata mapping; arbitrary document services are
+not implied.
+
+### Static mapping validation
+
+The non-mutating validation service is:
+
+```php
+StaticMappingValidator::validate(
+    MappingDefinition $definition,
+    TemplateContract $contract,
+    TemplateCapabilityProjection $projection,
+    EngineCapabilityCatalog $catalog
+): MappingValidationResult
+```
+
+`MappingValidationResult` exposes:
+
+```php
+valid(): bool
+diagnostics(): array
+deferredChecks(): array
+```
+
+Static validation covers, as applicable:
+
+- target dependency existence/uniqueness;
+- VALUE/COLLECTION shape agreement;
+- collection-scope relationship consistency;
+- duplicate target mappings;
+- native target existence/kind/uniqueness;
+- registered native action support/applicability;
+- supported document capability target;
+- contract/capability readiness.
+
+Checks requiring concrete application data remain explicit
+`DeferredMappingCheck` values rather than being guessed.
+
+`MappingDiagnostic` and `DeferredMappingCheck` are immutable
+machine-readable supporting diagnostics.
+
+**Disposition:** the result/diagnostic DTOs are **KEEP / ADVANCED**.
+StaticMappingValidator, capability projector/catalog internals are
+**Infrastructure/Advanced orchestration** rather than the primary mapping
+authoring surface.
+
+### Mapping resolution
+
+```php
+MappingResolutionResolver::resolve(
+    MappingDefinition $definition,
+    TemplateContract $contract,
+    array $data
+): MappingResolution
+```
+
+Resolution first performs current Phase-E capability projection/static
+validation. Invalid static mapping throws `MappingResolutionException`, whose
+`validationResult()` exposes the complete MappingValidationResult.
+
+Resolution precedence for dependency values is:
+
+```text
+1. explicit DependencyMapping
+2. scoped same-name resolution
+3. unresolved
+```
+
+The same-name rule is deliberately bounded:
+
+- ROOT VALUE dependencies may resolve from one same-named ROOT value;
+- COLLECTION boundaries are **never** established by convention;
+- collection dependencies therefore require explicit collection mapping;
+- inside an explicitly established mapped collection scope, same-name child
+  VALUE dependencies may resolve relative to that scope;
+- there is no unrestricted search through unrelated application branches.
+
+`MappingResolution` exposes the three resolution lists:
+
+```php
+dependencies()
+nativeObjectActions()
+documentCapabilities()
+```
+
+### DependencyMappingResolution
+
+Stable statuses/provenance constants:
+
+```text
+RESOLVED
+UNRESOLVED
+EXPLICIT
+SCOPED_SAME_NAME
+```
+
+Public surface:
+
+```php
+target(): DependencyDescriptor
+status(): string
+source(): ?ApplicationPath
+provenance(): ?string
+dataResolution(): ?ApplicationDataResolution
+```
+
+### NativeObjectActionResolution / DocumentCapabilityResolution
+
+These explicit mapping resolutions expose their mapping, source path, resolved
+data status/provenance and ApplicationDataResolution. Their current provenance
+is `EXPLICIT`; there is no implicit native-action/document-capability target
+search.
+
+### Application data resolution
+
+`ApplicationDataResolver::resolve(ApplicationPath $path, array $data)`
+returns `ApplicationDataResolution`.
+
+Stable statuses:
+
+```text
+MISSING
+NULL
+PRESENT
+EMPTY_COLLECTION
+WRONG_SHAPE
+```
+
+The resolution object exposes status, value, optional item index and nested
+items. These distinctions are intentional; in particular:
+
+```text
+missing collection != null collection != empty collection != wrong-shape value
+```
+
+Mapping must not silently normalize those states into one another.
+
+**Disposition:** ApplicationDataResolution is a **KEEP / ADVANCED supporting
+contract**; ApplicationDataResolver is **Infrastructure / Advanced**.
+
+### Capability projection
+
+`TemplateCapabilityProjection` is the non-mutating bridge between
+source-template semantics and the engine-version capability catalog. It
+exposes dependency targets, native-object targets and document capabilities
+plus typed lookup helpers.
+
+The projector and `EngineCapabilityCatalog` are **Infrastructure / Advanced
+orchestration**, not application domain configuration. Their existence does
+not move engine capability declarations into TemplateContract: source
+semantics and engine-version capability remain separate by design.
+
+### Boundary with Preflight and Automation
+
+Mapping ends with an inspectable resolution. Concrete preflight adds actual
+application-data/action payload validation against the current Working
+Document, and Automation performs mutation.
+
+Therefore:
+
+```text
+TemplateContract
+ + MappingDefinition
+ + Application Data
+       ↓
+static validation / resolution        NON-MUTATING
+       ↓
+MappingResolution
+       ↓
+Concrete Preflight                    NON-MUTATING
+       ↓
+Automation                            MUTATING
+```
+
+This block intentionally does **not** mark ConcreteMappingPreflight or the
+automation executors complete; those belong to the next two API-family audits.
+
+### Completion result
+
+```text
+INSPECTION — WORKING DOCUMENT
+  OdtTemplate::inspect()                    KEEP / RECOMMENDED
+  DocumentInspection/descriptors            KEEP / RECOMMENDED
+  InspectionDiagnostic                      KEEP / RECOMMENDED support
+  DocumentInspector                         INFRASTRUCTURE / HIDDEN
+  status                                    VERIFIED + DOCUMENTED-COMPLETE
+
+PHYSICAL SOURCE INSPECTION
+  inspectTemplateStructure()                KEEP / ADVANCED
+  structure inspection DTOs                 KEEP / ADVANCED
+  inspector/projector/normalizer services   INFRASTRUCTURE / HIDDEN
+  status                                    VERIFIED + DOCUMENTED-COMPLETE
+
+SEMANTIC TEMPLATE CONTRACT
+  OdtTemplate::inspectTemplate()            KEEP / RECOMMENDED
+  TemplateContract                          KEEP / RECOMMENDED
+  contract descriptors/scopes/provenance    KEEP / RECOMMENDED support
+  coverage/capabilities/diagnostics         KEEP / RECOMMENDED support
+  TemplateContractInspector                 INFRASTRUCTURE / HIDDEN
+  status                                    VERIFIED + DOCUMENTED-COMPLETE
+
+MAPPING AUTHORING
+  ApplicationPath                           KEEP / RECOMMENDED
+  MappingDefinition                         KEEP / RECOMMENDED
+  DependencyMapping                         KEEP / RECOMMENDED
+  NativeObjectActionMapping                 KEEP / RECOMMENDED
+  DocumentCapabilityMapping                 KEEP / RECOMMENDED
+
+MAPPING VALIDATION/RESOLUTION
+  MappingResolution + typed resolutions     KEEP / ADVANCED inspectable result
+  MappingValidationResult/diagnostics       KEEP / ADVANCED support
+  low-level validators/resolvers/projectors INFRASTRUCTURE / ADVANCED
+  status                                    VERIFIED + DOCUMENTED-COMPLETE
+```
+
+No new API or execution order was introduced. Inspection remains read-only,
+TemplateContract remains source-oriented, and Mapping remains an optional
+relationship/resolution layer rather than a renderer.
