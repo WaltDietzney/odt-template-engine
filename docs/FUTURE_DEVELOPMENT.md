@@ -256,6 +256,42 @@ RESEARCH-01A already proved that Writer preserves names such as `#foreach:experi
 
 A bounded native-field binding capability is Phase C of `TEMPLATE-AUTHORING-01`. Broad support for every Writer field/conditional construct remains post-1.0 unless concrete evidence makes it necessary. `{{variable}}` remains the preferred general/portable scalar-binding mechanism where native semantics provide no concrete advantage.
 
+### SECTION-INSTANCE-NATIVE-ADDRESSING-01 — Instance-relative addressing inside cloned Sections
+
+**Priority:** Post-1.0 architecture/research follow-up unless a mandatory milestone proves a bounded dependency
+
+TEMPLATE-AUTHORING-01F S03 established a specific gap between native identity
+preservation and application-level addressability. Section cloning already
+rewrites contained native identities, including bookmark names, so each clone
+remains structurally distinct. The current public Section instance surface does
+not provide equivalent instance-relative addressing for a logical bookmark
+inside that clone.
+
+The future design must characterize the general semantics before approving an
+API. In particular, determine:
+
+- whether instance-relative addressing should apply only to bookmarks or to
+  other contained named native object families;
+- how callers identify the logical authored object without depending on
+  generated clone suffixes;
+- how nested Section instances affect lookup scope and ambiguity;
+- how zero/multiple matches and malformed native identities are diagnosed;
+- whether addressing and mutation remain separate typed capabilities;
+- compatibility with existing Section identity rewriting and repeated
+  instantiate/save lifecycles.
+
+Do not infer `SectionTarget::bookmark()`, a universal named-element accessor,
+or another concrete method signature from this backlog item. The established
+principle remains:
+
+```text
+addressability != mutation capability
+```
+
+This topic is related to, but distinct from, classic foreach scope semantics.
+It concerns native objects contained in cloned Writer-authored Sections rather
+than placeholder-variable shadowing.
+
 ### CLASSIC-FOREACH-SCOPE-01 — Scoped placeholder resolution and shadowing
 
 **Priority:** Bounded architecture follow-up
