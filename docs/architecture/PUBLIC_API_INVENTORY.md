@@ -5938,3 +5938,476 @@ Dry-run/non-mutation boundary               VERIFIED + DOCUMENTED-COMPLETE
 No new validation semantics, payload conversion, or execution behavior was
 introduced. This audit records the concrete gate that already exists between
 Mapping and Automation.
+
+
+## API-family completion — Phase-E Automation
+
+Status: **VERIFIED + DOCUMENTED-COMPLETE for the current 1.0 common
+Phase-E automation facade, family execution seams, lifecycle and atomicity
+contract**.
+
+Automation is the mutating end of the already documented pipeline:
+
+```text
+inspect source -> TemplateContract
+mapping + data -> MappingResolution
+concrete preflight -> READY
+        ↓
+OdtTemplate::automate()
+        ↓
+one atomic Working-Document/package mutation invocation
+        ↓
+optional later imperative mutations
+        ↓
+save()
+```
+
+Automation is optional. It does not replace the ordinary imperative/classic
+lifecycle and does not implicitly call `render()` or `save()`.
+
+### Canonical public automation facade
+
+Exact signature:
+
+```php
+automate(
+    TemplateContract $contract,
+    ConcretePreflightResult $preflight
+): void
+```
+
+This is the recommended common Phase-E execution entry point.
+
+Preconditions:
+
+- the supplied concrete preflight must be READY;
+- the caller supplies the already-inspected source TemplateContract;
+- the preflight carries the MappingResolution and resolved concrete data;
+- the current Working Document/package must still satisfy runtime invariants
+  assumed by the READY invocation.
+
+A non-READY preflight is rejected with `InvalidArgumentException` before
+mutation.
+
+A successful common invocation is **single-use per Working Document
+lifecycle**. A second successful `automate()` call without lifecycle reset
+throws `LogicException`.
+
+`load()` resets the lifecycle gate, after which another successful common
+automation invocation is permitted.
+
+A failed invocation that rolls back successfully does **not** consume the
+single-success allowance; retry is characterized and supported.
+
+**Disposition:** **KEEP / RECOMMENDED for Phase-E users**.
+
+### Common execution order
+
+The common facade deliberately executes the three established families in this
+order:
+
+```text
+1. Native Object Actions
+2. Dependency Automation
+3. Document Capabilities
+```
+
+The ordering is not a generic action scheduler. It exists because native
+targets must be localized against source-order/source-ownership evidence before
+dependency execution can materialize/remove structural Sections.
+
+No general dependency graph, arbitrary action ordering API, command bus or
+workflow DSL is implied.
+
+### Invocation-wide atomicity
+
+`automate()` wraps the complete three-family invocation in one
+`OdtPackage` Working-State snapshot.
+
+If any execution family throws:
+
+1. the package/document Working State is restored from the snapshot;
+2. the original execution failure is rethrown if rollback succeeds;
+3. the invocation may subsequently be retried.
+
+Characterized rollback coverage includes:
+
+- content.xml Working DOM;
+- styles.xml Working DOM;
+- meta.xml Working DOM;
+- package-local resources;
+- semantic style definitions;
+- font-face requirements;
+- fill-image requirements;
+- prior imperative state that existed before automation.
+
+Existing pre-invocation package assets and imperative mutations survive the
+rollback; transient automation changes do not.
+
+Snapshot cleanup failure does not replace an otherwise successful/failed
+execution result.
+
+If execution fails **and rollback itself fails**,
+`PhaseEAutomationRollbackException` preserves both failures:
+
+```php
+executionFailure(): Throwable
+rollbackFailure(): Throwable
+```
+
+The execution failure is also the exception's previous cause.
+
+**Disposition:** the rollback exception is **KEEP / ADVANCED failure
+contract**. `PhaseEAutomationExecutor` itself is **Infrastructure / hidden**.
+
+### Family facade methods
+
+OdtTemplate also exposes the three family execution seams:
+
+```php
+automateDependencies(
+    TemplateContract $contract,
+    ConcretePreflightResult $preflight
+): void
+
+automateNativeObjectActions(
+    TemplateContract $contract,
+    ConcretePreflightResult $preflight
+): void
+
+automateDocumentCapabilities(
+    ConcretePreflightResult $preflight
+): void
+```
+
+These methods exist as explicit orchestration/extension seams and are used by
+the common `automate()` facade.
+
+They are **not equivalent to `automate()`**:
+
+- they do not provide the common invocation-wide snapshot/rollback boundary;
+- calling them individually does not set the common single-success lifecycle
+  gate;
+- they execute only their own family;
+- they are public and subclass-overridable behavior in current OdtTemplate,
+  so their signatures/dispatch matter for compatibility.
+
+The atomicity tests deliberately override family methods to inject a late
+failure, confirming that `automate()` dispatches through these facade methods
+rather than bypassing them.
+
+**Disposition:** **KEEP / ADVANCED orchestration + extension/compatibility
+facades**. Normal application documentation should teach `automate()` as the
+safe common entry point.
+
+### Dependency automation
+
+`automateDependencies()` delegates to `DependencyAutomationExecutor`.
+
+The executor consumes only:
+
+- current OdtDocumentContext;
+- the supplied TemplateContract;
+- READY ConcretePreflightResult;
+- established OdtTemplate callbacks for User Field binding, classic filter
+  application and condition evaluation.
+
+It does **not** traverse raw application data or rerun Mapping Resolution.
+
+Current dependency execution reuses established mutation owners:
+
+- Writer User Field bindings through `setUserField()`;
+- classic scalar/filter/special processing through TemplateProcessor behavior;
+- declarative/native Section IF/IFNOT/FOREACH structural execution through the
+  accepted declarative executor path.
+
+User Field binding precedes structural mutation where source evidence requires
+it. Classic ROOT and projected collection-item scopes are processed from the
+already-resolved dependency projection.
+
+Nested collection execution preserves the established projected scope/index
+identity rather than re-deriving application paths at mutation time.
+
+`DependencyAutomationExecutor`, `DependencyScopeProjector`, scope
+projection/value DTOs and declarative executor internals are
+**Infrastructure / hidden or advanced engine-extension machinery**, not a
+second application mapping API.
+
+### Native-object action automation
+
+`automateNativeObjectActions()` executes exactly the explicit READY native
+actions selected by the supplied preflight.
+
+Current 1.0 actions remain exactly:
+
+```text
+Section  replace-content   OdtElement
+Bookmark replace-text      string
+Frame    replace-image     bounded image payload
+```
+
+No action is inferred merely because TemplateContract discovered a native
+object.
+
+The executor verifies that each operation agrees with the supplied
+MappingResolution, explicit provenance and uniquely identified
+TemplateContract descriptor. Runtime Working-DOM localization is execution
+targeting, not a second semantic template inspection.
+
+Section and Bookmark actions reuse their established typed mutation semantics.
+Source-owned targets in page/master-page regions use the corresponding bounded
+working-region services where the normal content.xml typed facade does not
+address that region.
+
+#### Frame replace-image execution semantics
+
+Phase-E Frame replacement intentionally differs from the legacy imperative
+`replaceImageByName()` defaults:
+
+```text
+no width/height
+    -> preserve authored Frame width and height
+
+width only
+    -> set width; derive height from replacement image intrinsic ratio
+
+height only
+    -> set height; derive width from replacement image intrinsic ratio
+
+width + height
+    -> use both explicit values exactly
+```
+
+The unit of a one-dimensional explicit value is preserved for the derived
+dimension.
+
+The intrinsic ratio comes from the replacement image, not the old Frame.
+For raster images it uses intrinsic pixel dimensions. For SVG it uses a valid
+positive viewBox where available, otherwise compatible positive width/height
+attributes with matching units. If a required ratio cannot be determined,
+execution fails; it does not fall back to legacy dimensions or old-frame
+ratio.
+
+Unrelated Frame state remains authored/template-owned.
+
+Image resources are copied into `Pictures/` and the direct draw:image
+reference is updated. Before mutation, selected image actions are checked for
+package destination collisions: the same basename/path may be reused only
+when content hashes agree; an existing package destination containing
+different content is a failure.
+
+The native-action executor also performs bounded pre-mutation destructive
+interference checks among selected native actions. It does not resolve such
+conflicts by inventing an arbitrary action order.
+
+`NativeObjectActionExecutor` is **Infrastructure / hidden**; observable
+action semantics belong to the common automation contract and the typed
+target APIs.
+
+### Document capability automation
+
+The current document-capability family is metadata only.
+
+`automateDocumentCapabilities()` delegates READY metadata operations to the
+existing `MetadataManager`. It validates that each operation belongs to the
+supplied MappingResolution and remains consistent with the current
+EngineCapabilityCatalog/payload kind.
+
+There is no arbitrary “call document method” capability.
+
+Current supported targets and concrete payload semantics are exactly those
+already documented under Preflight:
+
+```text
+title
+subject
+description
+keywords
+initial_creator
+creator
+language
+creation_date
+date
+editing_cycles
+editing_duration
+generator
+coverage
+```
+
+`DocumentCapabilityAutomationExecutor` is **Infrastructure / hidden**.
+
+### Runtime invariant failures after READY
+
+READY means that the concrete invocation passed the non-mutating checks at
+preflight time. It does not freeze the world.
+
+Execution therefore reasserts critical invariants where necessary. Examples
+include:
+
+- a READY operation must actually belong to the supplied MappingResolution;
+- native action identity/capability/provenance must still agree;
+- the source-derived Working target must still be deterministically
+  localizable;
+- a replacement image must still exist/be readable when execution needs it;
+- one-dimensional image replacement must still yield a deterministic ratio;
+- package resource destinations must not have become conflicting.
+
+Violation is an explicit runtime/logic failure. Automation does not rerun
+mapping, search for replacement targets, silently skip the action or coerce a
+different payload.
+
+Under common `automate()`, such a failure triggers invocation-wide rollback.
+
+### Relationship with classic render()
+
+Phase-E automation and classic staged rendering are distinct.
+
+The common automation integration tests characterize that `automate()`
+itself makes **zero** calls to `render()` and **zero** calls to `save()`.
+
+Thus:
+
+```text
+assign()/assignRepeating() + render()
+    = classic staged processing
+
+inspectTemplate() + mapping + preflight + automate()
+    = Phase-E mapped automation
+```
+
+They may exist in the same library/lifecycle, but one does not implicitly
+invoke the other.
+
+Future documentation must not describe `automate()` as “render with
+mapping”, nor describe `render()` as automatically consuming
+MappingDefinition.
+
+### Relationship with imperative mutations
+
+Imperative APIs remain first-class before and after successful automation.
+
+Characterization demonstrates an imperative metadata mutation after
+`automate()` remains possible and persists on save.
+
+Likewise the family facade methods remain callable independently after common
+automation because they are not governed by the common single-success flag.
+That is current public behavior, but should be treated as **Advanced
+orchestration**, not promoted as a normal way to bypass the one-common-
+invocation lifecycle contract.
+
+No additional restriction is invented during 01F.
+
+### Save/finalization
+
+Successful automation mutates only the Working Document/package state.
+Persistence still requires the normal:
+
+```php
+$template->save($outputPath);
+```
+
+The common automation path does not save automatically.
+
+Integration characterization confirms dependency/native/metadata automation
+survives save and reopening, including copied image package resources.
+
+### Extension/polymorphism compatibility
+
+Because the common facade invokes:
+
+```php
+$this->automateNativeObjectActions(...)
+$this->automateDependencies(...)
+$this->automateDocumentCapabilities(...)
+```
+
+the public family methods are observable subclass override points.
+
+For 1.0 they must not be made private/final or bypassed by direct service calls
+inside `automate()` without a separate compatibility decision.
+
+This mirrors the broader project rule that protected/public facade wrappers
+used for polymorphic dispatch are compatibility-sensitive even when the
+underlying service is infrastructure.
+
+### Explicit non-goals
+
+Current Automation does not provide:
+
+- repeated successful common automation within one Working Document lifecycle;
+- arbitrary user-defined automation actions;
+- general command/action DSL;
+- arbitrary PHP method invocation;
+- automatic mapping/action inference from payload types;
+- Section clone/instantiate/instantiateMany mapping actions;
+- TableTarget::populate as a Phase-E native action;
+- structured Bookmark insertion;
+- HTML-to-OdtElement conversion;
+- general Frame/style/layout authoring;
+- crop/contain/cover/focal-point image policies;
+- automatic `render()`, `save()`, export or PDF conversion;
+- background/queued automation;
+- a live/staleness-tracking preflight token.
+
+Those are not implied by the word “Automation”.
+
+### Public-documentation model
+
+The recommended complete flow is:
+
+```php
+$template = new OdtTemplate($templatePath);
+
+$contract = $template->inspectTemplate();
+$working = $template->inspect();
+
+$preflight = (new ConcreteMappingPreflight())->preflight(
+    $mapping,
+    $contract,
+    $applicationData,
+    $working
+);
+
+if (!$preflight->ready()) {
+    // handle diagnostics; do not execute
+}
+
+$template->automate($contract, $preflight);
+$template->save($outputPath);
+```
+
+Mapping construction/application-data preparation are intentionally omitted
+from this small lifecycle example; they are documented in the Mapping family.
+
+### Completion result
+
+```text
+OdtTemplate::automate()                     KEEP / RECOMMENDED (Phase-E)
+  READY precondition                        VERIFIED
+  family execution order                    VERIFIED
+  one-success-per-lifecycle                  VERIFIED
+  retry after rolled-back failure           VERIFIED
+  no implicit render/save                    VERIFIED
+  save/reopen persistence                    VERIFIED
+  invocation-wide rollback                  VERIFIED
+
+automateDependencies()                      KEEP / ADVANCED facade
+automateNativeObjectActions()               KEEP / ADVANCED facade
+automateDocumentCapabilities()              KEEP / ADVANCED facade
+  polymorphic dispatch compatibility        VERIFIED
+
+PhaseEAutomationExecutor                    INFRASTRUCTURE / HIDDEN
+DependencyAutomationExecutor                INFRASTRUCTURE / HIDDEN
+NativeObjectActionExecutor                  INFRASTRUCTURE / HIDDEN
+DocumentCapabilityAutomationExecutor        INFRASTRUCTURE / HIDDEN
+
+PhaseEAutomationRollbackException           KEEP / ADVANCED failure contract
+
+Dependency execution semantics              VERIFIED + DOCUMENTED-COMPLETE
+Native action execution semantics           VERIFIED + DOCUMENTED-COMPLETE
+Document capability execution semantics     VERIFIED + DOCUMENTED-COMPLETE
+Automation lifecycle/atomicity              VERIFIED + DOCUMENTED-COMPLETE
+```
+
+No new action, lifecycle rule, fallback, or mutation behavior was introduced by
+this audit.
