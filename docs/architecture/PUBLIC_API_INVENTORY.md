@@ -28,6 +28,66 @@ Problem annotations may include **QUESTION**, **LEGACY**, **DEFECT**, and
 Final audience classification is pending and may distinguish Recommended,
 Advanced, Compatibility, Extension, and Infrastructure API.
 
+## Verification methodology
+
+The verification audit uses an evidence stack rather than treating current
+source code in isolation. For every discovered public surface, inspect the
+following sources before assigning a 1.0 classification:
+
+1. **Current implementation** - establishes what the current branch actually
+   executes, including validation, defaults, side effects, and lifecycle.
+2. **Current tests** - establish characterized and regression-protected
+   behavior. Test names alone are insufficient; relevant assertions must be
+   inspected.
+3. **Architecture and development documentation** - inspect change contracts,
+   architecture findings, milestone documents, roadmap/future notes, and
+   feature documentation for the decision that introduced or constrained the
+   API.
+4. **Canonical and historical usage** - inspect canonical samples first, then
+   historical samples and other repository call sites to understand intended
+   and compatibility usage.
+5. **Public documentation** - compare README, guides, and reference-like
+   documentation against the established current contract and record drift.
+
+The evidence hierarchy is intentional. Historical documentation explains
+design intent but does not override current implementation and tests. When
+sources disagree, record the contradiction explicitly instead of silently
+reconciling it.
+
+For each method or coherent API group, record:
+
+- current signature and implementation path;
+- relevant tests and what they actually prove;
+- originating/relevant architecture decisions and historical constraints;
+- canonical and legacy call sites;
+- exact behavior, defaults, accepted option keys, validation, exceptions, and
+  side effects;
+- lifecycle/preconditions and repeat-call behavior where relevant;
+- Writer/PHP ownership implications where relevant;
+- contradictions or documentation drift;
+- verification confidence and missing characterization;
+- proposed 1.0 audience classification only after the evidence review.
+
+The working flow is therefore:
+
+```text
+DISCOVERED
+    -> implementation inspected
+    -> tests/assertions inspected
+    -> architecture/history inspected
+    -> canonical + historical usage inspected
+    -> public docs compared
+    -> CHARACTERIZED
+    -> VERIFIED
+    -> CLASSIFIED
+    -> DOCUMENTED
+```
+
+A missing test does not automatically mean an API is broken, and a historical
+sample does not automatically make an API recommended. A public PHP method may
+ultimately be classified as Recommended, Advanced, Compatibility, Extension,
+or Infrastructure surface.
+
 ## 1. OdtTemplate facade
 
 Discovered public surface:
@@ -541,18 +601,7 @@ The verification audit must explicitly answer at least:
 
 Do not turn this inventory directly into website reference material.
 
-First perform the Public API Verification Audit:
-
-```text
-DISCOVERED
-    -> implementation inspected
-    -> tests identified
-    -> semantics/options characterized
-    -> compatibility/lifecycle checked
-    -> VERIFIED
-    -> CLASSIFIED
-    -> DOCUMENTED
-```
+First perform the Public API Verification Audit using the evidence stack defined above. Architecture/history and repository usage are mandatory evidence sources, not optional background reading.
 
 The resulting classification is the basis for the 1.0 end-programmer API
 reference.
