@@ -53,20 +53,28 @@ $heading = static function (string $number, string $title, bool $breakBefore = f
         ->addText($title, ['color' => $navy, 'font-size' => '18pt', 'bold' => true]);
 };
 
-$bodyParagraph = static function (string $text) use ($ink): Paragraph {
-    return (new Paragraph('B02Body', [
+$bodyParagraph = static function (string $text, string $marginBottom = '0.22cm') use ($ink): Paragraph {
+    $style = $marginBottom === '0.22cm'
+        ? 'B02Body'
+        : 'B02Body' . str_replace(['.', 'cm'], '', $marginBottom);
+
+    return (new Paragraph($style, [
         'widows' => 2,
         'orphans' => 2,
         'line-height' => '112%',
-        'margin-bottom' => '0.22cm',
+        'margin-bottom' => $marginBottom,
     ]))->addText($text, ['color' => $ink, 'font-size' => '10pt']);
 };
 
-$subheading = static function (string $text) use ($navy): Paragraph {
-    return (new Paragraph('B02Subheading', [
+$subheading = static function (string $text, string $marginTop = '0.12cm', string $marginBottom = '0.08cm') use ($navy): Paragraph {
+    $style = ($marginTop === '0.12cm' && $marginBottom === '0.08cm')
+        ? 'B02Subheading'
+        : 'B02Subheading' . str_replace(['.', 'cm'], '', $marginTop . $marginBottom);
+
+    return (new Paragraph($style, [
         'keep-with-next' => 'always',
-        'margin-top' => '0.12cm',
-        'margin-bottom' => '0.08cm',
+        'margin-top' => $marginTop,
+        'margin-bottom' => $marginBottom,
     ]))->addText($text, ['color' => $navy, 'font-size' => '12pt', 'bold' => true]);
 };
 
@@ -104,19 +112,19 @@ $cover->setColumnWidthRatios([3, 2, 2, 2]);
 $cover->addRow([
     $cell((new Paragraph('B02CoverImage', ['text-align' => 'center']))->addElement($coverImage), ['padding' => '0.12cm', 'background' => $light, 'border' => 'none'])->setColspan(4),
 ]);
-$body->addParagraph((new Paragraph('B02CoverBrand', ['margin-bottom' => '0.08cm']))->addText('ASTERIA DEMO FOUNDATION', ['color' => $navy, 'font-size' => '11pt', 'bold' => true]));
-$body->addParagraph((new Paragraph('B02CoverKicker', ['margin-bottom' => '0.12cm']))->addText('SAMPLE DOCUMENT · FICTIONAL ORGANIZATION AND DATA', ['color' => $accent, 'font-size' => '9pt', 'bold' => true]));
-$body->addParagraph((new Paragraph('B02CoverTitle', ['keep-with-next' => 'always', 'margin-bottom' => '0.12cm']))->addText('Annual Performance Report 2026', ['color' => $navy, 'font-size' => '30pt', 'bold' => true]));
-$body->addParagraph((new Paragraph('B02CoverProgram', ['margin-bottom' => '0.14cm']))->addText('Pathways 360 Demo Program', ['color' => $navy, 'font-size' => '14pt', 'bold' => true]));
-$body->addParagraph((new Paragraph('B02CoverMeta', ['margin-bottom' => '0.08cm']))->addText('January–December 2026  ·  Final Report · 31 January 2027', ['color' => $ink, 'font-size' => '10pt']));
+$body->addParagraph((new Paragraph('B02CoverBrand', ['margin-left' => '0.28cm', 'margin-right' => '0.28cm', 'margin-bottom' => '0.08cm']))->addText('ASTERIA DEMO FOUNDATION', ['color' => $navy, 'font-size' => '11pt', 'bold' => true]));
+$body->addParagraph((new Paragraph('B02CoverKicker', ['margin-left' => '0.28cm', 'margin-right' => '0.28cm', 'margin-bottom' => '0.12cm']))->addText('SAMPLE DOCUMENT · FICTIONAL ORGANIZATION AND DATA', ['color' => $accent, 'font-size' => '9pt', 'bold' => true]));
+$body->addParagraph((new Paragraph('B02CoverTitle', ['keep-with-next' => 'always', 'margin-left' => '0.28cm', 'margin-right' => '0.28cm', 'margin-bottom' => '0.12cm']))->addText('Annual Performance Report 2026', ['color' => $navy, 'font-size' => '30pt', 'bold' => true]));
+$body->addParagraph((new Paragraph('B02CoverProgram', ['margin-left' => '0.28cm', 'margin-right' => '0.28cm', 'margin-bottom' => '0.14cm']))->addText('Pathways 360 Demo Program', ['color' => $navy, 'font-size' => '14pt', 'bold' => true]));
+$body->addParagraph((new Paragraph('B02CoverMeta', ['margin-left' => '0.28cm', 'margin-right' => '0.28cm', 'margin-bottom' => '0.38cm']))->addText('January–December 2026  ·  Final Report · 31 January 2027', ['color' => $ink, 'font-size' => '10pt']));
 $body->addTable($cover);
 $body->addParagraph((new Paragraph('B02CoverClosing', ['break-after' => 'page', 'margin-top' => '0.18cm', 'border-top' => '0.02cm solid ' . $line, 'padding-top' => '0.14cm']))->addText('This document is a demonstration sample created for the ODT Template Engine. All organizations, programs, persons, figures and report data shown in this document are fictional and are used solely for demonstration purposes.', ['color' => $muted, 'font-size' => '8.5pt', 'italic' => true]));
 
 // Executive Summary.
 $body->addParagraph($heading('01', 'Executive Summary'));
-$body->addParagraph($bodyParagraph('The Pathways 360 Demo Program supports people to build skills, confidence and connections for sustainable employment and further training. During 2026, the program reached 248 participants across three delivery locations, combining individual coaching, practical workshops, digital skills development and direct engagement with local employers.'));
-$body->addParagraph($bodyParagraph('The delivery model is designed around progression rather than a single intervention. Participants can move between coaching, skills practice and employer-facing activity as their needs develop. This integrated approach helped the program maintain strong completion and outcome rates while building a broader base of employer partnerships.'));
-$body->addParagraph($bodyParagraph('The results indicate that coordinated support is most valuable when it is connected to realistic next steps. The strongest progression was observed among participants who received both individual coaching and employer-facing support. The year also highlighted the importance of differentiated digital support and more consistent outcome tracking as the program grows.'));
+$body->addParagraph($bodyParagraph('The Pathways 360 Demo Program supports people to build skills, confidence and connections for sustainable employment and further training. During 2026, the program reached 248 participants across three delivery locations, combining individual coaching, practical workshops, digital skills development and direct engagement with local employers.', '0.34cm'));
+$body->addParagraph($bodyParagraph('The delivery model is designed around progression rather than a single intervention. Participants can move between coaching, skills practice and employer-facing activity as their needs develop. This integrated approach helped the program maintain strong completion and outcome rates while building a broader base of employer partnerships.', '0.34cm'));
+$body->addParagraph($bodyParagraph('The results indicate that coordinated support is most valuable when it is connected to realistic next steps. The strongest progression was observed among participants who received both individual coaching and employer-facing support. The year also highlighted the importance of differentiated digital support and more consistent outcome tracking as the program grows.', '0.38cm'));
 
 $kpi = static function (string $value, string $label) use ($navy, $muted): RichText {
     return (new RichText())
@@ -151,12 +159,12 @@ $finding = (new DrawTextBox('B02KeyFinding', [
     (new Paragraph('B02KeyFindingBody', ['margin-bottom' => '0cm']))->addText('Participants receiving combined individual coaching and employer-facing support showed the strongest progression.', ['color' => $ink, 'font-size' => '9.5pt'])
 );
 $body->addElement($finding);
-$body->addParagraph($subheading('Management reading'));
-$body->addParagraph($bodyParagraph('Management reading: the headline results are strongest when reach, completion and employer connection are considered together. The next planning cycle should protect this integrated model while targeting digital confidence and more consistent outcome tracking.'));
+$body->addParagraph($subheading('Management reading', '0.28cm', '0.12cm'));
+$body->addParagraph($bodyParagraph('Management reading: the headline results are strongest when reach, completion and employer connection are considered together. The next planning cycle should protect this integrated model while targeting digital confidence and more consistent outcome tracking.', '0.28cm'));
 
 // Program Overview & Delivery.
 $body->addParagraph($heading('02', 'Program Overview & Delivery', true));
-$body->addParagraph($bodyParagraph('Pathways 360 is a fictional demonstration program that combines coaching, practical skills development and employer engagement. Its 2026 delivery model focused on improving readiness for employment or further training while maintaining a supportive route for participants with different starting points.'));
+$body->addParagraph($bodyParagraph('Pathways 360 is a fictional demonstration program that combines coaching, practical skills development and employer engagement. Its 2026 delivery model focused on improving readiness for employment or further training while maintaining a supportive route for participants with different starting points.', '0.34cm'));
 $facts = (new RichTable())->setTableStyle(['relative-width' => '100%', 'alignment' => 'center']);
 $facts->setColumnWidthRatios([3, 2, 2, 2]);
 $facts->addRow([
@@ -166,7 +174,7 @@ $facts->addRow([
     $cell((new RichText())->addParagraph((new Paragraph('B02Fact'))->addText('EMPLOYER PARTNERS', ['color' => $muted, 'font-size' => '8pt', 'bold' => true]))->addParagraph((new Paragraph('B02FactValue'))->addText('42 partners', ['color' => $navy, 'font-size' => '9pt'])), ['background' => $light, 'border' => 'none']),
 ]);
 $body->addTable($facts);
-$body->addParagraph($subheading('Program Objectives'));
+$body->addParagraph($subheading('Program Objectives', '0.28cm', '0.12cm'));
 $objectives = new ListElement('bullet');
 foreach ([
     'Improve employment readiness and training opportunities.',
@@ -177,7 +185,7 @@ foreach ([
     $objectives->addItem((new Paragraph('B02ListItem'))->addText($objective, ['color' => $ink, 'font-size' => '9.5pt']));
 }
 $body->addElement($objectives);
-$body->addParagraph($subheading('Activities Delivered'));
+$body->addParagraph($subheading('Activities Delivered', '0.30cm', '0.12cm'));
 $activities = (new RichTable())->setTableStyle(['relative-width' => '100%', 'alignment' => 'center']);
 $activities->setColumnWidthRatios([3, 2, 2, 2]);
 $activities->setHeaderRowCount(1);
@@ -199,9 +207,9 @@ foreach ([
     ]);
 }
 $body->addTable($activities);
-$body->addParagraph($subheading('Delivery Observation'));
-$body->addParagraph($bodyParagraph('The activity mix combines a high volume of individual coaching with shared skills practice and employer-facing opportunities. This balance gives the program a practical route to respond to different starting points while still connecting participants to common progression goals.'));
-$body->addParagraph($bodyParagraph('The scale of coaching, alongside 84 workshops and 18 employer events, also shows why coordination matters: individual support carries the largest contact load, while group and employer activity creates the shared practice and external connection needed to turn preparation into progression.'));
+$body->addParagraph($subheading('Delivery Observation', '0.30cm', '0.12cm'));
+$body->addParagraph($bodyParagraph('The activity mix combines a high volume of individual coaching with shared skills practice and employer-facing opportunities. This balance gives the program a practical route to respond to different starting points while still connecting participants to common progression goals.', '0.30cm'));
+$body->addParagraph($bodyParagraph('The scale of coaching, alongside 84 workshops and 18 employer events, also shows why coordination matters: individual support carries the largest contact load, while group and employer activity creates the shared practice and external connection needed to turn preparation into progression.', '0.28cm'));
 
 // Performance & Outcomes.
 $body->addParagraph($heading('03', 'Performance & Outcomes', true));
@@ -241,11 +249,11 @@ $body->addElement($outcomes);
 // Findings & Analysis.
 $body->addParagraph($heading('04', 'Findings & Analysis', true));
 $body->addParagraph($subheading('Integrated support produced stronger outcomes'));
-$body->addParagraph($bodyParagraph('Participants who combined individual coaching with workshops and employer-facing activity showed the strongest progression. The pattern suggests that practical support is most effective when it is connected to a clear next step and reinforced by more than one type of engagement.'));
-$body->addParagraph($bodyParagraph('For management, the implication is to preserve the sequence between preparation and opportunity: coaching builds readiness, practice makes capability visible, and employer contact gives progression a concrete direction.'));
-$body->addParagraph($subheading('Digital confidence remains uneven'));
-$body->addParagraph($bodyParagraph('Digital confidence improved across the program, but starting points varied considerably. Participants with less prior experience benefited from additional practice, more patient guidance and opportunities to apply digital skills in realistic vocational contexts.'));
-$body->addParagraph($bodyParagraph('This variation matters because digital tasks increasingly sit inside otherwise practical routes into work and training. A differentiated support offer can therefore strengthen both participation in the program and the quality of later progression.'));
+$body->addParagraph($bodyParagraph('Participants who combined individual coaching with workshops and employer-facing activity showed the strongest progression. The pattern suggests that practical support is most effective when it is connected to a clear next step and reinforced by more than one type of engagement.', '0.30cm'));
+$body->addParagraph($bodyParagraph('For management, the implication is to preserve the sequence between preparation and opportunity: coaching builds readiness, practice makes capability visible, and employer contact gives progression a concrete direction.', '0.34cm'));
+$body->addParagraph($subheading('Digital confidence remains uneven', '0.28cm', '0.12cm'));
+$body->addParagraph($bodyParagraph('Digital confidence improved across the program, but starting points varied considerably. Participants with less prior experience benefited from additional practice, more patient guidance and opportunities to apply digital skills in realistic vocational contexts.', '0.30cm'));
+$body->addParagraph($bodyParagraph('This variation matters because digital tasks increasingly sit inside otherwise practical routes into work and training. A differentiated support offer can therefore strengthen both participation in the program and the quality of later progression.', '0.34cm'));
 
 $insight = (new DrawTextBox('B02ProgramInsight', [
     'background-color' => '#dceef3',
@@ -264,7 +272,7 @@ $insight = (new DrawTextBox('B02ProgramInsight', [
     (new Paragraph('B02ProgramInsightBody', ['margin-bottom' => '0cm']))->addText('Employer engagement proved most effective when employers became involved before the formal recruitment stage rather than only receiving completed candidate profiles. Early contact made expectations clearer and gave participants a more realistic context for preparation.', ['color' => $ink, 'font-size' => '9pt'])
 );
 $body->addElement($insight);
-$body->addParagraph($subheading('Challenges'));
+$body->addParagraph($subheading('Challenges', '0.30cm', '0.12cm'));
 $challenges = new ListElement('bullet');
 foreach ([
     'Irregular attendance among a small participant group.',
@@ -274,12 +282,12 @@ foreach ([
     $challenges->addItem((new Paragraph('B02ListItem'))->addText($challenge, ['color' => $ink, 'font-size' => '9.5pt']));
 }
 $body->addElement($challenges);
-$body->addParagraph($subheading('Management implication'));
-$body->addParagraph($bodyParagraph('The response should be selective rather than broad: protect flexible support for attendance, build digital practice into ordinary delivery, and focus employer development where placement opportunities are most constrained.'));
+$body->addParagraph($subheading('Management implication', '0.34cm', '0.12cm'));
+$body->addParagraph($bodyParagraph('The response should be selective rather than broad: protect flexible support for attendance, build digital practice into ordinary delivery, and focus employer development where placement opportunities are most constrained.', '0.30cm'));
 
 // Recommendations & Outlook.
 $body->addParagraph($heading('05', 'Recommendations & Outlook', true));
-$body->addParagraph($subheading('Recommendations'));
+$body->addParagraph($subheading('Recommendations', '0.28cm', '0.12cm'));
 $recommendations = new ListElement('numbered');
 foreach ([
     'Expand employer involvement by bringing partners into program design and preparation earlier. This should align practice opportunities with realistic recruitment expectations and make employer-facing activity more purposeful.',
@@ -287,13 +295,13 @@ foreach ([
     'Improve outcome tracking so longer-term progression can be understood more consistently. A clearer view after completion would help distinguish immediate results from sustained movement into work or training.',
     'Create more peer-learning opportunities around sector-specific practice and confidence building. Shared practice can reinforce capability and reduce isolation for participants working toward similar goals.',
 ] as $recommendation) {
-    $recommendations->addItem((new Paragraph('B02Recommendation'))->addText($recommendation, ['color' => $ink, 'font-size' => '9.5pt']));
+    $recommendations->addItem((new Paragraph('B02Recommendation', ['margin-bottom' => '0.16cm']))->addText($recommendation, ['color' => $ink, 'font-size' => '9.5pt']));
 }
 $body->addElement($recommendations);
-$body->addParagraph($subheading('Outlook 2027'));
-$body->addParagraph($bodyParagraph('In 2027, Pathways 360 will build on the progress achieved in 2026 by deepening employer partnerships, strengthening targeted digital support and improving the continuity of outcome tracking. The focus will remain on high-quality, person-centred support that connects confidence, capability and realistic progression. Delivery will continue to balance individual attention with shared practice, so that growth in scale does not weaken the relationships that make progression possible.'));
-$body->addParagraph($bodyParagraph('The intended measure of progress is not only more activity, but clearer movement from preparation to opportunity. The program will therefore use the 2026 learning to refine support, strengthen the quality of employer connection and make outcomes easier to follow over time.'));
-$body->addParagraph((new Paragraph('B02Disclaimer', ['break-after' => 'page', 'margin-top' => '0.35cm', 'border-top' => '0.02cm solid ' . $line, 'padding-top' => '0.18cm']))->addText('This document is a demonstration sample created for the ODT Template Engine. All organizations, programs, persons, figures and report data shown in this document are fictional and are used solely for demonstration purposes.', ['color' => $muted, 'font-size' => '8.5pt', 'italic' => true]));
+$body->addParagraph($subheading('Outlook 2027', '0.34cm', '0.12cm'));
+$body->addParagraph($bodyParagraph('In 2027, Pathways 360 will build on the progress achieved in 2026 by deepening employer partnerships, strengthening targeted digital support and improving the continuity of outcome tracking. The focus will remain on high-quality, person-centred support that connects confidence, capability and realistic progression. Delivery will continue to balance individual attention with shared practice, so that growth in scale does not weaken the relationships that make progression possible.', '0.30cm'));
+$body->addParagraph($bodyParagraph('The intended measure of progress is not only more activity, but clearer movement from preparation to opportunity. The program will therefore use the 2026 learning to refine support, strengthen the quality of employer connection and make outcomes easier to follow over time.', '0.30cm'));
+$body->addParagraph((new Paragraph('B02Disclaimer', ['break-after' => 'page', 'margin-top' => '0.50cm', 'border-top' => '0.02cm solid ' . $line, 'padding-top' => '0.18cm']))->addText('This document is a demonstration sample created for the ODT Template Engine. All organizations, programs, persons, figures and report data shown in this document are fictional and are used solely for demonstration purposes.', ['color' => $muted, 'font-size' => '8.5pt', 'italic' => true]));
 
 $template->setElement('report_header', $header);
 $template->setElement('report_body', $body);
