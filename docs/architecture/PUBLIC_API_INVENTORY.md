@@ -1753,3 +1753,191 @@ FUTURE / SEPARATE
   CUSTOM-SHAPE-FILL-IMAGE-REPLACEMENT-01, not ImageElement 1.0 redesign
 ```
 
+
+
+## API-family verification — CircularImageElement
+
+Status: **VERIFIED + DOCUMENTED-COMPLETE for the methods CircularImageElement
+actually implements/overrides; inherited ImageElement surface is explicitly
+bounded below.**
+
+CircularImageElement is not a differently styled normal image frame. It is a
+specialized producer for LibreOffice-style circular graphics:
+
+```text
+draw:custom-shape (ellipse)
+    -> graphic style with draw:fill=bitmap
+    -> named draw:fill-image declaration
+    -> Pictures/<source basename>
+```
+
+That distinction is architecturally important because inheritance exposes
+ImageElement methods whose semantics do not project into this producer.
+
+### Constructor and effective options
+
+```php
+new CircularImageElement(string $imagePath, array $options = [])
+```
+
+The constructor first executes the complete ImageElement constructor, including
+`enabled`, source readability checking, getimagesize(), legacy mapping and
+one-dimensional autoscaling. It then **overwrites its protected geometry** as:
+
+```php
+$this->width  = $options['width']  ?? '3.4cm';
+$this->height = $options['height'] ?? '3.4cm';
+```
+
+Therefore the effective custom-shape geometry is:
+
+| width | height | custom-shape result |
+|---|---|---|
+| omitted | omitted | `3.4cm × 3.4cm` |
+| supplied | omitted | supplied width × `3.4cm` |
+| omitted | supplied | `3.4cm` × supplied height |
+| supplied | supplied | exact supplied pair |
+
+This deliberately means the parent ImageElement one-dimensional aspect-ratio
+autoscaling does **not** determine CircularImageElement shape geometry. A
+single supplied dimension does not make a proportional circle automatically.
+
+The effective anchor used by `toDomNode()` is the inherited protected
+`$anchor`, initialized by the parent from `options['anchor'] ?? 'paragraph'`.
+The custom-shape renderer does not consume the parent's mapped align/wrap/
+horizontal/vertical placement options.
+
+### Materialized ODF shape
+
+`toDomNode()` always creates a `draw:custom-shape`, never
+`draw:frame/draw:image`. It writes:
+
+- `text:anchor-type` from inherited constructor anchor;
+- `svg:width` and `svg:height` from CircularImageElement geometry;
+- `text:animation="none"`;
+- semantic generated `draw:style-name`;
+- `draw:z-index="0"`;
+- one `draw:enhanced-geometry` with `draw:type="ellipse"`,
+  viewBox `0 0 21600 21600`, full-circle enhanced path, glue points,
+  text area, disabled text-path/concentric-gradient fill, and parallel 3D
+  projection.
+
+The semantic graphic style is exactly:
+
+```text
+draw:fill              = bitmap
+draw:fill-image-name   = cv_photo_<source-stem>
+draw:fill-image-width  = 100%
+draw:fill-image-height = 100%
+style:repeat           = stretch
+draw:stroke            = none
+```
+
+Shape geometry/placement is intentionally absent from this style identity.
+Tests verify that two circular images using the same source but different
+width/height/anchor/alignment produce the same semantic graphic style.
+
+### Fill-image dependency
+
+`getOwnFillImageDependencies()` always exposes one typed
+`FillImageRequirement`:
+
+```text
+document part = styles.xml
+name          = cv_photo_<basename-without-extension>
+href          = Pictures/<basename-with-extension>
+```
+
+The normal setElement() dependency collector traverses this transitively,
+including when CircularImageElement is nested in DrawTextBox. Existing authored
+`draw:fill-image` declarations with the same name remain authoritative; the
+setElement path does not overwrite their href merely because this producer
+requests the same symbolic fill-image identity.
+
+This is the current SR-06 semantic contract. Replacement of the bitmap behind
+an already authored custom-shape/fill-image remains
+`CUSTOM-SHAPE-FILL-IMAGE-REPLACEMENT-01` future work.
+
+### CircularImageElement-owned public method reference
+
+| Method | Contract | Disposition |
+|---|---|---|
+| `__construct(string $imagePath, array $options = [])` | Parent validation/options run first; effective shape geometry then uses independent 3.4cm defaults as described above. | Specialized public producer |
+| `getOwnStyleRequirements(): iterable` | Always emits one common graphic definition in styles.xml for bitmap-fill properties. Available before DOM materialization. | Infrastructure/semantic producer |
+| `getOwnFillImageDependencies(): iterable` | Always emits one typed styles.xml fill-image declaration requirement. | Infrastructure/semantic dependency |
+| `toDomNode(DOMDocument $dom): DOMNode` | Creates ellipse draw:custom-shape with bitmap-fill style. Also populates legacy compatibility caches. | Infrastructure/materialization |
+| `getImageStyleRequirements(): array` | Before toDomNode(): empty. After toDomNode(): legacy map of generated graphic style name to bitmap-fill properties. | Compatibility/infrastructure |
+| `getFillImageRequirements(): array` | Before toDomNode(): empty. After toDomNode(): legacy map containing name/path/filename. | Compatibility/infrastructure |
+| `getOwnFillImageRequirements(): array` | Exact wrapper around getFillImageRequirements(). | Compatibility/infrastructure |
+| `toStyleDomNode(DOMDocument $dom): ?DOMElement` | Always null; semantic/compatibility finalization owns graphic/fill-image styles. | Infrastructure |
+
+### Inherited ImageElement methods: effective vs misleading
+
+Because CircularImageElement extends ImageElement, all public ImageElement
+methods are callable in PHP. They are **not all valid CircularImageElement
+authoring controls**.
+
+| inherited method/family | effective CircularImageElement behavior |
+|---|---|
+| `getImagePath()` | Effective: returns physical source path. |
+| `getImageAssets()/getOwnImageAssets()` | Effective resource reporting inherited from ImageElement; bitmap source still needs package resource. |
+| `getImageOptions()` | Compatibility/diagnostic only. Returns parent's mapped image-option state, which is not a faithful description of custom-shape geometry/materialization. |
+| `setStyle(array)` | **Misleading for CircularImageElement.** Mutates parent's raw/mapped imageOptions but custom-shape toDomNode() does not use those options for width/height/anchor/alignment/wrap or bitmap-fill style. Do not teach as CircularImageElement styling API. |
+| `setFrameLayout(array)` and all six `setFrame*()` methods | **Currently ineffective for CircularImageElement materialization.** They mutate the inherited private DrawingLayout state used by ImageElement methods, but CircularImageElement::toDomNode() never projects it. Do not advertise these inherited methods for circular/custom-shape positioning in 1.0. |
+| `structuredInsertionMode()` | Potentially inconsistent inherited behavior: it can observe inherited DrawingLayout state even though custom-shape toDomNode() ignores that layout. Without such calls it reflects mapped/constructor anchor. Treat as infrastructure and do not use inherited frame-layout calls on CircularImageElement. |
+| parent `enabled => false` behavior | **Not preserved by the override.** Parent constructor skips source validation/sizing, but CircularImageElement::toDomNode() does not check inherited enabled and still emits the custom shape/fill dependency/resource references. Therefore `enabled` must not be documented as a supported CircularImageElement option. |
+
+This inheritance mismatch is an important 1.0 documentation finding. Fixing it
+would be behavior/API architecture work and is therefore outside the 1.0 audit.
+The reference must document the bounded working surface rather than imply that
+all ImageElement fluent layout methods work polymorphically.
+
+### Naming/collision caveat
+
+The fill-image symbolic name is derived only from the source filename stem:
+
+```text
+/path/a/photo.png -> cv_photo_photo
+/path/b/photo.jpg -> cv_photo_photo
+```
+
+The element itself does not provide caller-controlled fill-image naming or
+collision disambiguation. Registry/materializer conflict behavior is a
+document-level concern. Do not promise filename-stem uniqueness at the element
+API level.
+
+### 1.0 disposition
+
+```text
+SPECIALIZED PUBLIC PRODUCER
+  CircularImageElement constructor
+
+EFFECTIVE SECONDARY API
+  getImagePath()
+  inherited image-resource reporting
+
+SEMANTIC / RESOURCE INFRASTRUCTURE
+  getOwnStyleRequirements()
+  getOwnFillImageDependencies()
+  toDomNode()
+  toStyleDomNode()
+
+COMPATIBILITY INFRASTRUCTURE
+  getImageStyleRequirements()
+  getFillImageRequirements()
+  getOwnFillImageRequirements()
+  getImageOptions()
+
+DO NOT TEACH FOR CircularImageElement
+  inherited setStyle()
+  inherited setFrameLayout()
+  inherited setFrame*() family
+  inherited enabled option
+
+FUTURE
+  coherent custom-shape layout/editing API, if needed
+  CUSTOM-SHAPE-FILL-IMAGE-REPLACEMENT-01
+```
+
+No new 1.0 API is introduced by this finding.
+
