@@ -9,6 +9,7 @@ use DOMElement;
 use DOMXPath;
 use OdtTemplateEngine\Document\AmbiguousAddressableTargetException;
 use OdtTemplateEngine\Document\DocumentInspector;
+use OdtTemplateEngine\Document\LogicalTableStructureReader;
 use OdtTemplateEngine\Document\TargetNotFoundException;
 use OdtTemplateEngine\Document\TypedTargetResolver;
 use OdtTemplateEngine\OdtDocumentContext;
@@ -31,7 +32,7 @@ final class TableRow01CharacterizationTest extends TestCase
     private const TABLE_NS = 'urn:oasis:names:tc:opendocument:xmlns:table:1.0';
     private const TEXT_NS = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0';
 
-    public function testDirectWriterRowsAreAddressableButCurrentlyUndercounted(): void
+    public function testDirectWriterRowsAreAddressableAndCountedLogically(): void
     {
         $path = $this->root() . '/tests/fixtures/libreoffice-reference/odt/TABLE-02-formatted-cell.odt';
         $template = new OdtTemplate($path);
@@ -44,11 +45,8 @@ final class TableRow01CharacterizationTest extends TestCase
         self::assertSame('Tabelle1', $descriptor->name());
         self::assertSame('content.xml', $descriptor->documentPart());
 
-        // CURRENT BEHAVIOR: direct table:table-row is omitted by tableRows().
-        // REQUIRED TABLE-ROW-01 BEHAVIOR: this valid Writer row counts as one
-        // logical row. Slice 1 must correct the inspector before mutation.
-        self::assertSame(0, $descriptor->rowCount());
-        self::assertNull($descriptor->columnCount());
+        self::assertSame(1, $descriptor->rowCount());
+        self::assertSame(1, $descriptor->columnCount());
     }
 
     public function testGroupedBodyRowsAndNativeHeaderRowsRemainDistinguishable(): void
@@ -62,6 +60,16 @@ final class TableRow01CharacterizationTest extends TestCase
         self::assertSame(2, $xpath->query('//table:table[@table:name="ProjectMilestones"]/table:table-rows/table:table-row')?->length);
         self::assertSame(3, $descriptor->rowCount());
         self::assertSame(2, $descriptor->columnCount());
+
+        $tableNode = $xpath->query('//table:table[@table:name="ProjectMilestones"]')->item(0);
+        self::assertInstanceOf(DOMElement::class, $tableNode);
+        $structure = (new LogicalTableStructureReader())->read($tableNode);
+        self::assertCount(3, $structure->rows());
+        self::assertCount(1, $structure->headerRows());
+        self::assertCount(2, $structure->ordinaryRows());
+        self::assertTrue($structure->rows()[0]->isHeader());
+        self::assertFalse($structure->rows()[1]->isHeader());
+        self::assertFalse($structure->rows()[2]->isHeader());
 
         $headerCell = $xpath->query('//table:table[@table:name="ProjectMilestones"]/table:table-header-rows/table:table-row/table:table-cell[1]')->item(0);
         $bodyCell = $xpath->query('//table:table[@table:name="ProjectMilestones"]/table:table-rows/table:table-row[1]/table:table-cell[1]')->item(0);

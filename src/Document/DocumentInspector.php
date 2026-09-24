@@ -212,12 +212,12 @@ final class DocumentInspector
                     continue;
                 }
 
-                $rows = $this->tableRows($node);
+                $structure = (new LogicalTableStructureReader())->read($node);
                 $tables[] = new TableDescriptor(
                     $name,
                     $part,
-                    count($rows),
-                    $this->columnCount($rows),
+                    count($structure->rows()),
+                    $structure->columnCount(),
                     $this->containingSection($node),
                 );
             }
@@ -287,42 +287,6 @@ final class DocumentInspector
         }
 
         return $summary;
-    }
-
-    /** @return list<DOMElement> */
-    private function tableRows(DOMElement $table): array
-    {
-        $rows = [];
-        foreach ($table->childNodes as $group) {
-            if (!in_array($group->nodeName, ['table:table-rows', 'table:table-header-rows'], true)) {
-                continue;
-            }
-            foreach ($group->childNodes as $row) {
-                if ($row instanceof DOMElement && $row->nodeName === 'table:table-row') {
-                    $rows[] = $row;
-                }
-            }
-        }
-
-        return $rows;
-    }
-
-    /** @param list<DOMElement> $rows */
-    private function columnCount(array $rows): ?int
-    {
-        if ($rows === []) {
-            return null;
-        }
-
-        $count = 0;
-        foreach ($rows[0]->childNodes as $cell) {
-            if (!$cell instanceof DOMElement || !in_array($cell->nodeName, ['table:table-cell', 'table:covered-table-cell'], true)) {
-                continue;
-            }
-            $count += max(1, (int) ($cell->getAttribute('table:number-columns-repeated') ?: 1));
-        }
-
-        return $count;
     }
 
     private function containingSection(DOMNode $node): ?string
