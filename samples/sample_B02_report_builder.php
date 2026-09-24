@@ -2,6 +2,16 @@
 
 declare(strict_types=1);
 
+/**
+ * B02 is the programmatic-builder counterpart to the Writer-owned showcase path.
+ *
+ * PHP intentionally owns the report's generated content structure here:
+ * paragraphs, tables, images, page-flow hints and frame callouts are composed
+ * through structured ODT elements. The surrounding ODT remains an editable
+ * document shell, but B02 is not a template-first/native-object automation
+ * example. Compare S03 when LibreOffice should own stable report structure.
+ */
+
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 use OdtTemplateEngine\Elements\DrawTextBox;
