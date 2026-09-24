@@ -273,6 +273,28 @@ must first characterize existing template compatibility. Reordering render
 phases is not automatically the solution and is not prescribed by this note.
 
 
+## TABLE-ROW-01 — Native Writer table population — COMPLETE / FINAL GO
+
+TABLE-ROW-01 is completed architecture baseline. A typed named table can now populate a bounded scalar data region while preserving the native Writer table object, native header rows, explicitly kept ordinary source rows, and Writer-owned row/cell/paragraph formatting. Repeated population reconciles against the immutable Writer/source-row baseline, and unsupported mutable topology is rejected rather than guessed.
+
+Canonical sample L12 — Writer Table Population teaches this ownership model. `RichTable` remains the separate PHP-owned/generated-table path.
+
+### TEMPLATE-DECLARED-STRUCTURAL-SEMANTICS-01 — Writer-authored structural markers
+
+**Priority:** Post-1.0 design/research direction; not a 1.0 blocker
+
+TABLE-ROW-01 deliberately uses application-side source indices such as `keepRows => [0]`. That is appropriate for the bounded 1.0 contract, but it also exposes a broader authoring opportunity: structural knowledge that belongs to a Writer template should, where practical, be declarable in the template instead of duplicated as numeric application configuration.
+
+A concrete future research case is a Writer-authored bookmark or another suitable native ODF marker placed in an ordinary table row to declare semantics such as `keepRow`, optionally with a semantic identifier. The engine could then derive the containing named table and row context from the native document tree rather than requiring redundant table names or changing row positions in PHP configuration.
+
+This is intentionally a design direction, not an approved bookmark naming convention or public API. Future work must first characterize real Writer/ODF behavior, including bookmark placement inside table cells/rows, stability under row cloning/removal and Writer save/reopen, duplicate/ambiguous markers, interaction with table identity, and whether bookmarks are the correct carrier at all.
+
+The broader principle is:
+
+> Template-owned structural semantics should live in the Writer-authored template when a stable native representation exists; application code should supply application-owned data and explicit runtime choices.
+
+This direction may later inform semantic named-element work, but it must not create one universal mutation API. Addressability and mutation capability remain separate: Sections, bookmarks, tables, and frames may share discoverable identity while retaining type-specific operations and ownership rules.
+
 ## FINALIZATION-01 — Final document/export semantics
 
 **Priority:** 1.0 BLOCKER AS ARCHITECTURE DECISION
