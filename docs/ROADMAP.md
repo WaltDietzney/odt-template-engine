@@ -328,7 +328,16 @@ automation lifecycle for ordinary library use. The accepted semantics and
 closure evidence are recorded in [`architecture/TEMPLATE_AUTHORING_01E_CHANGE_CONTRACT.md`](architecture/TEMPLATE_AUTHORING_01E_CHANGE_CONTRACT.md)
 and [`architecture/TEMPLATE_AUTHORING_01E6_COMPLETION.md`](architecture/TEMPLATE_AUTHORING_01E6_COMPLETION.md).
 
-#### F — Authoring Documentation & Samples
+#### F — Authoring Documentation & Samples — IN PROGRESS
+
+Phase F already includes the canonical L/C/B/S learning-path work and the completed professional S01b CV, S02 invoice, and B02 report-builder examples. TABLE-ROW-01 is complete and L12 now teaches bounded population of an existing Writer-authored named table. The next professional composition benchmark is S03 — Structured Professional Report.
+
+S03 must demonstrate two complementary outputs from Writer-owned report structure:
+
+- one output that preserves the report structure while replacing its application-owned results/data;
+- one deliberately different report that changes larger semantic document components through the appropriate typed native capabilities rather than rebuilding Writer layout in PHP.
+
+After S03, Phase F still requires an explicit **01F Final Review** before FINALIZATION-01. That review includes canonical sample migration/coverage, public-sample documentation quality, authoring guidance/learning-path coherence, README/Sample Explorer alignment, and only then bounded product-website alignment.
 
 Version 1.0 requires first-class authoring guidance, not merely API reference. Documentation should explain:
 
