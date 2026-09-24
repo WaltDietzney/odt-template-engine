@@ -122,7 +122,10 @@ foreach ($bookmarks as $name => $value) {
 $capacityFinding = $template->section('FindingDigitalConfidence')->clone();
 $capacityFinding->replaceContent(
     (new RichText())
-        ->addParagraph(strategicParagraph('3. Local delivery capacity needs reinforcement', 'B02Subheading028012'))
+        ->addParagraph(
+            (new Paragraph('B02Subheading028012'))
+                ->addText('3. Local delivery capacity needs reinforcement', ['bold' => true])
+        )
         ->addParagraph(strategicParagraph('Demand increased most strongly in selected delivery areas, creating pressure on specialist workshop capacity and local coordination.', 'B02Body030'))
         ->addParagraph(strategicParagraph('Priority for 2029: strengthen local delivery partnerships and create additional specialist workshop capacity before extending the geographic footprint.', 'B02Body034'))
 );
@@ -173,7 +176,13 @@ $template->table('PerformanceAgainstTargetsTable')->populate([
 
 $template->replaceImageByName(
     'ReportTitleImage',
-    __DIR__ . '/assets/s03-strategic-review-cover-2028.png'
+    __DIR__ . '/assets/s03-strategic-review-cover-2028.png',
+    [
+        // replaceImageByName() keeps legacy defaults when one dimension is
+        // omitted, so both dimensions are explicit for this cover asset.
+        'width' => '15cm',
+        'height' => '8.452cm',
+    ]
 );
 $template->replaceImageByName(
     'ParticipantOutcomesImage',

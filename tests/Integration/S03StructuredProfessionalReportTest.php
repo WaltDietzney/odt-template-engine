@@ -14,7 +14,8 @@ final class S03StructuredProfessionalReportTest extends TestCase
     public function testCanonicalTemplateAndOutputContainTheExpectedNativeTargets(): void
     {
         $template = $this->openArchive('samples/templates/template_S03_structured_professional_report.odt');
-        $output = $this->openArchive('samples/output/output_S03_structured_professional_report.odt');
+        $temporaryOutput = $this->generateFreshOutput();
+        $output = $this->openAbsoluteArchive($temporaryOutput);
 
         try {
             $templateContent = $this->part($template, 'content.xml');
@@ -72,6 +73,7 @@ final class S03StructuredProfessionalReportTest extends TestCase
         } finally {
             $template->close();
             $output->close();
+            $this->removeDirectory(dirname(dirname(dirname($temporaryOutput))));
         }
     }
 
@@ -81,6 +83,94 @@ final class S03StructuredProfessionalReportTest extends TestCase
         self::assertTrue($archive->open(dirname(__DIR__, 2) . '/' . $relativePath) === true);
 
         return $archive;
+    }
+
+    private function openAbsoluteArchive(string $path): ZipArchive
+    {
+        $archive = new ZipArchive();
+        self::assertTrue($archive->open($path) === true);
+
+        return $archive;
+    }
+
+    private function generateFreshOutput(): string
+    {
+        $repositoryRoot = dirname(__DIR__, 2);
+        $temporaryRoot = sys_get_temp_dir() . '/odt-s03-a-' . bin2hex(random_bytes(6));
+        mkdir($temporaryRoot . '/samples/templates', 0755, true);
+        mkdir($temporaryRoot . '/samples/assets', 0755, true);
+        mkdir($temporaryRoot . '/samples/output', 0755, true);
+        mkdir($temporaryRoot . '/src', 0755, true);
+        mkdir($temporaryRoot . '/vendor', 0755, true);
+        mkdir($temporaryRoot . '/caller', 0755, true);
+
+        $this->copyDirectory($repositoryRoot . '/src', $temporaryRoot . '/src');
+        $this->copyDirectory($repositoryRoot . '/vendor', $temporaryRoot . '/vendor');
+        self::assertTrue(copy(
+            $repositoryRoot . '/samples/templates/template_S03_structured_professional_report.odt',
+            $temporaryRoot . '/samples/templates/template_S03_structured_professional_report.odt'
+        ));
+        self::assertTrue(copy(
+            $repositoryRoot . '/samples/sample_S03_structured_professional_report.php',
+            $temporaryRoot . '/samples/sample_S03_structured_professional_report.php'
+        ));
+        self::assertTrue(copy(
+            $repositoryRoot . '/samples/assets/s03-participant-outcomes-2027.png',
+            $temporaryRoot . '/samples/assets/s03-participant-outcomes-2027.png'
+        ));
+
+        $process = proc_open(
+            [PHP_BINARY, $temporaryRoot . '/samples/sample_S03_structured_professional_report.php'],
+            [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+            $pipes,
+            $temporaryRoot . '/caller'
+        );
+        self::assertIsResource($process);
+        fclose($pipes[0]);
+        $stdout = stream_get_contents($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        self::assertSame('', trim($stderr), $stderr);
+        self::assertSame(0, proc_close($process), $stdout);
+
+        return $temporaryRoot . '/samples/output/output_S03_structured_professional_report.odt';
+    }
+
+    private function copyDirectory(string $source, string $destination): void
+    {
+        $directory = new \RecursiveDirectoryIterator($source, \FilesystemIterator::SKIP_DOTS);
+        $iterator = new \RecursiveIteratorIterator($directory, \RecursiveIteratorIterator::SELF_FIRST);
+        foreach ($iterator as $item) {
+            $relative = substr($item->getPathname(), strlen($source) + 1);
+            $target = $destination . '/' . $relative;
+            if ($item->isDir()) {
+                mkdir($target, 0755, true);
+            } else {
+                mkdir(dirname($target), 0755, true);
+                copy($item->getPathname(), $target);
+            }
+        }
+    }
+
+    private function removeDirectory(string $directory): void
+    {
+        if (!is_dir($directory)) {
+            return;
+        }
+
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST
+        );
+        foreach ($iterator as $item) {
+            if ($item->isDir()) {
+                rmdir($item->getPathname());
+            } else {
+                unlink($item->getPathname());
+            }
+        }
+        rmdir($directory);
     }
 
     private function part(ZipArchive $archive, string $name): string

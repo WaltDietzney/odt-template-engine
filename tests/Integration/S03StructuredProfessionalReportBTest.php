@@ -47,7 +47,7 @@ final class S03StructuredProfessionalReportBTest extends TestCase
             self::assertCount(1, $xpath->query('//table:table[@table:name="PerformanceAgainstTargetsTable"]/table:table-header-rows/table:table-row'));
             self::assertCount(4, $xpath->query('//table:table[@table:name="PerformanceAgainstTargetsTable"]/table:table-row'));
 
-            self::assertCount(1, $xpath->query('//draw:frame[@draw:name="ReportTitleImage"]'));
+            self::assertCount(1, $xpath->query('//draw:frame[@draw:name="ReportTitleImage"][@svg:width="15cm"][@svg:height="8.452cm"]'));
             self::assertCount(1, $xpath->query('//draw:frame[@draw:name="ParticipantOutcomesImage"][@svg:width="15.799cm"][@svg:height="10.007cm"]'));
             self::assertStringContainsString('s03-strategic-review-cover-2028.png', $this->part($output, 'META-INF/manifest.xml'));
             self::assertStringContainsString('s03-strategic-outcomes-2028.png', $this->part($output, 'META-INF/manifest.xml'));
