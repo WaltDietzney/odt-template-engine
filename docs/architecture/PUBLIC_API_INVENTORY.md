@@ -898,6 +898,219 @@ rowspan(int $count): self
 QUESTION: duplicate fluent/convenience forms and registerStylesAndRefresh()
 need classification.
 
+## API-family verification — Metadata and Writer User Fields
+
+This audit combines current implementation, focused integration tests, accepted
+architecture contracts/completion records, canonical samples, and current
+public documentation.
+
+### Metadata — VERIFIED
+
+The public imperative facade is intentionally bounded:
+
+```php
+$template->setMeta(array $meta): void;
+$template->getMeta(): array;
+```
+
+MetadataManager is the sole document-local mutation owner. This is not an
+arbitrary meta.xml or Dublin Core authoring API.
+
+#### Supported imperative metadata keys
+
+| Canonical key | ODF carrier | Imperative setMeta behavior |
+| --- | --- | --- |
+| title | dc:title | singular value cast to string |
+| subject | dc:subject | singular value cast to string |
+| description | dc:description | singular value cast to string |
+| coverage | dc:coverage | singular value cast to string; bounded extended metadata |
+| keywords | repeated meta:keyword | string = one keyword; list<string> = complete replacement collection |
+| initial_creator | meta:initial-creator | singular value cast to string |
+| creator | dc:creator | singular value cast to string |
+| language | dc:language | singular value cast to string |
+| creation_date | meta:creation-date | singular value cast to string |
+| date | dc:date | singular value cast to string |
+| editing_cycles | meta:editing-cycles | singular value cast to string |
+| editing_duration | meta:editing-duration | singular value cast to string |
+| generator | meta:generator | singular value cast to string |
+
+Imperative compatibility aliases:
+
+- author -> creator
+- initial_author -> initial_creator
+
+Unknown imperative keys are silently ignored by design for compatibility.
+
+getMeta() returns only supported fields that are present. creator and
+initial_creator additionally expose the compatibility read aliases author and
+initial_author with the same values. keywords is always returned as a list of
+all present meta:keyword values.
+
+For keywords:
+
+- string input is accepted as exactly one keyword and is never delimiter-split;
+- list input must be a PHP list and every item must be a string;
+- invalid keyword input throws InvalidArgumentException;
+- an empty list removes all existing keyword elements;
+- setting keywords replaces the complete keyword collection while preserving
+  unrelated metadata.
+
+For all non-keyword imperative fields, MetadataManager currently casts the
+supplied value to string. The stricter semantic types documented for metadata
+belong to Phase-E concrete preflight, not to imperative setMeta() validation.
+
+#### Phase-E metadata semantics are intentionally stricter
+
+The accepted canonical semantic model is:
+
+- STRING: title, subject, description, creator, initial_creator, generator,
+  coverage;
+- LIST<STRING>: keywords;
+- DATETIME: creation_date, date;
+- LANGUAGE: language;
+- NON_NEGATIVE_INTEGER: editing_cycles;
+- DURATION: editing_duration.
+
+MetadataPayloadValidator enforces these bounded forms during concrete Phase-E
+preflight. This does not retroactively tighten the compatibility-sensitive
+imperative setMeta() facade.
+
+#### Lifecycle and ownership
+
+setMeta() mutates the current document-local meta.xml DOM. It does not insert
+visible document content and save() does not automatically invent/update
+metadata. save/reopen behavior is covered by integration tests.
+
+METADATA-SEMANTICS-01 records focused XML verification, full preflight,
+LibreOffice headless round-trip, and manual LibreOffice save/close/reopen as
+GREEN. LibreOffice may update the generator field during its own round trip;
+that is editor behavior, not an engine auto-update contract.
+
+**1.0 classification:** setMeta() and getMeta() are Recommended Public API.
+The canonical names are creator/initial_creator; author/initial_author are
+Compatibility aliases.
+
+### Writer User Fields — VERIFIED
+
+The recommended imperative mutation API is:
+
+```php
+$template->setUserField(string $name, string $value): void;
+```
+
+The operation targets native Writer User Fields, not classic template
+placeholders. assign(), setValues(), and render() deliberately do not bind a
+same-named User Field.
+
+#### Supported v1 field model
+
+Phase-C v1 supports only Writer User Fields whose authoritative declarations
+use:
+
+```xml
+office:value-type="string"
+```
+
+Set/Get Variable and non-string User Fields are outside the supported binding
+surface.
+
+Logical User Field identity is ROOT + field name. A User Field reference
+physically located inside a native foreach Section remains ROOT-scoped.
+
+The binder analyzes bounded working-document regions:
+
+- BODY in content.xml;
+- header/footer content beneath master pages in styles.xml.
+
+For a supported logical field, all matching authoritative declarations across
+those bounded regions are updated atomically by changing
+office:string-value.
+
+text:user-field-get display text is intentionally **not** rewritten. Writer /
+LibreOffice reevaluation is responsible for refreshing the displayed native
+field value.
+
+#### Failure contract
+
+setUserField() validates the complete logical field before the first mutation
+and throws the public UserFieldBindingException on failure.
+
+Stable reason codes:
+
+| Reason | Meaning |
+| --- | --- |
+| MALFORMED | empty name, orphan/malformed logical field, or no authoritative declaration |
+| NOT_FOUND | no field with the requested name |
+| UNSUPPORTED_TYPE | declaration is outside the supported string User Field type |
+| AMBIGUOUS | conflicting/ambiguous declarations, values, or types prevent safe binding |
+
+The exception exposes:
+
+```php
+$exception->fieldName(): string;
+$exception->reason(): string;
+```
+
+Focused tests prove no mutation on the characterized failure paths.
+
+#### Lifecycle and inspection interaction
+
+The established lifecycle is:
+
+```text
+inspectTemplate()
+    original authored source contract
+
+setUserField()
+    current working content.xml/styles.xml declarations
+
+save()
+    persists declaration mutation
+
+load()
+    resets to the original template source
+
+new OdtTemplate(saved-output.odt)
+    saved output becomes that instance's original source
+```
+
+Repeated binding is supported. Binding coexists with classic assign/render.
+inspectTemplate() on the same instance remains source-oriented and therefore
+does not change after setUserField() mutates the working document.
+
+LibreOffice-authored fixtures verify BODY/header cross-part binding and native
+field behavior. The canonical public learning sample is L10 Writer User Fields.
+
+**1.0 classification:** setUserField() is Recommended Public API.
+UserFieldBindingException and its reason accessors/constants are part of the
+public failure contract. UserFieldAnalyzer and UserFieldBinder are internal
+services; their public PHP visibility, where present, does not make them
+end-programmer APIs.
+
+### Important distinction for the final public reference
+
+Metadata and User Fields both store document-level/native information, but
+their user semantics must not be conflated:
+
+```text
+setMeta()
+    -> meta.xml document properties
+    -> generally not visible body content
+
+setUserField()
+    -> Writer native field declaration
+    -> reusable Writer-authored field references
+    -> display refresh delegated to Writer/LibreOffice
+
+assign()/render()
+    -> classic visible template expressions
+    -> independent of native User Fields
+```
+
+This distinction is already supported by architecture contracts and focused
+tests and should be taught explicitly in the 1.0 documentation.
+
+
 ## 4. Images, frames, and drawing layout
 
 ### ImageElement
