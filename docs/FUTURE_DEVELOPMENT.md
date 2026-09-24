@@ -588,3 +588,56 @@ Future research/implementation may consider:
 - additional Writer field families where they provide a concrete authoring benefit.
 
 This work must not be folded back into Phase C v1 without new evidence and an explicit architecture decision. Set/Get Variable in particular must not be modeled as an ordinary document-global binding because its characterized semantics are position-dependent document-flow state.
+
+
+## CUSTOM-SHAPE-FILL-IMAGE-REPLACEMENT-01 — Writer/custom-shape bitmap fill replacement
+
+**Status:** post-1.0 architecture topic discovered during the TEMPLATE-AUTHORING-01F public API audit.
+
+### Problem
+
+Advanced Writer/ODF graphic objects such as `draw:custom-shape` can represent
+their image appearance through a bitmap graphic fill rather than a direct
+`draw:image` child. `CircularImageElement` uses this model and the project
+already has document-local semantic fill-image dependency infrastructure.
+
+A practical example is a circular CV portrait: replacing the photograph means
+replacing the bitmap fill/background resource while preserving the authored
+custom shape, geometry, size, position, and surrounding layout.
+
+Current frame image replacement APIs target `draw:frame/draw:image` semantics
+and must not be generalized to custom-shape bitmap fills.
+
+### Existing foundation
+
+SR-06 already separates:
+
+```text
+graphic style
+    -> draw:fill-image-name
+        -> draw:fill-image declaration
+            -> Pictures/... resource
+```
+
+It also established document-local fill-image requirements, conflict semantics,
+target-document authority, declaration materialization, and package/resource
+separation for generated structured content.
+
+SR-06 deliberately left mutation/replacement of an existing target
+`draw:fill-image` declaration to a separately designed structured operation.
+
+### Future design questions
+
+A post-1.0 architecture pass should characterize real Writer-authored and
+Word-converted custom-shape fixtures before selecting an API. It must decide:
+
+- whether logical targeting is by custom-shape identity, graphic style, or
+  fill-image declaration;
+- how shared fill-image declarations behave when only one object should change;
+- how replacement preserves Writer-owned geometry and layout;
+- how resource replacement, declaration identity, and package cleanup interact;
+- whether the capability belongs to a broader advanced-graphics/custom-shape
+  target model.
+
+No public API shape is approved by this entry.
+
