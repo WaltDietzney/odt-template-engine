@@ -262,6 +262,28 @@ final class PublicSampleSmokeTest extends TestCase
                 self::assertStringContainsString('Pictures/Logo.png', $manifest);
                 self::assertNotFalse($archive->locateName('Pictures/Logo.png'));
             }
+            if ($sample['id'] === 'B02') {
+                $content = $archive->getFromName('content.xml');
+                $styles = $archive->getFromName('styles.xml');
+                $manifest = $archive->getFromName('META-INF/manifest.xml');
+                self::assertIsString($content);
+                self::assertIsString($styles);
+                self::assertIsString($manifest);
+                self::assertStringNotContainsString('{{', $content, 'B02 left a template expression unresolved.');
+                self::assertStringContainsString('Annual Performance Report 2026', $content);
+                self::assertStringContainsString('3 program locations', $content);
+                self::assertStringContainsString('1,146', $content);
+                self::assertStringContainsString('Employer engagement proved most effective', $content);
+                self::assertStringContainsString('fictional', $content);
+                self::assertGreaterThanOrEqual(5, $this->contentXPath($content)->query('//table:table')->length);
+                self::assertGreaterThanOrEqual(2, $this->contentXPath($content)->query('//draw:frame/draw:image')->length);
+                self::assertGreaterThanOrEqual(2, $this->contentXPath($content)->query('//draw:frame/draw:text-box')->length);
+                self::assertStringContainsString('Pictures/asteria-b02-cover.png', $manifest);
+                self::assertStringContainsString('Pictures/asteria-b02-outcomes.png', $manifest);
+                self::assertNotFalse($archive->locateName('Pictures/asteria-b02-cover.png'));
+                self::assertNotFalse($archive->locateName('Pictures/asteria-b02-outcomes.png'));
+                self::assertStringContainsString('text:page-number', $styles);
+            }
             if ($sample['id'] === 'C04') {
                 $content = $archive->getFromName('content.xml');
                 $styles = $archive->getFromName('styles.xml');
