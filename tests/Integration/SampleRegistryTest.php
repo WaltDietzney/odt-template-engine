@@ -204,7 +204,7 @@ final class SampleRegistryTest extends TestCase
         self::assertSame(['L06'], $legacy['legacy.sample-06.image-settings']['migration_targets']);
         self::assertSame(['L04'], $legacy['legacy.sample-07.contact-list']['migration_targets']);
         self::assertSame(['L04', 'L05'], $legacy['legacy.sample-09.richtext-block']['migration_targets']);
-        self::assertSame(['L04', 'L06', 'S02'], $legacy['legacy.sample-14.advanced-tabs']['migration_targets']);
+        self::assertSame(['L04', 'L06', 'B01'], $legacy['legacy.sample-14.advanced-tabs']['migration_targets']);
         self::assertSame(['L04', 'C03'], $legacy['legacy.sample-16.tabs-basic']['migration_targets']);
         self::assertSame(['L05'], $legacy['legacy.sample-18.list-styles']['migration_targets']);
     }
