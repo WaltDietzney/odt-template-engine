@@ -314,15 +314,248 @@ This evidence closes the S03-A implementation gate. It does not close S03 as a
 whole: S03-B remains required, followed by the explicit TEMPLATE-AUTHORING-01F
 Final Review.
 
-## 16. S03-B boundary
+## 16. S03-B change contract — Different report composition
 
-S03-B follows only after S03-A is accepted.
+### 16.1 Objective
 
-S03-B must demonstrate a deliberately different report composition using existing typed native capabilities. Its purpose is structural variation, not merely another data update.
+S03-B must produce a clearly different professional report from the same
+Writer-authored S03 template. It is not sufficient to change organization
+names, prose, numbers, or table rows while retaining the S03-A visual and
+structural composition.
 
-S03-B must not be used as justification for a universal named-element mutation API, a theme/style-switcher API, programmatic Writer Section creation, or another speculative abstraction.
+The output must demonstrate that Writer can remain the document designer while
+the application deliberately changes selected semantic components through
+existing public typed capabilities.
 
-The exact S03-B structural operations will be fixed after S03-A regression evidence and after the contained-bookmark/Section-collection behavior has been characterized.
+The S03-B result may therefore differ substantially in content, section
+composition, imagery, and visible emphasis. It does not have to preserve the
+six-page S03-A appearance or pagination.
+
+### 16.2 Characterized capability baseline
+
+Current repository characterization establishes these public Section
+capabilities:
+
+```php
+$template->section($name)->clone();
+$template->section($name)->replaceContent($content);
+```
+
+`clone()` performs a native subtree clone and deterministically rewrites
+contained native identities. `replaceContent()` preserves the selected native
+Section container while replacing its children with legal structured
+`OdtElement` block content.
+
+The returned clone is itself a `SectionTarget`; therefore this composition is
+already supported:
+
+```php
+$variant = $template->section($prototypeName)->clone();
+$variant->replaceContent($richText);
+```
+
+No new engine API is required for this S03-B path.
+
+The public Section surface does **not** currently expose a general
+`SectionTarget::remove()`. The internal removal primitive used by collection
+finalization must not be promoted or called directly merely for this showcase.
+
+### 16.3 Required Section-clone proof
+
+S03-B must include at least one meaningful native Section clone from the
+Writer-authored report.
+
+The clone must be used as a visible semantic report component, not created only
+to satisfy a structural assertion. Its native identity must be distinct from
+the prototype and the resulting document must remain strictly addressable and
+valid after save/reopen.
+
+The preferred bounded composition is:
+
+```text
+Writer-authored semantic Section
+        -> clone()
+        -> rewritten native identity
+        -> replaceContent(RichText or another supported OdtElement)
+        -> visible S03-B component
+```
+
+This demonstrates reuse of Writer-authored structural placement/identity
+semantics while allowing the application to take explicit ownership of the
+clone's content.
+
+### 16.4 Section content replacement
+
+S03-B may deliberately replace the content of selected existing or cloned
+Sections with programmatic structured content.
+
+This is an intentional ownership transfer for that selected semantic region:
+
+```text
+Writer owns the Section container and surrounding document composition.
+PHP owns the replacement content supplied to replaceContent().
+```
+
+`RichText`, `Paragraph`, `ListElement`, `RichTable`, and other content
+already accepted by the existing Section mutation contract may be used where
+appropriate. S03-B must not reconstruct the complete report layout in PHP.
+
+Replacing Section content is not equivalent to removing the Section. Empty
+`RichText` may clear a Section while leaving the native Section addressable,
+but S03-B must not describe that operation as native Section removal.
+
+### 16.5 Clone-contained bookmark boundary
+
+S03-B must not address clone-rewritten bookmark names by generated physical
+suffixes such as `SomeBookmark_1`.
+
+The clone service already preserves uniqueness by rewriting contained bookmark
+identities, but instance-relative logical bookmark addressing remains the
+separate `SECTION-INSTANCE-NATIVE-ADDRESSING-01` follow-up.
+
+S03-B therefore uses `replaceContent()` when application-owned content is
+required inside the cloned Section. It must not add a speculative bookmark
+accessor or otherwise work around the documented capability boundary.
+
+### 16.6 Required visual differentiation
+
+S03-B must be immediately recognizable as a different report composition when
+opened beside S03-A.
+
+At minimum this requires:
+
+- a different fictional report identity and substantive report content;
+- a different **cover/start image** in the named Writer frame
+  `ReportTitleImage`;
+- a different participant/outcomes image where that report region remains in
+  the S03-B composition;
+- at least one meaningful native Section clone as defined above;
+- at least one selected semantic Section whose content is deliberately replaced
+  through the existing Section mutation API;
+- visible structural/compositional variation beyond scalar and table-data
+  changes.
+
+Changing the start image is mandatory because the cover is a dominant part of
+the report's visual identity. Reusing the S03-A cover image would weaken the
+different-report proof even if internal content changed.
+
+Image replacement must continue to respect Writer-owned frame geometry. S03-B
+does not authorize a new theme system, style-switcher API, or programmatic page
+layout reconstruction.
+
+### 16.7 Existing native mutation capabilities
+
+S03-B may continue to use the already accepted native mutation paths where they
+fit the second report:
+
+```php
+$template->setUserField(...);
+$template->bookmark(...)->replaceText(...);
+$template->table(...)->populate(...);
+$template->replaceImageByName(...);
+$template->section(...)->clone();
+$template->section(...)->replaceContent(...);
+$template->setMeta(...);
+```
+
+The sample should use the smallest combination that makes the ownership model
+and different composition clear. It should not exercise APIs merely to maximize
+feature count.
+
+Classic `{{...}}` expressions, `assign()`, `assignRepeating()`, direct
+DOM/XPath mutation, and `instantiate()` / `instantiateMany()` are not
+required for S03-B and should not be introduced solely for this showcase.
+
+### 16.8 Template ownership and modification boundary
+
+The canonical Writer template remains the common authoring basis for S03-A and
+S03-B. S03-B should consume that template rather than create a second
+programmatically generated layout.
+
+A Writer-template correction is allowed only when inspection proves that a
+native semantic target required by the agreed S03-B composition is incorrectly
+authored or absent. Such a correction must be documented as an authoring change,
+not hidden inside PHP.
+
+Prepared replacement images may be added under `samples/assets/`.
+
+### 16.9 S03-B data and composition design
+
+Before implementation, the coding slice must state the concrete fictional
+S03-B report identity and map each deliberately changed major region to one of
+these ownership operations:
+
+```text
+preserve Writer content
+native scalar/bookmark/table/image mutation
+Section clone
+Section content replacement
+Section content clear, if semantically justified
+```
+
+This mapping prevents accidental drift back toward a PHP report builder and
+makes the visual difference intentional rather than incidental.
+
+The exact fictional prose and values are sample content and may be refined
+without reopening this contract, provided the required structural operations
+and ownership boundaries remain unchanged.
+
+### 16.10 Automated acceptance
+
+Focused S03-B integration evidence must verify at minimum:
+
+- generated output is a valid ODT package;
+- S03-B is produced from the canonical Writer-authored S03 template;
+- the required Section clone exists with a rewritten unique native identity;
+- the source Section remains intact unless an explicitly documented mutation
+  applies to it;
+- replacement content is contained by the intended existing/cloned Section;
+- no application code depends on generated bookmark suffixes;
+- the changed `ReportTitleImage` is packaged and referenced through the
+  existing named Writer frame;
+- other replaced images retain their intended Writer-owned geometry;
+- named tables used by S03-B retain native identity/header/layout semantics;
+- save/reopen preserves cloned and mutated Sections as strict targets;
+- no unresolved classic template expressions are introduced;
+- the sample contains no direct DOM/XPath mutation.
+
+Normal preflight includes focused S03 tests, Section clone/mutation regression
+tests, `SampleRegistryTest`, `PublicSampleSmokeTest`, full `composer test`,
+PHP lint for relevant PHP, ODT ZIP/XML integrity, and `git diff --check`.
+
+### 16.11 Visual and LibreOffice acceptance
+
+Render the generated S03-B output through the repository visual-regression
+workflow and inspect every page. Then open it in LibreOffice.
+
+Acceptance requires:
+
+1. S03-B is immediately distinguishable from S03-A as a different report;
+2. the new cover/start image is visible and correctly fitted in the existing
+   Writer-owned cover frame;
+3. cloned Section content appears exactly once in its intended additional
+   location and does not overlap neighboring content;
+4. replaced Section content retains credible Writer integration, typography,
+   spacing, and page flow;
+5. native tables/images retained by the composition remain visually stable;
+6. no stale S03-A organization/program/report identity remains in header,
+   footer, cover, captions, or static visible regions;
+7. no clipping, overlap, malformed list/table layout, or implausible page break
+   is introduced;
+8. save, close, and reopen succeeds without structural damage.
+
+The accepted S03-A output is the comparison baseline, but identical pagination
+is explicitly not required.
+
+### 16.12 S03-B completion boundary
+
+S03-B is complete when the different-report composition, native Section clone,
+bounded Section content replacement, changed cover/start image, automated
+preflight, visual regression, and manual LibreOffice gate have all passed.
+
+Completion of S03-B completes the two required S03 proofs. It does **not** start
+FINALIZATION-01 directly. The next milestone is the explicit
+TEMPLATE-AUTHORING-01F Final Review.
 
 ## 17. Explicit non-goals
 
