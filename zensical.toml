@@ -57,6 +57,11 @@ nav = [
       { "Concrete Preflight" = "api-reference/mapping-automation/preflight.md" },
       { "Automation" = "api-reference/mapping-automation/automation.md" },
     ] },
+    { "Advanced & Compatibility" = [
+      { "Overview" = "api-reference/advanced-compatibility/index.md" },
+      { "Advanced API" = "api-reference/advanced-compatibility/advanced.md" },
+      { "Compatibility & Deprecated API" = "api-reference/advanced-compatibility/compatibility.md" },
+    ] },
   ] },
   { "Rich Documents" = [
     { "RichText & Paragraphs" = "rich-documents/richtext-and-paragraphs.md" },
