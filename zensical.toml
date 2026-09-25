@@ -32,6 +32,11 @@ nav = [
       { "Images" = "api-reference/template-document/images.md" },
       { "Styles & Document Defaults" = "api-reference/template-document/styles-and-defaults.md" },
     ] },
+    { "Structured Content" = [
+      { "Overview & setElement" = "api-reference/structured-content/index.md" },
+      { "RichText" = "api-reference/structured-content/richtext.md" },
+      { "Paragraphs & Inline Content" = "api-reference/structured-content/paragraph.md" },
+    ] },
   ] },
   { "Rich Documents" = [
     { "RichText & Paragraphs" = "rich-documents/richtext-and-paragraphs.md" },
