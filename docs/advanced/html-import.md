@@ -169,10 +169,7 @@ If your application already owns structured data, building `RichText` directly i
 The importer intentionally supports a practical subset rather than full
 HTML/CSS rendering. In particular, do not expect browser-equivalent behavior
 for complex CSS layout, floats, advanced selectors, external stylesheets,
-scripts, or arbitrary web markup. Historical image-layout experiments with
-`float`, `display`, and absolute offsets showed that those layouts remain
-sensitive to Writer/ODF behavior; they are not L08 guarantees. Use C03 for
-current frame-layout behavior.
+scripts, or arbitrary web markup. Browser-style `float`, `display`, and absolute-position layout are outside the importer contract. Use [C03 — Frame Layout](../../samples/sample_C03_frame_layout.php) for the current semantic frame-layout API.
 
 Styled tables are useful document structures, but exact visual behavior
 should be verified with representative LibreOffice output. The current
@@ -180,13 +177,10 @@ importer does not assign semantic repeating-header behavior to HTML `<thead>`
 rows, nor does it promise browser-like mixed list styles. The current
 recursive list importer can detach/re-attach a prior sibling while attempting
 to extract nested lists; adjacent and nested list combinations are therefore
-partial. L08 uses separated flat list types, and L08 retains an L08
-migration target until nested-list behavior is resolved.
+partial. L08 therefore uses separated flat list types and does not claim nested-list fidelity.
 
 ## Related samples
 
-- [L08 — HTML Import](../../samples/sample_L08_html_import.php) is the canonical broad capability example.
-- L08 — historical HTML-to-editable-ODT lineage, retained in the registry during migration.
-- L08 — historical HTML table import, now represented within L08.
+- [L08 — HTML Import](../../samples/sample_L08_html_import.php) is the canonical broad capability example, including native editable table import.
 
 See [RichText & Paragraphs](../rich-documents/richtext-and-paragraphs.md) to understand the native element model produced by the importer.

@@ -40,7 +40,7 @@ assert($contract instanceof TemplateContract);
 
 Unlike `inspect()`, this contract is source-oriented. Rendering, saving, or mutating the working document does not redefine the authored template contract.
 
-The canonical introduction is [L11 — Template Inspection](../../samples/sample_L11_template_inspection.php). It prints a compact machine-readable view of bindings, controls, native objects, dependencies, capabilities, and diagnostics. It does not render, mutate, or save an ODT. The historical L11 is retained as migration evidence, but is no longer needed for public learning.
+The canonical introduction is [L11 — Template Inspection](../../samples/sample_L11_template_inspection.php). It prints a compact machine-readable view of bindings, controls, native objects, dependencies, capabilities, and diagnostics. It does not render, mutate, or save an ODT.
 
 ## TemplateContract
 
@@ -114,7 +114,7 @@ Phase B recognizes bounded native Section-name forms such as:
 
 Native declarative candidates currently use support state `RECOGNIZED`.
 
-`RECOGNIZED` means the declaration is understood well enough for inspection and dependency mapping. It does **not** mean that native declarative execution is available. Declarative execution belongs to a later template-authoring phase.
+`RECOGNIZED` is an inspection classification: the authored declaration is understood well enough to appear in the semantic contract and participate in dependency mapping. Execution readiness is a separate question. Supported declarative Writer Section controls can be executed directly through `executeDeclarative()` or, for mapped application data, through a READY Concrete Preflight followed by `automate()`.
 
 ### Native objects
 
@@ -200,7 +200,7 @@ does not bind a same-named native User Field.
 
 Phase C v1 does not support Set/Get Variable or non-string User Field types. Those remain deferred work.
 
-The self-contained, Composer-distributed example is [L10 — Writer User Fields](../../samples/sample_L10_writer_user_fields.php). The older L10 remains repository-only as historical fixture-based regression evidence; it is not required to run L10.
+The canonical executable example is [L10 — Writer User Fields](../../samples/sample_L10_writer_user_fields.php). It demonstrates bounded string User Field binding without requiring repository-internal historical fixtures.
 
 Binding failures raise:
 

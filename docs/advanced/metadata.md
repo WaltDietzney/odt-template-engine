@@ -109,6 +109,6 @@ displaying selected values in document content.
 
 ## Related sample
 
-- S03 — setting, saving, reloading, and displaying metadata
+- [S03 — Structured Professional Report](../../samples/sample_S03_structured_professional_report.php) — setting, saving, reloading, and displaying metadata
 
 For the package location of `meta.xml`, see [ODT Internals](odt-internals.md).

@@ -28,6 +28,7 @@ nav = [
     { "Lists" = "rich-documents/lists.md" },
     { "Tables" = "rich-documents/tables.md" },
     { "Images" = "rich-documents/images.md" },
+    { "Frames & Text Boxes" = "rich-documents/frames-and-text-boxes.md" },
     { "Style Model" = "styling/style-model.md" },
     { "Text & Paragraph Styles" = "styling/text-and-paragraph-styles.md" },
     { "Table & Cell Styles" = "styling/table-and-cell-styles.md" },
@@ -36,6 +37,7 @@ nav = [
     { "Addressable ODT Structures" = "rich-documents/addressable-document.md" },
     { "Named Sections" = "rich-documents/named-sections.md" },
     { "Template Inspection" = "advanced/template-inspection.md" },
+    { "Mapping, Preflight & Automation" = "advanced/mapping-automation.md" },
   ] },
   { "Document Capabilities" = [
     { "HTML Import" = "advanced/html-import.md" },

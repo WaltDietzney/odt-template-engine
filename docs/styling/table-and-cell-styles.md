@@ -151,9 +151,7 @@ See the [Tables](../rich-documents/tables.md) guide for the current geometry API
 
 ## Related samples
 
-- C02 — advanced table styling
-- L07 — cell configuration
-- L07 — styled table
-- C02 — relative column-width ratios
+- [L07 — Tables](../../samples/sample_L07_tables.php) — focused generated-table and cell styling
+- [C02 — Advanced Table Layout](../../samples/sample_C02_advanced_table_layout.php) — advanced table styling and relative column-width ratios
 
 See [Style Model](style-model.md) for the general styling architecture.

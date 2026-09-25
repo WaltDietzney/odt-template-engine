@@ -220,7 +220,7 @@ foreach ($experiences as $index => $experience) {
 
 Each generated experience owns an independent local `ActivityEntry` prototype
 and clone family. Do not use generated names such as `ActivityEntry_1_2` in
-caller data. Declarative recursive mapping is not part of the current API.
+caller data. Do not treat `instantiateMany()` as a recursive application-data mapper. When application-shaped data must be mapped onto the inspected template contract, use the optional Mapping → Concrete Preflight → `automate()` workflow instead.
 
 ### Zero-item behavior and headings
 
@@ -407,9 +407,11 @@ Before changing a template or its rendering code:
 7. test realistic maximum-length and zero-item data;
 8. validate the ODT package/XML and inspect the result in LibreOffice.
 
-Do not introduce convenience APIs, declarative mappings, or layout redesigns
-just to make one template easier to author. Record a bounded limitation when
-the existing native structure is ambiguous.
+Do not invent convenience APIs, ad-hoc mapping rules, or layout redesigns just
+to make one template easier to author. Use the documented Mapping & Automation
+workflow when application-shaped data needs explicit mapping to the template
+contract. Record a bounded limitation when the existing native structure is
+ambiguous.
 
 ## Final checklist
 
