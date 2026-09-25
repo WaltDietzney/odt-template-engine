@@ -99,30 +99,32 @@ $tableDescriptor = $table->descriptor();
 $frameDescriptor = $frame->descriptor();
 ```
 
-The current `TableTarget` and `FrameTarget` APIs are intentionally read-only beyond target resolution and descriptor access. Do not infer mutation methods merely because sections and bookmarks already expose bounded mutation operations.
+`TableTarget` and `FrameTarget` deliberately have different 1.0 operation contracts. A Writer-authored table can be populated through `TableTarget::populate()` while preserving the authored table as the structural source model. `FrameTarget` remains identity/inspection-only and does **not** expose an imperative `replaceImage()` method.
 
-This distinction is important: the addressable document model can grow target by target without pretending that every native ODT structure supports the same operations.
+A bounded named-frame image replacement does exist in the optional Mapping & Automation workflow, where an inspected native-object action is validated by Concrete Preflight before `automate()` mutates the Working Document. Do not infer that operation onto `FrameTarget` itself.
+
+This distinction is important: Writer-native objects expose only the operations characterized for that object type rather than one generic mutation interface.
 
 ## Three complementary authoring models
 
 The engine now supports three complementary ways to make a document dynamic:
 
 ```text
-1. Template expressions
+1. Simple Template Processing
    {{name}}, filters, conditions, foreach
 
-2. Generated ODT elements
+2. Structured ODT Construction
    RichText, Paragraph, RichTable, ListElement, ImageElement
 
-3. Addressable native ODT structures
-   inspect(), bookmark(), section(), table(), frame()
+3. Writer-native Document Model
+   inspect(), bookmark(), section(), table(), frame(), Writer User Fields
 ```
 
 Choose according to who should own the structure.
 
-- Use template expressions when LibreOffice owns the structure and PHP supplies simple values or lightweight logic.
-- Use generated elements when PHP genuinely owns a dynamic content subtree.
-- Use addressable native structures when LibreOffice should remain the visual/structural author but PHP needs stable semantic handles for inspection or bounded operations.
+- Use **Simple Template Processing** when LibreOffice owns the structure and PHP supplies simple values or lightweight logic through visible expressions.
+- Use **Structured ODT Construction** when PHP genuinely owns a dynamic content subtree.
+- Use the **Writer-native Document Model** when LibreOffice should remain the visual/structural author but PHP needs stable semantic handles for inspection or bounded operations.
 
 These models can be combined in one document.
 
@@ -136,7 +138,7 @@ For practical LibreOffice authoring rules, nested section ownership, dynamic len
 
 - [L09 Native Objects](../../samples/sample_L09_native_objects.php) — bookmark text replacement, Section content replacement, and descriptor-only named table/frame access;
 - [L10 Writer User Fields](../../samples/sample_L10_writer_user_fields.php) — document-global string User Field binding;
-- Samples 22–24 — historical mutation/regression evidence;
-- C04 — complete CV showcase using section instantiation and nested collections.
+- [L12 Writer Table Population](../../samples/sample_L12_writer_table_population.php) — bounded population of a Writer-authored named table;
+- [C04 Declarative Structured Collections](../../samples/sample_C04_declarative_structured_collections.php) — declarative nested Writer-owned collections.
 
 Continue with [Named Sections](named-sections.md) for the most capable current target API and the [Sample Guide](../examples/sample-guide.md) for the executable examples.
