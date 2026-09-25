@@ -283,6 +283,15 @@ registered action
 
 All target strings must be non-empty.
 
+The immutable read surface is:
+
+```php
+source(): ApplicationPath
+targetKind(): string
+targetName(): string
+actionId(): string
+```
+
 Mapping does not invent action semantics. The target must exist uniquely in the source contract, and the action must be registered for that target kind and applicable to the source target.
 
 Concrete payload validation belongs to Preflight.
@@ -310,6 +319,14 @@ new DocumentCapabilityMapping(
 ```
 
 Group and target must be non-empty.
+
+The immutable read surface is:
+
+```php
+source(): ApplicationPath
+group(): string
+target(): string
+```
 
 This does not provide arbitrary access to document services. The current bounded Phase-E document-capability family is metadata; supported targets are verified by the engine capability catalog and later concrete preflight.
 
@@ -430,7 +447,7 @@ A dependency can be semantically **RESOLVED** even when the concrete data at its
 
 Concrete Preflight decides whether such facts make the invocation executable.
 
-Native-object action and document-capability resolutions are explicit-only. Their provenance is `EXPLICIT`.
+Native-object action and document-capability resolutions are explicit-only. Their provenance is `EXPLICIT`. Their immutable support surface includes `NativeObjectActionResolution::mapping()` and `DocumentCapabilityResolution::mapping()`, returning the originating mapping value.
 
 ## Application-data resolution
 
