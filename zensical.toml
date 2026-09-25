@@ -36,6 +36,8 @@ nav = [
       { "Overview & setElement" = "api-reference/structured-content/index.md" },
       { "RichText" = "api-reference/structured-content/richtext.md" },
       { "Paragraphs & Inline Content" = "api-reference/structured-content/paragraph.md" },
+      { "Lists" = "api-reference/structured-content/lists.md" },
+      { "Tables & Cells" = "api-reference/structured-content/tables.md" },
     ] },
   ] },
   { "Rich Documents" = [
