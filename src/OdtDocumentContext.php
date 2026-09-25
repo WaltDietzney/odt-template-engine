@@ -10,6 +10,7 @@ use OdtTemplateEngine\Document\FillImageRequirement;
 use OdtTemplateEngine\Document\FillImageRequirementRegistry;
 use OdtTemplateEngine\Document\FontFaceRequirement;
 use OdtTemplateEngine\Document\FontFaceRequirementRegistry;
+use OdtTemplateEngine\Document\NativeTablePopulationState;
 use OdtTemplateEngine\Style\StyleContext;
 
 /**
@@ -26,6 +27,9 @@ final class OdtDocumentContext
     private FontFaceRequirementRegistry $fontFaceRequirements;
 
     private FillImageRequirementRegistry $fillImageRequirements;
+
+    /** @var array<string, NativeTablePopulationState> */
+    private array $nativeTablePopulationStates = [];
 
     public function __construct(
         private DOMDocument $contentDom,
@@ -91,10 +95,25 @@ final class OdtDocumentContext
         $this->contentDom = $contentDom;
         $this->stylesDom = $stylesDom;
         $this->metaDom = $metaDom;
+        $this->nativeTablePopulationStates = [];
         $this->fontFaceRequirements->reset();
         $this->fillImageRequirements->reset();
         $this->styleContext->reset();
         $this->styleContext->replaceDocumentParts($contentDom, $stylesDom);
+    }
+
+    /** @internal Return the source-row baseline for one current working table. */
+    public function nativeTablePopulationState(string $tableName): ?NativeTablePopulationState
+    {
+        return $this->nativeTablePopulationStates[$tableName] ?? null;
+    }
+
+    /** @internal Remember the source-row baseline for one current working table. */
+    public function setNativeTablePopulationState(
+        string $tableName,
+        NativeTablePopulationState $state
+    ): void {
+        $this->nativeTablePopulationStates[$tableName] = $state;
     }
 
     /** @internal Capture all mutable document-local state used by Phase-E owners. */

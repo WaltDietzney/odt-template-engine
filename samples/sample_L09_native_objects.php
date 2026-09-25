@@ -18,7 +18,8 @@ $template->section('ProjectSummary')->replaceContent(
     )
 );
 
-// Tables and frames are addressable and inspectable, but remain read-only.
+// Tables and frames are addressable and inspectable here. L12 demonstrates
+// the separate bounded operation for populating an existing named table.
 $table = $template->table('ProjectMilestones')->descriptor();
 $frame = $template->frame('ProjectNote')->descriptor();
 

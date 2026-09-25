@@ -61,7 +61,7 @@ $table = $template->table('SkillsTable');
 $frame = $template->frame('ProfilePhoto');
 ```
 
-The current addressable model covers sections, bookmarks, named tables, and named drawing frames. Supported operations are intentionally type-specific: named sections provide cloning and data-bound instantiation, bookmarks support bounded text replacement, while table and frame targets currently expose read-only descriptors.
+The current addressable model covers sections, bookmarks, named tables, and named drawing frames. Supported operations are intentionally type-specific: named sections provide cloning and data-bound instantiation, bookmarks support bounded text replacement, named tables support bounded Writer-owned row population, while frame targets expose typed descriptors and participate in the bounded mapped image-replacement path.
 
 See [Addressable Native ODT Structures](rich-documents/addressable-document.md) and [Named Sections](rich-documents/named-sections.md).
 
@@ -75,12 +75,19 @@ A useful rule of thumb is:
 
 ## Real-world examples
 
-The repository contains two complementary CV-shaped architecture examples:
+The canonical professional examples are ownership-oriented rather than
+chronological:
 
-- **Sample 21** builds large sidebar and main-content regions programmatically with `RichText`, paragraphs, lists, images, and reusable paragraph styles, then inserts those regions into a LibreOffice-designed layout.
-- **Sample 25** keeps repeatable entry structures in the LibreOffice template as named native sections and expands them through section instantiation and nested collections.
+- **S01b Professional CV · Structured Template** keeps page design, Frames,
+  styles and repeatable native Sections in LibreOffice while PHP supplies
+  application data and bounded generated regions.
+- **S03 Structured Professional Report** demonstrates Writer-native inspection,
+  mapping, preflight and bounded automation against a professional report
+  template.
 
-The [Editable CV Showcase](examples/cv-showcase.md), [Building Complex Documents](examples/building-complex-documents.md), and [Sample Guide](examples/sample-guide.md) explain when each approach is useful.
+Historical Samples 21 and 25 remain useful architecture evidence for the two
+ownership directions that S01b synthesizes; they are not a parallel public
+learning path. See the [Sample Guide](examples/sample-guide.md).
 
 The samples can also be executed through the public Sample Explorer.
 

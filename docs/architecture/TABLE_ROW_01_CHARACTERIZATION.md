@@ -1,6 +1,6 @@
 # TABLE-ROW-01 — Native Writer Table Population Characterization
 
-**Status:** Characterization complete / Change Contract ready  
+**Status:** Characterization complete / implementation COMPLETE / FINAL GO  
 **Base:** `develop` at/after B02 merge  
 **Purpose:** S03 bounded prerequisite
 
@@ -283,4 +283,4 @@ The bounded semantic capability is:
 
 > Populate the data region of an existing named Writer-authored table while preserving the table object, native header rows by default, explicitly protected source rows, and Writer-owned structural formatting.
 
-This is sufficiently characterized to write the TABLE-ROW-01 Change Contract.
+This characterization led to the accepted TABLE-ROW-01 Change Contract and completed implementation. The final bounded implementation additionally makes scalar-carrier ambiguity explicit: one direct/simple scalar carrier is supported, while fragmented formatted runs are rejected rather than guessed. Manual LibreOffice edit/save/reopen regression and canonical L12 Writer Table Population validation completed the milestone.

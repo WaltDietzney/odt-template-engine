@@ -17,6 +17,14 @@ The remaining mandatory path to version 1.0 is:
 ```text
 TEMPLATE-AUTHORING-01F
     Authoring documentation, samples, templates, and public learning path
+    ├── TABLE-ROW-01 + L12 Writer Table Population — COMPLETE
+    ├── S03 Structured Professional Report — NEXT
+    └── 01F Final Review
+        ├── canonical sample migration / coverage review
+        ├── canonical sample documentation pass
+        ├── authoring documentation + learning-path coherence
+        ├── README / Sample Explorer alignment
+        └── bounded product-website alignment
     ↓
 FINALIZATION-01
     Final document/export lifecycle contract
@@ -90,6 +98,10 @@ Phase F should distinguish between:
 2. public learning/showcase samples, whose purpose is teaching the supported authoring model clearly and attractively.
 
 Existing regression fixtures do not need to be redesigned merely for presentation. The public learning path should instead identify or create canonical examples that progress from simple to structured and professional use.
+
+The canonical L/C/B/S sample families are the intended version-1.0 public learning path, not an additional permanent layer beside the historical sample collection. Existing registry migration metadata is retained while Phase F is active for traceability. During the 01F Final Review, historical samples must be checked against canonical coverage: covered public samples may be retired from the public learning path, while uncovered relevant capabilities should be represented canonically rather than preserved only because a historical sample already exists.
+
+Canonical samples are product documentation. Before Phase F closes, they require a documentation-quality pass with useful English file headers and comments at architecturally important ownership/API decisions without cluttering trivial PHP. B02 is explicitly included in this pass.
 
 Locally modified files under `samples/output/` remain regression artifacts and are not source changes unless a task explicitly concerns them.
 

@@ -2,21 +2,22 @@
 
 The `samples/` directory is both a runnable example collection and a map of the engine's public capabilities.
 
-The canonical Learn path is being introduced incrementally. The current
-entry points, templates/outputs, ownership descriptions, and migration/package
-status are recorded in the [sample registry](../../samples/sample-registry.php).
-Samples 28 and 29 remain repository-only because their templates are under
-`tests/fixtures/` and are not self-contained Composer-distributed examples.
+The canonical L/C/B/S path is the recommended public learning path. Current
+entry points, templates/outputs, ownership descriptions, and package status are
+recorded in the [sample registry](../../samples/sample-registry.php). Historical
+numbered samples remain repository/regression evidence, not a parallel public
+curriculum.
 
 ## Canonical Learn path
 
-The first eleven canonical samples complete the Learn path. L01–L03
+The twelve canonical samples complete the Learn path. L01–L03
 keep document structure in LibreOffice and use PHP to supply data. L04–L06
 retain a LibreOffice-authored shell/insertion point while PHP generates native
 ODT subtrees or image resources where that is the appropriate owner. L07 adds
 native generated tables; L08 adapts substantial controlled HTML into editable
 ODT elements. L09–L10 address native Writer-authored structures; L11 inspects
-the original template contract without producing an output document.
+the original template contract without producing an output document; L12
+populates a Writer-authored named table while preserving Writer ownership.
 
 | ID | Sample | Learn about |
 | --- | --- | --- |
@@ -28,9 +29,10 @@ the original template contract without producing an output document.
 | [L06](../../samples/sample_L06_images.php) | Images | [Image ownership choices](../rich-documents/images.md): replace a template frame or insert an ImageElement |
 | [L07](../../samples/sample_L07_tables.php) | Tables | [RichTable and RichTableCell](../rich-documents/tables.md): PHP-generated native editable table structure |
 | [L08](../../samples/sample_L08_html_import.php) | HTML Import | [HtmlImporter](../advanced/html-import.md): substantial controlled HTML translated into native ODT elements |
-| [L09](../../samples/sample_L09_native_objects.php) | Native Objects | [Addressable native structures](../rich-documents/addressable-document.md): bounded bookmark/Section mutation and read-only table/frame descriptors |
+| [L09](../../samples/sample_L09_native_objects.php) | Native Objects | [Addressable native structures](../rich-documents/addressable-document.md): bounded bookmark/Section mutation plus typed table/frame addressing |
 | [L10](../../samples/sample_L10_writer_user_fields.php) | Writer User Fields | [String User Field binding](../advanced/template-inspection.md#native-writer-user-fields): bind a template-owned document-global field |
 | [L11](../../samples/sample_L11_template_inspection.php) | Template Inspection | [TemplateContract](../advanced/template-inspection.md): source-oriented bindings, controls, native objects, dependencies and capabilities |
+| [L12](../../samples/sample_L12_writer_table_population.php) | Writer Table Population | Populate a Writer-authored named table while preserving native headers, kept rows, structure and formatting |
 
 ## Canonical capability samples
 
@@ -57,9 +59,10 @@ demonstrate final composition with stable visual ownership in LibreOffice.
 | [B01](../../samples/sample_B01_invoice_template_builder.php) | Invoice Template Builder | PHP constructs a credible editable invoice/template candidate with semantic paragraph styles, native tab stops, deliberate RichTable composition, and visible template syntax for later Writer refinement |
 | [B02](../../samples/sample_B02_report_builder.php) | Professional Report Builder | PHP composes a fictional multi-page annual report from existing RichText, tables, images, page-flow, and frame-layout capabilities |
 
-A Builder sample does not replace the corresponding Professional Showcase.
-B01 is authoring/building evidence for the later S02 Professional Invoice,
-where stable visual structure moves to the LibreOffice-authored template.
+A Builder sample is a distinct ownership lesson rather than a promise of a
+matching showcase. B01 and B02 demonstrate substantial PHP-owned construction;
+S01b and S03 demonstrate the current professional Writer/template-owned
+showcase path.
 
 
 ## Samples as architectural teaching material
@@ -84,6 +87,7 @@ reimplemented in a weaker form.
 | ID | Sample | Ownership lesson |
 | --- | --- | --- |
 | [S01b](../../samples/sample_S01b_cv_structured.php) | Professional CV · Structured Template | LibreOffice owns the CV page design and native Section structure; PHP supplies collections, replaces the authored image resource, and owns bounded RichText sidebar regions |
+| [S03](../../samples/sample_S03_structured_professional_report.php) | Structured Professional Report | One Writer-authored report template supports bounded native-object updates and a second structured composition path while preserving template-owned layout |
 
 C04 and C05 intentionally take different data paths: C04 passes values already
 named like the template's dependencies to `executeDeclarative()`; C05 maps
@@ -230,47 +234,20 @@ For **frame layout**, use [C03](../../samples/sample_C03_frame_layout.php).
 For integrated **mapping and automation**, use
 [C05](../../samples/sample_C05_mapping_automation.php).
 
-## Two CV architecture showcases
+## Historical CV architecture evidence
 
-Samples 21 and 25 are both real-world CV examples, but they demonstrate different and complementary architecture patterns.
+Samples 21 and 25 remain useful architecture history: Sample 21 demonstrates
+PHP-owned generated regions, while Sample 25 demonstrates Writer-owned native
+Section collections. They are no longer competing public showcase entry
+points. The canonical professional CV is
+[S01b](../../samples/sample_S01b_cv_structured.php), which deliberately combines
+the established ownership lessons: Writer owns stable page design, Frames,
+styles and repeatable Sections; PHP supplies application data and only bounded
+generated regions where PHP genuinely owns the structure.
 
-### Sample 21 — programmatically generated regions
-
-Sample 21 uses a LibreOffice-designed two-column shell with large placeholders. PHP constructs the dynamic regions with `RichText`, `Paragraph`, `ListElement`, `ImageElement`, and document-local paragraph styles, then inserts those regions with `setElement()`.
-
-Use this pattern when PHP genuinely owns the dynamic document structure inside a larger template-owned layout.
-
-Read [Building Complex Documents](building-complex-documents.md) for this approach.
-
-### Sample 25 — native structured template sections
-
-Sample 25 keeps more of the repeatable document structure in LibreOffice. PHP assigns scalar values and expands native named `ExperienceEntry` and nested `ActivityEntry` section prototypes with `instantiateMany()`.
-
-Use this pattern when the repeatable structure should remain visually authored in LibreOffice and application code should address semantic template objects rather than rebuild them.
-
-Read [Named Sections](../rich-documents/named-sections.md) and the [Practical ODT template authoring guide](../getting-started/template-authoring-guide.md) for this approach.
-
-Neither sample replaces the other. They demonstrate two different ownership boundaries between the ODT template and PHP.
-
-For S01b specifically, Sample 21 is the formatting reference for PHP-owned
-RichText/sidebar content, while the final S01b template owns the sidebar's
-named paragraph styles and Writer Frame geometry; Sample 25 is the
-format-preservation reference for LibreOffice-authored repeatable Sections.
-The profile/extract area demonstrates bounded bookmark replacement, and the
-named CV image demonstrates replacement at template-owned geometry. These
-mechanisms intentionally coexist because different document regions have
-different ownership constraints.
-
-The canonical [S01b structured CV](../../samples/sample_S01b_cv_structured.php)
-is the professional showcase continuation of Sample 25. It keeps the prepared
-CV page design and native Section ownership in LibreOffice while adding a full
-professional dataset, nested job activities, optional structural removal, a
-named image replacement, and intentionally PHP-owned sidebar RichText inserted
-into template-authored Writer Frames. Use Frames rather than text boxes for
-this pattern when generated paragraphs must follow ordinary named paragraph
-styles. The template also owns the sidebar tab-stop geometry; PHP emits native
-tabs rather than spacing with literal spaces. Writer remains responsible for physical pagination; the template does not introduce a
-PHP page-layout or continuation-page API.
+Use [Building Complex Documents](building-complex-documents.md) when studying
+the historical generated-region pattern and [Named Sections](../rich-documents/named-sections.md)
+for the native structured-template pattern.
 
 ## Verification samples
 
@@ -291,9 +268,9 @@ feature guide
       ↓
 choose the ownership model
       ↓
-Sample 21: PHP-generated regions
-or
-Sample 25: native structured sections
+L01–L12: focused vocabulary
+then C01–C05: capabilities
+then B01/B02 or S01b/S03 according to ownership
 ```
 
 This keeps application rendering code understandable and makes ODT-specific problems much easier to isolate.

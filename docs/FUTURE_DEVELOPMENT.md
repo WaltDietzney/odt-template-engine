@@ -187,6 +187,17 @@ The bounded 1.0 frame core now covers:
 
 `FRAME-LAYOUT-02`, `IMAGE-LAYOUT-01`, broader Writer drawing options, and future specialized draw elements must build on this shared model rather than introduce incompatible positioning semantics.
 
+S03-B2 also recorded a post-1.0 image replacement question for
+`IMAGE-LAYOUT-01`. The current named-image replacement contract intentionally
+retains legacy dimensions: no options produce `5cm × 3cm`, width-only means
+the supplied width with `3cm` height, height-only means `5cm` width with the
+supplied height, and two explicit dimensions are used exactly. S03-B therefore
+uses explicit `15cm × 8.452cm` dimensions for its cover asset. Future work
+must investigate intrinsic-ratio preservation, fitting or filling a
+Writer-authored frame, contain/cover/crop behavior, and replacement of only a
+frame's image resource from actual ODF/Writer structures. This is not a 1.0
+blocker and does not authorize redefining `replaceImageByName()`.
+
 ### GRAPHIC-PART-COMPAT-01 — RESOLVED BY FRAME-LAYOUT-01
 
 The PAGE-FLOW-01D discrepancy was investigated and closed during FRAME-LAYOUT-01.
@@ -256,6 +267,42 @@ RESEARCH-01A already proved that Writer preserves names such as `#foreach:experi
 
 A bounded native-field binding capability is Phase C of `TEMPLATE-AUTHORING-01`. Broad support for every Writer field/conditional construct remains post-1.0 unless concrete evidence makes it necessary. `{{variable}}` remains the preferred general/portable scalar-binding mechanism where native semantics provide no concrete advantage.
 
+### SECTION-INSTANCE-NATIVE-ADDRESSING-01 — Instance-relative addressing inside cloned Sections
+
+**Priority:** Post-1.0 architecture/research follow-up unless a mandatory milestone proves a bounded dependency
+
+TEMPLATE-AUTHORING-01F S03 established a specific gap between native identity
+preservation and application-level addressability. Section cloning already
+rewrites contained native identities, including bookmark names, so each clone
+remains structurally distinct. The current public Section instance surface does
+not provide equivalent instance-relative addressing for a logical bookmark
+inside that clone.
+
+The future design must characterize the general semantics before approving an
+API. In particular, determine:
+
+- whether instance-relative addressing should apply only to bookmarks or to
+  other contained named native object families;
+- how callers identify the logical authored object without depending on
+  generated clone suffixes;
+- how nested Section instances affect lookup scope and ambiguity;
+- how zero/multiple matches and malformed native identities are diagnosed;
+- whether addressing and mutation remain separate typed capabilities;
+- compatibility with existing Section identity rewriting and repeated
+  instantiate/save lifecycles.
+
+Do not infer `SectionTarget::bookmark()`, a universal named-element accessor,
+or another concrete method signature from this backlog item. The established
+principle remains:
+
+```text
+addressability != mutation capability
+```
+
+This topic is related to, but distinct from, classic foreach scope semantics.
+It concerns native objects contained in cloned Writer-authored Sections rather
+than placeholder-variable shadowing.
+
 ### CLASSIC-FOREACH-SCOPE-01 — Scoped placeholder resolution and shadowing
 
 **Priority:** Bounded architecture follow-up
@@ -272,6 +319,28 @@ shadowing. Future work may investigate true scoped placeholder resolution, but
 must first characterize existing template compatibility. Reordering render
 phases is not automatically the solution and is not prescribed by this note.
 
+
+## TABLE-ROW-01 — Native Writer table population — COMPLETE / FINAL GO
+
+TABLE-ROW-01 is completed architecture baseline. A typed named table can now populate a bounded scalar data region while preserving the native Writer table object, native header rows, explicitly kept ordinary source rows, and Writer-owned row/cell/paragraph formatting. Repeated population reconciles against the immutable Writer/source-row baseline, and unsupported mutable topology is rejected rather than guessed.
+
+Canonical sample L12 — Writer Table Population teaches this ownership model. `RichTable` remains the separate PHP-owned/generated-table path.
+
+### TEMPLATE-DECLARED-STRUCTURAL-SEMANTICS-01 — Writer-authored structural markers
+
+**Priority:** Post-1.0 design/research direction; not a 1.0 blocker
+
+TABLE-ROW-01 deliberately uses application-side source indices such as `keepRows => [0]`. That is appropriate for the bounded 1.0 contract, but it also exposes a broader authoring opportunity: structural knowledge that belongs to a Writer template should, where practical, be declarable in the template instead of duplicated as numeric application configuration.
+
+A concrete future research case is a Writer-authored bookmark or another suitable native ODF marker placed in an ordinary table row to declare semantics such as `keepRow`, optionally with a semantic identifier. The engine could then derive the containing named table and row context from the native document tree rather than requiring redundant table names or changing row positions in PHP configuration.
+
+This is intentionally a design direction, not an approved bookmark naming convention or public API. Future work must first characterize real Writer/ODF behavior, including bookmark placement inside table cells/rows, stability under row cloning/removal and Writer save/reopen, duplicate/ambiguous markers, interaction with table identity, and whether bookmarks are the correct carrier at all.
+
+The broader principle is:
+
+> Template-owned structural semantics should live in the Writer-authored template when a stable native representation exists; application code should supply application-owned data and explicit runtime choices.
+
+This direction may later inform semantic named-element work, but it must not create one universal mutation API. Addressability and mutation capability remain separate: Sections, bookmarks, tables, and frames may share discoverable identity while retaining type-specific operations and ownership rules.
 
 ## FINALIZATION-01 — Final document/export semantics
 
@@ -340,6 +409,16 @@ Continue documenting and, where justified, simplifying lifecycle semantics aroun
 
 The former TEMPLATE-AUTHORING-UX-01, DECLARATIVE-SECTION-01, and bounded NATIVE-FIELDS-01 topics are coordinated by the mandatory TEMPLATE-AUTHORING-01 milestone above. Broader native Writer semantics remain future work after the bounded 1.0 contract is established.
 
+S03-B2 provides a concrete `TEMPLATE-FORMAT-PRESERVATION-01` follow-up:
+application-created structured content supplied through `SectionTarget::replaceContent()`
+does not automatically inherit character formatting from the replaced
+Writer-authored content. In S03, a generated finding needed to request bold
+text explicitly. No engine defect was established. The post-1.0 question is
+what authored style context, inheritance, or preservation semantics should be
+available during structured replacement, if any; this does not reopen the
+completed `STYLE-CONTEXT-01` or `STYLE-API-02` foundations and does not approve
+an automatic inheritance API.
+
 ### HTML-IMPORT-01 — Extended HTML import
 
 **Priority:** Later
@@ -378,6 +457,25 @@ Treat dynamic graphics initially as content supplied to or replacing content in 
 **Priority:** Medium / bounded independent follow-up
 
 Provide reliable list indentation and nested list style control using native list/paragraph semantics. May be inserted before 1.0 only if it is independent and does not destabilize the mandatory sequence or if PAGE-FLOW/TEMPLATE-RELIABILITY exposes a concrete dependency.
+
+### LIST-ITEM-POPULATION-01 — Application-owned items in Writer-native lists
+
+**Priority:** Post-1.0 architecture/research; not a 1.0 blocker
+
+S03 demonstrated that Writer-native lists can remain Writer-owned, and that a
+whole containing Section can be replaced with application-generated structured
+content. It did not establish a capability for populating an existing
+Writer-authored list/list-item collection while preserving the authored list
+structure, item prototype, numbering, indentation, and formatting.
+
+Future work should determine, from actual ODF and LibreOffice Writer
+structures, whether and how Writer authors a mutable item region, how zero or
+more application items reconcile with preserved authored items, and which list
+and paragraph semantics remain template-owned. This is conceptually analogous
+to TABLE-ROW-01's separation of Writer-owned structure from application-owned
+data, but it is not a table API and must not be collapsed into classic
+`{{#foreach}}` or `CLASSIC-FOREACH-SCOPE-01`, which concern template-expression
+iteration and scope resolution. No public list-population API is approved.
 
 ## Document import and round-trip workflows
 
@@ -490,3 +588,56 @@ Future research/implementation may consider:
 - additional Writer field families where they provide a concrete authoring benefit.
 
 This work must not be folded back into Phase C v1 without new evidence and an explicit architecture decision. Set/Get Variable in particular must not be modeled as an ordinary document-global binding because its characterized semantics are position-dependent document-flow state.
+
+
+## CUSTOM-SHAPE-FILL-IMAGE-REPLACEMENT-01 — Writer/custom-shape bitmap fill replacement
+
+**Status:** post-1.0 architecture topic discovered during the TEMPLATE-AUTHORING-01F public API audit.
+
+### Problem
+
+Advanced Writer/ODF graphic objects such as `draw:custom-shape` can represent
+their image appearance through a bitmap graphic fill rather than a direct
+`draw:image` child. `CircularImageElement` uses this model and the project
+already has document-local semantic fill-image dependency infrastructure.
+
+A practical example is a circular CV portrait: replacing the photograph means
+replacing the bitmap fill/background resource while preserving the authored
+custom shape, geometry, size, position, and surrounding layout.
+
+Current frame image replacement APIs target `draw:frame/draw:image` semantics
+and must not be generalized to custom-shape bitmap fills.
+
+### Existing foundation
+
+SR-06 already separates:
+
+```text
+graphic style
+    -> draw:fill-image-name
+        -> draw:fill-image declaration
+            -> Pictures/... resource
+```
+
+It also established document-local fill-image requirements, conflict semantics,
+target-document authority, declaration materialization, and package/resource
+separation for generated structured content.
+
+SR-06 deliberately left mutation/replacement of an existing target
+`draw:fill-image` declaration to a separately designed structured operation.
+
+### Future design questions
+
+A post-1.0 architecture pass should characterize real Writer-authored and
+Word-converted custom-shape fixtures before selecting an API. It must decide:
+
+- whether logical targeting is by custom-shape identity, graphic style, or
+  fill-image declaration;
+- how shared fill-image declarations behave when only one object should change;
+- how replacement preserves Writer-owned geometry and layout;
+- how resource replacement, declaration identity, and package cleanup interact;
+- whether the capability belongs to a broader advanced-graphics/custom-shape
+  target model.
+
+No public API shape is approved by this entry.
+

@@ -1,5 +1,8 @@
 # TABLE-ROW-01 — Native Writer Table Population Change Contract
 
+**Status:** COMPLETE / FINAL GO  
+**Completion:** bounded population implemented, automated preflight green, manual LibreOffice edit/save/reopen regression passed, canonical L12 sample added
+
 **Status:** Accepted design baseline / implementation authorized after characterization tests  
 **Milestone:** TABLE-ROW-01  
 **Parent:** TEMPLATE-AUTHORING-01F / S03 prerequisite  
@@ -456,4 +459,8 @@ TABLE-ROW-01 is complete when:
 11. LibreOffice save/reopen remains valid and visually stable;
 12. full project preflight remains green.
 
-After this prerequisite is complete, S03 implementation may proceed.
+TABLE-ROW-01 is complete. S03 implementation may proceed.
+
+The accepted scalar payload boundary is deliberately narrow: a mutable cell has one simple Writer paragraph with one unambiguous scalar carrier. Direct paragraph text, an empty paragraph, one simple styled `text:span`, or an empty single styled span are supported while preserving the existing formatting carrier. Multiple/fragmented formatted text runs are rejected atomically rather than assigning the replacement value to an arbitrary run.
+
+Repeated `populate()` calls, including calls that change `keepRows`, resolve keep-row indices against the immutable original Writer/source ordinary-row sequence.

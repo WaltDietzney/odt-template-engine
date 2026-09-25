@@ -18,4 +18,18 @@ final class TableTarget extends AbstractAddressableTarget
     {
         return (new TypedTargetResolver())->resolveTableDescriptor($this->context, $this->targetName);
     }
+
+    /**
+     * Populate the bounded scalar data region of this Writer-authored table.
+     *
+     * @param list<list<scalar|null>> $rows
+     * @param array{keepRows?: list<int>} $options
+     */
+    public function populate(array $rows, array $options = []): self
+    {
+        $this->descriptor();
+        (new NativeTablePopulationService())->populate($this->context, $this->targetName, $rows, $options);
+
+        return $this;
+    }
 }

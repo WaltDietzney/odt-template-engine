@@ -9,7 +9,10 @@ use OdtTemplateEngine\OdtTemplate;
 $projectRoot = dirname(__DIR__, 2);
 $sampleDir = $projectRoot . '/samples';
 $sampleRegistry = require $sampleDir . '/sample-registry.php';
-$sampleEntries = $sampleRegistry['samples'];
+$sampleEntries = array_values(array_filter(
+    $sampleRegistry['samples'],
+    static fn (array $entry): bool => $entry['status'] === 'canonical'
+));
 $roleLabels = [
     'learn' => 'Learn',
     'capability' => 'Capabilities',

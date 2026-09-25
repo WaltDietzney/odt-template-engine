@@ -13,8 +13,9 @@ Prefer visual layout in LibreOffice, semantic structure in ODT, and data
 binding/manipulation in PHP. Do not recreate LibreOffice's layout system in
 application code unless the content is genuinely application-generated.
 
-The canonical progression is [Learn samples L01–L11](../examples/sample-guide.md)
-followed by capability examples C01–C05, then professional showcases S01–S03.
+The canonical progression is [Learn samples L01–L12](../examples/sample-guide.md)
+followed by capability examples C01–C05, builders B01–B02, and the current
+professional showcases S01b and S03.
 Learn samples introduce one authoring concept at a time; capability samples
 show the additional native ODF behavior each capability contributes.
 Inspection and mapping/automation are integration layers over the three
@@ -250,10 +251,60 @@ Cloning rewrites bookmark identities deterministically; expression binding does
 not guess that a data key should mutate a bookmark. Explicit bookmark
 replacement and template-expression replacement are separate operations.
 
+### Bookmark boundaries follow semantic ownership
+
+A bookmark should contain only the content that the application owns and is
+allowed to replace. Do not include punctuation, separators, labels, or other
+Writer-owned text in the bookmark merely because selecting the whole visible
+phrase is convenient in LibreOffice.
+
+For example, if Writer owns the separator in a caption, prefer:
+
+```text
+[ParticipantOutcomesCaption]Participant outcomes[/ParticipantOutcomesCaption] · 2027
+```
+
+over:
+
+```text
+[ParticipantOutcomesCaption]Participant outcomes · 2027[/ParticipantOutcomesCaption]
+```
+
+when the application is intended to replace only the caption text. A bookmark
+replacement replaces the complete bookmarked range; an accidentally oversized
+range therefore silently transfers ownership of Writer-authored punctuation or
+text to the application.
+
+This is an authoring concern rather than a replacement-engine defect. After
+creating a bookmark in Writer, verify its exact start/end range before treating
+the template as canonical. This is especially important around punctuation,
+adjacent fields, styled spans, and text-box content.
+
 LibreOffice can place bookmark markers between fragments of one expression.
 The engine preserves marker topology where it cannot prove that moving markers
 would preserve the intended range. Avoid overlapping bookmark and placeholder
 boundaries unless that topology is deliberate and tested.
+
+### Document-wide values belong in User Fields
+
+When one logical scalar value occurs in several document regions, including
+headers or footers, prefer one Writer User Field rather than several bookmarks
+that must be kept in sync by application code. Use bookmarks for bounded local
+content and User Fields for one document-wide value with multiple native
+occurrences.
+
+### Cloned Sections containing bookmarks
+
+Section cloning already rewrites contained bookmark identities so cloned native
+objects remain structurally distinct. The current public API does not,
+however, provide an instance-relative bookmark accessor for addressing the
+logical bookmark inside a particular returned Section instance.
+
+Treat this as a known capability boundary. Do not address generated bookmark
+suffixes from application code and do not infer a new public API from the
+limitation. Collection data that requires native bookmark-based per-instance
+binding needs separate architecture characterization before it is presented as
+a supported authoring pattern.
 
 ## Tables and lists
 
@@ -280,7 +331,7 @@ controlled HTML into editable native ODT content. Start with [L04 Rich Content](
 [L08 HTML Import](../../samples/sample_L08_html_import.php) according to the
 structure PHP needs to own.
 
-For template-authored native structures, use [L09 Native Objects](../../samples/sample_L09_native_objects.php): bookmarks support bounded text replacement and Sections support bounded content replacement, while named tables and frames currently provide read-only descriptors. [L10 Writer User Fields](../../samples/sample_L10_writer_user_fields.php) demonstrates the separately bounded string User Field binding. [L11 Template Inspection](../../samples/sample_L11_template_inspection.php) shows the source-oriented TemplateContract; inspection is an integration activity, not a fourth authoring model.
+For template-authored native structures, use [L09 Native Objects](../../samples/sample_L09_native_objects.php): bookmarks support bounded text replacement and Sections support bounded content replacement, while named tables and frames provide typed native addressing. [L10 Writer User Fields](../../samples/sample_L10_writer_user_fields.php) demonstrates the separately bounded string User Field binding. [L11 Template Inspection](../../samples/sample_L11_template_inspection.php) shows the source-oriented TemplateContract; inspection is an integration activity, not a fourth authoring model. [L12 Writer Table Population](../../samples/sample_L12_writer_table_population.php) demonstrates bounded population of a Writer-authored named table while preserving its authored structure and formatting.
 
 ## Images and semantic elements
 

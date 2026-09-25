@@ -222,10 +222,12 @@ Want to see what the engine actually produces before installing it? **[Try the l
 
 The same Sample Explorer is included in the repository under [`demo/sample-explorer/`](demo/sample-explorer/), while the growing collection of real ODT templates and executable examples lives under [`samples/`](samples/).
 
-The later samples include two complementary CV architecture showcases:
+The canonical sample path culminates in professional ownership-focused examples:
 
-- **Sample 21** — PHP-generated `RichText`/element regions inside a LibreOffice-designed shell;
-- **Sample 25** — LibreOffice-authored named section collections instantiated from application data.
+- **S01b Professional CV · Structured Template** — LibreOffice owns stable page design, Frames, styles and repeatable native Sections while PHP supplies application data and bounded generated regions;
+- **S03 Structured Professional Report** — a Writer-authored report demonstrates native inspection, mapping, preflight and bounded automation.
+
+Historical Samples 21 and 25 remain repository evidence for the complementary ownership patterns synthesized by S01b.
 
 Run the explorer locally with PHP's development server:
 

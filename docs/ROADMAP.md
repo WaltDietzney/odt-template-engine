@@ -328,22 +328,29 @@ automation lifecycle for ordinary library use. The accepted semantics and
 closure evidence are recorded in [`architecture/TEMPLATE_AUTHORING_01E_CHANGE_CONTRACT.md`](architecture/TEMPLATE_AUTHORING_01E_CHANGE_CONTRACT.md)
 and [`architecture/TEMPLATE_AUTHORING_01E6_COMPLETION.md`](architecture/TEMPLATE_AUTHORING_01E6_COMPLETION.md).
 
-#### F — Authoring Documentation & Samples
+#### F — Authoring Documentation & Samples — COMPLETE / FINAL GO
 
-Version 1.0 requires first-class authoring guidance, not merely API reference. Documentation should explain:
+Phase F is closed by
+[`architecture/TEMPLATE_AUTHORING_01F_FINAL_REVIEW.md`](architecture/TEMPLATE_AUTHORING_01F_FINAL_REVIEW.md).
 
-- the template philosophy;
-- simple template processing versus structured template processing;
-- how to create inspectable LibreOffice templates;
-- naming conventions for native objects and declarative controls;
-- when to use `{{...}}`, native fields, Sections, bookmarks, tables, and frames;
-- how generic data mapping and optional automation fit together;
-- formatting-preservation and nesting constraints;
-- diagnostics and validation;
-- realistic complete examples.
+The canonical 1.0 public path is L01–L12, C01–C05, B01–B02 and the actual
+professional showcases S01b and S03. Historical numbered samples remain
+repository/regression evidence rather than a parallel curriculum.
 
-The public samples should be reviewed before 1.0 and should demonstrate attractive, professionally authored templates rather than only technical feature fixtures.
+The final review completed the public API inventory from current source/tests,
+classified Recommended/Advanced/Compatibility/Deprecated/Infrastructure
+surfaces, reconciled the Sample Explorer and public guidance, and performed a
+mechanical public-symbol scan across `src/`. No additional Phase-F engine
+capability or new architecture was required.
 
+The three established authoring models are:
+
+1. simple visible template processing;
+2. PHP-owned structured ODT construction;
+3. Writer-owned native document structures, with inspection and optional
+   mapping/preflight/atomic automation.
+
+Post-1.0 findings remain in FUTURE_DEVELOPMENT and do not reopen Phase F.
 
 ### FINALIZATION-01 — Final document/export semantics — 1.0 BLOCKER AS ARCHITECTURE DECISION
 

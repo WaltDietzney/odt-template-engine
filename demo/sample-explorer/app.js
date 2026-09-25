@@ -4,7 +4,7 @@
     showcaseStyles.href = 'showcase.css';
     document.head.appendChild(showcaseStyles);
 
-    const cvSampleId = 'legacy.sample-21.cv-profile';
+    const cvSampleId = 'S01b';
     const cvCard = document.querySelector(`[data-sample-id="${cvSampleId}"]`);
 
     if (cvCard) {
@@ -22,8 +22,8 @@
                 <span class="section-kicker">Real-world ODT showcase</span>
                 <h2 id="cv-showcase-title">See what the engine can build.</h2>
                 <p>
-                    Sample 21 generates a complete two-column CV as a native, editable OpenDocument file.
-                    It combines page layout control, rich text, images, native lists, reusable styles and structured PHP data in one document.
+                    S01b generates a professional structured CV as a native, editable OpenDocument file.
+                    It keeps stable page design and repeatable structure in LibreOffice while PHP supplies structured data, images and bounded rich content.
                 </p>
                 <div class="cv-showcase-features" aria-label="CV showcase features">
                     <span>Two-column layout</span>
@@ -37,8 +37,8 @@ $template->setElement('cv_sidebar', $sidebar);
 $template->setElement('cv_content', $content);
 $template->save('cv.odt');</code></pre>
                 <div class="cv-showcase-actions">
-                    <a class="button button-primary" href="#sample-21-showcase">Try the CV showcase</a>
-                    <a class="text-link" href="https://github.com/WaltDietzney/odt-template-engine/blob/master/samples/sample_21_cvProfile.php" target="_blank" rel="noreferrer">View full PHP sample →</a>
+                    <a class="button button-primary" href="#s01b-showcase">Try the CV showcase</a>
+                    <a class="text-link" href="https://github.com/WaltDietzney/odt-template-engine/blob/develop/samples/sample_S01b_cv_structured.php" target="_blank" rel="noreferrer">View full PHP sample →</a>
                 </div>
             </div>
             <div class="cv-document-preview" aria-label="Stylized preview of the generated CV">
@@ -68,7 +68,7 @@ $template->save('cv.odt');</code></pre>
         `;
         howItWorks.parentNode.insertBefore(showcase, howItWorks);
 
-        cvCard.id = 'sample-21-showcase';
+        cvCard.id = 's01b-showcase';
     }
 
     const heroActions = document.querySelector('.hero-actions');
