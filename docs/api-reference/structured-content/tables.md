@@ -242,6 +242,17 @@ public function rowspan(int $count): self
 
 Values are clamped to at least `1`.
 
+The supporting read surface is:
+
+```php
+public function getColspan(): int
+public function getRowspan(): int
+public function getStyle(): array
+public function getStyleName(): ?string
+```
+
+These accessors expose the current cell span/style state for Advanced inspection and tooling; they do not introduce a second cell-authoring path.
+
 These methods emit the ODF span attributes on the originating cell. The current PHP-owned table renderer does **not** automatically emit the covered-table-cell placeholders required to complete a full ODF merged-cell grid. Treat spans as Advanced in 1.0 when exact merged-grid interoperability matters.
 
 ## Compatibility table builder
