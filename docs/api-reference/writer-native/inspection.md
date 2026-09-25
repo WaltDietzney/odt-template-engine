@@ -296,6 +296,12 @@ expressionsInScope(string $scope): array
 toArray(): array
 ```
 
+The contained `TemplateExpressionDescriptor` is an immutable Advanced tooling value. The mechanically audited supporting read surface includes `fragmentCount()`, `isSplit()`, `styleNames()`, `bookmarkNames()`, `classification()`, and `physicalNormalization()` in addition to its expression identity/value fields and `toArray()`.
+
+`TemplateStructureDiagnostic` exposes its diagnostic classification and optional related expression through `classification()` and `expression()`.
+
+`TemplateStructureNormalizationResult` belongs to lower-level normalization/repair tooling. Its supporting read surface includes `changed()`, `repairs()`, `skipped()`, and `toArray()`; the normal inspection workflow does not require callers to invoke the normalizer service directly.
+
 Use `inspectTemplate()` instead when you need the complete supported semantic source contract.
 
 ## Choosing the inspection view
