@@ -27,5 +27,5 @@ Both ownership models can be combined in one document.
 - [Bookmarks](bookmarks.md) — strict named bookmark targeting and bounded inline text replacement.
 - [Sections](sections.md) — Writer-owned structured containers, replacement, cloning, and bounded instantiation.
 - [Tables](tables.md) — bounded scalar population of Writer-authored native tables.
-- Frames — follows in F2.4.4.
-- User Fields — follows in F2.4.4.
+- [Frames](frames.md) — strict named-frame identity and current descriptor; no general imperative frame mutation API.
+- [User Fields](user-fields.md) — bounded binding of native Writer string User Fields.
