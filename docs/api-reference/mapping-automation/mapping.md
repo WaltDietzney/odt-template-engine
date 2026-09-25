@@ -496,5 +496,5 @@ Only after that gate succeeds does Automation mutate the document.
 ## See also
 
 - [Template Contract](template-contract.md)
-- Concrete Preflight
-- Automation
+- [Concrete Preflight](preflight.md)
+- [Automation](automation.md)
