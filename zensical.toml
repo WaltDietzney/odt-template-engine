@@ -50,13 +50,13 @@ nav = [
       { "Frames" = "api-reference/writer-native/frames.md" },
       { "User Fields" = "api-reference/writer-native/user-fields.md" },
     ] },
-  ] },
-  { "Mapping & Automation" = [
-    { "Overview" = "api-reference/mapping-automation/index.md" },
-    { "Template Contract" = "api-reference/mapping-automation/template-contract.md" },
-    { "Mapping" = "api-reference/mapping-automation/mapping.md" },
-    { "Concrete Preflight" = "api-reference/mapping-automation/preflight.md" },
-    { "Automation" = "api-reference/mapping-automation/automation.md" },
+    { "Mapping & Automation" = [
+      { "Overview" = "api-reference/mapping-automation/index.md" },
+      { "Template Contract" = "api-reference/mapping-automation/template-contract.md" },
+      { "Mapping" = "api-reference/mapping-automation/mapping.md" },
+      { "Concrete Preflight" = "api-reference/mapping-automation/preflight.md" },
+      { "Automation" = "api-reference/mapping-automation/automation.md" },
+    ] },
   ] },
   { "Rich Documents" = [
     { "RichText & Paragraphs" = "rich-documents/richtext-and-paragraphs.md" },
