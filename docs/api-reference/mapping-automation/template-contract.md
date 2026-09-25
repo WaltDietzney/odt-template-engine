@@ -375,6 +375,6 @@ if ($mappingReadiness !== TemplateContractCapabilities::READY) {
 ## See also
 
 - [Writer-native Inspection](../writer-native/inspection.md)
-- Mapping
-- Concrete Preflight
-- Automation
+- [Mapping](mapping.md)
+- [Concrete Preflight](preflight.md)
+- [Automation](automation.md)
