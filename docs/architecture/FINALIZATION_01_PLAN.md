@@ -203,6 +203,8 @@ implementation, tests, and applicable accepted architecture decisions.
 
 ### F2.1 — API Reference Contract
 
+**Contract:** [`API_REFERENCE_CONTRACT.md`](API_REFERENCE_CONTRACT.md) defines the accepted public reference information architecture, navigation model, entry shape, classification rules, option-contract rules, evidence discipline, and representative `setElement()` entry for F2.2–F2.7.
+
 Define the reference information architecture and one consistent page/entry
 contract before writing the reference.
 
