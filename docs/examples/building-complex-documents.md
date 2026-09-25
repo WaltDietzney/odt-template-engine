@@ -245,11 +245,11 @@ representative generated sample
 LibreOffice visual inspection
 ```
 
-Samples 21 and 25 are both useful regression documents because they exercise different ownership models. They should complement focused tests, not replace them.
+Use the canonical samples for regression and learning: S01b demonstrates a mixed professional template, while C04 isolates declarative Writer-owned collections. They should complement focused tests, not replace them.
 
 ## Continue exploring
 
-- [Sample Guide](sample-guide.md) — choose smaller focused examples and compare Samples 21 and 25
+- [Sample Guide](sample-guide.md) — choose the smallest canonical L/C/B/S example that matches the ownership problem
 - [RichText & Paragraphs](../rich-documents/richtext-and-paragraphs.md) — generated region building blocks
 - [Addressable ODT Structures](../rich-documents/addressable-document.md) — typed access to native document objects
 - [Named Sections](../rich-documents/named-sections.md) — native repeatable template structures
