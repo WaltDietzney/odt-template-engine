@@ -8,7 +8,7 @@ A useful rule of thumb is:
 
 The engine supports three complementary document-authoring models.
 
-## Level 1: Template expressions
+## Simple Template Processing
 
 Create the stable document structure in LibreOffice Writer or another ODT-compatible editor and mark dynamic positions with placeholders:
 
@@ -28,7 +28,7 @@ Template syntax also supports filters, conditions, and repeating blocks. This is
 
 See [Variables & Filters](../template-language/variables-and-filters.md) and [Conditions & Loops](../template-language/conditions-and-loops.md).
 
-## Level 2: Programmatically generated ODT content
+## Structured ODT Construction
 
 When PHP genuinely owns a dynamic content subtree, build native ODT content with elements such as `RichText`, `Paragraph`, `ListElement`, `ImageElement`, and `RichTable`.
 
@@ -51,7 +51,7 @@ The template contains a placeholder such as `{{content}}`, but PHP supplies a na
 
 This is useful for dynamic lists, tables, styled paragraphs, images, and larger generated regions.
 
-## Level 3: Addressable native ODT structures
+## Writer-native Document Model
 
 A LibreOffice template can also contain named native structures that PHP addresses directly:
 
@@ -69,7 +69,8 @@ The current public target types deliberately have different capabilities:
 
 - bookmarks support bounded text replacement;
 - named sections support inspection, cloning, data-bound instantiation, finalized collections, and nested owner scopes;
-- named tables and drawing frames currently expose typed resolution and read-only descriptors.
+- named tables support typed resolution, descriptors, and bounded Writer-owned row population;
+- named drawing frames expose typed identity/inspection and can participate in the separately validated mapped image-replacement action.
 
 This is not a generic DOM API. The engine exposes bounded operations where semantics have been defined and tested.
 
