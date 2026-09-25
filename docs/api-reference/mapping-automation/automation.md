@@ -187,6 +187,25 @@ Do not add `render()` merely because classic template processing traditionally u
 
 If application code deliberately combines automation with separate classic staged assignments, that is a mixed imperative lifecycle and must respect the semantics of both APIs rather than assuming that `automate()` is an alias for `render()`.
 
+## Direct declarative execution
+
+**Advanced**
+
+```php
+public function executeDeclarative(
+    TemplateContract $contract,
+    array $values
+): void
+```
+
+`executeDeclarative()` is the directly exposed Phase-D facade for executing the inspected template's recognized declarative Writer Section controls with values already expressed in the template's own ROOT and collection-item vocabulary.
+
+It is **independent of Phase-E Mapping & Automation**. It does not inspect the template, build or consume a `MappingDefinition`, run Concrete Preflight, call `render()`, or call `save()`.
+
+Use it only when application code intentionally supplies values in the template contract's own semantic vocabulary and wants direct declarative structural execution. Normal mapped application-data workflows should use Concrete Preflight followed by the common `automate()` facade instead.
+
+Successful repeated direct declarative execution is not generally guaranteed. This method is therefore not a shortcut around the common Phase-E lifecycle contract.
+
 ## Dependency automation
 
 **Advanced orchestration facade**
