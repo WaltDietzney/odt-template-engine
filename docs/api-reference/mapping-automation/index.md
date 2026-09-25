@@ -23,6 +23,6 @@ This workflow does not replace the normal imperative APIs and is not a mandatory
 ## Reference
 
 - [Template Contract](template-contract.md) — source-derived semantic contract, dependencies, native-object evidence, coverage, capabilities, diagnostics, and provenance.
-- Mapping — application-data paths and explicit/scoped relationships. F2.5.2.
+- [Mapping](mapping.md) — application-data paths, explicit mappings, scoped same-name resolution, and inspectable resolution.
 - Concrete Preflight — complete non-mutating validation of one concrete invocation. F2.5.3.
 - Automation — bounded mutation, ownership, atomicity, and lifecycle. F2.5.4.
