@@ -123,7 +123,6 @@ For documents where exact visual list geometry is critical, generate representat
 ## Related samples
 
 - [L05 — Lists](../../samples/sample_L05_lists.php) combines a native numbered list with a same-type nested bullet hierarchy.
-- L05 — native numbered, bulleted, and nested list structures
 - S01b — native bullet lists used in a larger editable CV document
 
 See [RichText & Paragraphs](richtext-and-paragraphs.md) for styling the paragraphs used as list items.
