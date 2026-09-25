@@ -205,7 +205,7 @@ Use `inspect()` when you need an immutable snapshot of the native named sections
 
 ## Native Writer User Fields
 
-For LibreOffice-authored document-global values, Phase C supports Writer User Fields with string values:
+For LibreOffice-authored document-global string values, use Writer User Fields:
 
 ```php
 $template = new OdtTemplate(__DIR__ . '/templates/example.odt');
@@ -216,7 +216,7 @@ $template->save(__DIR__ . '/output/example-result.odt');
 
 The engine updates the authoritative User Field declarations in the working ODT. Cached field display text is left to Writer reevaluation.
 
-This is intentionally separate from classic `{{customer}}` placeholder assignment. Phase C v1 is limited to string User Fields; Set/Get Variable and broader native field types are deferred.
+This is intentionally separate from classic `{{customer}}` placeholder assignment. The 1.0 Writer User Field API is bounded to string User Fields; broader native field types are outside this contract.
 
 ## Interactive samples
 
