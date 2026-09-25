@@ -65,7 +65,7 @@ $nested
 $main->addSubList($nested);
 ```
 
-`addSubList()` raises the nested list level relative to the parent. List levels are constrained to the ODT-oriented range supported by the element.
+`addSubList()` stores the nested list level relative to the parent. The current renderer derives actual nesting from the nested `text:list` structure; the stored `setLevel()` value itself does not currently affect visual output. See the API Reference for the exact 1.0 contract.
 
 ## Convenience methods on RichText
 
