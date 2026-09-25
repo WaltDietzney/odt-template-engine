@@ -105,12 +105,12 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
             <h1>Build real, editable ODT documents from PHP.</h1>
             <p class="hero-copy">
                 Design your document in LibreOffice, populate it from PHP and keep the result editable.
-                ODT Template Engine supports variables, conditions, loops, images, rich text, lists, tables,
-                styles and metadata.
+                Choose per document region whether Writer or PHP owns the structure. Start with simple template processing,
+                build native ODT content in PHP where needed, or address named Writer structures directly.
             </p>
             <div class="hero-actions">
                 <a class="button button-primary" href="#samples">Try it online</a>
-                <a class="button button-secondary" href="<?= $githubUrl ?>" target="_blank" rel="noreferrer">View source on GitHub</a>
+                <a class="button button-secondary" href="/docs/getting-started/quick-start/">Quick start</a>
             </div>
         </div>
 
@@ -132,36 +132,36 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
 <section class="install-strip" aria-label="Composer installation">
     <div>
         <strong>Install with Composer</strong>
-        <p>Or use the live samples below first — no local installation required.</p>
+        <p>Or explore the canonical live samples below first — no local installation required.</p>
     </div>
     <div class="install-command">composer require waltdietzney/odt-template-engine</div>
 </section>
 
 <main class="main">
     <section class="landing-section" id="how-it-works">
-        <span class="section-kicker">Template-first document generation</span>
-        <h2>Use the office document as the template.</h2>
+        <span class="section-kicker">Three complementary working models</span>
+        <h2>Choose who owns each piece of structure: Writer or PHP.</h2>
         <p>
-            Instead of rebuilding an office layout entirely in PHP, create the document in LibreOffice Writer,
-            add template placeholders and let PHP populate the ODT package with your application data.
+            The engine does not force one rendering model. A document can combine simple visible template logic,
+            PHP-owned native ODT content, and named Writer-owned structures while remaining a normal editable ODT file.
         </p>
         <div class="steps-grid">
             <article class="step-card">
                 <span class="step-number">1</span>
-                <h3>Create the ODT template</h3>
-                <p>Design the document normally in LibreOffice and place variables or control structures where dynamic content belongs.</p>
+                <h3>Simple Template Processing</h3>
+                <p>Keep surrounding structure in Writer and supply variables, conditions, filters, and lightweight repeating data from PHP.</p>
                 <div class="mini-code">Hello {{customer_name}}<br><br>{{#foreach:items}}<br>{{name}} — {{price}}<br>{{#endforeach}}</div>
             </article>
             <article class="step-card">
                 <span class="step-number">2</span>
-                <h3>Populate it from PHP</h3>
-                <p>Load the template, assign application data and render the placeholders and structured content.</p>
+                <h3>Structured ODT Construction</h3>
+                <p>When PHP owns a dynamic subtree, build native RichText, paragraphs, lists, tables, images, frames, and text boxes.</p>
                 <div class="mini-code">$template->assign([<br>&nbsp;&nbsp;'customer_name' => 'Jane Smith',<br>]);<br>$template->render();</div>
             </article>
             <article class="step-card">
                 <span class="step-number">3</span>
-                <h3>Save a real ODT file</h3>
-                <p>The output remains an OpenDocument Text file that users can continue editing in LibreOffice and compatible applications.</p>
+                <h3>Writer-native Document Model</h3>
+                <p>Keep named Sections, Bookmarks, tables, frames, and User Fields owned by Writer and address them through bounded semantic APIs.</p>
                 <div class="mini-code">$template->save(<br>&nbsp;&nbsp;'output/result.odt'<br>);</div>
             </article>
         </div>
@@ -187,14 +187,15 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
 
     <section class="landing-section" aria-labelledby="features-title">
         <span class="section-kicker">ODT-aware PHP API</span>
-        <h2 id="features-title">From simple placeholders to structured documents.</h2>
+        <h2 id="features-title">From simple placeholders to Writer-native automation.</h2>
         <div class="feature-summary">
             <div><h3>Template logic</h3><p>Variables, filters, repeating blocks, if/elseif/else and ifnot conditions.</p></div>
             <div><h3>Rich document content</h3><p>Paragraphs, formatted text, numbered and bullet lists, images and native ODT tables.</p></div>
-            <div><h3>ODF package handling</h3><p>Styles, metadata, HTML import and XML-aware processing of real ODT packages.</p></div>
+            <div><h3>Writer-native workflows</h3><p>Named native structures, source-template inspection, Writer User Fields, mapping, concrete preflight, and bounded automation.</p></div>
         </div>
         <div class="link-row">
-            <a class="text-link" href="<?= $githubUrl ?>" target="_blank" rel="noreferrer">Read the documentation on GitHub →</a>
+            <a class="text-link" href="/docs/">Read the documentation →</a>
+            <a class="text-link" href="/docs/api-reference/">Open the Practical API Reference →</a>
             <a class="text-link" href="<?= $packagistUrl ?>" target="_blank" rel="noreferrer">View the package on Packagist →</a>
         </div>
     </section>
@@ -209,7 +210,7 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
                     The examples use the same engine code and templates that ship with the repository.
                 </p>
             </div>
-            <div><strong id="resultCount"><?= count($sampleEntries) ?></strong> samples shown</div>
+            <div><strong id="resultCount"><?= count($sampleEntries) ?></strong> canonical samples shown</div>
         </section>
 
         <section class="toolbar" aria-label="Sample filters">
