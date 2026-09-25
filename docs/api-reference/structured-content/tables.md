@@ -83,7 +83,7 @@ Replaces the complete current element-owned table style.
 | `relative-width` | percentage string such as `60%` | Relative table width. |
 | `alignment` | `left`, `center`, `right`, `margins` | Horizontal table alignment. |
 
-`width` and `relative-width` are mutually exclusive. Unknown friendly keys throw `InvalidArgumentException`.
+`width` and `relative-width` are mutually exclusive. The current validator explicitly checks the documented friendly keys, but it does **not** reject additional unknown friendly keys before the mapper runs. The mapper passes native-prefixed keys through and would reject unknown friendly keys if called directly; through `setTableStyle()`, however, unknown friendly keys currently reach that mapper and therefore throw `InvalidArgumentException`.
 
 Native `fo:*`, `style:*`, and `table:*` keys are accepted as an Advanced compatibility escape hatch.
 
@@ -144,7 +144,7 @@ public function setColumnWidthRatios(array $ratios): void
 
 Positive integer ratios are normalized into ODF relative column widths totaling the engine's internal relative-width scale. For example, `[1, 2]` expresses a 1:2 relationship.
 
-The current method does not validate the array at the public call boundary. Non-positive/non-integer values fall through to historical direct `<value>*` serialization. Treat positive integer ratios as the Recommended contract.
+The current method does not validate the array at the public call boundary. Treat positive integer ratios as the Recommended contract; other values are historical/undefined input and are not promised by the 1.0 reference.
 
 When relative ratios are present they take precedence over absolute column widths during semantic materialization.
 
