@@ -36,16 +36,34 @@ These approaches can be combined in one document. Ownership is decided per piece
 
 ### Structured Content
 
-The structured-content family is documented in the next F2 slice. The core entry point, `setElement()`, is already introduced from the lifecycle reference because it participates in the normal document workflow.
+- [Overview & setElement](structured-content/index.md)
+- [RichText](structured-content/richtext.md)
+- [Paragraphs & Inline Content](structured-content/paragraph.md)
+- [Lists](structured-content/lists.md)
+- [Tables & Cells](structured-content/tables.md)
+- [Images](structured-content/images.md)
+- [Frames & Text Boxes](structured-content/frames-text-boxes.md)
 
 ### Writer-native Objects
 
-The Writer-native target reference follows in F2.4.
+- [Overview](writer-native/index.md)
+- [Inspection](writer-native/inspection.md)
+- [Bookmarks](writer-native/bookmarks.md)
+- [Sections](writer-native/sections.md)
+- [Tables](writer-native/tables.md)
+- [Frames](writer-native/frames.md)
+- [User Fields](writer-native/user-fields.md)
 
 ### Mapping & Automation
 
-The mapping, preflight, and automation reference follows in F2.5.
+- [Overview](mapping-automation/index.md)
+- [Template Contract](mapping-automation/template-contract.md)
+- [Mapping](mapping-automation/mapping.md)
+- [Concrete Preflight](mapping-automation/preflight.md)
+- [Automation](mapping-automation/automation.md)
 
 ### Advanced & Compatibility
 
-Dedicated compatibility and advanced reference consolidation follows in F2.6. Compatibility behavior that is essential to understand a Recommended core method is already called out next to that method.
+- [Overview](advanced-compatibility/index.md)
+- [Advanced API](advanced-compatibility/advanced.md)
+- [Compatibility & Deprecated API](advanced-compatibility/compatibility.md)
