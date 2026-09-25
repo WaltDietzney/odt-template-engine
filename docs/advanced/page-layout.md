@@ -137,7 +137,7 @@ This is a good example of the intended division of responsibility: LibreOffice o
 
 ## Related resources
 
-- S01b — complex CV / page-layout usage
+- [S01b — Professional CV · Structured Template](../../samples/sample_S01b_cv_structured.php) — complex CV / page-layout usage
 - `PageLayoutOdtTemplateTest` — integration coverage for page-layout changes
 
 See [ODT Internals](odt-internals.md) for the role of `styles.xml` and master pages in the package.
