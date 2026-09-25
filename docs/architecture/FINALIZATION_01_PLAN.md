@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planning baseline — pending review and acceptance**
+**Accepted — controlling FINALIZATION-01 execution plan**
 
 This document defines the bounded work plan for **FINALIZATION-01**, the
 repository and product finalization milestone between the completed
@@ -103,6 +103,10 @@ to an appropriate test-fixture or architecture-evidence location.
 This is an implementation of an existing architecture decision, not a new
 sample-design exercise.
 
+The `samples/` tree is exclusively the public canonical sample surface. Files
+whose primary purpose is testing, historical compatibility, architecture
+evidence, or migration support must not remain under `samples/`.
+
 ### F1.1 — Legacy dependency inventory
 
 Before moving or deleting files:
@@ -183,6 +187,19 @@ The reference must distinguish **Recommended**, **Advanced**, and
 **Compatibility** surfaces. Infrastructure/public-for-technical-reasons
 surfaces are not taught as normal application API unless extension authors
 genuinely require them.
+
+### API reference evidence rule
+
+API option documentation must be derived from the current implementation and
+verified against tests. Existing documentation and samples are evidence of
+intended or historical use, but they do not override current implementation
+semantics. Relevant accepted architecture decisions remain part of the evidence
+stack and must be consulted where they constrain the public contract.
+
+When these sources disagree, record and resolve the contradiction explicitly;
+do not silently copy an older option table or infer unsupported behavior. The
+reference contract must be based on the verified combination of current
+implementation, tests, and applicable accepted architecture decisions.
 
 ### F2.1 — API Reference Contract
 
@@ -310,8 +327,15 @@ Advanced end-programmer surface must be documented at the agreed reference
 depth. Compatibility surfaces must be discoverable where users need migration
 or behavioral information without dominating the normal learning path.
 
+Every user-facing options array accepted by a documented Recommended or
+Advanced API must either have a complete documented option contract or
+explicitly reference a shared documented option contract. Shared option
+contracts should be used where the verified API genuinely shares the same
+semantics; documentation structure must not invent API or style architecture.
+
 F2 closes only when the mechanical reconciliation has no unexplained public
-surface and the reference builds successfully.
+surface, no unexplained user-facing Recommended/Advanced option dictionary, and
+the reference builds successfully.
 
 ---
 
@@ -331,6 +355,13 @@ models:
 
 These models describe who owns document structure and help users choose an
 appropriate API. They do not create new runtime architecture.
+
+The documentation must explicitly explain that these models can be combined
+within one document and are not mutually exclusive operating modes. The
+practical decision is made per piece of structure: who owns it — the Writer
+template or PHP? A document may therefore combine simple template processing,
+PHP-owned structured content, and Writer-native targets where each is the
+appropriate ownership model.
 
 ### F3.1 — Information architecture
 
@@ -500,6 +531,9 @@ Reconcile stated support with CI and package reality:
 F5 closes when a fresh consumer can install and execute the documented
 Recommended path without relying on development-repository knowledge.
 
+F5 validates the finished consumer-facing distribution surface. It does not
+replace the later release-candidate-wide integration acceptance procedure.
+
 ---
 
 ## F6 — Finalization Closeout
@@ -551,6 +585,20 @@ The output of FINALIZATION-01 is a fixed release-candidate baseline for:
 The release pre-flight, not FINALIZATION-01, performs the final integrated proof
 that the candidate is suitable for 1.0.
 
+### Release-candidate freeze boundary
+
+Successful F6 closeout establishes the FINALIZATION-01 release-candidate
+**freeze**. At that boundary, API shape, documentation structure, sample
+surface, project presentation, and distribution contract are considered fixed
+for the release candidate.
+
+The subsequent RELEASE-1.0 INTEGRATION PRE-FLIGHT validates that exact frozen
+candidate as an integrated release. It must not become another design or
+finalization milestone. If the release pre-flight discovers a concrete blocker,
+the blocker is characterized and addressed through a bounded fix, the affected
+acceptance checks are repeated, and the candidate is frozen again. New
+architecture or opportunistic cleanup remains out of scope.
+
 ---
 
 ## Explicit exclusions
@@ -590,10 +638,11 @@ FINALIZATION-01 is complete only when all six blocks are closed and:
 8. the resulting baseline is suitable for the separate
    RELEASE-1.0 INTEGRATION PRE-FLIGHT.
 
-## Review gate
+## Review status
 
-This document is intentionally created before F1 implementation.
+This plan was reviewed and accepted before F1 implementation. It is the
+controlling execution contract for FINALIZATION-01.
 
-No FINALIZATION-01 implementation slice should begin until this plan has been
-reviewed and accepted. Review changes to this document are planning changes,
-not implementation scope drift.
+Changes to the accepted plan are explicit planning changes and must not be
+introduced implicitly as implementation scope drift. F1 may begin only from
+this accepted baseline.
