@@ -67,7 +67,7 @@ The following friendly keys are mapped by the current paragraph style mapper:
 | `number-lines`, `line-number` | ODF value | Line-number properties. |
 | `tab-stops` | list of tab definitions | Each item uses `position` in cm and optional `alignment` (default `left`). |
 
-`StyleOptionSplitter` also recognizes `align` as a convenience alias for `text-align` when a mixed convenience array passes through the splitter, for example `RichText::addParagraph(..., $styleOptions)`. Calling `setParagraphStyleOptions()` stores the supplied options directly; do not assume that every convenience alias is normalized at that call boundary.
+`StyleOptionSplitter` recognizes `align` as a convenience alias for `text-align` and `weight` as a convenience alias for `font-weight`. `setParagraphStyleOptions()` stores the supplied array immediately, but the paragraph's style-requirement materialization subsequently passes it through that splitter, so these two aliases are supported here as well. This is specific to the structured paragraph pipeline and must not be assumed for unrelated style APIs.
 
 Native-prefixed keys remain an Advanced compatibility escape hatch and should not replace the friendly API in normal application code.
 
