@@ -182,6 +182,7 @@ TEMPLATE-AUTHORING-01
     └── F — Authoring Documentation & Samples
     ↓
 FINALIZATION-01
+    └── controlling plan: architecture/FINALIZATION_01_PLAN.md
     ↓
 RELEASE-1.0 INTEGRATION PRE-FLIGHT
     ↓
@@ -189,6 +190,16 @@ RELEASE-1.0 INTEGRATION PRE-FLIGHT
 ```
 
 The sequence is intentionally bounded. High-value but non-foundational features must not indefinitely delay 1.0.
+
+### FINALIZATION-01 — Release-candidate finalization — IN PROGRESS
+
+The accepted controlling execution contract is
+[`architecture/FINALIZATION_01_PLAN.md`](architecture/FINALIZATION_01_PLAN.md).
+It defines the ordered F1–F6 blocks, their completion gates, the rule that
+FINALIZATION-01 does not invent new architecture, and the release-candidate
+freeze boundary before RELEASE-1.0 INTEGRATION PRE-FLIGHT. Detailed scope and
+slice decisions belong to that plan rather than being duplicated in this
+roadmap.
 
 ### PAGE-FLOW-01 — Page styles, paragraph flow, and Section flow — COMPLETE / FINAL GO
 
