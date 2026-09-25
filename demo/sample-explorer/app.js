@@ -23,13 +23,13 @@
                 <h2 id="cv-showcase-title">See what the engine can build.</h2>
                 <p>
                     S01b generates a professional structured CV as a native, editable OpenDocument file.
-                    It keeps stable page design and repeatable structure in LibreOffice while PHP supplies structured data, images and bounded rich content.
+                    It deliberately mixes ownership: Writer keeps stable page design and repeatable native Sections while PHP supplies application data, image content, and bounded RichText regions.
                 </p>
                 <div class="cv-showcase-features" aria-label="CV showcase features">
                     <span>Two-column layout</span>
                     <span>Editable ODT</span>
                     <span>Images &amp; lists</span>
-                    <span>Page layout API</span>
+                    <span>Mixed ownership</span>
                 </div>
                 <pre class="cv-showcase-code"><code>$template = new PageLayoutOdtTemplate('cv-template.odt');
 $template->setPageMargins('0cm', '0.8cm', '0cm', '0cm');
