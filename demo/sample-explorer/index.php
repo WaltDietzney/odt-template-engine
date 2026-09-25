@@ -93,7 +93,7 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
             <a href="#how-it-works">How it works</a>
             <a href="#samples">Live samples</a>
             <a href="#projects">Projects</a>
-            <a href="#support">Support</a>
+            <a class="nav-support-link" href="#support">Support the project</a>
             <a href="/docs/">Documentation</a>
             <a href="<?= $githubUrl ?>" target="_blank" rel="noreferrer">GitHub</a>
         </div>
@@ -128,6 +128,14 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
         </aside>
     </section>
 </header>
+
+<section class="support-callout" aria-label="Support the project">
+    <div>
+        <strong>Free, open source, independently developed.</strong>
+        <span>If ODT Template Engine is useful to you, you can help continued development.</span>
+    </div>
+    <a href="#support">Ways to support the project →</a>
+</section>
 
 <section class="install-strip" aria-label="Composer installation">
     <div>
@@ -328,8 +336,8 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
     <section class="support-section" id="support" aria-labelledby="support-title">
         <div class="support-copy">
             <span class="section-kicker section-kicker-light">Open source · MIT licensed</span>
-            <h2 id="support-title">Support further development</h2>
-            <p>ODT Template Engine is free and open source. If the library saves you time or helps with your project, you can support its continued development via PayPal or Bitcoin Lightning. Thank you!</p>
+            <h2 id="support-title">Help keep ODT Template Engine moving.</h2>
+            <p>ODT Template Engine is free, MIT licensed, and independently developed. If it saves you time or becomes useful in your own project, there are several voluntary ways to support continued development.</p>
         </div>
         <div class="support-actions">
             <a class="support-button support-button-github" href="<?= $githubUrl ?>" target="_blank" rel="noreferrer">
