@@ -29,13 +29,15 @@ The manual regression should remain intentionally small and representative.
 
 ### Classic template processing
 
-Run:
+Run the current canonical condition and repeating-content samples:
 
-    php samples/sample_10_smarties.php
+    php samples/sample_L02_conditions.php
+    php samples/sample_L03_repeating_content.php
 
 Inspect:
 
-    samples/output/output_10_smarties.odt
+    samples/output/output_L02_conditions.odt
+    samples/output/output_L03_repeating_content.odt
 
 Check in LibreOffice:
 
@@ -43,21 +45,22 @@ Check in LibreOffice:
 - classic conditions render plausibly;
 - foreach-generated content is present;
 - variable/filter replacement is complete;
-- rich text, lists, tabs, image placement, and metadata-driven document content remain visually sane;
+- the canonical condition and repeating-content examples remain visually sane;
 - no visible template control markers remain in rendered output.
 
-This sample is the primary visual regression for the classic template-language path affected by
-the Phase-B condition-grammar reconciliation.
+Together these samples are the current visual regression for the classic
+template-language path affected by the Phase-B condition-grammar
+reconciliation.
 
 ### Professional layout benchmark
 
 Run:
 
-    php samples/sample_21_cvProfile.php
+    php samples/sample_S01b_cv_structured.php
 
 Inspect:
 
-    samples/output/output_21_cvProfile.odt
+    samples/output/output_S01b_cv_structured.odt
 
 Check in LibreOffice:
 
@@ -73,11 +76,11 @@ This sample remains the practical architecture benchmark for professional author
 
 Run:
 
-    php samples/sample_26_tableLayout.php
+    php samples/sample_C02_advanced_table_layout.php
 
 Inspect:
 
-    samples/output/output_26_tableLayout.odt
+    samples/output/output_C02_advanced_table_layout.odt
 
 Check in LibreOffice:
 
@@ -90,11 +93,11 @@ Check in LibreOffice:
 
 Run:
 
-    php samples/sample_27_frameLayout.php
+    php samples/sample_C03_frame_layout.php
 
 Inspect:
 
-    samples/output/output_27_frameLayout.odt
+    samples/output/output_C03_frame_layout.odt
 
 Check in LibreOffice:
 

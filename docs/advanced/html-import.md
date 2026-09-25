@@ -169,9 +169,10 @@ If your application already owns structured data, building `RichText` directly i
 The importer intentionally supports a practical subset rather than full
 HTML/CSS rendering. In particular, do not expect browser-equivalent behavior
 for complex CSS layout, floats, advanced selectors, external stylesheets,
-scripts, or arbitrary web markup. The older `sample_html_images.php` records
-image-layout experiments (`float`, `display`, absolute offsets); these remain
-layout-sensitive evidence for C03, not L08 guarantees.
+scripts, or arbitrary web markup. Historical image-layout experiments with
+`float`, `display`, and absolute offsets showed that those layouts remain
+sensitive to Writer/ODF behavior; they are not L08 guarantees. Use C03 for
+current frame-layout behavior.
 
 Styled tables are useful document structures, but exact visual behavior
 should be verified with representative LibreOffice output. The current
@@ -187,6 +188,5 @@ migration target until nested-list behavior is resolved.
 - [L08 — HTML Import](../../samples/sample_L08_html_import.php) is the canonical broad capability example.
 - Sample 08 — historical HTML-to-editable-ODT lineage, retained in the registry during migration.
 - Sample 19 — historical HTML table import, now represented within L08.
-- `sample_html_images.php` — HTML image import behavior
 
 See [RichText & Paragraphs](../rich-documents/richtext-and-paragraphs.md) to understand the native element model produced by the importer.
