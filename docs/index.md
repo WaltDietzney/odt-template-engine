@@ -14,7 +14,7 @@ It combines LibreOffice-authored templates with PHP data, programmatically const
 
 ## Three complementary ways to make a document dynamic
 
-### 1. Template expressions
+### 1. Simple Template Processing
 
 For simple values and lightweight template logic, place expressions directly inside the ODT template:
 
@@ -28,7 +28,7 @@ For simple values and lightweight template logic, place expressions directly ins
 
 This keeps the surrounding structure in LibreOffice while PHP supplies values, conditions, and repeating data.
 
-### 2. Programmatically generated ODT elements
+### 2. Structured ODT Construction
 
 When PHP should own a dynamic content subtree, build native ODT elements and insert them into a placeholder:
 
@@ -49,7 +49,7 @@ $template->setElement('content', $richText);
 
 RichText, paragraphs, lists, tables, images, frames, and text boxes can be composed as native ODT structures.
 
-### 3. Addressable native ODT structures
+### 3. Writer-native Document Model
 
 When LibreOffice should remain the structural designer but PHP needs stable semantic handles, address named structures already present in the document:
 
@@ -85,9 +85,7 @@ chronological:
   mapping, preflight and bounded automation against a professional report
   template.
 
-Historical Samples 21 and 25 remain useful architecture evidence for the two
-ownership directions that S01b synthesizes; they are not a parallel public
-learning path. See the [Sample Guide](examples/sample-guide.md).
+Use the [Sample Guide](examples/sample-guide.md) for the canonical L/C/B/S learning path and ownership-oriented examples.
 
 The samples can also be executed through the public Sample Explorer.
 
