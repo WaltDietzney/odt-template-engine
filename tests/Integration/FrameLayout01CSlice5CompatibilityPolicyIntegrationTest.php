@@ -32,7 +32,7 @@ final class FrameLayout01CSlice5CompatibilityPolicyIntegrationTest extends TestC
     public function testEquivalentCompatibilityPolicyStylesDeduplicateAndRemainStableAcrossRepeatedSave(): void
     {
         $this->template = new OdtTemplate(
-            dirname(__DIR__, 2) . '/samples/templates/template_17_textfield.odt'
+            dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_17_textfield.odt'
         );
 
         $first = $this->policyBox('PolicyOne');

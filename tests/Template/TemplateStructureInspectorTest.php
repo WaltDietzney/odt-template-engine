@@ -47,7 +47,7 @@ final class TemplateStructureInspectorTest extends TestCase
 
     public function testInspectsOriginalSample25DespiteLegacyLoadNormalization(): void
     {
-        $template = new OdtTemplate(dirname(__DIR__, 2) . '/samples/templates/sample_25_sectionClone.odt');
+        $template = new OdtTemplate(dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/sample_25_sectionClone.odt');
         $inspection = $template->inspectTemplateStructure();
 
         foreach (['firstname', 'lastname', 'profession', 'note', 'position', 'activity'] as $variable) {

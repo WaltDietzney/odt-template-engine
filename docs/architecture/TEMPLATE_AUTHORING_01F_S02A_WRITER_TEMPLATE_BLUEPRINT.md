@@ -42,7 +42,7 @@ B01 is the visual and semantic design reference, not the XML source for S02.
 The canonical Writer template is planned as:
 
 ```text
-samples/templates/template_S02_professional_invoice.odt
+tests/Fixtures/LegacySamples/templates/template_S02_professional_invoice.odt
 ```
 
 S02-A creates and validates the template. The canonical rendering sample is a

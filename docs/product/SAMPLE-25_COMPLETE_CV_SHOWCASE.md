@@ -8,7 +8,7 @@ section collections in a LibreOffice-authored CV layout.
 
 ## Template and data
 
-The source is `samples/templates/sample_25_sectionClone.odt`. Its repeatable
+The source is `tests/Fixtures/LegacySamples/templates/sample_25_sectionClone.odt`. Its repeatable
 structure is an `ExperienceEntry` section containing an `ActivityEntry`
 section. The existing header, contact area, frames, lists, bookmarks and
 fixed-position layout remain native and are not rebuilt by the sample.
@@ -48,8 +48,8 @@ later Sample Explorer or Sample Editor inclusion.
 Visual acceptance requires local LibreOffice rendering:
 
 ```sh
-php samples/sample_25_sectionInstantiation.php
-./tools/visual-regression/render-odt.sh samples/output/output_25_sectionInstantiation.odt
+php tests/Fixtures/LegacySamples/sample_25_sectionInstantiation.php
+./tools/visual-regression/render-odt.sh tests/Fixtures/LegacySamples/output/output_25_sectionInstantiation.odt
 ```
 
 The sample does not add recursive mapping, document import, or prototype

@@ -79,7 +79,7 @@ final class StyleContextParagraphFinalizationTest extends TestCase
 
     private function templateWithParagraph(string $style, string $margin): OdtTemplate
     {
-        $template = new OdtTemplate(dirname(__DIR__, 2) . '/samples/templates/template_18_ListStyles.odt');
+        $template = new OdtTemplate(dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_18_ListStyles.odt');
         $paragraph = new Paragraph($style, ['margin-left' => $margin]);
         $paragraph->addText('Document-local paragraph');
         $template->setElement('my_list', (new RichText())->addParagraph($paragraph));

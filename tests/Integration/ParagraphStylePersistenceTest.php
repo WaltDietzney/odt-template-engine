@@ -30,7 +30,7 @@ final class ParagraphStylePersistenceTest extends TestCase
 
     public function testNamedParagraphStyleIsPersistedInStylesXml(): void
     {
-        $templatePath = dirname(__DIR__, 2) . '/samples/templates/template_18_ListStyles.odt';
+        $templatePath = dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_18_ListStyles.odt';
         self::assertFileExists($templatePath);
 
         $template = new OdtTemplate($templatePath);
@@ -100,7 +100,7 @@ final class ParagraphStylePersistenceTest extends TestCase
             'style:text-underline-style' => 'solid',
         ]);
 
-        $template = new OdtTemplate(dirname(__DIR__, 2) . '/samples/templates/template_18_ListStyles.odt');
+        $template = new OdtTemplate(dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_18_ListStyles.odt');
         $template->setElement('my_list', (new RichText())->addParagraph($paragraph));
         $template->save($this->outputFile);
 

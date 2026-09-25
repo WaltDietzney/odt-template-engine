@@ -57,7 +57,7 @@ final class StyleRequirementFontMaterializationTest extends TestCase
     {
         $fontA = 'SR05E Font A ' . bin2hex(random_bytes(3));
         $fontB = 'SR05E Font B ' . bin2hex(random_bytes(3));
-        $template = new OdtTemplate(dirname(__DIR__, 2) . '/samples/templates/template_18_ListStyles.odt');
+        $template = new OdtTemplate(dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_18_ListStyles.odt');
         $template->setElement('my_list', (new RichText())->addParagraph((new Paragraph())->addText('A', ['font-family' => $fontA])));
         $template->setElement('my_list_second', (new RichText())->addParagraph((new Paragraph())->addText('B', ['font-family' => $fontB])));
         $first = $this->temporaryDirectory . '/first.odt';
@@ -77,7 +77,7 @@ final class StyleRequirementFontMaterializationTest extends TestCase
     private function save(RichText $element): string
     {
         $output = $this->temporaryDirectory . '/document-' . bin2hex(random_bytes(3)) . '.odt';
-        $template = new OdtTemplate(dirname(__DIR__, 2) . '/samples/templates/template_18_ListStyles.odt');
+        $template = new OdtTemplate(dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_18_ListStyles.odt');
         $template->setElement('my_list', $element);
         $template->save($output);
 

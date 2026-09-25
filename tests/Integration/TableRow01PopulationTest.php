@@ -286,7 +286,7 @@ final class TableRow01PopulationTest extends TestCase
     private function template(string $variant = 'normal'): PopulationTemplate
     {
         $template = new PopulationTemplate(
-            dirname(__DIR__, 2) . '/samples/templates/template_01_simple_variables.odt'
+            dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_01_simple_variables.odt'
         );
         $template->addPopulationTable($variant);
 

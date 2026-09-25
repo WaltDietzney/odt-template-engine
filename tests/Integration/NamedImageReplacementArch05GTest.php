@@ -91,7 +91,7 @@ final class NamedImageReplacementArch05GTest extends TestCase
 
     private function templatePath(string $fileName): string
     {
-        $path = dirname(__DIR__, 2) . '/samples/templates/' . $fileName;
+        $path = dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/' . $fileName;
         self::assertFileExists($path);
 
         return $path;

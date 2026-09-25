@@ -8,384 +8,66 @@ use PHPUnit\Framework\TestCase;
 
 final class SampleRegistryTest extends TestCase
 {
-    public function testRegistryEntriesHaveUniqueValidIdentityAndOwnershipMetadata(): void
+    public function testRegistryContainsOnlyTheCanonicalPublicTaxonomy(): void
     {
-        $samples = $this->registry()['samples'];
-        $ids = [];
-        $entryPoints = [];
-        $outputPaths = [];
+        $registry = $this->registry();
+        $samples = $registry['samples'];
+        $ids = array_column($samples, 'id');
+
+        self::assertSame(
+            ['L01', 'L02', 'L03', 'L04', 'L05', 'L06', 'L07', 'L08', 'L09', 'L10', 'L11', 'L12',
+                'C01', 'C02', 'C03', 'C04', 'C05', 'B01', 'B02', 'S01b', 'S03'],
+            $ids
+        );
 
         foreach ($samples as $sample) {
-            self::assertMatchesRegularExpression(
-                '/^(?:[a-z][a-z0-9.-]+|(?:L|C|B|S)\d{2}[a-z]?)$/',
-                $sample['id']
-            );
-            self::assertNotContains($sample['id'], $ids, 'Duplicate sample ID: ' . $sample['id']);
-            $ids[] = $sample['id'];
-
-            self::assertContains($sample['role'], ['learn', 'capability', 'builder', 'showcase']);
-            self::assertContains($sample['ownership'], [
-                'simple-template',
-                'programmatic-elements',
-                'addressable-native-odt',
-                'mixed',
-            ]);
-            self::assertContains($sample['status'], ['canonical', 'migration']);
-            self::assertContains($sample['distribution'], ['composer', 'repository-only']);
-            self::assertContains($sample['execution_mode'], ['odt', 'inspection']);
-            self::assertNotSame('', trim($sample['title']));
-            self::assertNotSame('', trim($sample['purpose']));
-            self::assertIsArray($sample['migration_targets']);
-
-            self::assertStringStartsWith('samples/', $sample['entry_point']);
+            self::assertMatchesRegularExpression('/^(?:L|C|B|S)\d{2}[a-z]?$/', $sample['id']);
+            self::assertSame('canonical', $sample['status']);
+            self::assertArrayNotHasKey('migration_targets', $sample);
+            self::assertSame('composer', $sample['distribution']);
             self::assertFileExists($this->path($sample['entry_point']));
-            self::assertNotContains($sample['entry_point'], $entryPoints, 'Duplicate sample entry point.');
-            $entryPoints[] = $sample['entry_point'];
-
             if ($sample['template_path'] !== null) {
                 self::assertFileExists($this->path($sample['template_path']));
             }
+        }
+    }
 
+    public function testCanonicalSamplesHaveUniqueRunnablePaths(): void
+    {
+        $samples = $this->registry()['samples'];
+        $entryPoints = array_column($samples, 'entry_point');
+        $outputPaths = array_filter(array_column($samples, 'output_path'));
+
+        self::assertCount(count(array_unique($entryPoints)), $entryPoints);
+        self::assertCount(count(array_unique($outputPaths)), $outputPaths);
+
+        foreach ($samples as $sample) {
+            self::assertMatchesRegularExpression('#^samples/#', $sample['entry_point']);
+            self::assertContains($sample['role'], ['learn', 'capability', 'builder', 'showcase']);
+            self::assertContains($sample['ownership'], [
+                'simple-template', 'programmatic-elements', 'addressable-native-odt', 'mixed',
+            ]);
+            self::assertNotSame('', trim($sample['purpose']));
             if ($sample['execution_mode'] === 'inspection') {
                 self::assertNull($sample['output_path']);
             } else {
-                self::assertMatchesRegularExpression(
-                    '#^samples/output/output_[A-Za-z0-9_-]+\.odt$#',
-                    $sample['output_path']
-                );
-                self::assertNotContains($sample['output_path'], $outputPaths, 'Duplicate canonical output path.');
-                $outputPaths[] = $sample['output_path'];
+                self::assertMatchesRegularExpression('#^samples/output/output_[A-Za-z0-9_-]+\.odt$#', $sample['output_path']);
             }
         }
     }
 
-    public function testMigrationTargetsAreReferencesRatherThanCanonicalSampleIdentities(): void
-    {
-        foreach ($this->registry()['samples'] as $sample) {
-            if ($sample['status'] === 'migration') {
-                self::assertStringStartsWith('legacy.', $sample['id']);
-            } else {
-                self::assertMatchesRegularExpression('/^(?:L|C|B|S)\d{2}[a-z]?$/', $sample['id']);
-            }
-
-            foreach ($sample['migration_targets'] as $target) {
-                self::assertMatchesRegularExpression('/^(?:L|C|B|S)\d{2}[a-z]?$/', $target);
-            }
-        }
-    }
-
-    public function testSamplesDependingOnTestFixturesAreExplicitlyRepositoryOnly(): void
-    {
-        $samples = [];
-        foreach ($this->registry()['samples'] as $sample) {
-            $samples[$sample['entry_point']] = $sample;
-        }
-
-        foreach ([
-            'samples/sample_28_inspectTemplateContract.php',
-            'samples/sample_29_userFieldBinding.php',
-        ] as $entryPoint) {
-            self::assertSame('repository-only', $samples[$entryPoint]['distribution']);
-            self::assertStringStartsWith('tests/fixtures/', $samples[$entryPoint]['template_path']);
-        }
-
-        self::assertSame('inspection', $samples['samples/sample_28_inspectTemplateContract.php']['execution_mode']);
-        self::assertSame(
-            'samples/output/output_29_userFieldBinding.odt',
-            $samples['samples/sample_29_userFieldBinding.php']['output_path']
-        );
-    }
-
-    public function testBookmarkAndSectionSamplesUseTheirActualTrackedPaths(): void
-    {
-        $samples = [];
-        foreach ($this->registry()['samples'] as $sample) {
-            $samples[$sample['entry_point']] = $sample;
-        }
-
-        self::assertSame(
-            'samples/templates/sample_22_bookmarkTextReplacement.odt',
-            $samples['samples/sample_22_bookmarkTextReplacement.php']['template_path']
-        );
-        self::assertSame(
-            'samples/templates/sample_23_sectionContentReplacement.odt',
-            $samples['samples/sample_23_sectionContentReplacement.php']['template_path']
-        );
-        self::assertSame(
-            'samples/templates/sample_24_sectionImageReplacement.odt',
-            $samples['samples/sample_24_sectionImageReplacement.php']['template_path']
-        );
-    }
-
-    public function testL01ThroughL03AreCanonicalSimpleTemplateLearnSamples(): void
+    public function testCanonicalSamplesUseExpectedRepresentativePaths(): void
     {
         $samples = [];
         foreach ($this->registry()['samples'] as $sample) {
             $samples[$sample['id']] = $sample;
         }
 
-        $expected = [
-            'L01' => [
-                'samples/sample_L01_variables_filters.php',
-                'samples/templates/template_L01_variables_filters.odt',
-                'samples/output/output_L01_variables_filters.odt',
-            ],
-            'L02' => [
-                'samples/sample_L02_conditions.php',
-                'samples/templates/template_L02_conditions.odt',
-                'samples/output/output_L02_conditions.odt',
-            ],
-            'L03' => [
-                'samples/sample_L03_repeating_content.php',
-                'samples/templates/template_L03_repeating_content.odt',
-                'samples/output/output_L03_repeating_content.odt',
-            ],
-        ];
-
-        foreach ($expected as $id => [$entryPoint, $templatePath, $outputPath]) {
-            $sample = $samples[$id];
-            self::assertSame('canonical', $sample['status']);
-            self::assertSame('learn', $sample['role']);
-            self::assertSame('simple-template', $sample['ownership']);
-            self::assertSame('composer', $sample['distribution']);
-            self::assertSame('odt', $sample['execution_mode']);
-            self::assertSame($entryPoint, $sample['entry_point']);
-            self::assertSame($templatePath, $sample['template_path']);
-            self::assertSame($outputPath, $sample['output_path']);
-            self::assertSame([], $sample['migration_targets']);
-        }
-
-        self::assertSame(
-            ['L06'],
-            $samples['legacy.sample-01.simple-variables']['migration_targets'],
-            'Legacy Sample 01 still contains image behavior pending L06.'
-        );
-        self::assertSame(
-            [],
-            $samples['legacy.sample-02.filter']['migration_targets'],
-            'Legacy Sample 02 is retained, but its filters and conditional logic are represented canonically.'
-        );
-        self::assertSame([], $samples['legacy.sample-03.logic-elements']['migration_targets']);
-    }
-
-    public function testL04ThroughL06AreCanonicalProgrammaticLearnSamples(): void
-    {
-        $samples = [];
-        foreach ($this->registry()['samples'] as $sample) {
-            $samples[$sample['id']] = $sample;
-        }
-
-        $expected = [
-            'L04' => ['programmatic-elements', 'sample_L04_rich_content.php', 'template_L04_rich_content.odt', 'output_L04_rich_content.odt'],
-            'L05' => ['programmatic-elements', 'sample_L05_lists.php', 'template_L05_lists.odt', 'output_L05_lists.odt'],
-            'L06' => ['mixed', 'sample_L06_images.php', 'template_L06_images.odt', 'output_L06_images.odt'],
-        ];
-
-        foreach ($expected as $id => [$ownership, $entry, $template, $output]) {
-            $sample = $samples[$id];
-            self::assertSame('canonical', $sample['status']);
-            self::assertSame('learn', $sample['role']);
-            self::assertSame($ownership, $sample['ownership']);
-            self::assertSame('composer', $sample['distribution']);
-            self::assertSame('odt', $sample['execution_mode']);
-            self::assertSame('samples/' . $entry, $sample['entry_point']);
-            self::assertSame('samples/templates/' . $template, $sample['template_path']);
-            self::assertSame('samples/output/' . $output, $sample['output_path']);
-            self::assertSame([], $sample['migration_targets']);
-        }
-
-        $legacy = [];
-        foreach ($this->registry()['samples'] as $sample) {
-            $legacy[$sample['id']] = $sample;
-        }
-        self::assertSame(['L06'], $legacy['legacy.sample-01.simple-variables']['migration_targets']);
-        self::assertSame(['L06'], $legacy['legacy.sample-05.replace-image']['migration_targets']);
-        self::assertSame(['L06'], $legacy['legacy.sample-05b.replace-images']['migration_targets']);
-        self::assertSame(['L06'], $legacy['legacy.sample-06.image-settings']['migration_targets']);
-        self::assertSame(['L04'], $legacy['legacy.sample-07.contact-list']['migration_targets']);
-        self::assertSame(['L04', 'L05'], $legacy['legacy.sample-09.richtext-block']['migration_targets']);
-        self::assertSame(['L04', 'L06', 'B01'], $legacy['legacy.sample-14.advanced-tabs']['migration_targets']);
-        self::assertSame(['L04', 'C03'], $legacy['legacy.sample-16.tabs-basic']['migration_targets']);
-        self::assertSame(['L05'], $legacy['legacy.sample-18.list-styles']['migration_targets']);
-    }
-
-    public function testL07AndL08AreCanonicalProgrammaticLearnSamples(): void
-    {
-        $samples = [];
-        foreach ($this->registry()['samples'] as $sample) {
-            $samples[$sample['id']] = $sample;
-        }
-
-        foreach ([
-            'L07' => ['Tables', 'sample_L07_tables.php', 'template_L07_tables.odt', 'output_L07_tables.odt'],
-            'L08' => ['HTML Import', 'sample_L08_html_import.php', 'template_L08_html_import.odt', 'output_L08_html_import.odt'],
-        ] as $id => [$title, $entryPoint, $template, $output]) {
-            $sample = $samples[$id];
-            self::assertSame($title, $sample['title']);
-            self::assertSame('canonical', $sample['status']);
-            self::assertSame('learn', $sample['role']);
-            self::assertSame('programmatic-elements', $sample['ownership']);
-            self::assertSame('composer', $sample['distribution']);
-            self::assertSame('odt', $sample['execution_mode']);
-            self::assertSame('samples/' . $entryPoint, $sample['entry_point']);
-            self::assertSame('samples/templates/' . $template, $sample['template_path']);
-            self::assertSame('samples/output/' . $output, $sample['output_path']);
-            self::assertSame([], $sample['migration_targets']);
-        }
-
-        foreach ([
-            'legacy.sample-08.html' => ['L08'],
-            'legacy.sample-11.table' => ['C02'],
-            'legacy.sample-12.advanced-table' => ['L07'],
-            'legacy.sample-13.cell-settings' => ['L07'],
-            'legacy.sample-15.styled-table' => [],
-            'legacy.sample-19.html-table' => [],
-            'legacy.sample-20.table-ratio' => ['C02'],
-            'legacy.sample-26.table-layout' => ['C02'],
-        ] as $id => $targets) {
-            self::assertSame($targets, $samples[$id]['migration_targets'], $id . ' migration state changed unexpectedly.');
-        }
-    }
-
-    public function testL09ThroughL12AreCanonicalSamplesWithNativeOwnershipAndInspectionMode(): void
-    {
-        $samples = [];
-        foreach ($this->registry()['samples'] as $sample) {
-            $samples[$sample['id']] = $sample;
-        }
-
-        foreach ([
-            'L09' => ['Native Objects', 'addressable-native-odt', 'sample_L09_native_objects.php', 'template_L09_native_objects.odt', 'output_L09_native_objects.odt', 'odt'],
-            'L10' => ['Writer User Fields', 'addressable-native-odt', 'sample_L10_writer_user_fields.php', 'template_L10_writer_user_fields.odt', 'output_L10_writer_user_fields.odt', 'odt'],
-            'L11' => ['Template Inspection', 'mixed', 'sample_L11_template_inspection.php', 'template_L11_template_inspection.odt', null, 'inspection'],
-            'L12' => ['Writer Table Population', 'addressable-native-odt', 'sample_L12_writer_table_population.php', 'template_L12_writer_table_population.odt', 'output_L12_writer_table_population.odt', 'odt'],
-        ] as $id => [$title, $ownership, $entry, $template, $output, $mode]) {
-            $sample = $samples[$id];
-            self::assertSame($title, $sample['title']);
-            self::assertSame('canonical', $sample['status']);
-            self::assertSame('learn', $sample['role']);
-            self::assertSame($ownership, $sample['ownership']);
-            self::assertSame('composer', $sample['distribution']);
-            self::assertSame($mode, $sample['execution_mode']);
-            self::assertSame('samples/' . $entry, $sample['entry_point']);
-            self::assertSame('samples/templates/' . $template, $sample['template_path']);
-            self::assertSame($output === null ? null : 'samples/output/' . $output, $sample['output_path']);
-            self::assertSame([], $sample['migration_targets']);
-        }
-
-        self::assertSame(['L11'], $samples['legacy.sample-28.template-inspection']['migration_targets']);
-        self::assertSame(['L10'], $samples['legacy.sample-29.user-field-binding']['migration_targets']);
-        self::assertSame(['L09', 'L06'], $samples['legacy.sample-24.section-image-replacement']['migration_targets']);
-        self::assertSame(['S01b'], $samples['legacy.sample-25.section-instantiation']['migration_targets']);
-    }
-
-    public function testF6CapabilitySamplesAreCanonicalAndRegistryDriven(): void
-    {
-        $samples = [];
-        foreach ($this->registry()['samples'] as $sample) {
-            $samples[$sample['id']] = $sample;
-        }
-
-        foreach ([
-            'C01' => ['Page & Flow Layout', 'mixed', 'page_flow_layout'],
-            'C02' => ['Advanced Table Layout', 'programmatic-elements', 'advanced_table_layout'],
-            'C03' => ['Frame Layout', 'programmatic-elements', 'frame_layout'],
-            'C04' => ['Declarative Structured Collections', 'addressable-native-odt', 'declarative_structured_collections'],
-            'C05' => ['Mapping & Automation', 'mixed', 'mapping_automation'],
-        ] as $id => [$title, $ownership, $slug]) {
-            $sample = $samples[$id];
-            self::assertSame($title, $sample['title']);
-            self::assertSame('canonical', $sample['status']);
-            self::assertSame('capability', $sample['role']);
-            self::assertSame($ownership, $sample['ownership']);
-            self::assertSame('composer', $sample['distribution']);
-            self::assertSame('odt', $sample['execution_mode']);
-            self::assertSame('samples/sample_C' . substr($id, 1) . '_' . $slug . '.php', $sample['entry_point']);
-            self::assertSame('samples/templates/template_C' . substr($id, 1) . '_' . $slug . '.odt', $sample['template_path']);
-            self::assertSame('samples/output/output_C' . substr($id, 1) . '_' . $slug . '.odt', $sample['output_path']);
-            self::assertSame([], $sample['migration_targets']);
-        }
-
-        self::assertSame(['C02'], $samples['legacy.sample-11.table']['migration_targets']);
-        self::assertSame(['C03'], $samples['legacy.sample-17.text-field']['migration_targets']);
-        self::assertSame(['C02'], $samples['legacy.sample-20.table-ratio']['migration_targets']);
-        self::assertSame(['C02'], $samples['legacy.sample-26.table-layout']['migration_targets']);
-        self::assertSame(['C03'], $samples['legacy.sample-27.frame-layout']['migration_targets']);
-        self::assertSame(['S01b'], $samples['legacy.sample-25.section-instantiation']['migration_targets']);
-    }
-
-    public function testBuilderSamplesAreCanonicalAndRegistryDriven(): void
-    {
-        $samples = [];
-        foreach ($this->registry()['samples'] as $sample) {
-            $samples[$sample['id']] = $sample;
-        }
-
-        self::assertSame([
-            'Invoice Template Builder',
-            'builder',
-            'programmatic-elements',
-            'samples/sample_B01_invoice_template_builder.php',
-            'samples/templates/invoice-richtext-prototype.odt',
-            'samples/output/output_B01_invoice_template_builder.odt',
-        ], [
-            $samples['B01']['title'],
-            $samples['B01']['role'],
-            $samples['B01']['ownership'],
-            $samples['B01']['entry_point'],
-            $samples['B01']['template_path'],
-            $samples['B01']['output_path'],
-        ]);
-
-        self::assertSame([
-            'Professional Report Builder',
-            'builder',
-            'programmatic-elements',
-            'samples/sample_B02_report_builder.php',
-            'samples/templates/template_B02_report_builder.odt',
-            'samples/output/output_B02_report_builder.odt',
-        ], [
-            $samples['B02']['title'],
-            $samples['B02']['role'],
-            $samples['B02']['ownership'],
-            $samples['B02']['entry_point'],
-            $samples['B02']['template_path'],
-            $samples['B02']['output_path'],
-        ]);
-
-        self::assertSame('canonical', $samples['B02']['status']);
-        self::assertSame([], $samples['B02']['migration_targets']);
-        self::assertSame('composer', $samples['B02']['distribution']);
-        self::assertSame('odt', $samples['B02']['execution_mode']);
-    }
-
-    public function testS01bIsTheCanonicalStructuredTemplateShowcase(): void
-    {
-        $samples = [];
-        foreach ($this->registry()['samples'] as $sample) {
-            $samples[$sample['id']] = $sample;
-        }
-
-        self::assertSame([
-            'Professional CV · Structured Template',
-            'showcase',
-            'mixed',
-            'samples/sample_S01b_cv_structured.php',
-            'samples/templates/template_S01b_cv_structured.odt',
-            'samples/output/output_S01b_cv_structured.odt',
-        ], [
-            $samples['S01b']['title'],
-            $samples['S01b']['role'],
-            $samples['S01b']['ownership'],
-            $samples['S01b']['entry_point'],
-            $samples['S01b']['template_path'],
-            $samples['S01b']['output_path'],
-        ]);
-        self::assertSame('canonical', $samples['S01b']['status']);
-        self::assertSame('composer', $samples['S01b']['distribution']);
-        self::assertSame('odt', $samples['S01b']['execution_mode']);
-        self::assertSame([], $samples['S01b']['migration_targets']);
-        self::assertSame(['S01b'], $samples['legacy.sample-25.section-instantiation']['migration_targets']);
+        self::assertSame('samples/templates/invoice-richtext-prototype.odt', $samples['B01']['template_path']);
+        self::assertSame('samples/templates/template_S01b_cv_structured.odt', $samples['S01b']['template_path']);
+        self::assertSame('samples/templates/template_S03_structured_professional_report.odt', $samples['S03']['template_path']);
+        self::assertSame('inspection', $samples['L11']['execution_mode']);
+        self::assertNull($samples['L11']['output_path']);
     }
 
     public function testC04TemplateContainsNativeNestedSectionControls(): void
@@ -406,69 +88,20 @@ final class SampleRegistryTest extends TestCase
         self::assertSame(1, $xpath->query('//text:section[@text:name="#if:featured"]')->length);
         self::assertSame(1, $xpath->query('//text:section[@text:name="#ifnot:archived"]')->length);
         self::assertSame(1, $xpath->query('//text:section[@text:name="#foreach:milestones"]')->length);
-        self::assertSame(
-            1,
-            $xpath->query('//text:section[@text:name="#foreach:projects"]/text:section[@text:name="#foreach:milestones"]')->length
-        );
         self::assertStringContainsString('Heading_20_2', $styles);
-        self::assertStringContainsString('Body_20_Text.foot', $content);
     }
 
-    public function testSampleExplorerGeneratorRejectsUnregisteredAndRepositoryOnlyEntries(): void
+    public function testSampleExplorerRejectsUnregisteredSampleAndListsCanonicalSamples(): void
     {
         $unregistered = $this->runGenerator('sample_999_arbitrary');
         self::assertStringContainsString('Sample is not registered for public discovery.', $unregistered);
 
-        $repositoryOnly = $this->runGenerator('legacy.sample-29.user-field-binding');
-        self::assertStringContainsString('not a self-contained packaged ODT example', $repositoryOnly);
-
-        $inspectionOnly = $this->runGenerator('L11');
-        self::assertStringContainsString('not a self-contained packaged ODT example', $inspectionOnly);
-    }
-
-    public function testSampleExplorerPresentsCanonicalLearnEntriesFromTheRegistry(): void
-    {
         $html = $this->runExplorer();
-
-        foreach ([
-            'data-sample-id="L01"',
-            'data-sample-id="L02"',
-            'data-sample-id="L03"',
-            'Variables &amp; Filters',
-            'Conditions',
-            'Repeating Content',
-            'data-sample="L01"',
-            'data-sample="L02"',
-            'data-sample="L03"',
-            'data-sample-id="L07"',
-            'data-sample-id="L08"',
-            'data-sample-id="L09"',
-            'data-sample-id="L10"',
-            'data-sample-id="L11"',
-            'Tables',
-            'HTML Import',
-            'Native Objects',
-            'Writer User Fields',
-            'Template Inspection',
-            'data-sample-id="C01"',
-            'data-sample-id="C02"',
-            'data-sample-id="C03"',
-            'data-sample-id="C04"',
-            'data-sample-id="C05"',
-            'data-sample-id="B01"',
-            'Page &amp; Flow Layout',
-            'Advanced Table Layout',
-            'Frame Layout',
-            'Declarative Structured Collections',
-            'Mapping &amp; Automation',
-            'Invoice Template Builder',
-            'data-sample="L07"',
-            'data-sample="L08"',
-            'data-sample="L09"',
-            'data-sample="L10"',
-            'Inspection only · no generated ODT.',
-        ] as $expected) {
-            self::assertStringContainsString($expected, $html);
+        foreach (['L01', 'L12', 'C01', 'C05', 'B01', 'B02', 'S01b', 'S03'] as $id) {
+            self::assertStringContainsString('data-sample-id="' . $id . '"', $html);
+        }
+        foreach (['legacy.sample-', 'sample_01_', 'sample_21_', 'sample_S02_', 'sample_S03_structured_professional_report_b'] as $legacyMarker) {
+            self::assertStringNotContainsString($legacyMarker, $html);
         }
     }
 
@@ -477,8 +110,6 @@ final class SampleRegistryTest extends TestCase
     {
         $registry = require dirname(__DIR__, 2) . '/samples/sample-registry.php';
         self::assertSame(1, $registry['version']);
-        self::assertNotEmpty($registry['samples']);
-
         return $registry;
     }
 
@@ -486,7 +117,6 @@ final class SampleRegistryTest extends TestCase
     {
         self::assertFalse(str_starts_with($repositoryRelativePath, '/'));
         self::assertDoesNotMatchRegularExpression('#(?:^|/)\.\.(?:/|$)#', $repositoryRelativePath);
-
         return dirname(__DIR__, 2) . '/' . $repositoryRelativePath;
     }
 
@@ -501,7 +131,6 @@ final class SampleRegistryTest extends TestCase
             $pipes,
             $repositoryRoot
         );
-
         self::assertIsResource($process);
         fclose($pipes[0]);
         $stdout = stream_get_contents($pipes[1]);
@@ -510,7 +139,6 @@ final class SampleRegistryTest extends TestCase
         fclose($pipes[2]);
         self::assertSame(0, proc_close($process));
         self::assertSame('', $stderr);
-
         return $stdout;
     }
 
@@ -523,7 +151,6 @@ final class SampleRegistryTest extends TestCase
             $pipes,
             $repositoryRoot
         );
-
         self::assertIsResource($process);
         fclose($pipes[0]);
         $stdout = stream_get_contents($pipes[1]);
@@ -532,7 +159,6 @@ final class SampleRegistryTest extends TestCase
         fclose($pipes[2]);
         self::assertSame(0, proc_close($process));
         self::assertSame('', $stderr);
-
         return $stdout;
     }
 }

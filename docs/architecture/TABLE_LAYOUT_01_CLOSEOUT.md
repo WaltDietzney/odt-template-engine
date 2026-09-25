@@ -178,13 +178,13 @@ The deprecations are existing PHPUnit metadata deprecations and are not TABLE-LA
 A dedicated manual showcase script was added:
 
 ```text
-samples/sample_26_tableLayout.php
+tests/Fixtures/LegacySamples/sample_26_tableLayout.php
 ```
 
 The locally authored companion template is:
 
 ```text
-samples/templates/template_26_tableLayout.odt
+tests/Fixtures/LegacySamples/templates/template_26_tableLayout.odt
 ```
 
 with placeholders:
@@ -237,8 +237,8 @@ It is a bounded future architecture topic, not a reason to weaken semantic confl
 The public showcase is complete in the branch:
 
 ```text
-samples/sample_26_tableLayout.php
-samples/templates/template_26_tableLayout.odt
+tests/Fixtures/LegacySamples/sample_26_tableLayout.php
+tests/Fixtures/LegacySamples/templates/template_26_tableLayout.odt
 ```
 
 `PublicSampleSmokeTest` now includes Sample 26 and passed with:
@@ -251,7 +251,7 @@ samples/templates/template_26_tableLayout.odt
 The generated output:
 
 ```text
-samples/output/output_26_tableLayout.odt
+tests/Fixtures/LegacySamples/output/output_26_tableLayout.odt
 ```
 
 remains a local regression artifact and is intentionally not committed.

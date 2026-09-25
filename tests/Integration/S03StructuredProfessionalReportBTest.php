@@ -15,7 +15,7 @@ final class S03StructuredProfessionalReportBTest extends TestCase
     public function testS03BComposesASecondReportFromTheCanonicalWriterTemplate(): void
     {
         $template = $this->openArchive('samples/templates/template_S03_structured_professional_report.odt');
-        $output = $this->openArchive('samples/output/output_S03_structured_professional_report_b.odt');
+        $output = $this->openArchive('tests/Fixtures/LegacySamples/output/output_S03_structured_professional_report_b.odt');
 
         try {
             $templateContent = $this->part($template, 'content.xml');
@@ -24,8 +24,8 @@ final class S03StructuredProfessionalReportBTest extends TestCase
 
             self::assertStringNotContainsString('{{', $templateContent);
             self::assertStringNotContainsString('{{', $outputContent);
-            self::assertStringNotContainsString('DOMDocument', file_get_contents(dirname(__DIR__, 2) . '/samples/sample_S03_structured_professional_report_b.php'));
-            self::assertStringNotContainsString('DOMXPath', file_get_contents(dirname(__DIR__, 2) . '/samples/sample_S03_structured_professional_report_b.php'));
+            self::assertStringNotContainsString('DOMDocument', file_get_contents(dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/sample_S03_structured_professional_report_b.php'));
+            self::assertStringNotContainsString('DOMXPath', file_get_contents(dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/sample_S03_structured_professional_report_b.php'));
             self::assertStringContainsString('Northbridge Community Trust', $outputContent);
             self::assertStringContainsString('ForwardWorks Initiative', $outputContent);
             self::assertStringContainsString('Strategic Review', $outputContent);
@@ -59,7 +59,7 @@ final class S03StructuredProfessionalReportBTest extends TestCase
             $output->close();
         }
 
-        $reopened = new OdtTemplate(dirname(__DIR__, 2) . '/samples/output/output_S03_structured_professional_report_b.odt');
+        $reopened = new OdtTemplate(dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/output/output_S03_structured_professional_report_b.odt');
         self::assertSame('FindingDigitalConfidence_1', $reopened->section('FindingDigitalConfidence_1')->descriptor()->name());
         self::assertSame('ProgramObjectivesContent', $reopened->section('ProgramObjectivesContent')->descriptor()->name());
     }

@@ -207,7 +207,7 @@ final class DocumentInspectorTest extends TestCase
 
     public function testFacadeCreatesFreshReadOnlySnapshotsAcrossLifecycleReset(): void
     {
-        $template = new OdtTemplate('samples/templates/template_01_simple_variables.odt');
+        $template = new OdtTemplate('tests/Fixtures/LegacySamples/templates/template_01_simple_variables.odt');
         $before = $template->inspect();
         $template->load();
         $after = $template->inspect();

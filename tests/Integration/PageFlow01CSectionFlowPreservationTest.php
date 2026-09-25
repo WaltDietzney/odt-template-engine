@@ -137,7 +137,7 @@ final class PageFlow01CSectionFlowPreservationTest extends TestCase
     private function createWriterStyleFixture(): string
     {
         $fixture = tempnam(sys_get_temp_dir(), 'odt-page-flow-01c-fixture-') . '.odt';
-        self::assertTrue(copy('samples/templates/template_01_simple_variables.odt', $fixture));
+        self::assertTrue(copy('tests/Fixtures/LegacySamples/templates/template_01_simple_variables.odt', $fixture));
 
         $zip = new ZipArchive();
         self::assertTrue($zip->open($fixture));

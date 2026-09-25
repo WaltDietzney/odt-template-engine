@@ -32,7 +32,7 @@ The focused Slice 2 test set passed locally after the migration, including:
 
 ## LibreOffice Writer evidence
 
-The migrated `samples/sample_17_textfield.php` output was opened directly in LibreOffice Writer without a repair error.
+The migrated `tests/Fixtures/LegacySamples/sample_17_textfield.php` output was opened directly in LibreOffice Writer without a repair error.
 
 Manual visual inspection confirmed all three intended placement classes:
 

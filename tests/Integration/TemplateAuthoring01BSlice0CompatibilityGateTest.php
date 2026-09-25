@@ -31,7 +31,7 @@ final class TemplateAuthoring01BSlice0CompatibilityGateTest extends TestCase
     public function testExistingInspectionFacadeReturnTypesAndSerializedTopLevelShapeRemainStable(): void
     {
         $template = new OdtTemplate(
-            dirname(__DIR__, 2) . '/samples/templates/template_01_simple_variables.odt'
+            dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_01_simple_variables.odt'
         );
 
         $documentInspection = $template->inspect();
@@ -54,7 +54,7 @@ final class TemplateAuthoring01BSlice0CompatibilityGateTest extends TestCase
     public function testFocusedTemplateStructureInspectionRemainsSourceStableAcrossRenderAndSave(): void
     {
         $template = new OdtTemplate(
-            dirname(__DIR__, 2) . '/samples/templates/template_01_simple_variables.odt'
+            dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_01_simple_variables.odt'
         );
 
         $before = $template->inspectTemplateStructure()->toArray();

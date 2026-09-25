@@ -358,7 +358,7 @@ final class StyleContextCompositeMaterializationCharacterizationTest extends Tes
 
     private function templatePath(string $name): string
     {
-        return dirname(__DIR__, 2) . '/samples/templates/' . $name;
+        return dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/' . $name;
     }
 
     private static function imagePath(): string

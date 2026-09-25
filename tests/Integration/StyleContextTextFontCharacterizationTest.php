@@ -72,7 +72,7 @@ final class StyleContextTextFontCharacterizationTest extends TestCase
     /** @return array{0: OdtTemplate, 1: string} */
     private function templateWithStyledText(string $font, string $color): array
     {
-        $template = new OdtTemplate(dirname(__DIR__, 2) . '/samples/templates/template_18_ListStyles.odt');
+        $template = new OdtTemplate(dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_18_ListStyles.odt');
         $paragraph = new Paragraph();
         $paragraph->addText('Styled text', [
             'font-family' => $font,

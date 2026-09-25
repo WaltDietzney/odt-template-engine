@@ -155,7 +155,7 @@ final class StyleContextGraphicImageAdoptionTest extends TestCase
 
     private function templatePath(string $name): string
     {
-        return dirname(__DIR__, 2) . '/samples/templates/' . $name;
+        return dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/' . $name;
     }
 
     private function imagePath(): string

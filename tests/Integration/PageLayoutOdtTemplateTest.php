@@ -16,7 +16,7 @@ class PageLayoutOdtTemplateTest extends TestCase
 
     public function testSetPageMarginsUpdatesStylesXml(): void
     {
-        $template = new PageLayoutOdtTemplate('samples/templates/template_01_simple_variables.odt');
+        $template = new PageLayoutOdtTemplate('tests/Fixtures/LegacySamples/templates/template_01_simple_variables.odt');
         $template->setPageMargins('0.5cm', '1cm', '1.5cm', '2cm');
 
         $output = sys_get_temp_dir() . '/odt-page-layout-' . uniqid('', true) . '.odt';
@@ -36,7 +36,7 @@ class PageLayoutOdtTemplateTest extends TestCase
 
     public function testSetPageMarginsPreservesSetPageLayoutPolymorphism(): void
     {
-        $template = new class ('samples/templates/template_01_simple_variables.odt') extends PageLayoutOdtTemplate {
+        $template = new class ('tests/Fixtures/LegacySamples/templates/template_01_simple_variables.odt') extends PageLayoutOdtTemplate {
             public bool $setPageLayoutCalled = false;
 
             public function setPageLayout(array $options, string $masterPage = 'Standard'): static
@@ -54,7 +54,7 @@ class PageLayoutOdtTemplateTest extends TestCase
 
     public function testSetPageLayoutCanChangeOrientationAndPageSize(): void
     {
-        $template = new PageLayoutOdtTemplate('samples/templates/template_01_simple_variables.odt');
+        $template = new PageLayoutOdtTemplate('tests/Fixtures/LegacySamples/templates/template_01_simple_variables.odt');
         $template->setPageLayout([
             'page-width' => '29.7cm',
             'page-height' => '21cm',

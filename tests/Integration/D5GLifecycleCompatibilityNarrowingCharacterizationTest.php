@@ -13,7 +13,7 @@ final class D5GLifecycleCompatibilityNarrowingCharacterizationTest extends TestC
 {
     public function testLegacyParagraphLifecycleDoesNotNeedRegistryFinalization(): void
     {
-        $template = new OdtTemplate(dirname(__DIR__, 2) . '/samples/templates/sample_textfeld.odt');
+        $template = new OdtTemplate(dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/sample_textfeld.odt');
         $template->assign(['test1' => new Paragraph()]);
         $template->render();
 

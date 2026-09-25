@@ -180,13 +180,13 @@ When exact stable geometry matters, prefer defining that structure in the LibreO
 ## Related samples
 
 - [L07 — Tables](../../samples/sample_L07_tables.php) is the focused Learn example for native PHP-generated table structure.
-- Sample 11 — historical generated table basics
-- Sample 12 — advanced table content and styling
-- Sample 13 — table-cell configuration
-- Sample 15 — styled simple table
+- L07 — historical generated table basics
+- C02 — advanced table content and styling
+- L07 — table-cell configuration
+- L07 — styled simple table
 - [L08 — HTML Import](../../samples/sample_L08_html_import.php) converts a styled HTML table into native ODT table/cell structures.
-- Sample 19 — historical HTML table import, retained as migration evidence
-- Sample 20 — relative column-width ratios
+- L08 — historical HTML table import, retained as migration evidence
+- C02 — relative column-width ratios
 - [C02 — Advanced Table Layout](../../samples/sample_C02_advanced_table_layout.php) combines whole-table geometry, relative column ratios, row geometry, vertical cell alignment, and paragraph alignment. Its tables avoid incompatible positional column-style requirements; C02 does not resolve the open column-identity question.
 
 See [Table & Cell Styles](../styling/table-and-cell-styles.md) for the style-responsibility model.

@@ -137,6 +137,6 @@ For practical LibreOffice authoring rules, nested section ownership, dynamic len
 - [L09 Native Objects](../../samples/sample_L09_native_objects.php) — bookmark text replacement, Section content replacement, and descriptor-only named table/frame access;
 - [L10 Writer User Fields](../../samples/sample_L10_writer_user_fields.php) — document-global string User Field binding;
 - Samples 22–24 — historical mutation/regression evidence;
-- Sample 25 — complete CV showcase using section instantiation and nested collections.
+- C04 — complete CV showcase using section instantiation and nested collections.
 
 Continue with [Named Sections](named-sections.md) for the most capable current target API and the [Sample Guide](../examples/sample-guide.md) for the executable examples.

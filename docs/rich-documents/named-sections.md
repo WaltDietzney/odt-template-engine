@@ -308,14 +308,14 @@ $template->render();
 $template->save(__DIR__ . '/output/cv.odt');
 ```
 
-For the full executable/public example, see [Sample 25 — Complete CV
-showcase](../product/SAMPLE-25_COMPLETE_CV_SHOWCASE.md) and
-`samples/sample_25_sectionInstantiation.php`.
+For the full executable/public examples, see [S01b — Professional CV ·
+Structured Template](../../samples/sample_S01b_cv_structured.php) and
+[C04 — Declarative Structured Collections](../../samples/sample_C04_declarative_structured_collections.php).
 
 ## Related guidance
 
 - [Practical ODT template authoring guide](../getting-started/template-authoring-guide.md) — how to design the ODT in LibreOffice.
 - [Variables & Filters](../template-language/variables-and-filters.md) — scalar and filter syntax.
 - [Bookmarks](../product/NAMED-RANGE-01A_TEXT_REPLACEMENT_SEMANTICS.md) — explicit named-range operations.
-- [Sample 25 showcase](../product/SAMPLE-25_COMPLETE_CV_SHOWCASE.md) — native CV collection example.
+- [S01b showcase](../../samples/sample_S01b_cv_structured.php) — native CV collection example.
 - [SECTION-03 final review](../product/SECTION-03_FINAL_REVIEW.md) — implementation boundaries and compatibility findings.

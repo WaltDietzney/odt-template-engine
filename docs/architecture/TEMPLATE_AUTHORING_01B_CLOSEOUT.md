@@ -207,7 +207,7 @@ verifies body/header provenance, native objects, ownership, recognized declarati
 The executable demonstration:
 
 ```text
-php samples/sample_28_inspectTemplateContract.php
+php tests/Fixtures/LegacySamples/sample_28_inspectTemplateContract.php
 ```
 
 prints the semantic contract without rendering or mutating the fixture.

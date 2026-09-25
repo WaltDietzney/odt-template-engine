@@ -137,7 +137,7 @@ final class StyleApi02CPublicIntegrationTest extends TestCase
 
     private function template(): OdtTemplate
     {
-        $path = dirname(__DIR__, 2) . '/samples/templates/template_17_textfield.odt';
+        $path = dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_17_textfield.odt';
         self::assertFileExists($path);
 
         return new OdtTemplate($path);

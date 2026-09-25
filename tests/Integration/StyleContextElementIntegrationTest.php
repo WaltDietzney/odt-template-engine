@@ -189,7 +189,7 @@ final class StyleContextElementIntegrationTest extends TestCase
 
     private function templatePath(): string
     {
-        return dirname(__DIR__, 2) . '/samples/templates/template_18_ListStyles.odt';
+        return dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_18_ListStyles.odt';
     }
 
     private function semanticDefinition(StyleContextInspectableTemplate $template, string $name): ?\OdtTemplateEngine\Document\StyleRequirement

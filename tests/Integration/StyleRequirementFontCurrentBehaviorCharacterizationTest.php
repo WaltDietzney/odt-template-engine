@@ -166,7 +166,7 @@ final class StyleRequirementFontCurrentBehaviorCharacterizationTest extends Test
     private function save(RichText $richText): string
     {
         $output = $this->temporaryDirectory . '/document-' . bin2hex(random_bytes(3)) . '.odt';
-        $template = new OdtTemplate(dirname(__DIR__, 2) . '/samples/templates/template_18_ListStyles.odt');
+        $template = new OdtTemplate(dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_18_ListStyles.odt');
         $template->setElement('my_list', $richText);
         $template->save($output);
 

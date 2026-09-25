@@ -88,7 +88,7 @@ final class FontFaceRequirementDiscoveryTest extends TestCase
 
     public function testDiscoveryIntegrationRegistersSemanticParagraphDependency(): void
     {
-        $template = new class (dirname(__DIR__, 2) . '/samples/templates/template_18_ListStyles.odt') extends OdtTemplate {
+        $template = new class (dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_18_ListStyles.odt') extends OdtTemplate {
             public function exposedContext(): OdtDocumentContext
             {
                 return $this->documentContext();

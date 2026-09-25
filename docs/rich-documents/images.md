@@ -100,7 +100,7 @@ $image = new ImageElement(__DIR__ . '/assets/photo.png', [
 $template->section('ImageSection')->replaceContent($image);
 ```
 
-Here LibreOffice owns the named section while PHP supplies its new structured content. The image still participates in the normal package-resource pipeline. Historical Sample 24 remains focused regression evidence for this combined Section-plus-ImageElement operation; [L09 Native Objects](../../samples/sample_L09_native_objects.php) and [L06 Images](../../samples/sample_L06_images.php) teach its target and image concepts separately.
+Here LibreOffice owns the named section while PHP supplies its new structured content. The image still participates in the normal package-resource pipeline. Historical internal Section/image fixture remains focused regression evidence for this combined Section-plus-ImageElement operation; [L09 Native Objects](../../samples/sample_L09_native_objects.php) and [L06 Images](../../samples/sample_L06_images.php) teach its target and image concepts separately.
 
 ## Image assets in the ODT package
 
@@ -130,11 +130,6 @@ Always inspect representative output in the target office suite when using advan
 
 ## Related samples
 
-- [L06 — Images](../../samples/sample_L06_images.php) contrasts a LibreOffice-authored named frame with a PHP-generated `ImageElement` frame. It keeps placement simple; advanced geometry belongs to [C03 — Frame Layout](../../samples/sample_27_frameLayout.php) while that capability example remains migration-era.
-- Sample 05 — replace an image in an existing template structure
-- Sample 06 — image settings and sizing
-- Sample 16 — image placement combined with tabs/positioning options
-- Sample 21 — profile image embedded in a generated CV region
-- Historical Sample 24 — combined named-Section replacement with an `ImageElement` (retained regression evidence)
+- [L06 — Images](../../samples/sample_L06_images.php) contrasts a LibreOffice-authored named frame with a PHP-generated `ImageElement` frame. Advanced geometry belongs to [C03 — Frame Layout](../../samples/sample_C03_frame_layout.php).
 
 See [How the Engine Works](../concepts/how-it-works.md) for the general template-first design principle and [Addressable Native ODT Structures](addressable-document.md) for named targets.

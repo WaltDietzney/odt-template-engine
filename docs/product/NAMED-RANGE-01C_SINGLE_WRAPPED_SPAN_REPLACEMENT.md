@@ -91,7 +91,7 @@ HTML, ODF fragment, or template-language interpretation is added.
 
 ## H. Real-template validation
 
-The manually authored `samples/templates/sample_22_bookmarkTextReplacement.odt`
+The manually authored `tests/Fixtures/LegacySamples/templates/sample_22_bookmarkTextReplacement.odt`
 was not modified. Temporary output generated from it contained:
 
 - `Walter Dietz` in `FullName`;

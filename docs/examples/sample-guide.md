@@ -2,11 +2,11 @@
 
 The `samples/` directory is both a runnable example collection and a map of the engine's public capabilities.
 
-The canonical L/C/B/S path is the recommended public learning path. Current
-entry points, templates/outputs, ownership descriptions, and package status are
-recorded in the [sample registry](../../samples/sample-registry.php). Historical
-numbered samples remain repository/regression evidence, not a parallel public
-curriculum.
+The canonical L/C/B/S path is the complete public learning path. Current entry
+points, templates/outputs, ownership descriptions, and package status are
+recorded in the [sample registry](../../samples/sample-registry.php).
+Historical numbered samples are maintained only as internal regression
+fixtures outside the public `samples/` tree.
 
 ## Canonical Learn path
 
@@ -193,7 +193,7 @@ the resulting PNG files remain the evidence for visual review.
 
 ## Samples and templates belong together
 
-Most numbered samples have a corresponding LibreOffice template in:
+Canonical samples that use a LibreOffice template keep that template in:
 
 ```text
 samples/templates/
@@ -202,8 +202,8 @@ samples/templates/
 For example:
 
 ```text
-samples/sample_08_html.php
-samples/templates/template_08_html.odt
+samples/sample_L08_html_import.php
+samples/templates/template_L08_html_import.odt
 ```
 
 Read both sides when learning a feature. The PHP file shows what the application supplies; the ODT template shows what remains the responsibility of LibreOffice.
@@ -212,23 +212,24 @@ That distinction is central to the engine's design.
 
 ## Learning by feature
 
-For **template language**, start with L01–L03 and the Template Language documentation. Samples 01–03 and 10 remain useful migration-era comparisons.
+For **template language**, start with L01–L03 and the Template Language documentation.
 
-For **programmatic content**, start with L04–L08. Samples 07, 09, 14, 16, and 18 remain migration-era comparisons for specialized tab/paragraph layouts, mixed blocks, and historical list patterns. Sample 08 and Sample 19 remain registered as historical L08 lineage; neither was deleted.
+For **programmatic content**, start with L04–L08. Historical specialized examples remain internal regression fixtures and are not part of the public sample path.
 
-For **addressable native ODT structures**, start with [L09 Native Objects](../../samples/sample_L09_native_objects.php); use Samples 22–24 as historical regression evidence and Sample 25 for section collections together with [Named Sections](../rich-documents/named-sections.md).
+For **addressable native ODT structures**, start with [L09 Native Objects](../../samples/sample_L09_native_objects.php) and [Named Sections](../rich-documents/named-sections.md).
 
-For **Writer User Fields**, start with [L10](../../samples/sample_L10_writer_user_fields.php). Historical Sample 29 remains repository-only because its original entry point still uses a test fixture; the canonical L10 template is self-contained and Composer-distributed.
+For **Writer User Fields**, start with [L10](../../samples/sample_L10_writer_user_fields.php). The canonical L10 template is self-contained and Composer-distributed.
 
-For **template inspection**, start with [L11](../../samples/sample_L11_template_inspection.php). Sample 28 remains historical output-format evidence, not a prerequisite for normal public learning.
+For **template inspection**, start with [L11](../../samples/sample_L11_template_inspection.php).
 
 For **tables**, start with [L07](../../samples/sample_L07_tables.php) for
 content and [C02](../../samples/sample_C02_advanced_table_layout.php) for
-advanced geometry. Samples 11, 20, and 26 remain migration evidence.
+advanced geometry.
 
-For **HTML**, use 08 for general import and 19 for table import.
+For **HTML**, use [L08](../../samples/sample_L08_html_import.php) for general
+and table import.
 
-For **images**, start with [L06](../../samples/sample_L06_images.php); Sample 24 remains historical combined Section-plus-ImageElement regression evidence. Sample 05 covers existing-position replacement, and Sample 21 embeds an image in a PHP-generated region.
+For **images**, start with [L06](../../samples/sample_L06_images.php).
 
 For **frame layout**, use [C03](../../samples/sample_C03_frame_layout.php).
 For integrated **mapping and automation**, use
@@ -236,9 +237,8 @@ For integrated **mapping and automation**, use
 
 ## Historical CV architecture evidence
 
-Samples 21 and 25 remain useful architecture history: Sample 21 demonstrates
-PHP-owned generated regions, while Sample 25 demonstrates Writer-owned native
-Section collections. They are no longer competing public showcase entry
+The historical CV experiments demonstrated PHP-owned generated regions and
+Writer-owned native Section collections. They are no longer public entry
 points. The canonical professional CV is
 [S01b](../../samples/sample_S01b_cv_structured.php), which deliberately combines
 the established ownership lessons: Writer owns stable page design, Frames,

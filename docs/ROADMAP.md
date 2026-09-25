@@ -98,7 +98,7 @@ Important outcomes include explicit package/document ownership, extracted templa
 
 PRODUCT-01 / SECTION-03 established a practical addressable document model based on native LibreOffice/ODF structures.
 
-The completed milestone includes native section discovery, typed targets, exact cloning, deterministic identity rewriting, local data binding, nested instantiation, collection lifecycle semantics, rollback, structure-preserving scalar replacement, ODF whitespace preservation, authoring guidance, and the Sample 25 CV showcase.
+The completed milestone includes native section discovery, typed targets, exact cloning, deterministic identity rewriting, local data binding, nested instantiation, collection lifecycle semantics, rollback, structure-preserving scalar replacement, ODF whitespace preservation, authoring guidance, and the C04 CV showcase.
 
 Sections are therefore an implemented structured-template primitive, not merely a future design direction.
 

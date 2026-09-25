@@ -163,6 +163,6 @@ PHP
           fully editable .odt file
 ```
 
-Sample 21 demonstrates the programmatically generated-region model. Sample 25 demonstrates the native structured-template model with named sections and data-bound collections. Both are valid architecture patterns; the right choice depends on whether PHP or the LibreOffice template should own the dynamic structure.
+S01b demonstrates the programmatically generated-region model. C04 demonstrates the native structured-template model with named sections and data-bound collections. Both are valid architecture patterns; the right choice depends on whether PHP or the LibreOffice template should own the dynamic structure.
 
 See [Building Complex Documents](../examples/building-complex-documents.md), [Editable CV Showcase](../examples/cv-showcase.md), and the [Sample Guide](../examples/sample-guide.md).

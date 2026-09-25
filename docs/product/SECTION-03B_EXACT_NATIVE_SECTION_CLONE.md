@@ -15,7 +15,7 @@ addressable template instance.
 The implementation was checked against PRODUCT-01C, ADDRESSABLE-01/02,
 SECTION-01, SECTION-02A-D, SECTION-03A, the ARCH-05 materialization documents,
 the ARCH-07 ownership documents, and the native fixture
-`samples/templates/sample_25_sectionClone.odt`.
+`tests/Fixtures/LegacySamples/templates/sample_25_sectionClone.odt`.
 
 The fixture is a real converted CV document rather than a rebuilt synthetic
 template. Its `ExperienceEntry` section is nested below a drawing custom shape,

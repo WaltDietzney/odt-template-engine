@@ -2,7 +2,7 @@
 
 Complex ODT generation becomes manageable when the application does **not** try to generate every aspect of the document from PHP.
 
-The engine supports more than one useful ownership boundary between LibreOffice and application code. This chapter focuses on the **programmatically generated region** pattern demonstrated by Sample 21:
+The engine supports more than one useful ownership boundary between LibreOffice and application code. This chapter focuses on the **programmatically generated region** pattern demonstrated by S01b:
 
 ```text
 application data
@@ -18,13 +18,13 @@ LibreOffice-designed document structure
 editable ODT output
 ```
 
-Sample 25 demonstrates a complementary pattern in which repeatable native sections remain authored in LibreOffice and PHP addresses and instantiates those semantic template objects. See [Named Sections](../rich-documents/named-sections.md) when that ownership model fits better.
+C04 demonstrates a complementary pattern in which repeatable native sections remain authored in LibreOffice and PHP addresses and instantiates those semantic template objects. See [Named Sections](../rich-documents/named-sections.md) when that ownership model fits better.
 
 The samples use CVs, but both patterns apply to reports, dossiers, offers, profiles, certificates, and other structured office documents.
 
 ## 1. Let the template own durable layout
 
-Sample 21 starts from a LibreOffice-designed template containing the two-column CV structure. PHP does not rebuild the entire page from low-level XML.
+S01b starts from a LibreOffice-designed template containing the two-column CV structure. PHP does not rebuild the entire page from low-level XML.
 
 Conceptually, the template contains large insertion regions such as:
 
@@ -88,7 +88,7 @@ Then create higher-level helpers for repeated visual roles. This is much easier 
 
 ## 4. Use semantic style names for repeated roles
 
-Sample 21 defines reusable names such as:
+S01b defines reusable names such as:
 
 ```text
 CVSidebarName
@@ -165,11 +165,11 @@ Conversely, do not replace a complete LibreOffice-authored structure merely beca
 
 ## 7. Use page-layout code only where it adds value
 
-Sample 21 uses `PageLayoutOdtTemplate` to adjust margins:
+The canonical S01b sample uses `PageLayoutOdtTemplate` to adjust margins:
 
 ```php
 $template = new PageLayoutOdtTemplate(
-    __DIR__ . '/templates/template_21_cvProfile.odt'
+    __DIR__ . '/templates/template_S01b_cv_structured.odt'
 );
 
 $template->setPageMargins('0cm', '0.8cm', '0cm', '0cm');
@@ -223,9 +223,9 @@ These choices make the output easier to edit and reduce surprises in LibreOffice
 
 A useful question is not only “Can PHP generate this?” but **“Who should own this structure?”**
 
-Use a large generated region, as in Sample 21, when application code genuinely controls its internal structure and composition.
+Use a large generated region, as in S01b, when application code genuinely controls its internal structure and composition.
 
-Use native named sections, as in Sample 25, when LibreOffice should remain the visual authoring environment for a repeatable semantic block and PHP should mainly bind and repeat it.
+Use native named sections, as in C04, when LibreOffice should remain the visual authoring environment for a repeatable semantic block and PHP should mainly bind and repeat it.
 
 Use simple placeholders when only scalar values or lightweight template logic are dynamic.
 

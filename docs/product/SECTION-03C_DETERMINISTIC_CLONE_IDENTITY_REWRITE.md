@@ -14,7 +14,7 @@ The implementation was checked against PRODUCT-01C, ADDRESSABLE-01/02,
 SECTION-01, SECTION-02A-D, SECTION-03A/B, the FRAME-LAYOUT-01 documents, the
 ARCH-05 structured materialization documents, and the ARCH-07 ownership
 documents. The primary fixture is the real
-`samples/templates/sample_25_sectionClone.odt`.
+`tests/Fixtures/LegacySamples/templates/sample_25_sectionClone.odt`.
 
 ## C. Sample-25 topology
 

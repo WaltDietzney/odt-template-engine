@@ -151,9 +151,9 @@ See the [Tables](../rich-documents/tables.md) guide for the current geometry API
 
 ## Related samples
 
-- Sample 12 — advanced table styling
-- Sample 13 — cell configuration
-- Sample 15 — styled table
-- Sample 20 — relative column-width ratios
+- C02 — advanced table styling
+- L07 — cell configuration
+- L07 — styled table
+- C02 — relative column-width ratios
 
 See [Style Model](style-model.md) for the general styling architecture.
