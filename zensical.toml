@@ -44,6 +44,8 @@ nav = [
     { "Writer-native Objects" = [
       { "Overview" = "api-reference/writer-native/index.md" },
       { "Inspection" = "api-reference/writer-native/inspection.md" },
+      { "Bookmarks" = "api-reference/writer-native/bookmarks.md" },
+      { "Sections" = "api-reference/writer-native/sections.md" },
     ] },
   ] },
   { "Rich Documents" = [
