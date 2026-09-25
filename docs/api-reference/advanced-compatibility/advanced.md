@@ -87,7 +87,7 @@ See [Automation](../mapping-automation/automation.md) for their exact execution 
 
 They provide bounded mutation of existing Writer page-layout geometry; they do not form a general page/master-style authoring system. Writer remains the owner of page/master style identity, succession, headers/footers, composition, and physical pagination.
 
-See the Page Layout guide for the supported geometry contract.
+See the [Page Layout guide](../../advanced/page-layout.md) for the supported geometry contract.
 
 ## Custom structured-element extension surface
 
@@ -112,7 +112,7 @@ It translates a deliberately bounded HTML/CSS subset into the engine's structure
 
 Important boundaries include flattened semantics for several block/heading elements, limited nested style composition, partial nested-list behavior, no semantic table-header model, bounded image-source handling, and a restricted CSS-like style vocabulary.
 
-Use the dedicated HTML Import guide for the supported subset rather than inferring browser behavior.
+Use the dedicated [HTML Import guide](../../advanced/html-import.md) for the supported subset rather than inferring browser behavior.
 
 ## Style and mapping support values
 
