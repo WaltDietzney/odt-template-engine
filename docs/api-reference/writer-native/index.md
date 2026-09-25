@@ -26,6 +26,6 @@ Both ownership models can be combined in one document.
 - [Inspection](inspection.md) — current Working Document inspection, semantic source-template inspection, and advanced template-structure diagnostics.
 - [Bookmarks](bookmarks.md) — strict named bookmark targeting and bounded inline text replacement.
 - [Sections](sections.md) — Writer-owned structured containers, replacement, cloning, and bounded instantiation.
-- Tables — follows in F2.4.3.
+- [Tables](tables.md) — bounded scalar population of Writer-authored native tables.
 - Frames — follows in F2.4.4.
 - User Fields — follows in F2.4.4.
