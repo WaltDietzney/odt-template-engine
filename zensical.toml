@@ -56,6 +56,7 @@ nav = [
     { "Template Contract" = "api-reference/mapping-automation/template-contract.md" },
     { "Mapping" = "api-reference/mapping-automation/mapping.md" },
     { "Concrete Preflight" = "api-reference/mapping-automation/preflight.md" },
+    { "Automation" = "api-reference/mapping-automation/automation.md" },
   ] },
   { "Rich Documents" = [
     { "RichText & Paragraphs" = "rich-documents/richtext-and-paragraphs.md" },
