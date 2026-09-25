@@ -41,6 +41,10 @@ nav = [
       { "Images" = "api-reference/structured-content/images.md" },
       { "Frames & Text Boxes" = "api-reference/structured-content/frames-text-boxes.md" },
     ] },
+    { "Writer-native Objects" = [
+      { "Overview" = "api-reference/writer-native/index.md" },
+      { "Inspection" = "api-reference/writer-native/inspection.md" },
+    ] },
   ] },
   { "Rich Documents" = [
     { "RichText & Paragraphs" = "rich-documents/richtext-and-paragraphs.md" },
