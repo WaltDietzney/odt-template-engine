@@ -38,6 +38,8 @@ nav = [
       { "Paragraphs & Inline Content" = "api-reference/structured-content/paragraph.md" },
       { "Lists" = "api-reference/structured-content/lists.md" },
       { "Tables & Cells" = "api-reference/structured-content/tables.md" },
+      { "Images" = "api-reference/structured-content/images.md" },
+      { "Frames & Text Boxes" = "api-reference/structured-content/frames-text-boxes.md" },
     ] },
   ] },
   { "Rich Documents" = [
