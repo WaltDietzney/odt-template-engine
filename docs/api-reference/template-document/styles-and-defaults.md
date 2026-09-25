@@ -81,12 +81,13 @@ The current text mapper recognizes the following friendly keys:
 | --- | --- |
 | `bold` | truthy -> bold |
 | `italic` | truthy -> italic |
-| `font-weight` (or `weight`) | non-empty ODF/CSS-style weight value |
+| `font-weight` | non-empty ODF/CSS-style weight value |
 | `font-style` | non-empty style value |
 | `underline` | truthy -> single solid underline |
 | `text-decoration` | non-empty value enables underline; `line-through` also enables strike-through |
 | `text-line-through` | truthy -> strike-through |
 | `color` | color value |
+| `background-color` | background color value |
 | `font-size` | size; named xx-small..xx-large map to fixed pt sizes |
 | `font-family` | font family/name |
 | `font-variant` | `small-caps` is recognized |
@@ -102,7 +103,7 @@ The current paragraph mapper recognizes these friendly properties for document d
 | Key | Value form / behavior |
 | --- | --- |
 | `margin-left`, `margin-right`, `margin-top`, `margin-bottom` | ODF length |
-| `text-align` (or `align`) | alignment value |
+| `text-align` | alignment value |
 | `text-indent` | ODF length |
 | `line-height` | line-height value |
 | `background-color` | color value |
@@ -115,6 +116,8 @@ The current paragraph mapper recognizes these friendly properties for document d
 | `number-lines`, `line-number` | scalar ODF-compatible value |
 
 Native-prefixed paragraph attributes are an Advanced compatibility escape hatch only when they map to supported `fo:*` or `style:*` attributes. `setDocumentDefaults()` rejects mapped attributes outside those namespaces.
+
+`setDocumentDefaults()` passes these two groups directly to the current mappers; it does not run the convenience-key normalization used by `defineParagraph()`. Therefore aliases such as `weight` and `align` are not valid document-default keys.
 
 The generic `margin` convenience key and structured `tab-stops` value are **not** valid successful document-default contracts in the current implementation: their mapped form does not satisfy the scalar supported-namespace merge boundary. Use the four explicit margin keys; configure tab stops through the paragraph APIs documented with Structured Content.
 
