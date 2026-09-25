@@ -58,13 +58,13 @@ For repeatable semantic document blocks such as experience entries, activities, 
 
 ## Decide who owns each dynamic structure
 
-The current engine supports three complementary choices.
+The engine supports three complementary working models.
 
-**Template expressions** are appropriate when LibreOffice owns the surrounding structure and PHP supplies scalar values or lightweight logic.
+**Simple Template Processing** is appropriate when LibreOffice owns the surrounding structure and PHP supplies scalar values, filters, conditions, or lightweight repetition through visible template expressions.
 
-**Programmatic ODT elements** are appropriate when PHP owns the internal composition of a dynamic subtree, for example a generated `RichText`, `ListElement`, `RichTable`, or `ImageElement` region.
+**Structured ODT Construction** is appropriate when PHP owns the internal composition of a dynamic subtree, for example a generated `RichText`, `ListElement`, `RichTable`, or `ImageElement` region.
 
-**Addressable native ODT structures** are appropriate when LibreOffice should own a named section, bookmark, table, or frame and PHP needs a stable semantic handle. Named sections can be cloned or instantiated as repeatable native structures.
+**Writer-native Document Model** is appropriate when LibreOffice should own a named Section, Bookmark, table, frame, or supported Writer field and PHP needs a stable semantic handle. Named Sections can be cloned or instantiated as repeatable native structures.
 
 The important question is therefore not simply whether content is dynamic, but **who should own its structure**.
 
@@ -99,9 +99,11 @@ Office editors may rewrite XML structure when a file is saved. After significant
 
 The repository's `samples/` directory is both executable documentation and a collection of tested template patterns. The public Sample Explorer can generate the same representative documents interactively.
 
-## Template anatomy
+## You do not need ODF internals to author a template
 
-Internally, an `.odt` document is a ZIP package. Important members include:
+For normal template authoring, work in LibreOffice and use the documented public APIs. Do not unzip the ODT or edit its XML manually.
+
+For advanced diagnosis it can be useful to know that an `.odt` document is a ZIP package. Important members include:
 
 - `content.xml` for document content and native structures such as sections, bookmarks, tables, and frames;
 - `styles.xml` for document, text, paragraph, and page styles;

@@ -16,23 +16,15 @@ The package requires:
 
 Composer resolves the library and its dependencies through Packagist.
 
-## Verify the installation
+## Next: generate your first document
 
-Create a small PHP file in your project:
+Installation alone does not require LibreOffice at runtime. To follow the
+first-document workflow, create a normal `.odt` template in LibreOffice and
+continue with the [Quick Start](quick-start.md).
 
-```php
-<?php
-
-require __DIR__ . '/vendor/autoload.php';
-
-use OdtTemplateEngine\OdtTemplate;
-
-$template = new OdtTemplate('template.odt');
-```
-
-If the class can be instantiated and the template path is valid, the package is available through Composer autoloading.
-
-Continue with the [Quick Start](quick-start.md) to generate a document.
+The Quick Start deliberately uses only the Recommended 1.0 API and produces a
+normal editable ODT file. You do not need to inspect or edit ODF XML to get
+started.
 
 ## Development checkout
 
