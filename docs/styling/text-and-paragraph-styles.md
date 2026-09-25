@@ -144,8 +144,8 @@ rather than trying to express paragraph spacing as a text property or font styli
 
 ## Related samples
 
-- L04 — RichText and paragraph styling
-- B01 — tabs, borders, margins, and paragraph style behavior
-- S01b — semantic named paragraph styles in a complex document
+- [L04 — Rich Content](../../samples/sample_L04_rich_content.php) — focused RichText and paragraph styling
+- [B01 — Invoice Template Builder](../../samples/sample_B01_invoice_template_builder.php) — tabs, borders, margins, and paragraph style behavior
+- [S01b — Professional CV · Structured Template](../../samples/sample_S01b_cv_structured.php) — semantic named paragraph styles in a complex document
 
 For the overall architecture and the current document-local style model, see [Style Model](style-model.md).
