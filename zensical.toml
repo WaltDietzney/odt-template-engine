@@ -46,6 +46,7 @@ nav = [
       { "Inspection" = "api-reference/writer-native/inspection.md" },
       { "Bookmarks" = "api-reference/writer-native/bookmarks.md" },
       { "Sections" = "api-reference/writer-native/sections.md" },
+      { "Tables" = "api-reference/writer-native/tables.md" },
     ] },
   ] },
   { "Rich Documents" = [
