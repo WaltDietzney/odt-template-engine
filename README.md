@@ -2,7 +2,7 @@
 
 **Generate real, editable OpenDocument Text (`.odt`) files from PHP.**
 
-ODT Template Engine is an open-source PHP library for turning existing ODT templates into structured documents with variables, loops, conditions, images, rich text, lists, tables, styles, HTML imports, metadata, and addressable native ODT structures.
+ODT Template Engine is an open-source PHP library for working with LibreOffice-authored ODT templates, PHP-generated native ODT content, and named Writer structures while keeping the result editable as a real ODT document.
 
 [![CI](https://github.com/WaltDietzney/odt-template-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/WaltDietzney/odt-template-engine/actions/workflows/ci.yml)
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-777BB4.svg)](https://www.php.net/)
@@ -13,7 +13,7 @@ ODT Template Engine is an open-source PHP library for turning existing ODT templ
 
 ### 🚀 Try it online
 
-**[Open the live Sample Explorer](https://odt.walter-dietz.de/)** — inspect real PHP sample code, explore template variables and generate downloadable `.odt` documents directly in your browser. No installation required.
+**[Open the live Sample Explorer](https://odt.walter-dietz.de/#samples)** — inspect real PHP sample code, explore template variables and generate downloadable `.odt` documents directly in your browser. No installation required.
 
 ## Why ODT Template Engine?
 
@@ -34,7 +34,7 @@ This makes the engine useful for documents such as:
 
 The engine is not limited to one templating model.
 
-### 1. Template language
+### 1. Simple Template Processing
 
 Use visible expressions for scalar values, filters, conditions, and lightweight loops:
 
@@ -46,11 +46,11 @@ Hello {{customer_name}}
 {{#endforeach}}
 ```
 
-### 2. Programmatic ODT elements
+### 2. Structured ODT Construction
 
 When PHP owns a dynamic region's internal structure, build native ODT elements such as `RichText`, `Paragraph`, `ListElement`, `RichTable`, and `ImageElement`, then insert them into a template placeholder.
 
-### 3. Addressable native ODT structures
+### 3. Writer-native Document Model
 
 When LibreOffice should own the structure, address native named document objects directly:
 
@@ -60,7 +60,7 @@ $template->bookmark('FullName')->replaceText('Jane Smith');
 $experience = $template->section('ExperienceEntry');
 ```
 
-Named sections can be cloned or instantiated from data, including nested repeatable collections. Named tables and frames can be resolved through typed targets for the operations currently supported by those target types.
+Named Sections and Bookmarks expose bounded native operations; Writer-owned tables support bounded row population; named frames expose typed identity/inspection and participate in the separately validated mapped image-replacement workflow. Writer User Fields provide native document-global string bindings.
 
 These models can coexist in one document. The important design choice is **who owns the structure: the template or PHP?**
 
@@ -90,6 +90,8 @@ These models can coexist in one document. The important design choice is **who o
 - ZIP extension (`ext-zip`)
 
 The automated test suite currently runs on PHP 8.2, 8.3 and 8.4.
+
+LibreOffice is used to author normal ODT templates and is recommended for visual verification of generated documents. It is not a PHP runtime dependency of the engine.
 
 ## Installation
 
@@ -146,7 +148,7 @@ $template->render();
 $template->save(__DIR__ . '/output/example-result.odt');
 ```
 
-`OdtTemplate` loads the source document during construction. After all values and repeating data have been assigned, `render()` applies the template logic and `save()` writes the resulting ODT package.
+`OdtTemplate` loads the source document during construction. After all values and repeating data have been assigned, `render()` applies the template logic and `save()` writes the resulting ODT package. `save()` does **not** implicitly call `render()`.
 
 The result is a normal ODT document that can be opened and edited in LibreOffice and other compatible OpenDocument applications.
 
@@ -203,7 +205,7 @@ Use `inspect()` when you need an immutable snapshot of the native named sections
 
 ## Native Writer User Fields
 
-For LibreOffice-authored document-global values, Phase C supports Writer User Fields with string values:
+For LibreOffice-authored document-global string values, use Writer User Fields:
 
 ```php
 $template = new OdtTemplate(__DIR__ . '/templates/example.odt');
@@ -214,7 +216,7 @@ $template->save(__DIR__ . '/output/example-result.odt');
 
 The engine updates the authoritative User Field declarations in the working ODT. Cached field display text is left to Writer reevaluation.
 
-This is intentionally separate from classic `{{customer}}` placeholder assignment. Phase C v1 is limited to string User Fields; Set/Get Variable and broader native field types are deferred.
+This is intentionally separate from classic `{{customer}}` placeholder assignment. The 1.0 Writer User Field API is bounded to string User Fields; broader native field types are outside this contract.
 
 ## Interactive samples
 
@@ -226,8 +228,6 @@ The canonical sample path culminates in professional ownership-focused examples:
 
 - **S01b Professional CV · Structured Template** — LibreOffice owns stable page design, Frames, styles and repeatable native Sections while PHP supplies application data and bounded generated regions;
 - **S03 Structured Professional Report** — a Writer-authored report demonstrates native inspection, mapping, preflight and bounded automation.
-
-Historical Samples 21 and 25 remain repository evidence for the complementary ownership patterns synthesized by S01b.
 
 Run the explorer locally with PHP's development server:
 
@@ -269,7 +269,9 @@ The project also uses generated sample documents for practical LibreOffice-orien
 
 The developer documentation is published at [odt.walter-dietz.de/docs/](https://odt.walter-dietz.de/docs/). Its versioned Markdown source lives in [`docs/`](docs/) and is built with Zensical.
 
-Start with the [Quick Start](https://odt.walter-dietz.de/docs/getting-started/quick-start/) and then continue with the template-language, rich-document, addressable-structure and styling guides.
+Start with the [Quick Start](https://odt.walter-dietz.de/docs/getting-started/quick-start/), then choose the guide for **Simple Template Processing**, **Structured ODT Construction**, or the **Writer-native Document Model**. For application-shaped data and inspected template contracts, [Mapping, Preflight & Automation](https://odt.walter-dietz.de/docs/advanced/mapping-automation/) is an optional integration workflow rather than a fourth authoring model.
+
+For exact signatures, lifecycle rules, options, limitations, and API classifications, use the [Practical API Reference](https://odt.walter-dietz.de/docs/api-reference/). The [Sample Guide](https://odt.walter-dietz.de/docs/examples/sample-guide/) explains the canonical L/C/B/S learning path.
 
 Useful repository areas:
 
@@ -285,18 +287,6 @@ samples/                 Example scripts, templates and assets
 demo/sample-explorer/    Interactive local showcase
 docs/                    Developer documentation source
 ```
-
-## Project status
-
-The engine is actively maintained and already supports substantial real-world ODT generation. Its architecture now combines document-local package/context services, structured ODT elements, semantic style requirements, and typed access to native named ODT structures.
-
-Current development priorities include:
-
-- broader integration coverage for representative document features;
-- layout work for frames, tables, lists and page flow;
-- template-authoring and format-preservation improvements;
-- continued LibreOffice compatibility testing;
-- further structured-document capabilities driven by real document-generation requirements.
 
 ## Security
 
@@ -316,7 +306,7 @@ composer test
 
 ODT Template Engine is free and open source. If the project is useful to you, starring the repository helps other developers discover it.
 
-You can also support continued development via [PayPal](https://www.paypal.com/donate/?hosted_button_id=RVFJUELPFMXQW) or visit the [official project site](https://odt.walter-dietz.de/) for PayPal and Bitcoin Lightning support.
+For the current voluntary support options, including PayPal and Bitcoin Lightning, visit the [project support page](https://odt.walter-dietz.de/#support).
 
 ## Author
 
