@@ -16,12 +16,12 @@ final class SampleRegistryTest extends TestCase
 
         self::assertSame(
             ['L01', 'L02', 'L03', 'L04', 'L05', 'L06', 'L07', 'L08', 'L09', 'L10', 'L11', 'L12',
-                'C01', 'C02', 'C03', 'C04', 'C05', 'B01', 'B02', 'S01b', 'S03'],
+                'C01', 'C02', 'C03', 'C04', 'C05', 'B01', 'B02', 'S01b', 'S03', 'S03-B'],
             $ids
         );
 
         foreach ($samples as $sample) {
-            self::assertMatchesRegularExpression('/^(?:L|C|B|S)\d{2}[a-z]?$/', $sample['id']);
+            self::assertMatchesRegularExpression('/^(?:(?:L|C|B)\d{2}[a-z]?|S\d{2}(?:[a-z]?|-[A-Z]))$/', $sample['id']);
             self::assertSame('canonical', $sample['status']);
             self::assertArrayNotHasKey('migration_targets', $sample);
             self::assertSame('composer', $sample['distribution']);
@@ -97,7 +97,7 @@ final class SampleRegistryTest extends TestCase
         self::assertStringContainsString('Sample is not registered for public discovery.', $unregistered);
 
         $html = $this->runExplorer();
-        foreach (['L01', 'L12', 'C01', 'C05', 'B01', 'B02', 'S01b', 'S03'] as $id) {
+        foreach (['L01', 'L12', 'C01', 'C05', 'B01', 'B02', 'S01b', 'S03', 'S03-B'] as $id) {
             self::assertStringContainsString('data-sample-id="' . $id . '"', $html);
         }
         foreach (['legacy.sample-', 'sample_01_', 'sample_21_', 'sample_S02_', 'sample_S03_structured_professional_report_b'] as $legacyMarker) {

@@ -61,7 +61,7 @@ demonstrate final composition with stable visual ownership in LibreOffice.
 
 A Builder sample is a distinct ownership lesson rather than a promise of a
 matching showcase. B01 and B02 demonstrate substantial PHP-owned construction;
-S01b and S03 demonstrate the current professional Writer/template-owned
+S01b and S03/S03-B demonstrate the current professional Writer/template-owned
 showcase path.
 
 
@@ -87,7 +87,8 @@ reimplemented in a weaker form.
 | ID | Sample | Ownership lesson |
 | --- | --- | --- |
 | [S01b](../../samples/sample_S01b_cv_structured.php) | Professional CV · Structured Template | LibreOffice owns the CV page design and native Section structure; PHP supplies collections, replaces the authored image resource, and owns bounded RichText sidebar regions |
-| [S03](../../samples/sample_S03_structured_professional_report.php) | Structured Professional Report | One Writer-authored report template supports bounded native-object updates and a second structured composition path while preserving template-owned layout |
+| [S03](../../samples/sample_S03_structured_professional_report.php) | Structured Professional Report | One Writer-authored report template supports bounded native-object updates while preserving template-owned layout |
+| [S03-B](../../samples/sample_S03_structured_professional_report_b.php) | Structured Professional Report · Alternative Composition | The same Writer-authored report template produces a substantially different composition through native targets, table population, and Section cloning |
 
 C04 and C05 intentionally take different data paths: C04 passes values already
 named like the template's dependencies to `executeDeclarative()`; C05 maps
@@ -229,7 +230,7 @@ choose the ownership model
       ↓
 L01–L12: focused vocabulary
 then C01–C05: capabilities
-then B01/B02 or S01b/S03 according to ownership
+then B01/B02 or S01b/S03/S03-B according to ownership
 ```
 
 This keeps application rendering code understandable and makes ODT-specific problems much easier to isolate.

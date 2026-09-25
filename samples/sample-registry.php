@@ -186,5 +186,13 @@ return [
             'purpose' => 'Demonstrates native User Fields, bookmarks, named tables, image frames, and bounded Section composition from one Writer-authored report template.',
             'status' => 'canonical', 'distribution' => 'composer', 'execution_mode' => 'odt',
         ],
+        [
+            'id' => 'S03-B', 'title' => 'Structured Professional Report · Alternative Composition', 'role' => 'showcase', 'ownership' => 'addressable-native-odt',
+            'entry_point' => 'samples/sample_S03_structured_professional_report_b.php',
+            'template_path' => 'samples/templates/template_S03_structured_professional_report.odt',
+            'output_path' => 'samples/output/output_S03_structured_professional_report_b.odt',
+            'purpose' => 'Demonstrates a substantially different report composition from the same Writer-authored S03 template through native targets, table population, and Section cloning.',
+            'status' => 'canonical', 'distribution' => 'composer', 'execution_mode' => 'odt',
+        ],
     ],
 ];

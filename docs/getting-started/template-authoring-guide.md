@@ -15,7 +15,7 @@ application code unless the content is genuinely application-generated.
 
 The canonical progression is [Learn samples L01–L12](../examples/sample-guide.md)
 followed by capability examples C01–C05, builders B01–B02, and the current
-professional showcases S01b and S03.
+professional showcases S01b and S03/S03-B.
 Learn samples introduce one authoring concept at a time; capability samples
 show the additional native ODF behavior each capability contributes.
 Inspection and mapping/automation are integration layers over the three

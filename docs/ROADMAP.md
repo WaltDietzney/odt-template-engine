@@ -345,7 +345,7 @@ Phase F is closed by
 [`architecture/TEMPLATE_AUTHORING_01F_FINAL_REVIEW.md`](architecture/TEMPLATE_AUTHORING_01F_FINAL_REVIEW.md).
 
 The canonical 1.0 public path is L01–L12, C01–C05, B01–B02 and the actual
-professional showcases S01b and S03. Historical numbered samples remain
+professional showcases S01b and S03/S03-B. Historical numbered samples remain
 repository/regression evidence rather than a parallel curriculum.
 
 The final review completed the public API inventory from current source/tests,
