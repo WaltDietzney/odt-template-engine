@@ -22,7 +22,7 @@ save-order characterization. The second path intentionally retains its
 process-wide first-registration-wins and cross-document leakage behavior.
 
 Current call-site evidence includes `Paragraph`, `HtmlImporter`,
-`samples/sample_21_cvProfile.php`, and
+`tests/Fixtures/LegacySamples/sample_21_cvProfile.php`, and
 `samples/sample_richttext_simple.php`. `StyleWriter` is also used directly by
 the save/refresh path and by compatibility tests.
 

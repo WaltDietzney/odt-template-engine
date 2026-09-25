@@ -65,7 +65,7 @@ $nested
 $main->addSubList($nested);
 ```
 
-`addSubList()` raises the nested list level relative to the parent. List levels are constrained to the ODT-oriented range supported by the element.
+`addSubList()` stores the nested list level relative to the parent. The current renderer derives actual nesting from the nested `text:list` structure; the stored `setLevel()` value itself does not currently affect visual output. See the API Reference for the exact 1.0 contract.
 
 ## Convenience methods on RichText
 
@@ -123,7 +123,7 @@ For documents where exact visual list geometry is critical, generate representat
 ## Related samples
 
 - [L05 — Lists](../../samples/sample_L05_lists.php) combines a native numbered list with a same-type nested bullet hierarchy.
-- Sample 18 — native numbered, bulleted, and nested list structures
-- Sample 21 — native bullet lists used in a larger editable CV document
+- L05 — native numbered, bulleted, and nested list structures
+- S01b — native bullet lists used in a larger editable CV document
 
 See [RichText & Paragraphs](richtext-and-paragraphs.md) for styling the paragraphs used as list items.

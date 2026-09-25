@@ -28,7 +28,7 @@ final class TemplateAuthoring01B0InspectionBoundaryCharacterizationTest extends 
     public function testTemplateStructureInspectionReadsOriginalContentXmlAcrossRenderLifecycle(): void
     {
         $template = new OdtTemplate(
-            dirname(__DIR__, 2) . '/samples/templates/template_01_simple_variables.odt'
+            dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_01_simple_variables.odt'
         );
 
         $before = $template->inspectTemplateStructure()->toArray();

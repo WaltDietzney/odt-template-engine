@@ -55,7 +55,7 @@ final class TemplateStructureNormalizerTest extends TestCase
 
     public function testSample25LoadSavePreservesPositionAndHeaderStyles(): void
     {
-        $template = new OdtTemplate(dirname(__DIR__, 2) . '/samples/templates/sample_25_sectionClone.odt');
+        $template = new OdtTemplate(dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/sample_25_sectionClone.odt');
         $output = tempnam(sys_get_temp_dir(), 'odt-structure-');
         self::assertNotFalse($output);
         try {

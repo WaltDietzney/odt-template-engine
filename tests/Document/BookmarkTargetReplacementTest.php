@@ -150,7 +150,7 @@ final class BookmarkTargetReplacementTest extends TestCase
 
     public function testPublicFacadeReplacementSurvivesRenderSaveAndReopen(): void
     {
-        $template = new class ('samples/templates/template_01_simple_variables.odt') extends OdtTemplate {
+        $template = new class ('tests/Fixtures/LegacySamples/templates/template_01_simple_variables.odt') extends OdtTemplate {
             public function addBookmark(string $value): void
             {
                 $dom = $this->documentContext()->contentDom();

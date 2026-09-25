@@ -254,7 +254,6 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
                     $sampleEntry['title'],
                     $categoryLabel,
                     $sampleEntry['purpose'],
-                    ...$sampleEntry['migration_targets'],
                 ]));
                 ?>
                 <article class="sample-card" data-sample-id="<?= htmlspecialchars($sampleEntry['id'], ENT_QUOTES, 'UTF-8') ?>" data-category="<?= htmlspecialchars($category, ENT_QUOTES, 'UTF-8') ?>" data-search="<?= htmlspecialchars($searchText, ENT_QUOTES, 'UTF-8') ?>">
@@ -266,10 +265,7 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
                         <h3><?= htmlspecialchars($sampleEntry['title'], ENT_QUOTES, 'UTF-8') ?></h3>
                         <p class="description"><?= htmlspecialchars($sampleEntry['purpose'], ENT_QUOTES, 'UTF-8') ?></p>
                         <div class="meta-row">
-                            <span class="meta-pill"><?= $sampleEntry['status'] === 'canonical' ? 'Canonical sample' : 'Legacy migration entry' ?></span>
-                            <?php if ($sampleEntry['migration_targets'] !== []): ?>
-                                <span class="meta-pill">Planned: <?= htmlspecialchars(implode(', ', $sampleEntry['migration_targets']), ENT_QUOTES, 'UTF-8') ?></span>
-                            <?php endif; ?>
+                            <span class="meta-pill">Canonical sample</span>
                             <span class="meta-pill <?= $templateAvailable ? 'ok' : '' ?>"><?= $templateAvailable ? '✓ Template available' : ($sampleEntry['template_path'] === null ? 'No template required' : 'Template unavailable') ?></span>
                             <?php if (is_array($variables)): ?><span class="meta-pill"><?= count($variables) ?> template entries</span><?php endif; ?>
                         </div>

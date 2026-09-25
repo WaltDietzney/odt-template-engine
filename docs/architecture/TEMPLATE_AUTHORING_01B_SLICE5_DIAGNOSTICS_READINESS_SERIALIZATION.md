@@ -132,7 +132,7 @@ tests/Integration/TemplateAuthoring01BLibreOfficeFixtureInspectionTest.php
 The executable demonstration is:
 
 ```text
-samples/sample_28_inspectTemplateContract.php
+tests/Fixtures/LegacySamples/sample_28_inspectTemplateContract.php
 ```
 
 The sample performs inspection only. It does not render, save, or mutate the authored reference document.

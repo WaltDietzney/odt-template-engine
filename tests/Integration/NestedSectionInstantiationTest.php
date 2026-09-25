@@ -140,6 +140,6 @@ final class NestedSectionInstantiationTest extends TestCase
 
     private function templatePath(): string
     {
-        return dirname(__DIR__, 2) . '/samples/templates/sample_25_sectionClone.odt';
+        return dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/sample_25_sectionClone.odt';
     }
 }

@@ -108,10 +108,10 @@ environment retains the known LibreOffice `javaldx`/`dconf` limitation. Local
 visual validation is required:
 
 ```bash
-php samples/sample_23_sectionContentReplacement.php
-php samples/sample_24_sectionImageReplacement.php
+php tests/Fixtures/LegacySamples/sample_23_sectionContentReplacement.php
+php tests/Fixtures/LegacySamples/sample_24_sectionImageReplacement.php
 ./tools/visual-regression/render-odt.sh \
-  samples/output/output_24_sectionImageReplacement.odt
+  tests/Fixtures/LegacySamples/output/output_24_sectionImageReplacement.odt
 ```
 
 Acceptance requires a visible image between the surrounding section text,

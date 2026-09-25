@@ -2,11 +2,11 @@
 
 The `samples/` directory is both a runnable example collection and a map of the engine's public capabilities.
 
-The canonical L/C/B/S path is the recommended public learning path. Current
-entry points, templates/outputs, ownership descriptions, and package status are
-recorded in the [sample registry](../../samples/sample-registry.php). Historical
-numbered samples remain repository/regression evidence, not a parallel public
-curriculum.
+The canonical L/C/B/S path is the complete public learning path. Current entry
+points, templates/outputs, ownership descriptions, and package status are
+recorded in the [sample registry](../../samples/sample-registry.php).
+Legacy examples are maintained only as internal regression fixtures outside
+the public `samples/` tree.
 
 ## Canonical Learn path
 
@@ -61,7 +61,7 @@ demonstrate final composition with stable visual ownership in LibreOffice.
 
 A Builder sample is a distinct ownership lesson rather than a promise of a
 matching showcase. B01 and B02 demonstrate substantial PHP-owned construction;
-S01b and S03 demonstrate the current professional Writer/template-owned
+S01b and S03/S03-B demonstrate the current professional Writer/template-owned
 showcase path.
 
 
@@ -87,7 +87,8 @@ reimplemented in a weaker form.
 | ID | Sample | Ownership lesson |
 | --- | --- | --- |
 | [S01b](../../samples/sample_S01b_cv_structured.php) | Professional CV · Structured Template | LibreOffice owns the CV page design and native Section structure; PHP supplies collections, replaces the authored image resource, and owns bounded RichText sidebar regions |
-| [S03](../../samples/sample_S03_structured_professional_report.php) | Structured Professional Report | One Writer-authored report template supports bounded native-object updates and a second structured composition path while preserving template-owned layout |
+| [S03](../../samples/sample_S03_structured_professional_report.php) | Structured Professional Report | One Writer-authored report template supports bounded native-object updates while preserving template-owned layout |
+| [S03-B](../../samples/sample_S03_structured_professional_report_b.php) | Structured Professional Report · Alternative Composition | The same Writer-authored report template produces a substantially different composition through native targets, table population, and Section cloning |
 
 C04 and C05 intentionally take different data paths: C04 passes values already
 named like the template's dependencies to `executeDeclarative()`; C05 maps
@@ -98,47 +99,6 @@ L06 intentionally shows two ownership models, not two interchangeable APIs:
 LibreOffice; `ImageElement` creates a new frame/resource as part of the PHP
 generated subtree. `setImage()` remains a placeholder-oriented convenience
 path documented with the image APIs, not a third equal model in this sample.
-
-## Migration-era numbered samples
-
-The numbered examples below are historical migration entries, not the
-recommended canonical learning path. They remain available while later F
-slices account for their remaining behavior; consult the registry for current
-migration targets and package status.
-
-### Historical numbered examples
-
-| Sample | Focus | Read it when you need... |
-| --- | --- | --- |
-| 01 | Simple variables | the smallest placeholder replacement example |
-| 02 | Filters | formatting such as upper/lower/date/number behavior |
-| 03 | Logic elements | conditions and basic template logic |
-| 04 | Metadata | `meta.xml`, save/reload, and metadata display |
-| 05 / 05b | Image replacement | images in existing template structures |
-| 06 | Image settings | image sizing and placement options |
-| 07 | Contact list / paragraphs | generated paragraph-oriented content |
-| 08 | HTML import | converting controlled HTML to editable ODT elements |
-| 09 | RichText block | composing richer generated sections |
-| 10 | Template language | a larger variables/filters/logic example |
-| 11 | Table | generated table basics |
-| 12 | Advanced table | richer table content and styling |
-| 13 | Cell settings | table-cell configuration and style responsibilities |
-| 14 | Advanced tabs | paragraph geometry, tabs, margins, and borders |
-| 15 | Styled table | a compact styled-table example |
-| 16 | Basic tabs | tab-stop-oriented text layout |
-| 17 | Text field | text-box / field-related document structure |
-| 18 | List styles | native bullet, numbered, and nested lists |
-| 19 | HTML table | HTML table import into native ODT table structures |
-| 20 | Table ratios | relative native table-column widths |
-| 21 | Generated CV profile | a real-world document composed from large PHP-generated regions |
-| 22 | Bookmark text replacement | addressing and replacing text in native named bookmarks |
-| 23 | Section content replacement | replacing the children of a native named section with structured ODT content |
-| 24 | Section image replacement | replacing section content with an image and package resource |
-| 25 | Native CV section collections | LibreOffice-authored repeatable sections, nested collections, and scalar binding |
-| 28 | Template Contract inspection | historical full contract dump; canonical compact introduction is L11 |
-| 29 | Writer User Field binding | historical fixture-dependent entry; the self-contained Composer example is L10 |
-
-The repository also contains additional focused or historical sample scripts outside the numbered sequence. Treat the numbered samples as the primary learning path.
 
 ## Run a sample
 
@@ -193,7 +153,7 @@ the resulting PNG files remain the evidence for visual review.
 
 ## Samples and templates belong together
 
-Most numbered samples have a corresponding LibreOffice template in:
+Canonical samples that use a LibreOffice template keep that template in:
 
 ```text
 samples/templates/
@@ -202,8 +162,8 @@ samples/templates/
 For example:
 
 ```text
-samples/sample_08_html.php
-samples/templates/template_08_html.odt
+samples/sample_L08_html_import.php
+samples/templates/template_L08_html_import.odt
 ```
 
 Read both sides when learning a feature. The PHP file shows what the application supplies; the ODT template shows what remains the responsibility of LibreOffice.
@@ -212,23 +172,24 @@ That distinction is central to the engine's design.
 
 ## Learning by feature
 
-For **template language**, start with L01–L03 and the Template Language documentation. Samples 01–03 and 10 remain useful migration-era comparisons.
+For **template language**, start with L01–L03 and the Template Language documentation.
 
-For **programmatic content**, start with L04–L08. Samples 07, 09, 14, 16, and 18 remain migration-era comparisons for specialized tab/paragraph layouts, mixed blocks, and historical list patterns. Sample 08 and Sample 19 remain registered as historical L08 lineage; neither was deleted.
+For **programmatic content**, start with L04–L08. Historical specialized examples remain internal regression fixtures and are not part of the public sample path.
 
-For **addressable native ODT structures**, start with [L09 Native Objects](../../samples/sample_L09_native_objects.php); use Samples 22–24 as historical regression evidence and Sample 25 for section collections together with [Named Sections](../rich-documents/named-sections.md).
+For **addressable native ODT structures**, start with [L09 Native Objects](../../samples/sample_L09_native_objects.php) and [Named Sections](../rich-documents/named-sections.md).
 
-For **Writer User Fields**, start with [L10](../../samples/sample_L10_writer_user_fields.php). Historical Sample 29 remains repository-only because its original entry point still uses a test fixture; the canonical L10 template is self-contained and Composer-distributed.
+For **Writer User Fields**, start with [L10](../../samples/sample_L10_writer_user_fields.php). The canonical L10 template is self-contained and Composer-distributed.
 
-For **template inspection**, start with [L11](../../samples/sample_L11_template_inspection.php). Sample 28 remains historical output-format evidence, not a prerequisite for normal public learning.
+For **template inspection**, start with [L11](../../samples/sample_L11_template_inspection.php).
 
 For **tables**, start with [L07](../../samples/sample_L07_tables.php) for
 content and [C02](../../samples/sample_C02_advanced_table_layout.php) for
-advanced geometry. Samples 11, 20, and 26 remain migration evidence.
+advanced geometry.
 
-For **HTML**, use 08 for general import and 19 for table import.
+For **HTML**, use [L08](../../samples/sample_L08_html_import.php) for general
+and table import.
 
-For **images**, start with [L06](../../samples/sample_L06_images.php); Sample 24 remains historical combined Section-plus-ImageElement regression evidence. Sample 05 covers existing-position replacement, and Sample 21 embeds an image in a PHP-generated region.
+For **images**, start with [L06](../../samples/sample_L06_images.php).
 
 For **frame layout**, use [C03](../../samples/sample_C03_frame_layout.php).
 For integrated **mapping and automation**, use
@@ -236,9 +197,8 @@ For integrated **mapping and automation**, use
 
 ## Historical CV architecture evidence
 
-Samples 21 and 25 remain useful architecture history: Sample 21 demonstrates
-PHP-owned generated regions, while Sample 25 demonstrates Writer-owned native
-Section collections. They are no longer competing public showcase entry
+The historical CV experiments demonstrated PHP-owned generated regions and
+Writer-owned native Section collections. They are no longer public entry
 points. The canonical professional CV is
 [S01b](../../samples/sample_S01b_cv_structured.php), which deliberately combines
 the established ownership lessons: Writer owns stable page design, Frames,
@@ -270,7 +230,7 @@ choose the ownership model
       ↓
 L01–L12: focused vocabulary
 then C01–C05: capabilities
-then B01/B02 or S01b/S03 according to ownership
+then B01/B02 or S01b/S03/S03-B according to ownership
 ```
 
 This keeps application rendering code understandable and makes ODT-specific problems much easier to isolate.

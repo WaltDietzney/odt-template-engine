@@ -180,13 +180,13 @@ importer does not assign semantic repeating-header behavior to HTML `<thead>`
 rows, nor does it promise browser-like mixed list styles. The current
 recursive list importer can detach/re-attach a prior sibling while attempting
 to extract nested lists; adjacent and nested list combinations are therefore
-partial. L08 uses separated flat list types, and Sample 08 retains an L08
+partial. L08 uses separated flat list types, and L08 retains an L08
 migration target until nested-list behavior is resolved.
 
 ## Related samples
 
 - [L08 — HTML Import](../../samples/sample_L08_html_import.php) is the canonical broad capability example.
-- Sample 08 — historical HTML-to-editable-ODT lineage, retained in the registry during migration.
-- Sample 19 — historical HTML table import, now represented within L08.
+- L08 — historical HTML-to-editable-ODT lineage, retained in the registry during migration.
+- L08 — historical HTML table import, now represented within L08.
 
 See [RichText & Paragraphs](../rich-documents/richtext-and-paragraphs.md) to understand the native element model produced by the importer.

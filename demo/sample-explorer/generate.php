@@ -34,7 +34,7 @@ if ($sampleEntry === null) {
 
 if ($sampleEntry['distribution'] !== 'composer' || $sampleEntry['execution_mode'] !== 'odt') {
     http_response_code(409);
-    echo json_encode(['status' => 'error', 'message' => 'This migration sample is not a self-contained packaged ODT example.']);
+    echo json_encode(['status' => 'error', 'message' => 'This sample is not a self-contained packaged ODT example.']);
     exit;
 }
 

@@ -117,7 +117,7 @@ final class PageFlow01ParagraphFlowStyleMappingTest extends TestCase
         $output = tempnam(sys_get_temp_dir(), 'odt-page-flow-01-paragraph-') . '.odt';
 
         try {
-            $template = new OdtTemplate(dirname(__DIR__, 2) . '/samples/templates/template_18_ListStyles.odt');
+            $template = new OdtTemplate(dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_18_ListStyles.odt');
             $template->setElement('my_list', new Paragraph('MaterializedPageFlow', [
                 'keep-together' => 'always',
                 'widows' => 2,

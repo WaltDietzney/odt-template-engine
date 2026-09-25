@@ -15,7 +15,7 @@ application code unless the content is genuinely application-generated.
 
 The canonical progression is [Learn samples L01–L12](../examples/sample-guide.md)
 followed by capability examples C01–C05, builders B01–B02, and the current
-professional showcases S01b and S03.
+professional showcases S01b and S03/S03-B.
 Learn samples introduce one authoring concept at a time; capability samples
 show the additional native ODF behavior each capability contributes.
 Inspection and mapping/automation are integration layers over the three
@@ -115,7 +115,7 @@ boundary values before calling them production-ready:
 - five or more activities per employment;
 - zero activities and zero employment entries.
 
-Sample 25 demonstrated that a phone value can fit during authoring while
+C04 demonstrated that a phone value can fit during authoring while
 `+49 151 12345678` exceeds a narrow text box. The engine does not automatically
 resize arbitrary frames. Give bounded fields enough width, allow wrapping when
 appropriate, or use normal text flow for content whose length is not bounded.
@@ -197,7 +197,7 @@ ExperienceEntry
     └── one complete repeatable list item
 ```
 
-Static siblings remain static. This rule was demonstrated by Sample 25: the
+Static siblings remain static. This rule was demonstrated by C04: the
 collection engine cannot safely guess that visually related sibling content is
 part of a collection.
 
@@ -388,7 +388,7 @@ Treat template quality as a progression:
 3. **Production template** — tested through save/reopen and LibreOffice
    rendering, with the relevant export or round-trip requirements understood.
 
-The executable samples are useful reference implementations. Sample 25 is the
+The executable samples are useful reference implementations. C04 is the
 complete CV benchmark combining scalar values, finalized `ExperienceEntry`
 collections, nested `ActivityEntry` collections, bookmarks, lists, frames, and
 preserved native structure.

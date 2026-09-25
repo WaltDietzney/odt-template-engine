@@ -426,8 +426,8 @@ Subject to the normal implementation slice and registry review, the intended
 canonical S02 artifacts are:
 
 ```text
-samples/sample_S02_professional_invoice.php
-samples/templates/template_S02_professional_invoice.odt
+tests/Fixtures/LegacySamples/sample_S02_professional_invoice.php
+tests/Fixtures/LegacySamples/templates/template_S02_professional_invoice.odt
 samples/output/output_S02_professional_invoice.odt
 ```
 

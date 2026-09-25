@@ -104,11 +104,11 @@ $keywords = $metadata['keywords'] ?? [];
 ```
 
 Metadata is separate from visible content. Setting it does not insert text into
-`content.xml`. Sample 04 demonstrates setting metadata, saving, reopening, and
+`content.xml`. S03 demonstrates setting metadata, saving, reopening, and
 displaying selected values in document content.
 
 ## Related sample
 
-- Sample 04 — setting, saving, reloading, and displaying metadata
+- S03 — setting, saving, reloading, and displaying metadata
 
 For the package location of `meta.xml`, see [ODT Internals](odt-internals.md).

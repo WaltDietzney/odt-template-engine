@@ -144,8 +144,8 @@ rather than trying to express paragraph spacing as a text property or font styli
 
 ## Related samples
 
-- Sample 09 — RichText and paragraph styling
-- Sample 14 — tabs, borders, margins, and paragraph style behavior
-- Sample 21 — semantic named paragraph styles in a complex document
+- L04 — RichText and paragraph styling
+- B01 — tabs, borders, margins, and paragraph style behavior
+- S01b — semantic named paragraph styles in a complex document
 
 For the overall architecture and the current document-local style model, see [Style Model](style-model.md).

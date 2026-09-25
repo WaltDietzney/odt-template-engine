@@ -142,7 +142,7 @@ Instances survive save/reopen and remain strictly resolvable. Separate
 
 ## K. Sample 25
 
-`samples/sample_25_sectionInstantiation.php` creates two instances from the
+`tests/Fixtures/LegacySamples/sample_25_sectionInstantiation.php` creates two instances from the
 real CV section:
 
 ```text
@@ -168,9 +168,9 @@ The agent environment did not provide LibreOffice visual rendering, so visual
 equivalence is not claimed. Local validation commands are:
 
 ```sh
-php samples/sample_25_sectionInstantiation.php
+php tests/Fixtures/LegacySamples/sample_25_sectionInstantiation.php
 ./tools/visual-regression/render-odt.sh \
-    samples/output/output_25_sectionInstantiation.odt
+    tests/Fixtures/LegacySamples/output/output_25_sectionInstantiation.odt
 ```
 
 The expected result is the visible prototype followed by instance 1 and

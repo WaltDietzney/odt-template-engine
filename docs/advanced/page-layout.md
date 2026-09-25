@@ -123,11 +123,11 @@ The implementation also overrides list-indentation adjustment so page margins ar
 
 ## Example: complex CV
 
-Sample 21 uses `PageLayoutOdtTemplate` because the LibreOffice template defines the two-column CV structure while PHP adjusts the page margins and fills the two large generated regions.
+S01b uses `PageLayoutOdtTemplate` because the LibreOffice template defines the two-column CV structure while PHP adjusts the page margins and fills the two large generated regions.
 
 ```php
 $template = new PageLayoutOdtTemplate(
-    __DIR__ . '/templates/template_21_cvProfile.odt'
+    __DIR__ . '/templates/template_S01b_cv_structured.odt'
 );
 
 $template->setPageMargins('0cm', '0.8cm', '0cm', '0cm');
@@ -137,7 +137,7 @@ This is a good example of the intended division of responsibility: LibreOffice o
 
 ## Related resources
 
-- Sample 21 — complex CV / page-layout usage
+- S01b — complex CV / page-layout usage
 - `PageLayoutOdtTemplateTest` — integration coverage for page-layout changes
 
 See [ODT Internals](odt-internals.md) for the role of `styles.xml` and master pages in the package.

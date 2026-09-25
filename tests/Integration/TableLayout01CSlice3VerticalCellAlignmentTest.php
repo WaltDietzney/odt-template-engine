@@ -206,7 +206,7 @@ final class TableLayout01CSlice3VerticalCellAlignmentTest extends TestCase
 
     private function templatePath(): string
     {
-        return dirname(__DIR__, 2) . '/samples/templates/template_11_table.odt';
+        return dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_11_table.odt';
     }
 
     private function outputPath(string $name): string

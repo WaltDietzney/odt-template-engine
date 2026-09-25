@@ -90,7 +90,7 @@ final class StyleApi02EP0SemanticIndependenceCharacterizationTest extends TestCa
 
     private function templatePath(string $name): string
     {
-        $path = dirname(__DIR__, 2) . '/samples/templates/' . $name;
+        $path = dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/' . $name;
         self::assertFileExists($path);
 
         return $path;

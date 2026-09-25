@@ -29,7 +29,7 @@ Sample 17 is treated as a first-class regression oracle because it contains thre
 
 ## 2. Sample 17 is an explicit known layout defect
 
-`samples/sample_17_textfield.php` contains three cases:
+`tests/Fixtures/LegacySamples/sample_17_textfield.php` contains three cases:
 
 ### Box 1 — intended right-floating frame
 

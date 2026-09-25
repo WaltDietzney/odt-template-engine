@@ -97,7 +97,7 @@ final class StylePipelineP2BTest extends TestCase
     {
         $output = $this->temporaryDirectory . '/document-' . $suffix . '.odt';
         $template = new OdtTemplate(
-            dirname(__DIR__, 2) . '/samples/templates/template_18_ListStyles.odt'
+            dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_18_ListStyles.odt'
         );
         $template->setElement('my_list', $richText);
         $template->save($output);

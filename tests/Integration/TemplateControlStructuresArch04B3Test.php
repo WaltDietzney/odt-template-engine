@@ -248,7 +248,7 @@ final class TemplateControlStructuresArch04B3Test extends TestCase
     public function testConditionFacadeAndEvaluatorOverridesRemainObservable(): void
     {
         $template = new Arch04B3ConditionalPolymorphismTemplate(
-            dirname(__DIR__, 2) . '/samples/templates/template_01_simple_variables.odt'
+            dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_01_simple_variables.odt'
         );
 
         try {
@@ -271,7 +271,7 @@ final class TemplateControlStructuresArch04B3Test extends TestCase
     public function testRepeatingFacadeAndRowReplacementOverridesRemainObservable(): void
     {
         $template = new Arch04B3RepeatingPolymorphismTemplate(
-            dirname(__DIR__, 2) . '/samples/templates/template_01_simple_variables.odt'
+            dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_01_simple_variables.odt'
         );
 
         try {
@@ -312,7 +312,7 @@ final class TemplateControlStructuresArch04B3Test extends TestCase
 
     private function template(): Arch04B3InspectableTemplate
     {
-        $path = dirname(__DIR__, 2) . '/samples/templates/template_01_simple_variables.odt';
+        $path = dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_01_simple_variables.odt';
         self::assertFileExists($path);
 
         return new Arch04B3InspectableTemplate($path);

@@ -143,7 +143,7 @@ final class TypedTargetResolverTest extends TestCase
 
     public function testFacadeResolvesTypedTargetsWithSectionMutationBoundary(): void
     {
-        $template = new class ('samples/templates/template_01_simple_variables.odt') extends OdtTemplate {
+        $template = new class ('tests/Fixtures/LegacySamples/templates/template_01_simple_variables.odt') extends OdtTemplate {
             public function addSection(): void
             {
                 $section = $this->documentContext()->contentDom()->createElementNS(
@@ -162,7 +162,7 @@ final class TypedTargetResolverTest extends TestCase
 
     public function testFacadeHandleFailsDeterministicallyAfterLoadRemovesItsIdentity(): void
     {
-        $template = new class ('samples/templates/template_01_simple_variables.odt') extends OdtTemplate {
+        $template = new class ('tests/Fixtures/LegacySamples/templates/template_01_simple_variables.odt') extends OdtTemplate {
             public function addSection(): void
             {
                 $section = $this->documentContext()->contentDom()->createElementNS(
@@ -183,7 +183,7 @@ final class TypedTargetResolverTest extends TestCase
 
     public function testFacadeHandleFailsDeterministicallyAfterRefreshRemovesItsIdentity(): void
     {
-        $template = new class ('samples/templates/template_01_simple_variables.odt') extends OdtTemplate {
+        $template = new class ('tests/Fixtures/LegacySamples/templates/template_01_simple_variables.odt') extends OdtTemplate {
             public function addSection(): void
             {
                 $section = $this->documentContext()->contentDom()->createElementNS(
@@ -204,7 +204,7 @@ final class TypedTargetResolverTest extends TestCase
 
     public function testSeparateFacadeInstancesCannotShareTargetContext(): void
     {
-        $first = new class ('samples/templates/template_01_simple_variables.odt') extends OdtTemplate {
+        $first = new class ('tests/Fixtures/LegacySamples/templates/template_01_simple_variables.odt') extends OdtTemplate {
             public function addSection(): void
             {
                 $section = $this->documentContext()->contentDom()->createElementNS(
@@ -215,7 +215,7 @@ final class TypedTargetResolverTest extends TestCase
                 $this->documentContext()->contentDom()->documentElement->appendChild($section);
             }
         };
-        $second = new class ('samples/templates/template_01_simple_variables.odt') extends OdtTemplate {
+        $second = new class ('tests/Fixtures/LegacySamples/templates/template_01_simple_variables.odt') extends OdtTemplate {
             public function addSection(): void
             {
                 $section = $this->documentContext()->contentDom()->createElementNS(

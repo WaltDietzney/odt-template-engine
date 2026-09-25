@@ -66,7 +66,7 @@ final class AdjacentExpressionWhitespaceTest extends TestCase
 
     public function testSample25LoadSavePreservesAuthoredHeaderSeparator(): void
     {
-        $template = new OdtTemplate(dirname(__DIR__, 2) . '/samples/templates/sample_25_sectionClone.odt');
+        $template = new OdtTemplate(dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/sample_25_sectionClone.odt');
         $output = $this->tempFile('odt-adjacent-output-');
         $template->save($output);
 
@@ -102,7 +102,7 @@ final class AdjacentExpressionWhitespaceTest extends TestCase
 
     private function noSeparatorTemplate(): string
     {
-        $source = dirname(__DIR__, 2) . '/samples/templates/sample_25_sectionClone.odt';
+        $source = dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/sample_25_sectionClone.odt';
         $target = $this->tempFile('odt-adjacent-template-');
         $input = new ZipArchive();
         self::assertSame(true, $input->open($source));

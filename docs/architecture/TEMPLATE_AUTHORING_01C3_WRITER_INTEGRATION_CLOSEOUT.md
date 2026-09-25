@@ -15,7 +15,7 @@ C3 adds:
 - real-fixture integration gate:
   `tests/Integration/TemplateAuthoring01C3LibreOfficeUserFieldIntegrationTest.php`;
 - public/manual sample:
-  `samples/sample_29_userFieldBinding.php`;
+  `tests/Fixtures/LegacySamples/sample_29_userFieldBinding.php`;
 - public User Field documentation in `docs/advanced/template-inspection.md`;
 - README feature/API exposure.
 
@@ -96,7 +96,7 @@ customer = Maria
 against the real body/header fixture and writes:
 
 ```text
-samples/output/output_29_userFieldBinding.odt
+tests/Fixtures/LegacySamples/output/output_29_userFieldBinding.odt
 ```
 
 The generated output is a local regression artifact unless explicitly selected for commit. Existing project rules for `samples/output/*.odt` remain unchanged.
@@ -105,8 +105,8 @@ The generated output is a local regression artifact unless explicitly selected f
 
 After the automated gate is green:
 
-1. run `php samples/sample_29_userFieldBinding.php`;
-2. open `samples/output/output_29_userFieldBinding.odt` in LibreOffice Writer;
+1. run `php tests/Fixtures/LegacySamples/sample_29_userFieldBinding.php`;
+2. open `tests/Fixtures/LegacySamples/output/output_29_userFieldBinding.odt` in LibreOffice Writer;
 3. confirm there is no repair warning;
 4. confirm body User Field references display `Maria`;
 5. confirm header User Field reference displays `Maria`;
@@ -154,7 +154,7 @@ php -l src/Template/UserFieldBindingException.php
 php -l src/Template/TemplateContractInspector.php
 php -l src/OdtTemplate.php
 php -l tests/Integration/TemplateAuthoring01C3LibreOfficeUserFieldIntegrationTest.php
-php -l samples/sample_29_userFieldBinding.php
+php -l tests/Fixtures/LegacySamples/sample_29_userFieldBinding.php
 
 git diff --check develop...HEAD
 ```

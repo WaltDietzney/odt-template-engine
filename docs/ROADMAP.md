@@ -98,7 +98,7 @@ Important outcomes include explicit package/document ownership, extracted templa
 
 PRODUCT-01 / SECTION-03 established a practical addressable document model based on native LibreOffice/ODF structures.
 
-The completed milestone includes native section discovery, typed targets, exact cloning, deterministic identity rewriting, local data binding, nested instantiation, collection lifecycle semantics, rollback, structure-preserving scalar replacement, ODF whitespace preservation, authoring guidance, and the Sample 25 CV showcase.
+The completed milestone includes native section discovery, typed targets, exact cloning, deterministic identity rewriting, local data binding, nested instantiation, collection lifecycle semantics, rollback, structure-preserving scalar replacement, ODF whitespace preservation, authoring guidance, and the C04 CV showcase.
 
 Sections are therefore an implemented structured-template primitive, not merely a future design direction.
 
@@ -182,6 +182,7 @@ TEMPLATE-AUTHORING-01
     └── F — Authoring Documentation & Samples
     ↓
 FINALIZATION-01
+    └── controlling plan: architecture/FINALIZATION_01_PLAN.md
     ↓
 RELEASE-1.0 INTEGRATION PRE-FLIGHT
     ↓
@@ -189,6 +190,16 @@ RELEASE-1.0 INTEGRATION PRE-FLIGHT
 ```
 
 The sequence is intentionally bounded. High-value but non-foundational features must not indefinitely delay 1.0.
+
+### FINALIZATION-01 — Release-candidate finalization — IN PROGRESS
+
+The accepted controlling execution contract is
+[`architecture/FINALIZATION_01_PLAN.md`](architecture/FINALIZATION_01_PLAN.md).
+It defines the ordered F1–F6 blocks, their completion gates, the rule that
+FINALIZATION-01 does not invent new architecture, and the release-candidate
+freeze boundary before RELEASE-1.0 INTEGRATION PRE-FLIGHT. Detailed scope and
+slice decisions belong to that plan rather than being duplicated in this
+roadmap.
 
 ### PAGE-FLOW-01 — Page styles, paragraph flow, and Section flow — COMPLETE / FINAL GO
 
@@ -334,7 +345,7 @@ Phase F is closed by
 [`architecture/TEMPLATE_AUTHORING_01F_FINAL_REVIEW.md`](architecture/TEMPLATE_AUTHORING_01F_FINAL_REVIEW.md).
 
 The canonical 1.0 public path is L01–L12, C01–C05, B01–B02 and the actual
-professional showcases S01b and S03. Historical numbered samples remain
+professional showcases S01b and S03/S03-B. Historical numbered samples remain
 repository/regression evidence rather than a parallel curriculum.
 
 The final review completed the public API inventory from current source/tests,

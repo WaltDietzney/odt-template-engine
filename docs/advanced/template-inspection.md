@@ -40,7 +40,7 @@ assert($contract instanceof TemplateContract);
 
 Unlike `inspect()`, this contract is source-oriented. Rendering, saving, or mutating the working document does not redefine the authored template contract.
 
-The canonical introduction is [L11 — Template Inspection](../../samples/sample_L11_template_inspection.php). It prints a compact machine-readable view of bindings, controls, native objects, dependencies, capabilities, and diagnostics. It does not render, mutate, or save an ODT. The historical Sample 28 is retained as migration evidence, but is no longer needed for public learning.
+The canonical introduction is [L11 — Template Inspection](../../samples/sample_L11_template_inspection.php). It prints a compact machine-readable view of bindings, controls, native objects, dependencies, capabilities, and diagnostics. It does not render, mutate, or save an ODT. The historical L11 is retained as migration evidence, but is no longer needed for public learning.
 
 ## TemplateContract
 
@@ -200,7 +200,7 @@ does not bind a same-named native User Field.
 
 Phase C v1 does not support Set/Get Variable or non-string User Field types. Those remain deferred work.
 
-The self-contained, Composer-distributed example is [L10 — Writer User Fields](../../samples/sample_L10_writer_user_fields.php). The older Sample 29 remains repository-only as historical fixture-based regression evidence; it is not required to run L10.
+The self-contained, Composer-distributed example is [L10 — Writer User Fields](../../samples/sample_L10_writer_user_fields.php). The older L10 remains repository-only as historical fixture-based regression evidence; it is not required to run L10.
 
 Binding failures raise:
 
@@ -291,7 +291,7 @@ Serialization is deterministic for unchanged authored source and does not contai
 The repository contains an executable Phase-B inspection example:
 
 ```bash
-php samples/sample_28_inspectTemplateContract.php
+php samples/sample_L11_template_inspection.php
 ```
 
 It loads the Writer-authored reference fixture `TEMPLATE-AUTHORING-01B-inspection-contract.odt` and prints its coverage, bindings, controls, native objects, dependencies, capabilities, and diagnostics without rendering or mutating the document.
@@ -299,7 +299,7 @@ It loads the Writer-authored reference fixture `TEMPLATE-AUTHORING-01B-inspectio
 Phase C adds a Writer User Field binding example:
 
 ```bash
-php samples/sample_29_userFieldBinding.php
+php samples/sample_L10_writer_user_fields.php
 ```
 
 It binds one logical string User Field across body/header declarations and writes an ODT for manual LibreOffice reevaluation.

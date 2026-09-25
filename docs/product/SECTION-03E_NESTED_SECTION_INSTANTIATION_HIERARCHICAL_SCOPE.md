@@ -12,7 +12,7 @@ experience, without leaking values or clone indices between experiences.
 The implementation was checked against the SECTION-03A–D contracts, the
 addressable document model, template-structure and structure-preserving
 replacement work, and the native XML in
-`samples/templates/sample_25_sectionClone.odt`.
+`tests/Fixtures/LegacySamples/templates/sample_25_sectionClone.odt`.
 
 ## C. Sample-25 topology
 

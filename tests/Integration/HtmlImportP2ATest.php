@@ -46,7 +46,7 @@ final class HtmlImportP2ATest extends TestCase
 
         $output = $this->temporaryDirectory . '/base64.odt';
         $template = new \OdtTemplateEngine\OdtTemplate(
-            dirname(__DIR__, 2) . '/samples/templates/template_18_ListStyles.odt'
+            dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_18_ListStyles.odt'
         );
         $template->setElement('my_list', $richText);
         $template->save($output);

@@ -30,7 +30,7 @@ milestones.
 
 Phase F has established the canonical Learn, Capability, Builder, and
 Professional Showcase model. Relevant completed work includes L12 Writer Table
-Population, B02 Professional Report Builder, S01b Professional CV, and S03
+Population, B02 Professional Report Builder, S01b Professional CV, and S03/S03-B
 Writer-authored Structured Professional Report.
 
 S03-A and S03-B provide the current strongest template-first evidence: Writer
@@ -118,7 +118,7 @@ reconciled:
 - Sample 21 and Sample 25 are still taught as parallel CV showcases.
 
 The canonical public progression should be centered on L01-L12, C01-C05,
-B01/B02, and the actual professional showcases such as S01b and S03.
+B01/B02, and the actual professional showcases such as S01b and S03/S03-B.
 
 ### Template Authoring Guide
 
@@ -208,7 +208,7 @@ The former open-work checklist is complete:
 6. Registry migration state and canonical taxonomy were reconciled.
 7. Sample Explorer, Sample Guide, Template Authoring Guide, README and docs
    index were aligned to the canonical L01-L12 / C01-C05 / B01-B02 /
-   S01b+S03 path.
+   S01b+S03/S03-B path.
 8. B02 now states its programmatic ownership role explicitly; canonical
    showcase documentation states the Writer/PHP ownership boundary.
 9. A final mechanical scan of every public source symbol classified remaining
@@ -249,7 +249,7 @@ models:
    concrete preflight and bounded atomic automation.
 
 Canonical public learning now proceeds through L01-L12, C01-C05, B01-B02 and
-the actual professional showcases S01b and S03. Historical numbered samples
+the actual professional showcases S01b and S03/S03-B. Historical numbered samples
 remain evidence, not a competing curriculum.
 
 The complete public API inventory has been reconciled mechanically against
