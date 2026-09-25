@@ -316,6 +316,6 @@ Structured Template](../../samples/sample_S01b_cv_structured.php) and
 
 - [Practical ODT template authoring guide](../getting-started/template-authoring-guide.md) — how to design the ODT in LibreOffice.
 - [Variables & Filters](../template-language/variables-and-filters.md) — scalar and filter syntax.
-- [Bookmarks](../product/NAMED-RANGE-01A_TEXT_REPLACEMENT_SEMANTICS.md) — explicit named-range operations.
-- [S01b showcase](../../samples/sample_S01b_cv_structured.php) — native CV collection example.
-- [SECTION-03 final review](../product/SECTION-03_FINAL_REVIEW.md) — implementation boundaries and compatibility findings.
+- [Addressable Native ODT Structures](addressable-document.md) — bookmarks and the other Writer-native target families.
+- [S01b showcase](../../samples/sample_S01b_cv_structured.php) — professional mixed-ownership CV example.
+- [C04 — Declarative Structured Collections](../../samples/sample_C04_declarative_structured_collections.php) — focused nested Writer-owned collection example.
