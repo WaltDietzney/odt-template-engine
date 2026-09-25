@@ -5,8 +5,8 @@ The `samples/` directory is both a runnable example collection and a map of the 
 The canonical L/C/B/S path is the complete public learning path. Current entry
 points, templates/outputs, ownership descriptions, and package status are
 recorded in the [sample registry](../../samples/sample-registry.php).
-Historical numbered samples are maintained only as internal regression
-fixtures outside the public `samples/` tree.
+Legacy examples are maintained only as internal regression fixtures outside
+the public `samples/` tree.
 
 ## Canonical Learn path
 
@@ -98,47 +98,6 @@ L06 intentionally shows two ownership models, not two interchangeable APIs:
 LibreOffice; `ImageElement` creates a new frame/resource as part of the PHP
 generated subtree. `setImage()` remains a placeholder-oriented convenience
 path documented with the image APIs, not a third equal model in this sample.
-
-## Migration-era numbered samples
-
-The numbered examples below are historical migration entries, not the
-recommended canonical learning path. They remain available while later F
-slices account for their remaining behavior; consult the registry for current
-migration targets and package status.
-
-### Historical numbered examples
-
-| Sample | Focus | Read it when you need... |
-| --- | --- | --- |
-| 01 | Simple variables | the smallest placeholder replacement example |
-| 02 | Filters | formatting such as upper/lower/date/number behavior |
-| 03 | Logic elements | conditions and basic template logic |
-| 04 | Metadata | `meta.xml`, save/reload, and metadata display |
-| 05 / 05b | Image replacement | images in existing template structures |
-| 06 | Image settings | image sizing and placement options |
-| 07 | Contact list / paragraphs | generated paragraph-oriented content |
-| 08 | HTML import | converting controlled HTML to editable ODT elements |
-| 09 | RichText block | composing richer generated sections |
-| 10 | Template language | a larger variables/filters/logic example |
-| 11 | Table | generated table basics |
-| 12 | Advanced table | richer table content and styling |
-| 13 | Cell settings | table-cell configuration and style responsibilities |
-| 14 | Advanced tabs | paragraph geometry, tabs, margins, and borders |
-| 15 | Styled table | a compact styled-table example |
-| 16 | Basic tabs | tab-stop-oriented text layout |
-| 17 | Text field | text-box / field-related document structure |
-| 18 | List styles | native bullet, numbered, and nested lists |
-| 19 | HTML table | HTML table import into native ODT table structures |
-| 20 | Table ratios | relative native table-column widths |
-| 21 | Generated CV profile | a real-world document composed from large PHP-generated regions |
-| 22 | Bookmark text replacement | addressing and replacing text in native named bookmarks |
-| 23 | Section content replacement | replacing the children of a native named section with structured ODT content |
-| 24 | Section image replacement | replacing section content with an image and package resource |
-| 25 | Native CV section collections | LibreOffice-authored repeatable sections, nested collections, and scalar binding |
-| 28 | Template Contract inspection | historical full contract dump; canonical compact introduction is L11 |
-| 29 | Writer User Field binding | historical fixture-dependent entry; the self-contained Composer example is L10 |
-
-The repository also contains additional focused or historical sample scripts outside the numbered sequence. Treat the numbered samples as the primary learning path.
 
 ## Run a sample
 
