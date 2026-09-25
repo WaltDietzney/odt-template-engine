@@ -84,7 +84,7 @@ when neither dimension is supplied and derives the other dimension when only
 one is supplied. These are current API behaviors, not a promise that all
 template-owned geometry is preserved by either imperative call.
 
-See Samples 05 and 06 for the existing image replacement and image-settings workflows.
+See [L06 — Images](../../samples/sample_L06_images.php) for the canonical ownership comparison and [C03 — Frame Layout](../../samples/sample_C03_frame_layout.php) for semantic frame positioning.
 
 ## Images in named sections
 
@@ -100,7 +100,7 @@ $image = new ImageElement(__DIR__ . '/assets/photo.png', [
 $template->section('ImageSection')->replaceContent($image);
 ```
 
-Here LibreOffice owns the named section while PHP supplies its new structured content. The image still participates in the normal package-resource pipeline. Historical internal Section/image fixture remains focused regression evidence for this combined Section-plus-ImageElement operation; [L09 Native Objects](../../samples/sample_L09_native_objects.php) and [L06 Images](../../samples/sample_L06_images.php) teach its target and image concepts separately.
+Here LibreOffice owns the named section while PHP supplies its new structured content. The image still participates in the normal package-resource pipeline. [L09 Native Objects](../../samples/sample_L09_native_objects.php) teaches the target model and [L06 Images](../../samples/sample_L06_images.php) teaches image ownership.
 
 ## Image assets in the ODT package
 
