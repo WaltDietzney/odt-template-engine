@@ -27,15 +27,20 @@ From the repository root:
 
 ```bash
 tools/visual-regression/render.sh \
-    samples/output/output_05_replaceImage.odt \
-    samples/output/output_21_cvProfile.odt
+    samples/output/output_L12_writer_table_population.odt \
+    samples/output/output_S03_structured_professional_report.odt
 ```
 
 Each PDF is written to `tmp/visual-regression/pdf/`. Page images use the ODT basename as prefix, for example:
 
 ```text
-tmp/visual-regression/images/output_21_cvProfile-1.png
+tmp/visual-regression/images/output_S03_structured_professional_report-1.png
 ```
+
+These canonical outputs provide representative current Writer-authored table
+and professional-report regression documents. For a targeted image or frame
+check, first generate the canonical sample that exercises that capability
+(for example L06, C03, or S01b) and pass its output to this tool.
 
 ## Render all generated sample outputs
 
