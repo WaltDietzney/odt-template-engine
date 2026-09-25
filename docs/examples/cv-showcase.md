@@ -1,12 +1,12 @@
 # Editable CV Showcase
 
-The repository contains two complementary CV architecture showcases.
+The repository uses the professional S01b CV and the focused C04 capability sample to demonstrate complementary ownership choices.
 
-**S01b** demonstrates a realistic document whose large dynamic regions are constructed from structured PHP elements and inserted into a LibreOffice-designed shell.
+**S01b** is the canonical professional CV showcase. It deliberately combines Writer-owned page design and repeatable native Sections with bounded PHP-owned RichText regions.
 
-**C04** demonstrates LibreOffice-authored repeatable native sections addressed and instantiated directly from PHP.
+**C04** is the canonical capability sample for declarative Writer-authored nested Section collections with template-shaped data.
 
-Both produce editable ODT output. They differ mainly in **who owns the dynamic structure**.
+Both produce editable ODT output. The important comparison is **who owns each dynamic structure**.
 
 These CV examples are also architectural teaching material. S01b is the
 reference for a professionally styled PHP-owned region: it uses document-local
@@ -23,7 +23,7 @@ boundaries deliberately: the prepared template owns the page design, native
 Sections, and image-frame placement, while PHP expands the Section collections
 and supplies bounded RichText sidebar regions.
 
-## S01b — PHP-generated document regions
+## S01b — Professional mixed-ownership template
 
 S01b combines:
 
@@ -67,7 +67,7 @@ $template->setElement('cv_content', $content);
 
 Use this model when PHP genuinely owns the internal structure of a dynamic region.
 
-## C04 — LibreOffice-authored native sections
+## C04 — Declarative Writer-owned collections
 
 C04 keeps more structure in the ODT template itself. Scalar values still use ordinary assignment, while repeatable entries are native named sections authored in LibreOffice.
 
@@ -144,9 +144,9 @@ The models can also coexist in one document. A named section may contain ordinar
 
 ## Why both matter
 
-S01b remains an important benchmark for the structured-element layer: paragraphs, lists, images, styles, and large generated regions.
+S01b is an important professional benchmark for combining Writer-owned structure with bounded structured PHP content: paragraphs, lists, images, styles, native Sections, bookmarks, and template-owned frame geometry.
 
-C04 is the benchmark for the newer addressable native-document layer: semantic section identities, nested ownership, cloning/instantiation, collection finalization, and preservation of LibreOffice-authored structure.
+C04 is the focused benchmark for declarative Writer-native collections: semantic Section identities, nested ownership, collection execution, and preservation of LibreOffice-authored structure.
 
 Together they show the direction of the engine more accurately than either sample alone:
 
