@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OdtTemplateEngine\Tests\Elements;
 
 use DOMDocument;
+use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Elements\Paragraph;
 use PHPUnit\Framework\TestCase;
 
@@ -52,16 +53,11 @@ final class ParagraphTest extends TestCase
         ]);
         $paragraph->addText('Styled text', ['bold' => true]);
 
-        self::assertCount(1, $paragraph->getRequiredStyles());
-        self::assertSame(
-            [
-                'CustomParagraph' => [
-                    'text-align' => 'center',
-                    'margin-top' => '0.2cm',
-                ],
-            ],
-            $paragraph->getRequiredParagraphStyles()
-        );
+        $requirements = iterator_to_array($paragraph->getOwnStyleRequirements(), false);
+        self::assertCount(2, $requirements);
+        self::assertSame('paragraph', $requirements[0]->family());
+        self::assertSame('CustomParagraph', $requirements[0]->name());
+        self::assertSame('text', $requirements[1]->family());
     }
 
     public function testCanMarkParagraphAsBulletedOrNumbered(): void
@@ -82,5 +78,116 @@ final class ParagraphTest extends TestCase
             'Numbering_20_Symbol',
             $numbered->toDomNode($dom)->getAttribute('text:style-name')
         );
+    }
+
+    public function testExposesSemanticParagraphDefinitionWithTypedPropertyGroups(): void
+    {
+        $paragraph = new Paragraph('CustomParagraph', [
+            'text-align' => 'center',
+            'color' => '#cc0000',
+            'font-weight' => 'bold',
+        ]);
+
+        $requirements = iterator_to_array($paragraph->getOwnStyleRequirements(), false);
+
+        self::assertCount(1, $requirements);
+        self::assertSame(
+            [
+                'style:paragraph-properties' => [
+                    'fo:text-align' => 'center',
+                ],
+                'style:text-properties' => [
+                    'fo:font-weight' => 'bold',
+                    'fo:color' => '#cc0000',
+                ],
+            ],
+            $requirements[0]->propertyGroups()
+        );
+        self::assertSame(StyleRequirement::KIND_DEFINITION, $requirements[0]->kind());
+        self::assertSame(StyleRequirement::SCOPE_COMMON, $requirements[0]->scope());
+        self::assertSame('paragraph', $requirements[0]->family());
+        self::assertSame(StyleRequirement::PART_STYLES, $requirements[0]->documentPart());
+        self::assertSame('CustomParagraph', $requirements[0]->name());
+        self::assertSame('Standard', $requirements[0]->parentStyleName());
+    }
+
+    public function testExposesNameOnlyParagraphAsUnresolvedReference(): void
+    {
+        $requirements = iterator_to_array(
+            (new Paragraph('CVMainHeading'))->getOwnStyleRequirements(),
+            false
+        );
+
+        self::assertCount(1, $requirements);
+        self::assertSame(StyleRequirement::KIND_REFERENCE, $requirements[0]->kind());
+        self::assertNull($requirements[0]->scope());
+        self::assertSame('paragraph', $requirements[0]->family());
+        self::assertNull($requirements[0]->documentPart());
+        self::assertSame('CVMainHeading', $requirements[0]->name());
+        self::assertNull($requirements[0]->parentStyleName());
+        self::assertSame([], $requirements[0]->propertyGroups());
+    }
+
+    public function testExposesGeneratedInlineTextStylesAsCommonDefinitions(): void
+    {
+        $paragraph = (new Paragraph())
+            ->addText('red', ['color' => '#cc0000'])
+            ->addText('bold', ['bold' => true]);
+
+        $requirements = iterator_to_array($paragraph->getOwnStyleRequirements(), false);
+
+        self::assertCount(2, $requirements);
+        self::assertSame(
+            ['style:text-properties' => ['fo:color' => '#cc0000']],
+            $requirements[0]->propertyGroups()
+        );
+        self::assertSame(
+            ['style:text-properties' => ['fo:font-weight' => 'bold']],
+            $requirements[1]->propertyGroups()
+        );
+        foreach ($requirements as $requirement) {
+            self::assertSame(StyleRequirement::KIND_DEFINITION, $requirement->kind());
+            self::assertSame(StyleRequirement::SCOPE_COMMON, $requirement->scope());
+            self::assertSame('text', $requirement->family());
+            self::assertSame(StyleRequirement::PART_STYLES, $requirement->documentPart());
+            self::assertSame('Standard', $requirement->parentStyleName());
+        }
+    }
+
+    public function testNativeInlineTextPropertiesArePreservedAsSemanticProperties(): void
+    {
+        $paragraph = (new Paragraph())->addText('native', [
+            'fo:color' => '#123456',
+            'fo:font-size' => '13pt',
+            'fo:font-weight' => 'bold',
+            'fo:font-style' => 'italic',
+            'style:font-name' => 'Liberation Sans',
+            'style:text-underline-style' => 'solid',
+        ]);
+
+        $requirements = iterator_to_array($paragraph->getOwnStyleRequirements(), false);
+
+        self::assertSame([
+            'style:text-properties' => [
+                'fo:color' => '#123456',
+                'fo:font-size' => '13pt',
+                'fo:font-weight' => 'bold',
+                'fo:font-style' => 'italic',
+                'style:font-name' => 'Liberation Sans',
+                'style:text-underline-style' => 'solid',
+            ],
+        ], $requirements[0]->propertyGroups());
+    }
+
+    public function testSemanticTextNamesPreserveExistingGenerationAndDeduplication(): void
+    {
+        $paragraph = (new Paragraph())
+            ->addText('one', ['color' => '#123456'])
+            ->addText('two', ['color' => '#123456']);
+
+        $semanticRequirements = iterator_to_array($paragraph->getOwnStyleRequirements(), false);
+
+        self::assertCount(1, $semanticRequirements);
+        self::assertSame('text', $semanticRequirements[0]->family());
     }
 }

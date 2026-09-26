@@ -33,6 +33,8 @@ Common options currently mapped by the engine include:
 
 Font-family usage is also reflected in the ODT font-face declarations written for the document.
 
+Inline text styles are generated and collected from the paragraph content. Application code does not need to register them in a static registry, and the current public API intentionally does not provide a `defineText()` counterpart merely for symmetry with named paragraph styles.
+
 ## Paragraph style options
 
 Paragraph styles are supplied when creating a paragraph or through `setParagraphStyleOptions()`:
@@ -102,14 +104,12 @@ The engine maps the tab definitions into ODF paragraph style data.
 
 Use tabs for compact aligned text. For genuinely tabular data, prefer a native table.
 
-## Semantic reusable styles
+## Reusable named paragraph styles
 
-For repeated roles in a complex document, register a meaningful paragraph style name:
+For repeated roles in a complex document, define a meaningful named paragraph style on the current document:
 
 ```php
-use OdtTemplateEngine\Utils\StyleMapper;
-
-StyleMapper::registerParagraphStyle('InvoiceSectionHeading', [
+$template->styles()->defineParagraph('InvoiceSectionHeading', [
     'margin-top' => '0.4cm',
     'margin-bottom' => '0.1cm',
     'border-bottom' => '1pt solid #333333',
@@ -119,15 +119,11 @@ $heading = new Paragraph('InvoiceSectionHeading');
 $heading->addText('Items', ['bold' => true]);
 ```
 
-The benefit is not only code reuse. The generated ODT also contains a style name that describes its purpose.
+The benefit is not only code reuse. The generated ODT also contains a style name that describes its purpose. The later `new Paragraph('InvoiceSectionHeading')` call is a named style reference; it does not define or register the style.
 
-For one-off paragraph geometry, constructing the paragraph directly with style options is simpler and avoids global explicit registration.
+A reference can also target a paragraph style that already exists in the LibreOffice-authored template. If a named style is neither authored in the current document nor defined document-locally, the reference remains unresolved rather than falling back to process-global PHP state.
 
-## Named text styles
-
-`StyleMapper` also supports explicit text-style registration, but most application code does not need to register text styles manually. `Paragraph::addText()` generates and collects the required inline styles automatically.
-
-Use explicit registration only when you have a concrete advanced requirement and understand the current process-scoped registry behavior.
+For one-off paragraph geometry, constructing the paragraph directly with friendly style options is simpler and avoids defining a reusable named style.
 
 ## Avoid mixing responsibilities
 
@@ -148,8 +144,8 @@ rather than trying to express paragraph spacing as a text property or font styli
 
 ## Related samples
 
-- Sample 09 — RichText and paragraph styling
-- Sample 14 — tabs, borders, margins, and paragraph style behavior
-- Sample 21 — semantic named paragraph styles in a complex document
+- [L04 — Rich Content](../../samples/sample_L04_rich_content.php) — focused RichText and paragraph styling
+- [B01 — Invoice Template Builder](../../samples/sample_B01_invoice_template_builder.php) — tabs, borders, margins, and paragraph style behavior
+- [S01b — Professional CV · Structured Template](../../samples/sample_S01b_cv_structured.php) — semantic named paragraph styles in a complex document
 
-For the overall architecture and the current static-registry caveat, see [Style Model](style-model.md).
+For the overall architecture and the current document-local style model, see [Style Model](style-model.md).

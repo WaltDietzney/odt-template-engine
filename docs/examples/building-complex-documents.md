@@ -2,7 +2,7 @@
 
 Complex ODT generation becomes manageable when the application does **not** try to generate every aspect of the document from PHP.
 
-Sample 21 demonstrates the architecture the engine is designed to support:
+The engine supports more than one useful ownership boundary between LibreOffice and application code. This chapter explains the **programmatically generated region** pattern that S01b uses for its bounded sidebar regions, while S01b keeps its main repeatable structures Writer-owned:
 
 ```text
 application data
@@ -18,25 +18,17 @@ LibreOffice-designed document structure
 editable ODT output
 ```
 
-The sample is a CV, but the same architecture applies to reports, dossiers, offers, profiles, certificates, and other structured office documents.
+C04 demonstrates a complementary pattern in which repeatable native sections remain authored in LibreOffice and PHP addresses and instantiates those semantic template objects. See [Named Sections](../rich-documents/named-sections.md) when that ownership model fits better.
+
+The samples use CVs, but both patterns apply to reports, dossiers, offers, profiles, certificates, and other structured office documents.
 
 ## 1. Let the template own durable layout
 
-Sample 21 starts from a LibreOffice-designed template containing the two-column CV structure. PHP does not rebuild the entire page from low-level XML.
+S01b starts from a LibreOffice-designed template containing the two-column CV structure, Writer Frames, native repeatable Sections, and named image geometry. PHP does not rebuild the entire page from low-level XML.
 
-Conceptually, the template contains large insertion regions such as:
+Conceptually, Writer owns the stable page and repeatable main-column structures while PHP owns only bounded generated regions such as the sidebar Frames.
 
-```text
-┌──────────────────────┬───────────────────────────────┐
-│                      │                               │
-│   {{cv_sidebar}}     │       {{cv_content}}          │
-│                      │                               │
-└──────────────────────┴───────────────────────────────┘
-```
-
-The table/column structure, page design, and stable visual composition remain editable in LibreOffice.
-
-This is the template-first principle at application scale.
+This is one form of the template-first principle at application scale.
 
 ## 2. Keep application data independent
 
@@ -82,31 +74,11 @@ function cvParagraph(
 }
 ```
 
-Then create higher-level helpers for repeated visual roles:
-
-```php
-function addMainHeading(
-    RichText $rich,
-    string $title,
-    bool $first = false
-): void {
-    $rich->addParagraph(cvParagraph(
-        $title,
-        [
-            'bold' => true,
-            'font-size' => '13pt',
-            'color' => '#111111',
-        ],
-        $first ? 'CVMainHeadingFirst' : 'CVMainHeading'
-    ));
-}
-```
-
-This is much easier to maintain than one giant renderer method containing every paragraph and style rule.
+Then create higher-level helpers for repeated visual roles. This is much easier to maintain than one giant renderer method containing every paragraph and style rule.
 
 ## 4. Use semantic style names for repeated roles
 
-Sample 21 registers names such as:
+S01b defines reusable names such as:
 
 ```text
 CVSidebarName
@@ -118,12 +90,10 @@ CVEntryTitle
 CVEntryCompany
 ```
 
-That is preferable to thinking only in terms of visual attributes such as "13pt bold with bottom border".
-
 The semantic name describes why the style exists.
 
 ```php
-StyleMapper::registerParagraphStyle('CVMainHeading', [
+$template->styles()->defineParagraph('CVMainHeading', [
     'margin-top' => '0.45cm',
     'margin-bottom' => '0.10cm',
     'padding-bottom' => '0.03cm',
@@ -132,11 +102,11 @@ StyleMapper::registerParagraphStyle('CVMainHeading', [
 ]);
 ```
 
-Remember the current advanced-API caveat: explicit `StyleMapper` registries are static process state. The project roadmap tracks a future document-scoped style context.
+The definition belongs to the current logical document. Content can reference the named style later with `new Paragraph('CVMainHeading')`; that constructor call is a style reference and does not define the style.
 
 ## 5. Compose RichText from native elements
 
-A sidebar can contain text, an image, and native lists in one generated region:
+A generated region can contain text, images, and native lists:
 
 ```php
 $sidebar = new RichText();
@@ -161,9 +131,7 @@ $sidebar->addImage(new ImageElement(
 ));
 ```
 
-Lists are represented as `ListElement`, not as bullet characters embedded in strings. Experience entries are represented as paragraphs with meaningful paragraph roles.
-
-The result remains native, editable ODT content.
+Lists are represented as `ListElement`, not as bullet characters embedded in strings. The result remains native, editable ODT content.
 
 ## 6. Build separate large regions
 
@@ -174,34 +142,30 @@ $sidebar = new RichText();
 $content = new RichText();
 ```
 
-Each block can have its own rendering helpers and styling conventions. Finally, they are assigned to the large template placeholders:
+In S01b the bounded sidebar regions are assigned to template-authored Writer Frame insertion points:
 
 ```php
-$template->setElement('cv_sidebar', $sidebar);
-$template->setElement('cv_content', $content);
+$template->setElement('CVSidebarPage1', $sidebarPage1);
+$template->setElement('CVSidebarPage2', $sidebarPage2);
 ```
 
-This is a useful scale boundary. Avoid creating hundreds of tiny template placeholders when one coherent generated region is easier to own in PHP.
+This is a useful scale boundary when PHP owns the region. Avoid hundreds of tiny placeholders when one coherent generated region is easier to own in PHP.
 
-Conversely, avoid replacing the entire document with one generated region when stable layout can remain in LibreOffice.
+Conversely, do not replace a complete LibreOffice-authored structure merely because PHP can rebuild it. If a repeatable block should remain visually authored in the template, consider a named native section instead.
 
-## 7. Use page-layout code only where it adds value
+## 7. Keep stable page geometry in Writer
 
-Sample 21 uses `PageLayoutOdtTemplate` to adjust margins:
+The current canonical S01b template owns its page geometry and stable two-column
+composition in LibreOffice. The sample uses the normal `OdtTemplate` facade;
+it does not require `PageLayoutOdtTemplate` or programmatic margin changes.
 
-```php
-$template = new PageLayoutOdtTemplate(
-    __DIR__ . '/templates/template_21_cvProfile.odt'
-);
-
-$template->setPageMargins('0cm', '0.8cm', '0cm', '0cm');
-```
-
-It does **not** recreate the full two-column design programmatically. This is the intended balance between template-owned layout and application-controlled variation.
+Use the advanced page-layout API only when an application genuinely needs to
+change bounded page geometry. Do not move stable template design into PHP merely
+because the API can express it.
 
 ## 8. Separate data, rendering, and template responsibilities
 
-For production applications, a useful architecture is:
+For production applications using generated regions, a useful architecture is:
 
 ```text
 Domain / application data
@@ -225,26 +189,7 @@ LibreOffice template
 Generated .odt
 ```
 
-The sample keeps everything in one script so it remains runnable and easy to inspect. A real application should normally move the section builders into renderer classes or focused private methods.
-
-For example:
-
-```php
-final class CvOdtRenderer
-{
-    private function buildSidebar(CvData $cv): RichText
-    {
-        // ...
-    }
-
-    private function buildContent(CvData $cv): RichText
-    {
-        // ...
-    }
-}
-```
-
-The engine does not require this class structure; it is an application architecture that scales better as document complexity grows.
+The engine does not require a particular renderer class structure; focused renderer methods simply scale better as generated regions become complex.
 
 ## 9. Prefer native ODT semantics
 
@@ -255,17 +200,22 @@ When building complex documents:
 - use `ListElement` for lists;
 - use `RichTable` for genuinely tabular generated content;
 - use image elements or template image replacement according to layout ownership;
+- use named native sections when the template should own a repeatable structure;
 - keep HTML import at integration boundaries rather than making HTML the internal document model.
 
 These choices make the output easier to edit and reduce surprises in LibreOffice.
 
-## 10. Know when to stop generating layout in PHP
+## 10. Choose the ownership boundary deliberately
 
-Some layout requirements are better expressed directly in LibreOffice.
+A useful question is not only “Can PHP generate this?” but **“Who should own this structure?”**
 
-If you find yourself programmatically reproducing fixed headers, fixed multi-column page composition, elaborate master-page behavior, or exact static frame positions, consider moving that responsibility back into the `.odt` template.
+Use a bounded generated region, as in S01b's sidebar, when application code genuinely controls its internal structure and composition.
 
-The engine is strongest when PHP controls **dynamic structure and data** while LibreOffice controls **stable office-document design**.
+Use native named sections, as in C04, when LibreOffice should remain the visual authoring environment for a repeatable semantic block and PHP should mainly bind and repeat it.
+
+Use simple placeholders when only scalar values or lightweight template logic are dynamic.
+
+This gives three complementary levels rather than one universal rendering strategy.
 
 ## Verification for complex documents
 
@@ -281,12 +231,14 @@ representative generated sample
 LibreOffice visual inspection
 ```
 
-Sample 21 is especially useful as a regression document because it exercises many subsystems at once. It should complement focused tests, not replace them.
+Use the canonical samples for regression and learning: S01b demonstrates a mixed professional template, while C04 isolates declarative Writer-owned collections. They should complement focused tests, not replace them.
 
 ## Continue exploring
 
-- [Sample Guide](sample-guide.md) — choose smaller focused examples
-- [RichText & Paragraphs](../rich-documents/richtext-and-paragraphs.md) — generated section building blocks
+- [Sample Guide](sample-guide.md) — choose the smallest canonical L/C/B/S example that matches the ownership problem
+- [RichText & Paragraphs](../rich-documents/richtext-and-paragraphs.md) — generated region building blocks
+- [Addressable ODT Structures](../rich-documents/addressable-document.md) — typed access to native document objects
+- [Named Sections](../rich-documents/named-sections.md) — native repeatable template structures
 - [Style Model](../styling/style-model.md) — style responsibilities
 - [Page Layout](../advanced/page-layout.md) — controlled page geometry
 - [ODT Internals](../advanced/odt-internals.md) — package-level debugging

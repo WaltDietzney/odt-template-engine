@@ -2,12 +2,48 @@
 
 namespace OdtTemplateEngine;
 
-use ZipArchive;
 use DOMDocument;
+use DOMElement;
+use DOMNode;
 use DOMXPath;
 use Exception;
-use OdtTemplateEngine\Utils\StyleWriter;
-use OdtTemplateEngine\Elements\RichText;
+use RuntimeException;
+use OdtTemplateEngine\Document\AmbiguousTemplateTargetException;
+use OdtTemplateEngine\Document\DocumentInspection;
+use OdtTemplateEngine\Document\DocumentInspector;
+use OdtTemplateEngine\Document\DependencyAutomationExecutor;
+use OdtTemplateEngine\Document\DeclarativeConditionExecutor;
+use OdtTemplateEngine\Document\DocumentCapabilityAutomationExecutor;
+use OdtTemplateEngine\Document\FillImageRequirementCollector;
+use OdtTemplateEngine\Document\FillImageRequirementMaterializer;
+use OdtTemplateEngine\Document\FontFaceRequirementDiscovery;
+use OdtTemplateEngine\Document\FontFaceRequirementMaterializer;
+use OdtTemplateEngine\Document\FrameImageReplacementService;
+use OdtTemplateEngine\Document\NativeObjectActionExecutor;
+use OdtTemplateEngine\Document\PhaseEAutomationExecutor;
+use OdtTemplateEngine\Document\BookmarkTarget;
+use OdtTemplateEngine\Document\FrameTarget;
+use OdtTemplateEngine\Document\MetadataManager;
+use OdtTemplateEngine\Document\SectionTarget;
+use OdtTemplateEngine\Document\StructuredElementMaterializer;
+use OdtTemplateEngine\Document\StructuredInsertionMode;
+use OdtTemplateEngine\Document\StructuredResourceCollector;
+use OdtTemplateEngine\Document\StyleRequirementCollector;
+use OdtTemplateEngine\Document\StyleRequirementMaterializer;
+use OdtTemplateEngine\Document\TableTarget;
+use OdtTemplateEngine\Document\TemplateTargetResolver;
+use OdtTemplateEngine\Document\TypedTargetResolver;
+use OdtTemplateEngine\Elements\OdtElement;
+use OdtTemplateEngine\Style\DocumentStyles;
+use OdtTemplateEngine\Template\TemplateContract;
+use OdtTemplateEngine\Mapping\ConcretePreflightResult;
+use OdtTemplateEngine\Template\TemplateContractInspector;
+use OdtTemplateEngine\Template\TemplateProcessor;
+use OdtTemplateEngine\Template\TemplateStructureInspection;
+use OdtTemplateEngine\Template\TemplateStructureInspector;
+use OdtTemplateEngine\Template\TemplateStructureNormalizer;
+use OdtTemplateEngine\Template\UserFieldBinder;
+use OdtTemplateEngine\Utils\StyleMapper;
 
 
 /**
@@ -21,35 +57,10 @@ use OdtTemplateEngine\Elements\RichText;
  * - Output as a valid LibreOffice-compatible ODT document
  */
 
-class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
+class OdtTemplate
 {
-    /**
-     * Path to the original ODT template file.
-     *
-     * @var string
-     */
-    protected string $templatePath;
-
-    /**
-     * Temporary working directory for unpacking and editing the ODT content.
-     *
-     * @var string
-     */
-    protected string $tempDir;
-
-    /**
-     * Contents of content.xml as a DOMDocument.
-     *
-     * @var DOMDocument
-     */
-    protected DOMDocument $domContent;
-
-    /**
-     * Contents of styles.xml (e.g., for headers/footers) as a DOMDocument.
-     *
-     * @var DOMDocument
-     */
-    protected DOMDocument $domStyles;
+    private OdtPackage $package;
+    private StructuredInsertionMode $activeStructuredInsertionMode = StructuredInsertionMode::BLOCK;
 
     /**
      * All placeholder values to be replaced, set via setValues().
@@ -57,13 +68,6 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      * @var array<string, mixed>
      */
     protected array $values = [];
-
-    /**
-     * DOM representation of meta.xml (for document metadata).
-     *
-     * @var DOMDocument
-     */
-    protected DOMDocument $domMeta;
 
     /**
      * Summary of valueStack
@@ -76,6 +80,22 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      * @var array
      */
     protected array $repeatStack = [];   // Repeating structures (foreach data)
+
+    /**
+     * Whether the legacy assign/render path materialized a structured element.
+     * This enables its explicit compatibility finalization without affecting
+     * the document-owned setElement() path.
+     */
+    private bool $legacyStructuredValuesMaterialized = false;
+
+    private bool $phaseEAutomationSucceeded = false;
+
+    private ?DocumentStyles $documentStyles = null;
+
+    /** @var list<string> */
+    private array $log = [];
+
+    private bool $debugMode = false;
 
 
 
@@ -101,20 +121,9 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     public function __construct(string $templatePath)
     {
-        if (!file_exists($templatePath)) {
-            throw new Exception("Template file not found: $templatePath");
-        }
+        $this->package = new OdtPackage($templatePath);
+        $this->prepareLoadedTemplate();
 
-        $tmpDir = sys_get_temp_dir() . '/odt_' . uniqid();
-        if (!mkdir($tmpDir) && !is_dir($tmpDir)) {
-            throw new Exception("Failed to create temporary directory.");
-        }
-
-        $this->tempDir = $tmpDir;
-        $this->templatePath = $templatePath;
-        $this->load();
-
-        // Automatische Aufräumaktion beim Scriptende
         register_shutdown_function([$this, 'cleanup']);
     }
 
@@ -133,25 +142,225 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 
     public function load(): void
     {
-        $zip = new ZipArchive;
-        if ($zip->open($this->templatePath) !== true) {
-            throw new Exception("Could not open ODT file.");
+        $this->package->resetFromTemplate();
+        $this->legacyStructuredValuesMaterialized = false;
+        $this->phaseEAutomationSucceeded = false;
+        $this->prepareLoadedTemplate();
+    }
+
+    /**
+     * Access the document context owned by the package.
+     */
+    protected function documentContext(): OdtDocumentContext
+    {
+        return $this->package->context();
+    }
+
+    /**
+     * Access the document-local style authoring facade.
+     *
+     * The facade resolves the current document context for every operation so
+     * a retained instance remains valid across load() boundaries.
+     */
+    public function styles(): DocumentStyles
+    {
+        return $this->documentStyles ??= new DocumentStyles(
+            fn (): OdtDocumentContext => $this->documentContext()
+        );
+    }
+
+    /**
+     * Apply document-wide Writer defaults through the native Standard paragraph style.
+     *
+     * @param array{text?: array<string, mixed>, paragraph?: array<string, mixed>} $settings
+     */
+    public function setDocumentDefaults(array $settings): void
+    {
+        $this->styles()->setDocumentDefaults($settings);
+    }
+
+    /**
+     * Inspect native named structures in the current document state.
+     *
+     * Each call creates a read-only snapshot. No DOM or package state is
+     * changed, and the result does not expose internal DOM nodes.
+     */
+    public function inspect(): DocumentInspection
+    {
+        $context = $this->documentContext();
+
+        return (new DocumentInspector())->inspect($context->contentDom(), $context->stylesDom());
+    }
+
+    /** Inspect original template structure without exposing or mutating DOM nodes. */
+    public function inspectTemplateStructure(): TemplateStructureInspection
+    {
+        return (new TemplateStructureInspector())->inspect($this->package->sourceDom('content.xml'));
+    }
+
+    /**
+     * Inspect the original authored ODT source as a unified template contract.
+     *
+     * This source-oriented view is independent of current working-document
+     * mutations and does not expose mutable DOM nodes.
+     */
+    public function inspectTemplate(): TemplateContract
+    {
+        return (new TemplateContractInspector())->inspect(
+            $this->package->sourceDom('content.xml'),
+            $this->package->sourceDom('styles.xml')
+        );
+    }
+
+    /**
+     * Execute the inspected template's recognized declarative Section controls.
+     *
+     * Values use the template's own ROOT and collection-item vocabulary. This
+     * operation does not inspect, render, save, or invoke Phase-E mapping.
+     * Successful repeated execution is not generally guaranteed by Phase D.
+     *
+     * @param array<string, mixed> $values
+     */
+    public function executeDeclarative(TemplateContract $contract, array $values): void
+    {
+        (new DeclarativeConditionExecutor())->execute(
+            $this->documentContext(),
+            $contract,
+            $values
+        );
+    }
+
+    /**
+     * Bind one supported Writer string User Field in the current working document.
+     *
+     * The authored source inspected by inspectTemplate() remains unchanged.
+     */
+    public function setUserField(string $name, string $value): void
+    {
+        $context = $this->documentContext();
+
+        (new UserFieldBinder())->bind(
+            $context->contentDom(),
+            $context->stylesDom(),
+            $name,
+            $value
+        );
+    }
+
+    /** Execute READY Phase-E dependency consumers against this template's working document. */
+    public function automateDependencies(
+        TemplateContract $contract,
+        ConcretePreflightResult $preflight
+    ): void {
+        (new DependencyAutomationExecutor())->execute(
+            $this->documentContext(),
+            $contract,
+            $preflight,
+            fn (string $name, string $value): mixed => $this->setUserField($name, $value),
+            fn (string $filter, string $value, ?string $option): string => $this->applyFilter($filter, $value, $option),
+            fn (string $expression, array $values): bool => $this->evaluateCondition($expression, $values)
+        );
+    }
+
+    /** Execute explicit native-object actions from a READY Phase-E preflight. */
+    public function automateNativeObjectActions(
+        TemplateContract $contract,
+        ConcretePreflightResult $preflight
+    ): void {
+        (new NativeObjectActionExecutor())->execute(
+            $this->documentContext(),
+            $this->package,
+            $contract,
+            $preflight
+        );
+    }
+
+    /** Execute explicit READY metadata capabilities through MetadataManager. */
+    public function automateDocumentCapabilities(ConcretePreflightResult $preflight): void
+    {
+        (new DocumentCapabilityAutomationExecutor())->execute(
+            new MetadataManager($this->documentContext()),
+            $preflight
+        );
+    }
+
+    /**
+     * Execute one atomic Phase-E invocation from the existing source contract and READY preflight.
+     *
+     * E3 needs the already-inspected TemplateContract; accepting it avoids a second inspection.
+     */
+    public function automate(TemplateContract $contract, ConcretePreflightResult $preflight): void
+    {
+        if ($this->phaseEAutomationSucceeded) {
+            throw new \LogicException('A successful Phase-E invocation already ran in this document lifecycle.');
+        }
+        if (!$preflight->ready()) {
+            throw new \InvalidArgumentException('Phase-E automation requires a READY concrete preflight.');
         }
 
-        $zip->extractTo($this->tempDir);
-        $zip->close();
+        (new PhaseEAutomationExecutor())->execute(
+            $this->package,
+            $preflight,
+            function () use ($contract, $preflight): void {
+                // E4 localizes native targets against source-order evidence before E3
+                // can materialize/remove structural Sections in the Working DOM.
+                $this->automateNativeObjectActions($contract, $preflight);
+                $this->automateDependencies($contract, $preflight);
+                $this->automateDocumentCapabilities($preflight);
+            }
+        );
+        $this->phaseEAutomationSucceeded = true;
+    }
 
-        $this->domContent = $this->loadXmlFile('content.xml');
-        $this->domStyles = $this->loadXmlFile('styles.xml');
-        $this->domMeta = $this->loadXmlFile('meta.xml');
+    /**
+     * Resolve a named bookmark or range in the current document state.
+     */
+    public function bookmark(string $name): BookmarkTarget
+    {
+        return (new TypedTargetResolver())->resolveBookmark($this->documentContext(), $name);
+    }
 
-        $this->normalizeTemplateDom($this->domContent);
-        $this->normalizeTemplateDom($this->domStyles);
+    /**
+     * Resolve a named native section in the current document state.
+     */
+    public function section(string $name): SectionTarget
+    {
+        return (new TypedTargetResolver())->resolveSection($this->documentContext(), $name, $this->package);
+    }
 
+    /**
+     * Resolve a named native table in the current document state.
+     */
+    public function table(string $name): TableTarget
+    {
+        return (new TypedTargetResolver())->resolveTable($this->documentContext(), $name);
+    }
+
+    /**
+     * Resolve a named native drawing frame in the current document state.
+     */
+    public function frame(string $name): FrameTarget
+    {
+        return (new TypedTargetResolver())->resolveFrame($this->documentContext(), $name);
+    }
+
+    /**
+     * Prepare a constructed element's image resource without resolving a
+     * named template target.
+     */
+    protected function copyImageResource(string $imagePath): void
+    {
+        $this->package->copyImageResource($imagePath);
+    }
+
+    private function prepareLoadedTemplate(): void
+    {
+        $context = $this->documentContext();
+        (new TemplateStructureNormalizer())->normalize($context->contentDom());
+        (new TemplateStructureNormalizer())->normalize($context->stylesDom());
         $this->ensureDefaultParagraphStyles();
         $this->ensureDefaultListStyles();
-        $this->ensureDefaultListStylesForContentXml($this->domContent);
-
+        $this->ensureDefaultListStylesForContentXml($context->contentDom());
     }
 
 
@@ -167,7 +376,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
     // Ensure the source XML is trusted to avoid potential security issues.
     protected function loadXmlFile(string $filename): DOMDocument
     {
-        $path = $this->tempDir . '/' . $filename;
+        $path = $this->package->path($filename);
         if (!file_exists($path)) {
             throw new Exception("Missing $filename in template.");
         }
@@ -205,6 +414,301 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         $this->valueStack = array_merge($this->valueStack, $values);
     }
 
+    /**
+     * Insert constructed structured content through the public template facade.
+     *
+     * Style and resource preparation remain delegated to the existing
+     * compatibility/document collaborators. The materializer owns the ODF
+     * subtree replacement rules, while protected callbacks continue to
+     * dispatch through the facade.
+     */
+    public function setElement(string $placeholder, OdtElement $element): void
+    {
+        $this->prepareStructuredSemanticState($element);
+        $this->prepareStructuredResources($element);
+        $this->materializeStructuredElement($placeholder, $element);
+        $this->finalizeStructuredCompatibility($element);
+    }
+
+    /**
+     * Prepare all document-local semantic state before native DOM rendering.
+     *
+     */
+    private function prepareStructuredSemanticState(OdtElement $element): void
+    {
+        $collector = new StyleRequirementCollector();
+        $semanticRequirements = iterator_to_array($collector->collectSemantic($element), false);
+        $fontDiscovery = new FontFaceRequirementDiscovery();
+        foreach ($semanticRequirements as $requirement) {
+            $this->documentContext()->styleContext()->registerRequirement($requirement);
+            $fontRequirement = $fontDiscovery->discover($requirement);
+            if ($fontRequirement !== null) {
+                $this->documentContext()->registerFontFaceRequirement($fontRequirement);
+            }
+        }
+
+        $this->prepareStructuredFillImageDependencies($element);
+        $this->materializeStructuredSemanticStyles();
+
+    }
+
+    /**
+     * Register and materialize typed fill-image dependencies before insertion.
+     */
+    private function prepareStructuredFillImageDependencies(OdtElement $element): void
+    {
+        $fillImageCollector = new FillImageRequirementCollector();
+        foreach ($fillImageCollector->collect($element) as $requirement) {
+            $this->documentContext()->registerFillImageRequirement($requirement);
+        }
+
+        $fillImageMaterializer = new FillImageRequirementMaterializer();
+        foreach ($this->documentContext()->fillImageRequirements()->requirements() as $requirement) {
+            $fillImageMaterializer->materialize($this->documentContext(), $requirement);
+        }
+    }
+
+    /**
+     * Materialize all semantic styles already registered for this document.
+     */
+    private function materializeStructuredSemanticStyles(): void
+    {
+        $materializer = new StyleRequirementMaterializer();
+        foreach ($this->documentContext()->styleContext()->materializationRequirements() as $requirement) {
+            $materializer->materialize($this->documentContext(), $requirement);
+        }
+    }
+
+    /**
+     * Prepare physical package resources independently of document styles.
+     */
+    private function prepareStructuredResources(OdtElement $element): void
+    {
+        $resources = iterator_to_array((new StructuredResourceCollector())->collect($element), false);
+        if ($resources !== []) {
+            $this->package->copyImageResourcesAtomically($resources);
+        }
+    }
+
+    /**
+     * Insert the native subtree through the existing materializer callbacks.
+     */
+    private function materializeStructuredElement(string $placeholder, OdtElement $element): void
+    {
+        $materializer = new StructuredElementMaterializer();
+        $materializer->insert(
+            $this->documentContext()->contentDom(),
+            $this->documentContext()->stylesDom(),
+            $placeholder,
+            $element,
+            function (DOMDocument $dom) use ($placeholder): void {
+                $this->normalizeStructuredPlaceholder($dom, $placeholder);
+            },
+            function (DOMDocument $dom, string $key, DOMNode $replacement) use ($element): void {
+                $this->replacePlaceholderWithElementSemantics($dom, $key, $replacement, $element);
+            },
+            fn (DOMDocument $dom, string $key): bool => $this->hasPlaceholder($dom, $key)
+        );
+    }
+
+    /**
+     * Preserve the second legacy collector pass after native materialization.
+     *
+     * This remains compatibility state, not semantic discovery.
+     */
+    private function finalizeStructuredCompatibility(OdtElement $element): void
+    {
+        $collector = new StyleRequirementCollector();
+        foreach ($collector->collect($element) as $requirement) {
+            if (in_array($requirement['family'], ['frame', 'image', 'fill-image'], true)) {
+                $this->registerLegacyGraphicCompatibilityState($requirement);
+            }
+        }
+    }
+
+    /**
+     * Preserve the legacy graphic carriers collected on the normal path.
+     *
+     * This boundary carries legacy graphic, image, and fill-image compatibility
+     * state. Semantic requirements and paragraph/text compatibility handling
+     * are complete before native materialization and are not re-registered in
+     * the post-materialization phase.
+     *
+     * @param array{family: string, name: string, definition: array<string, mixed>} $requirement
+     */
+    private function registerLegacyGraphicCompatibilityState(array $requirement): void
+    {
+        $styleContext = $this->documentContext()->styleContext();
+
+        switch ($requirement['family']) {
+            case 'frame':
+                $styleContext->registerFrameStyle($requirement['name'], $requirement['definition']);
+                break;
+            case 'image':
+                $styleContext->registerImageStyle($requirement['name'], $requirement['definition']);
+                break;
+            case 'fill-image':
+                $styleContext->registerFillImage($requirement['name'], $requirement['definition']);
+                break;
+        }
+    }
+
+    /**
+     * Apply assigned scalar values and structured elements to one document DOM.
+     *
+     * Scalar replacement remains delegated to TemplateProcessor. Structured
+     * values are routed through the facade callback so materialization and
+     * protected compatibility dispatch remain separate concerns.
+     */
+    protected function setValuesInDom(DOMDocument $dom, array $values): void
+    {
+        $processor = new TemplateProcessor();
+        $scalarValues = [];
+        foreach ($values as $key => $value) {
+            if ($value instanceof OdtElement) {
+                $this->legacyStructuredValuesMaterialized = true;
+                $replacement = $value->toDomNode($dom);
+                $this->registerLegacyGraphicRequirements($value);
+                $this->replacePlaceholderWithElementSemantics(
+                    $dom,
+                    (string) $key,
+                    $replacement,
+                    $value
+                );
+            } else {
+                $scalarValues[(string) $key] = $value;
+            }
+        }
+        $processor->replaceScalarTextInSubtree(
+            $dom,
+            $scalarValues,
+            fn (string $filter, mixed $value, ?string $option): string => $this->applyFilter($filter, $value, $option)
+        );
+    }
+
+    /**
+     * Repair placeholders split across ODF text nodes.
+     */
+    protected function fixBrokenVariables(DOMNode $node): void
+    {
+        (new TemplateProcessor())->fixBrokenVariables($node);
+    }
+
+    /** Join only the requested structured placeholder for legacy materialization. */
+    private function normalizeStructuredPlaceholder(DOMDocument $dom, string $key): void
+    {
+        $token = '{{' . $key . '}}';
+        $xpath = new DOMXPath($dom);
+        foreach ($xpath->query('//text:p | //text:h') ?: [] as $scope) {
+            if (!$scope instanceof DOMElement) continue;
+            $run = [];
+            $text = '';
+            foreach ([...iterator_to_array($scope->childNodes), null] as $node) {
+                $isText = $node instanceof DOMNode
+                    && ($node->nodeType === XML_TEXT_NODE || ($node instanceof DOMElement && $node->nodeName === 'text:span'));
+                if ($isText) {
+                    $run[] = $node;
+                    $text .= $node->textContent;
+                    continue;
+                }
+                if ($run !== [] && $text === $token) {
+                    $first = $run[0];
+                    $scope->insertBefore($dom->createTextNode($text), $first);
+                    foreach ($run as $remove) $scope->removeChild($remove);
+                }
+                $run = [];
+                $text = '';
+            }
+        }
+    }
+
+    /**
+     * Route structured placeholder replacement through the materializer.
+     */
+    protected function replacePlaceholderWithDom(
+        DOMDocument $dom,
+        string $key,
+        DOMNode $replacement
+    ): void {
+        (new StructuredElementMaterializer())->replacePlaceholder(
+            $dom,
+            $key,
+            $replacement,
+            $this->activeStructuredInsertionMode
+        );
+    }
+
+    /**
+     * Preserve the protected replacement facade while supplying semantic
+     * insertion state out-of-band for the duration of this replacement.
+     */
+    private function replacePlaceholderWithElementSemantics(
+        DOMDocument $dom,
+        string $key,
+        DOMNode $replacement,
+        OdtElement $element
+    ): void {
+        $previousMode = $this->activeStructuredInsertionMode;
+        $this->activeStructuredInsertionMode = $element->structuredInsertionMode();
+
+        try {
+            $this->replacePlaceholderWithDom($dom, $key, $replacement);
+        } finally {
+            $this->activeStructuredInsertionMode = $previousMode;
+        }
+    }
+
+    /**
+     * Check whether a structured placeholder remains in a document DOM.
+     */
+    protected function hasPlaceholder(DOMDocument $dom, string $key): bool
+    {
+        $xpath = new DOMXPath($dom);
+
+        foreach ($xpath->query('//text()') as $textNode) {
+            if (strpos($textNode->nodeValue, '{{' . $key . '}}') !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Replace placeholders recursively in a cloned foreach row subtree.
+     */
+    protected function replacePlaceholdersInNode(DOMNode $node, array $data): void
+    {
+        if ($node->nodeType === XML_TEXT_NODE) {
+            $replaced = $this->replaceInText($node->nodeValue, $data);
+            if ($replaced !== $node->nodeValue) {
+                $node->nodeValue = $replaced;
+            }
+        }
+
+        if ($node->hasChildNodes()) {
+            foreach (iterator_to_array($node->childNodes) as $child) {
+                $this->replacePlaceholdersInNode($child, $data);
+            }
+        }
+    }
+
+    /**
+     * Apply legacy row-local placeholder substitution semantics.
+     */
+    protected function replaceInText(string $text, array $data): string
+    {
+        return preg_replace_callback('/{{(.*?)}}/', function ($matches) use ($data) {
+            $key = trim($matches[1]);
+
+            if (!array_key_exists($key, $data)) {
+                return '';
+            }
+
+            return (string) $data[$key];
+        }, $text);
+    }
+
 
     /**
      * Replaces `{{nl2br:placeholder}}` tags with text content and <text:line-break/> elements.
@@ -224,40 +728,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     protected function replaceNl2brInDom(DOMDocument $dom, array $values): void
     {
-        $xpath = new DOMXPath($dom);
-        $xpath->registerNamespace('text', 'urn:oasis:names:tc:opendocument:xmlns:text:1.0'); // für <text:line-break>
-        $nodes = $xpath->query('//text()');
-
-        foreach ($nodes as $textNode) {
-            $text = $textNode->nodeValue;
-
-            if (preg_match('/{{nl2br:(\w+)}}/', $text, $match)) {
-                $key = $match[1];
-                $original = $values[$key] ?? '';
-                $parts = preg_split('/\r\n|\n|\r/', $original);
-
-                $parent = $textNode->parentNode;
-
-                // Neue Knoten erzeugen
-                $newNodes = [];
-                foreach ($parts as $i => $part) {
-                    if ($i > 0) {
-                        $newNodes[] = $dom->createElement('text:line-break');
-                    }
-                    if ($part !== '') {
-                        $newNodes[] = $dom->createTextNode($part);
-                    }
-                }
-
-                // Neue Knoten VOR dem Platzhalter einfügen
-                foreach ($newNodes as $newNode) {
-                    $parent->insertBefore($newNode, $textNode);
-                }
-
-                // Platzhalterknoten entfernen
-                $parent->removeChild($textNode);
-            }
-        }
+        (new TemplateProcessor())->replaceNl2brInDom($dom, $values);
     }
 
     /**
@@ -278,42 +749,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     protected function replaceListsInDom(DOMDocument $dom, array $values): void
     {
-        $xpath = new DOMXPath($dom);
-        $nodes = $xpath->query('//text()');
-
-        foreach ($nodes as $textNode) {
-            $text = $textNode->nodeValue;
-
-            if (preg_match('/{{(ul|ol):(\w+)}}/', $text, $match)) {
-                $listType = $match[1];  // ul oder ol
-                $key = $match[2];
-                $original = $values[$key] ?? '';
-
-                // Text in Zeilen aufsplitten
-                $lines = preg_split('/\r\n|\r|\n/', $original);
-
-                // Liste erstellen
-                $list = $dom->createElement('text:list');
-                $styleName = ($listType === 'ol') ? 'Numbering_20_Symbol' : 'Bullet_20_Symbol';
-                $list->setAttribute('text:style-name', $styleName);
-
-                foreach ($lines as $line) {
-                    $listItem = $dom->createElement('text:list-item');
-                    $p = $dom->createElement('text:p');
-                    $p->appendChild($dom->createTextNode($line));
-                    $listItem->appendChild($p);
-                    $list->appendChild($listItem);
-                }
-
-                // Den <text:p> Knoten komplett ersetzen, nicht nur den Textknoten!
-                $pNode = $textNode->parentNode;
-                $pParent = $pNode->parentNode;
-
-                if ($pParent && $pNode->nodeName === 'text:p') {
-                    $pParent->replaceChild($list, $pNode);
-                }
-            }
-        }
+        (new TemplateProcessor())->replaceListsInDom($dom, $values);
     }
 
 
@@ -344,84 +780,12 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 
     protected function applyConditionalsInDom(DOMDocument $dom, array $values): void
     {
-        $xpath = new DOMXPath($dom);
-        $paragraphs = iterator_to_array($xpath->query('//text:p'));
-        $i = 0;
-
-        while ($i < count($paragraphs)) {
-            $node = $paragraphs[$i];
-            $text = trim($node->textContent);
-
-            if (preg_match('/{{#(ifnot|if):(.+?)}}/', $text, $match)) {
-                $type = $match[1]; // "if" oder "ifnot"
-                $expr = trim($match[2]);
-
-                $conditions = [
-                    ['start' => $i, 'expr' => $expr, 'type' => $type]
-                ];
-
-                $else = null;
-                $end = null;
-                $j = $i + 1;
-
-                while ($j < count($paragraphs)) {
-                    $inner = trim($paragraphs[$j]->textContent);
-                    if (preg_match('/{{#elseif:(.+?)}}/', $inner, $m)) {
-                        $conditions[] = ['start' => $j, 'expr' => trim($m[1]), 'type' => 'if'];
-                    } elseif ($inner === '{{#else}}') {
-                        $else = $j;
-                    } elseif ($inner === '{{#endif}}') {
-                        $end = $j;
-                        break;
-                    }
-                    $j++;
-                }
-
-                if ($end === null) {
-                    $i++;
-                    continue;
-                }
-
-                $keepStart = null;
-                $keepEnd = null;
-
-                for ($c = 0; $c < count($conditions); $c++) {
-                    $cond = $conditions[$c];
-                    $result = $this->evaluateCondition($cond['expr'], $values);
-                    if ($cond['type'] === 'ifnot') {
-                        $result = !$result;
-                    }
-
-                    if ($result) {
-                        $keepStart = $cond['start'] + 1;
-                        $keepEnd = isset($conditions[$c + 1])
-                            ? $conditions[$c + 1]['start'] - 1
-                            : ($else ?? $end) - 1;
-                        break;
-                    }
-                }
-
-
-                if ($keepStart === null && $else !== null) {
-                    $keepStart = $else + 1;
-                    $keepEnd = $end - 1;
-                }
-
-                for ($k = $end; $k >= $i; $k--) {
-                    if ($k >= $keepStart && $k <= $keepEnd)
-                        continue;
-                    $n = $paragraphs[$k];
-                    if ($n->parentNode) {
-                        $n->parentNode->removeChild($n);
-                    }
-                }
-
-                $paragraphs = iterator_to_array($xpath->query('//text:p'));
-                $i = $i;
-            } else {
-                $i++;
-            }
-        }
+        (new TemplateProcessor())->applyConditionalsInDom(
+            $dom,
+            $values,
+            fn (string $expression, array $conditionValues): bool =>
+                $this->evaluateCondition($expression, $conditionValues)
+        );
     }
 
 
@@ -450,30 +814,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
 
     protected function evaluateCondition(string $expr, array $values): bool
     {
-        if (preg_match('/^(\w+)\s*(==|!=|>=|<=|>|<)\s*(.+)$/', $expr, $m)) {
-            $var = $m[1];
-            $op = $m[2];
-            $val = trim($m[3], '"\'');
-
-            $left = $values[$var] ?? null;
-            if (is_numeric($left) && is_numeric($val)) {
-                $left = (float) $left;
-                $val = (float) $val;
-            }
-
-            return match ($op) {
-                '==' => $left == $val,
-                '!=' => $left != $val,
-                '>' => $left > $val,
-                '<' => $left < $val,
-                '>=' => $left >= $val,
-                '<=' => $left <= $val,
-            };
-        }
-
-        // Wahrheitswert prüfen
-        $val = $values[$expr] ?? false;
-        return filter_var($val, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        return (new TemplateProcessor())->evaluateCondition($expr, $values);
     }
 
 
@@ -527,68 +868,24 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     public function setRepeatingData(array $data): void
     {
-        $this->fixBrokenVariables($this->domContent);
-        $this->fixBrokenVariables($this->domStyles);
-        $this->applyAllRepeatingBlocksInDom($this->domContent, $data);
-        $this->applyAllRepeatingBlocksInDom($this->domStyles, $data);
+        $context = $this->documentContext();
+        $this->fixBrokenVariables($context->contentDom());
+        $this->fixBrokenVariables($context->stylesDom());
+        $this->applyAllRepeatingBlocksInDom($context->contentDom(), $data);
+        $this->applyAllRepeatingBlocksInDom($context->stylesDom(), $data);
     }
 
 
     protected function applyRepeatingInDom(DOMDocument $dom, string $key, array $rows): void
     {
-        $xpath = new DOMXPath($dom);
-
-        while (true) {
-            // Suche nach einem Start- und End-Block für die Schleife
-            $startNodeList = $xpath->query("//text:p[contains(text(), '{{#foreach:$key}}')]");
-            if ($startNodeList->length === 0) {
-                break; // Keine weiteren foreach-Blöcke vorhanden
+        (new TemplateProcessor())->applyRepeatingInDom(
+            $dom,
+            $key,
+            $rows,
+            function (DOMNode $node, array $rowData): void {
+                $this->replacePlaceholdersInNode($node, $rowData);
             }
-
-            $startNode = $startNodeList->item(0);
-
-            // Suche den dazugehörigen End-Block
-            $endNode = null;
-            $current = $startNode->nextSibling;
-            while ($current) {
-                if ($current->nodeType === XML_ELEMENT_NODE && strpos($current->textContent, '{{#endforeach}}') !== false) {
-                    $endNode = $current;
-                    break;
-                }
-                $current = $current->nextSibling;
-            }
-
-            if (!$endNode) {
-                // Fehler: Kein passendes #endforeach gefunden, Abbruch
-                break;
-            }
-
-            $parent = $startNode->parentNode;
-            $referenceNode = $endNode->nextSibling;
-
-            // Sammle alle Knoten zwischen start und end
-            $templateNodes = [];
-            $current = $startNode->nextSibling;
-            while ($current && $current !== $endNode) {
-                $templateNodes[] = $current;
-                $next = $current->nextSibling;
-                $parent->removeChild($current);
-                $current = $next;
-            }
-
-            // Entferne Start- und End-Marker
-            $parent->removeChild($startNode);
-            $parent->removeChild($endNode);
-
-            // Jetzt für jede Zeile neue Knoten einfügen
-            foreach ($rows as $rowData) {
-                foreach ($templateNodes as $template) {
-                    $clone = $template->cloneNode(true); // Deep Clone
-                    $this->replacePlaceholdersInNode($clone, $rowData);
-                    $parent->insertBefore($clone, $referenceNode); // An der richtigen Stelle einfügen
-                }
-            }
-        }
+        );
     }
 
 
@@ -651,132 +948,36 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
     }
 
     /**
-     * Sets metadata fields for the ODT document (e.g. title, author, description).
+     * Sets metadata fields for the ODT document (e.g. title, creator, description).
      *
      * Updates or creates metadata elements in `meta.xml` using standard ODF/DC/meta tags.
-     * This includes common document information like title, author, subject, and creation date.
-     *
-     * Supported keys:
-     * - 'title'            => dc:title
-     * - 'subject'          => dc:subject
-     * - 'description'      => dc:description
-     * - 'keywords'         => meta:keyword
-     * - 'initial_author'   => meta:initial-creator
-     * - 'author'           => dc:creator
-     * - 'language'         => dc:language
-     * - 'creation_date'    => meta:creation-date
-     * - 'date'             => dc:date
-     * - 'editing_cycles'   => meta:editing-cycles
-     * - 'editing_duration' => meta:editing-duration
-     * - 'generator'        => meta:generator
-     *
      * Missing XML nodes are automatically created under the <office:meta> element.
      *
-     * @param array<string, string> $meta Associative array of metadata fields and values.
+     * Canonical names are creator and initial_creator; author and initial_author
+     * remain accepted as imperative compatibility aliases. Keywords accept a
+     * list of strings, while a string remains one keyword.
+     *
+     * @param array<string, mixed> $meta Associative array of metadata fields and values.
      *
      * @return void
      */
     public function setMeta(array $meta): void
     {
-        $xpath = new DOMXPath($this->domMeta);
-        $xpath->registerNamespace("office", "urn:oasis:names:tc:opendocument:xmlns:office:1.0");
-        $xpath->registerNamespace("dc", "http://purl.org/dc/elements/1.1/");
-        $xpath->registerNamespace("meta", "urn:oasis:names:tc:opendocument:xmlns:meta:1.0");
-
-        $map = [
-            'title' => ['dc:title'],
-            'subject' => ['dc:subject'],
-            'description' => ['dc:description'],
-            'coverage' => ['dc:coverage'],
-            'keywords' => ['meta:keyword'],
-            'initial_author' => ['meta:initial-creator'],
-            'author' => ['dc:creator'],
-            'language' => ['dc:language'],
-            'creation_date' => ['meta:creation-date'],
-            'date' => ['dc:date'],
-            'editing_cycles' => ['meta:editing-cycles'],
-            'editing_duration' => ['meta:editing-duration'],
-            'generator' => ['meta:generator'],
-        ];
-
-
-        foreach ($meta as $key => $value) {
-            if (!isset($map[$key]))
-                continue;
-
-            foreach ($map[$key] as $xpathExpr) {
-                $nodes = $xpath->query("//$xpathExpr");
-                if ($nodes->length > 0) {
-                    $nodes->item(0)->nodeValue = $value;
-                } else {
-                    // Füge Knoten hinzu, falls nicht vorhanden
-                    $metaRoot = $xpath->query('//office:document-meta/office:meta')->item(0);
-                    if ($metaRoot) {
-                        [$prefix, $tag] = explode(':', $xpathExpr);
-                        $newNode = $this->domMeta->createElement("$prefix:$tag", $value);
-                        $metaRoot->appendChild($newNode);
-                    }
-                }
-            }
-        }
+        (new MetadataManager($this->documentContext()))->set($meta);
     }
 
 
     /**
      * Returns a list of known document metadata fields extracted from meta.xml.
      *
-     * Scans the ODT document's meta.xml using standard ODF namespaces and collects values
-     * for supported metadata fields such as title, author, and creation date.
+     * Canonical creator keys are returned alongside their established legacy
+     * aliases. Keywords are returned as a list containing all meta:keyword values.
      *
-     * Supported keys:
-     * - 'title'            => dc:title
-     * - 'subject'          => dc:subject
-     * - 'description'      => dc:description
-     * - 'keywords'         => meta:keyword
-     * - 'initial_author'   => meta:initial-creator
-     * - 'author'           => dc:creator
-     * - 'language'         => dc:language
-     * - 'creation_date'    => meta:creation-date
-     * - 'date'             => dc:date
-     * - 'editing_cycles'   => meta:editing-cycles
-     * - 'editing_duration' => meta:editing-duration
-     * - 'generator'        => meta:generator
-     *
-     * @return array<string, string> Associative array of metadata fields and their current values.
+     * @return array<string, string|list<string>> Metadata currently present in the document.
      */
     public function getMeta(): array
     {
-        $xpath = new DOMXPath($this->domMeta);
-        $xpath->registerNamespace("office", "urn:oasis:names:tc:opendocument:xmlns:office:1.0");
-        $xpath->registerNamespace("dc", "http://purl.org/dc/elements/1.1/");
-        $xpath->registerNamespace("meta", "urn:oasis:names:tc:opendocument:xmlns:meta:1.0");
-
-        $map = [
-            'title' => 'dc:title',
-            'subject' => 'dc:subject',
-            'description' => 'dc:description',
-            'coverage' => 'dc:coverage',
-            'keywords' => 'meta:keyword',
-            'initial_author' => 'meta:initial-creator',
-            'author' => 'dc:creator',
-            'language' => 'dc:language',
-            'creation_date' => 'meta:creation-date',
-            'date' => 'dc:date',
-            'editing_cycles' => 'meta:editing-cycles',
-            'editing_duration' => 'meta:editing-duration',
-            'generator' => 'meta:generator',
-        ];
-
-        $result = [];
-
-        foreach ($map as $key => $xpathExpr) {
-            $node = $xpath->query("//$xpathExpr")->item(0);
-            if ($node) {
-                $result[$key] = $node->textContent;
-            }
-        }
-
-        return $result;
+        return (new MetadataManager($this->documentContext()))->get();
     }
 
 
@@ -810,7 +1011,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         }
 
         $filename = basename($imagePath);
-        $picturesDir = $this->tempDir . '/Pictures';
+        $picturesDir = $this->package->path('Pictures');
         if (!is_dir($picturesDir)) {
             mkdir($picturesDir);
         }
@@ -838,8 +1039,9 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         $anchor = $options['anchor'] ?? 'paragraph';
         $wrap = $options['wrap'] ?? 'none';
 
-        $this->replaceImageInDom($this->domContent, $key, $filename, $targetWidth, $targetHeight, $anchor, $wrap);
-        $this->replaceImageInDom($this->domStyles, $key, $filename, $targetWidth, $targetHeight, $anchor, $wrap);
+        $context = $this->documentContext();
+        $this->replaceImageInDom($context->contentDom(), $key, $filename, $targetWidth, $targetHeight, $anchor, $wrap);
+        $this->replaceImageInDom($context->stylesDom(), $key, $filename, $targetWidth, $targetHeight, $anchor, $wrap);
     }
 
 
@@ -935,7 +1137,9 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      *
      * Behavior:
      * - Copies the image to the "Pictures" folder inside the ODT temp directory.
-     * - Calculates missing width or height proportionally based on original image dimensions.
+     * - Uses the legacy default dimensions of 5cm x 3cm unless explicit options
+     *   replace them. A single explicit dimension does not trigger proportional
+     *   recalculation because the other dimension already has a default.
      * - Updates the xlink:href attribute of the targeted <draw:image> node.
      *
      * Throws:
@@ -953,7 +1157,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         }
 
         $filename = basename($imagePath);
-        $picturesDir = $this->tempDir . '/Pictures';
+        $picturesDir = $this->package->path('Pictures');
         if (!is_dir($picturesDir)) {
             mkdir($picturesDir);
         }
@@ -973,8 +1177,9 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
             $width = round($cm * $imgWidth / $imgHeight, 3) . 'cm';
         }
 
-        $this->replaceImageInNamedDom($this->domContent, $name, $filename, $width, $height);
-        $this->replaceImageInNamedDom($this->domStyles, $name, $filename, $width, $height);
+        $context = $this->documentContext();
+        $this->replaceImageInNamedDom($context->contentDom(), $name, $filename, $width, $height);
+        $this->replaceImageInNamedDom($context->stylesDom(), $name, $filename, $width, $height);
     }
 
 
@@ -1014,19 +1219,42 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
         string $width,
         string $height
     ): void {
-        $xpath = new DOMXPath($dom);
-        $frames = $xpath->query("//draw:frame[@draw:name='$name']");
+        $resolver = new TemplateTargetResolver();
 
-        foreach ($frames as $frame) {
-            $frame->setAttribute('svg:width', $width);
-            $frame->setAttribute('svg:height', $height);
+        try {
+            $target = $resolver->resolveFrame($dom, $name);
+        } catch (AmbiguousTemplateTargetException) {
+            // Preserve the legacy public behavior: every matching frame was
+            // updated when duplicate names existed in one document.
+            $xpath = new DOMXPath($dom);
+            $frames = $xpath->query("//draw:frame[@draw:name='$name']");
 
-            foreach ($frame->childNodes as $child) {
-                if ($child->nodeName === 'draw:image') {
-                    $child->setAttribute('xlink:href', 'Pictures/' . $filename);
-                }
+            foreach ($frames as $frame) {
+                $this->replaceImageInFrame($frame, $filename, $width, $height);
             }
+
+            return;
         }
+
+        if ($target === null) {
+            return;
+        }
+
+        $this->replaceImageInFrame($target->node(), $filename, $width, $height);
+    }
+
+    private function replaceImageInFrame(
+        DOMElement $frame,
+        string $filename,
+        string $width,
+        string $height
+    ): void {
+        (new FrameImageReplacementService())->updateFrame(
+            $frame,
+            'Pictures/' . $filename,
+            $width,
+            $height
+        );
     }
 
 
@@ -1065,18 +1293,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     protected function applyFilter(string $filter, string $value, ?string $option = null): string
     {
-        return match ($filter) {
-            'upper' => mb_strtoupper($value),
-            'lower' => mb_strtolower($value),
-            'trim' => trim($value),
-            'nl2br' => $value, // von replaceNl2brInDom separat behandelt
-            'ul' => $value, // von  separat behandelt
-            'date' => date($option ?: 'd.m.Y', strtotime($value)),
-            'number' => number_format((float) str_replace(',', '.', $value), (int) ($option ?? 2), ',', '.'),
-            default => $value,
-            'checkbox' => ($value) ? '☑' : '☐',
-            'currency' => number_format((float) str_replace(',', '.', $value), (int) 2, ',', '.') . ' €'
-        };
+        return (new TemplateProcessor())->applyFilter($filter, $value, $option);
     }
 
 
@@ -1107,43 +1324,9 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      * @param DOMDocument $dom The ODT XML DOM to normalize (usually content.xml or styles.xml)
      */
     protected function normalizeTemplateDom(DOMDocument $dom): void
-{
-    $xpath = new \DOMXPath($dom);
-
-    // Alle Textabsätze finden (normale Absätze + in Textboxen)
-    $paragraphs = $xpath->query('//text:p');
-
-    foreach ($paragraphs as $p) {
-        if (!($p instanceof \DOMElement)) {
-            continue;
-        }
-
-        $buffer = '';
-        $nodesToRemove = [];
-
-        foreach (iterator_to_array($p->childNodes) as $child) {
-            if ($child->nodeType === XML_TEXT_NODE || $child->nodeName === 'text:span') {
-                $buffer .= $child->textContent;
-                $nodesToRemove[] = $child;
-
-                // Wenn der Platzhalter abgeschlossen ist (genug geschlossene Klammern), dann zusammenfügen
-                if (substr_count($buffer, '{{') > 0 && substr_count($buffer, '{{') === substr_count($buffer, '}}')) {
-                    // Alte Nodes entfernen
-                    foreach ($nodesToRemove as $n) {
-                        $p->removeChild($n);
-                    }
-
-                    // Neuen Text-Node einfügen
-                    $p->appendChild($dom->createTextNode($buffer));
-
-                    // Reset
-                    $buffer = '';
-                    $nodesToRemove = [];
-                }
-            }
-        }
+    {
+        (new TemplateProcessor())->normalizeTemplateDom($dom);
     }
-}
 
 
 
@@ -1170,71 +1353,24 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     public function save(string $outputPath): void
     {
-        // ✅ Inject registered image styles (graphic styles + fill-image elements)
         $this->injectImageStyles();
-
-        // ✅ StyleWriter einbinden und Styles eintragen
-        StyleWriter::writeAllStyles($this->domStyles);
-
-        // ✅ Bullet list indentation anpassen (weiter links)
-        $this->adjustBulletIndentation();
-
-        // ✅ Manifest um Bild-Einträge ergänzen
-        $this->addImagesToManifest();
-
-        // 💾 Minifizierte XML-Dateien speichern
-        $this->saveMinifiedXml($this->domContent, $this->tempDir . '/content.xml');
-        $this->saveMinifiedXml($this->domStyles, $this->tempDir . '/styles.xml');
-        $this->saveMinifiedXml($this->domMeta, $this->tempDir . '/meta.xml');
-
-        // 📦 Archiv erzeugen
-        $zip = new ZipArchive;
-        if ($zip->open($outputPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new Exception("Could not create output file: $outputPath");
-        }
-
-        // 📄 mimetype-Datei (uncompressed zuerst)
-        $mimetypePath = $this->tempDir . '/mimetype';
-        if (!file_exists($mimetypePath)) {
-            throw new Exception("Missing mimetype file in template.");
-        }
-
-        $zip->addFromString('mimetype', file_get_contents($mimetypePath));
-        $zip->setCompressionName('mimetype', ZipArchive::CM_STORE);
-
-        // 📂 Restliche Dateien hinzufügen
-        $rii = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($this->tempDir, \RecursiveDirectoryIterator::SKIP_DOTS)
+        $this->injectDocumentGraphicStyles();
+        (new FontFaceRequirementMaterializer())->materializeAll(
+            $this->documentContext(),
+            $this->documentContext()->fontFaceRequirements()->requirements()
         );
-
-        foreach ($rii as $file) {
-            if ($file->isDir())
-                continue;
-
-            $filePath = $file->getPathname();
-            $localPath = substr($filePath, strlen($this->tempDir) + 1);
-
-            // ❌ Skip mimetype & evtl. temporäre template-Datei
-            if (in_array($localPath, ['mimetype', 'template.odt']))
-                continue;
-
-            $zip->addFile($filePath, $localPath);
-        }
-
-        $zip->close();
+        $this->adjustBulletIndentation();
+        $this->package->saveAs($outputPath);
     }
 
     public function refresh()
     {
-        // ✅ StyleWriter einbinden und Styles eintragen
-        StyleWriter::writeAllStyles($this->domStyles);
-
-
-        // 💾 Minifizierte XML-Dateien speichern
-        $this->saveMinifiedXml($this->domContent, $this->tempDir . '/content.xml');
-        $this->saveMinifiedXml($this->domStyles, $this->tempDir . '/styles.xml');
-        $this->saveMinifiedXml($this->domMeta, $this->tempDir . '/meta.xml');
-
+        $this->injectDocumentGraphicStyles();
+        (new FontFaceRequirementMaterializer())->materializeAll(
+            $this->documentContext(),
+            $this->documentContext()->fontFaceRequirements()->requirements()
+        );
+        $this->package->persistCoreDocuments();
         $this->load();
     }
 
@@ -1270,60 +1406,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     protected function addImagesToManifest(): void
     {
-        $manifestPath = $this->tempDir . '/META-INF/manifest.xml';
-        $picturesDir = $this->tempDir . '/Pictures';
-
-        if (!file_exists($manifestPath) || !is_dir($picturesDir)) {
-            return;
-        }
-
-        $manifest = file_get_contents($manifestPath);
-
-        // Existierende Einträge ermitteln
-        $existingEntries = [];
-        preg_match_all('/manifest:full-path="([^"]+)"/', $manifest, $matches);
-        foreach ($matches[1] as $path) {
-            $existingEntries[$path] = true;
-        }
-
-        $imageMimeTypes = [
-            'png' => 'image/png',
-            'jpg'  => 'image/jpeg',
-            'jpeg' => 'image/jpeg',
-            'gif'  => 'image/gif',
-            'svg'  => 'image/svg+xml',
-            'bmp'  => 'image/bmp',
-            'webp' => 'image/webp',
-        ];
-
-        $changed = false;
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($picturesDir, \RecursiveDirectoryIterator::SKIP_DOTS)
-        );
-
-        foreach ($iterator as $file) {
-            if ($file->isDir()) continue;
-
-            $localPath = 'Pictures/' . $file->getFilename();
-
-            if (isset($existingEntries[$localPath])) continue;
-
-            $ext = strtolower(pathinfo($file->getFilename(), PATHINFO_EXTENSION));
-            $mime = $imageMimeTypes[$ext] ?? 'application/octet-stream';
-
-            // Vor </manifest:manifest> einfügen
-            $entry = sprintf(
-                "\n <manifest:file-entry manifest:full-path=\"%s\" manifest:media-type=\"%s\"/>",
-                $localPath,
-                $mime
-            );
-            $manifest = str_replace('</manifest:manifest>', $entry . "\n</manifest:manifest>", $manifest);
-            $changed = true;
-        }
-
-        if ($changed) {
-            file_put_contents($manifestPath, $manifest);
-        }
+        $this->package->synchronizeImageManifest();
     }
 
     /**
@@ -1339,19 +1422,7 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     public function cleanup(): void
     {
-        if (!is_dir($this->tempDir))
-            return;
-
-        $files = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($this->tempDir, \RecursiveDirectoryIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::CHILD_FIRST
-        );
-
-        foreach ($files as $file) {
-            $file->isDir() ? rmdir($file) : unlink($file);
-        }
-
-        rmdir($this->tempDir);
+        $this->package->cleanup();
     }
 
 
@@ -1369,31 +1440,42 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
      */
     public function render(): void
     {
-        $this->fixBrokenVariables($this->domContent);
-        $this->fixBrokenVariables($this->domStyles);
+        $context = $this->documentContext();
+        $contentDom = $context->contentDom();
+        $stylesDom = $context->stylesDom();
 
-        // Sonderbehandlungen zuerst
-        $this->replaceNl2brInDom($this->domContent, $this->valueStack);
-        $this->replaceNl2brInDom($this->domStyles, $this->valueStack);
-
-        $this->replaceListsInDom($this->domContent, $this->valueStack);
-        $this->replaceListsInDom($this->domStyles, $this->valueStack);
-
-        // Normale Werte ersetzen
-        $this->setValuesInDom($this->domContent, $this->valueStack);
-        $this->setValuesInDom($this->domStyles, $this->valueStack);
-
-        // Textboxen separat behandeln
-        $this->renderTextBoxes($this->domContent, $this->valueStack);
-        $this->renderTextBoxes($this->domStyles, $this->valueStack);
-
-        foreach ($this->repeatStack as $key => $rows) {
-            $this->applyRepeatingInDom($this->domContent, $key, $rows);
-            $this->applyRepeatingInDom($this->domStyles, $key, $rows);
+        foreach ($this->valueStack as $key => $value) {
+            if ($value instanceof OdtElement) {
+                $this->normalizeStructuredPlaceholder($contentDom, (string) $key);
+                $this->normalizeStructuredPlaceholder($stylesDom, (string) $key);
+            }
         }
 
-        $this->applyConditionalsInDom($this->domContent, $this->valueStack);
-        $this->applyConditionalsInDom($this->domStyles, $this->valueStack);
+        $this->fixBrokenVariables($contentDom);
+        $this->fixBrokenVariables($stylesDom);
+
+        // Sonderbehandlungen zuerst
+        $this->replaceNl2brInDom($contentDom, $this->valueStack);
+        $this->replaceNl2brInDom($stylesDom, $this->valueStack);
+
+        $this->replaceListsInDom($contentDom, $this->valueStack);
+        $this->replaceListsInDom($stylesDom, $this->valueStack);
+
+        // Normale Werte ersetzen
+        $this->setValuesInDom($contentDom, $this->valueStack);
+        $this->setValuesInDom($stylesDom, $this->valueStack);
+
+        // Textboxen separat behandeln
+        $this->renderTextBoxes($contentDom, $this->valueStack);
+        $this->renderTextBoxes($stylesDom, $this->valueStack);
+
+        foreach ($this->repeatStack as $key => $rows) {
+            $this->applyRepeatingInDom($contentDom, $key, $rows);
+            $this->applyRepeatingInDom($stylesDom, $key, $rows);
+        }
+
+        $this->applyConditionalsInDom($contentDom, $this->valueStack);
+        $this->applyConditionalsInDom($stylesDom, $this->valueStack);
     }
 
 
@@ -1576,6 +1658,444 @@ class OdtTemplate extends \OdtTemplateEngine\AbstractOdtTemplate
                 $parent->removeChild($ref);
             }
         }
+    }
+
+    /**
+     * Register the namespaces used by the ODF style helpers.
+     */
+    protected function prepareNamespaces(DOMXPath $xpath): void
+    {
+        $xpath->registerNamespace('office', 'urn:oasis:names:tc:opendocument:xmlns:office:1.0');
+        $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
+        $xpath->registerNamespace('fo', 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0');
+    }
+
+    /**
+     * Ensure namespaces required by generated style attributes exist.
+     */
+    protected function ensureXmlnsAttributes(): void
+    {
+        $stylesDom = $this->documentContext()->stylesDom();
+        $root = $stylesDom->documentElement;
+
+        if (!$root->hasAttribute('xmlns:fo')) {
+            $root->setAttributeNS(
+                'http://www.w3.org/2000/xmlns/',
+                'xmlns:fo',
+                'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0'
+            );
+        }
+        if (!$root->hasAttribute('xmlns:style')) {
+            $root->setAttributeNS(
+                'http://www.w3.org/2000/xmlns/',
+                'xmlns:style',
+                'urn:oasis:names:tc:opendocument:xmlns:style:1.0'
+            );
+        }
+    }
+
+    /**
+     * Write registered image styles into the authoritative styles DOM.
+     */
+    /**
+     * Retained as a protected compatibility hook; active save finalization is
+     * document-owned and is performed by injectDocumentGraphicStyles().
+     */
+    protected function injectImageStyles(): void
+    {
+        // Retained as a protected lifecycle hook; graphic requirements are
+        // already owned by the current StyleContext before save finalization.
+    }
+
+    /** Register requirements materialized through the explicit legacy path. */
+    private function registerLegacyGraphicRequirements(OdtElement $element): void
+    {
+        $styleContext = $this->documentContext()->styleContext();
+
+        if (method_exists($element, 'getFrameStyleRequirements')) {
+            foreach ($element->getFrameStyleRequirements() as $name => $definition) {
+                $styleContext->registerFrameStyle($name, $definition);
+            }
+        }
+
+        if (method_exists($element, 'getImageStyleRequirements')) {
+            foreach ($element->getImageStyleRequirements() as $name => $definition) {
+                $styleContext->registerImageStyle($name, $definition);
+            }
+        }
+
+        if (method_exists($element, 'getFillImageRequirements')) {
+            $fillImageAssets = [];
+            foreach ($element->getFillImageRequirements() as $name => $definition) {
+                $path = $definition['path'] ?? null;
+                if (is_string($path)) {
+                    $styleContext->registerFillImage($name, $definition);
+                    $fillImageAssets[] = [
+                        'id' => basename($path),
+                        'path' => $path,
+                    ];
+                }
+            }
+            if ($fillImageAssets !== []) {
+                $this->package->copyImageResourcesAtomically($fillImageAssets);
+            }
+        }
+    }
+
+
+    /** Write document-owned graphic requirements using the existing ODF placement. */
+    private function injectDocumentGraphicStyles(): void
+    {
+        $stylesDom = $this->documentContext()->stylesDom();
+        $xpath = new DOMXPath($stylesDom);
+        $this->prepareNamespaces($xpath);
+        $officeStyles = $xpath->query('//office:styles')->item(0);
+        $automaticStyles = $xpath->query('//office:automatic-styles')->item(0);
+        $styleContext = $this->documentContext()->styleContext();
+
+        if ($officeStyles) {
+            foreach ($styleContext->frameStyles() as $name => $properties) {
+                $this->appendGraphicStyleIfMissing($stylesDom, $xpath, $officeStyles, $name, 'Frame', $properties);
+            }
+        }
+
+        if ($automaticStyles) {
+            foreach ($styleContext->imageStyles() as $name => $properties) {
+                $this->appendGraphicStyleIfMissing($stylesDom, $xpath, $automaticStyles, $name, 'Standard', $properties);
+            }
+        }
+
+        if ($officeStyles) {
+            foreach ($styleContext->fillImages() as $name => $definition) {
+                $alreadyDeclared = false;
+                foreach ($stylesDom->getElementsByTagName('*') as $existing) {
+                    if (!$existing instanceof DOMElement
+                        || ($existing->localName !== 'fill-image' && $existing->nodeName !== 'draw:fill-image')
+                    ) {
+                        continue;
+                    }
+                    foreach ($existing->attributes as $attribute) {
+                        if ($attribute->nodeName === 'draw:name' && $attribute->nodeValue === $name) {
+                            $alreadyDeclared = true;
+                            break 2;
+                        }
+                    }
+                }
+                if ($alreadyDeclared) {
+                    continue;
+                }
+                $fillImage = $stylesDom->createElement('draw:fill-image');
+                $fillImage->setAttribute('draw:name', $definition['name'] ?? $name);
+                $fillImage->setAttribute('xlink:href', 'Pictures/' . ($definition['filename'] ?? basename((string) ($definition['path'] ?? ''))));
+                $fillImage->setAttribute('xlink:type', 'simple');
+                $fillImage->setAttribute('xlink:show', 'embed');
+                $fillImage->setAttribute('xlink:actuate', 'onLoad');
+                $officeStyles->insertBefore($fillImage, $officeStyles->firstChild);
+            }
+        }
+    }
+
+    private function appendGraphicStyleIfMissing(
+        DOMDocument $dom,
+        DOMXPath $xpath,
+        DOMElement $parent,
+        string $name,
+        string $parentStyle,
+        array $properties
+    ): void {
+        foreach ($dom->getElementsByTagName('*') as $existingStyle) {
+            if (!$existingStyle instanceof DOMElement
+                || !in_array($existingStyle->localName, ['style', 'style:style'], true)) {
+                continue;
+            }
+            $existingName = $this->graphicStyleAttribute($existingStyle, 'style:name', 'name');
+            $existingFamily = $this->graphicStyleAttribute($existingStyle, 'style:family', 'family');
+            if ($existingName === $name && $existingFamily === 'graphic') {
+                return;
+            }
+        }
+        $style = $dom->createElement('style:style');
+        $style->setAttribute('style:name', $name);
+        $style->setAttribute('style:family', 'graphic');
+        $style->setAttribute('style:parent-style-name', $parentStyle);
+        $graphicProperties = $dom->createElement('style:graphic-properties');
+        foreach ($properties as $key => $value) {
+            if (is_scalar($value)) {
+                $graphicProperties->setAttribute($key, (string) $value);
+            }
+        }
+        $style->appendChild($graphicProperties);
+        $parent->appendChild($style);
+    }
+
+    private function graphicStyleAttribute(DOMElement $element, string $qualifiedName, string $localName): string
+    {
+        foreach ($element->attributes as $attribute) {
+            if ($attribute->nodeName === $qualifiedName || $attribute->localName === $localName) {
+                return $attribute->nodeValue;
+            }
+        }
+
+        return '';
+    }
+
+    protected function adjustBulletIndentation(): void
+    {
+        $stylesDom = $this->documentContext()->stylesDom();
+        $xpath = new DOMXPath($stylesDom);
+        $this->prepareNamespaces($xpath);
+        foreach ($xpath->query('//style:list-level-label-alignment') as $node) {
+            if ($node instanceof DOMElement) {
+                $node->setAttribute('fo:margin-left', '0.35cm');
+                $node->setAttribute('fo:text-indent', '-0.25cm');
+            }
+        }
+    }
+
+    protected function ensureTextStylesExist(array $styleMap): void
+    {
+        $this->ensureXmlnsAttributes();
+        $stylesDom = $this->documentContext()->stylesDom();
+        $xpath = new DOMXPath($stylesDom);
+        $this->prepareNamespaces($xpath);
+        $officeStyles = $xpath->query('//office:styles')->item(0);
+        if (!$officeStyles) {
+            throw new Exception('❌ <office:styles> section not found in styles.xml');
+        }
+        foreach ($styleMap as $name => $options) {
+            if ($xpath->query("//style:style[@style:name='$name']")->length > 0) {
+                continue;
+            }
+            $style = $stylesDom->createElement('style:style');
+            $style->setAttribute('style:name', $name);
+            $style->setAttribute('style:family', 'text');
+            $style->setAttribute('style:parent-style-name', 'Standard');
+            $props = $stylesDom->createElement('style:text-properties');
+            foreach (StyleMapper::mapTextStyleOptions($options) as $key => $value) {
+                $props->setAttribute($key, $value);
+            }
+            $style->appendChild($props);
+            $officeStyles->appendChild($style);
+        }
+    }
+
+    public function ensureParagraphStylesExist(array $styleMap): void
+    {
+        $this->ensureXmlnsAttributes();
+        $stylesDom = $this->documentContext()->stylesDom();
+        $xpath = new DOMXPath($stylesDom);
+        $this->prepareNamespaces($xpath);
+        $officeStyles = $xpath->query('//office:styles')->item(0);
+        if (!$officeStyles) {
+            throw new Exception('❌ <office:styles> not found');
+        }
+        foreach ($styleMap as $name => $rawOptions) {
+            if ($xpath->query("//style:style[@style:name='$name']")->length > 0) {
+                continue;
+            }
+            $style = $stylesDom->createElement('style:style');
+            $style->setAttribute('style:name', $name);
+            $style->setAttribute('style:family', 'paragraph');
+            $style->setAttribute('style:parent-style-name', 'Standard');
+            $style->setAttribute('style:class', 'text');
+            $paraProps = $stylesDom->createElement('style:paragraph-properties');
+            foreach (StyleMapper::mapParagraphStyle($rawOptions) as $key => $value) {
+                if ($key === 'style:tab-stops' && is_array($value)) {
+                    $tabStops = $stylesDom->createElement('style:tab-stops');
+                    foreach ($value as $tabStop) {
+                        $tab = $stylesDom->createElement('style:tab-stop');
+                        foreach ($tabStop as $attr => $attrValue) {
+                            $tab->setAttribute($attr, $attrValue);
+                        }
+                        $tabStops->appendChild($tab);
+                    }
+                    $paraProps->appendChild($tabStops);
+                } else {
+                    $paraProps->setAttribute($key, $value);
+                }
+            }
+            $style->appendChild($paraProps);
+            $officeStyles->appendChild($style);
+        }
+    }
+
+    protected function insertAutomaticStyle(DOMDocument $dom, DOMElement $style): void
+    {
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('office', 'urn:oasis:names:tc:opendocument:xmlns:office:1.0');
+        $automaticStyles = $xpath->query('//office:automatic-styles')->item(0);
+        if (!$automaticStyles) {
+            $automaticStyles = $dom->createElement('office:automatic-styles');
+            $dom->documentElement->insertBefore($automaticStyles, $dom->documentElement->firstChild);
+        }
+        $automaticStyles->appendChild($style);
+    }
+
+    protected function ensureDefaultListStyles(): void
+    {
+        $stylesDom = $this->documentContext()->stylesDom();
+        $xpath = new DOMXPath($stylesDom);
+        $xpath->registerNamespace('text', 'urn:oasis:names:tc:opendocument:xmlns:text:1.0');
+        $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
+        foreach ([['Bullet_20_Symbol', 'text:list-level-style-bullet', 'text:bullet-char', '•'], ['Numbering_20_Symbol', 'text:list-level-style-number', 'style:num-format', '1']] as $definition) {
+            [$name, $levelName, $attribute, $value] = $definition;
+            if ($xpath->query("//text:list-style[@style:name='$name']")->length > 0) {
+                continue;
+            }
+            $list = $stylesDom->createElement('text:list-style');
+            $list->setAttribute('style:name', $name);
+            $level = $stylesDom->createElement($levelName);
+            $level->setAttribute('text:level', '1');
+            $level->setAttribute($attribute, $value);
+            if ($name === 'Numbering_20_Symbol') {
+                $level->setAttribute('style:num-suffix', '.');
+                $level->setAttribute('style:num-prefix', '');
+            }
+            $props = $stylesDom->createElement('style:list-level-properties');
+            $props->setAttribute('text:space-before', '0.5cm');
+            $props->setAttribute('text:min-label-width', '0.5cm');
+            $level->appendChild($props);
+            $list->appendChild($level);
+            $stylesDom->documentElement->appendChild($list);
+        }
+    }
+
+    public function ensureDefaultListStylesForContentXml(DOMDocument $contentDom): void
+    {
+        $xpath = new DOMXPath($contentDom);
+        foreach ([
+            'office' => 'urn:oasis:names:tc:opendocument:xmlns:office:1.0',
+            'text' => 'urn:oasis:names:tc:opendocument:xmlns:text:1.0',
+            'style' => 'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+            'loext' => 'urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0',
+            'fo' => 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0',
+        ] as $prefix => $namespace) {
+            $xpath->registerNamespace($prefix, $namespace);
+        }
+        $automaticStyles = $xpath->query('//office:automatic-styles')->item(0);
+        if (!$automaticStyles) {
+            $office = $xpath->query('//office:document-content')->item(0);
+            if (!$office) {
+                throw new RuntimeException('No <office:document-content> found.');
+            }
+            $automaticStyles = $contentDom->createElement('office:automatic-styles');
+            $office->insertBefore($automaticStyles, $office->firstChild);
+        }
+        foreach ($automaticStyles->getElementsByTagName('list-style') as $style) {
+            if ($style->getAttribute('style:name') === 'Numbering_20_Symbol') {
+                return;
+            }
+        }
+        $list = $contentDom->createElement('text:list-style');
+        $list->setAttribute('style:name', 'Numbering_20_Symbol');
+        $level = $contentDom->createElement('text:list-level-style-number');
+        $level->setAttribute('text:level', '1');
+        $level->setAttribute('style:num-format', '1');
+        $level->setAttribute('style:num-suffix', '.');
+        $level->setAttribute('loext:num-list-format', '%1%.');
+        $props = $contentDom->createElement('style:list-level-properties');
+        $props->setAttribute('text:list-level-position-and-space-mode', 'label-alignment');
+        $align = $contentDom->createElement('style:list-level-label-alignment');
+        $align->setAttribute('text:label-followed-by', 'listtab');
+        $align->setAttribute('text:list-tab-stop-position', '1.27cm');
+        $align->setAttribute('fo:text-indent', '-0.635cm');
+        $align->setAttribute('fo:margin-left', '1.27cm');
+        $props->appendChild($align);
+        $level->appendChild($props);
+        $list->appendChild($level);
+        $automaticStyles->appendChild($list);
+    }
+
+    protected function ensureDefaultParagraphStyles(): void
+    {
+        $stylesDom = $this->documentContext()->stylesDom();
+        $xpath = new DOMXPath($stylesDom);
+        $this->prepareNamespaces($xpath);
+        $officeStyles = $xpath->query('//office:styles')->item(0);
+        if (!$officeStyles) {
+            throw new Exception('❌ <office:styles> section not found.');
+        }
+        for ($i = 1; $i <= 6; $i++) {
+            $name = "Heading $i";
+            if ($xpath->query("//style:style[@style:name='$name']")->length > 0) {
+                continue;
+            }
+            $style = $stylesDom->createElement('style:style');
+            $style->setAttribute('style:name', $name);
+            $style->setAttribute('style:family', 'paragraph');
+            $style->setAttribute('style:parent-style-name', 'Standard');
+            $textProps = $stylesDom->createElement('style:text-properties');
+            $textProps->setAttribute('fo:font-weight', 'bold');
+            $paraProps = $stylesDom->createElement('style:paragraph-properties');
+            $paraProps->setAttribute('fo:margin-top', '0.5cm');
+            $paraProps->setAttribute('fo:margin-bottom', '0.3cm');
+            $style->appendChild($textProps);
+            $style->appendChild($paraProps);
+            $officeStyles->appendChild($style);
+        }
+        $this->ensureParagraphStylesExist([
+            'CenterPara' => ['text-align' => 'center'],
+            'LeftPara' => ['text-align' => 'left'],
+            'RightPara' => ['text-align' => 'right'],
+        ]);
+    }
+
+    public function extractTemplateVariables(): array
+    {
+        $result = [
+            'variables' => [], 'loops' => [], 'conditions' => [],
+            'negated_conditions' => [], 'filters' => [], 'filter_options' => [],
+        ];
+        foreach ([$this->documentContext()->contentDom(), $this->documentContext()->stylesDom()] as $dom) {
+            foreach ($this->parseTemplateContent($dom->saveXML()) as $key => $values) {
+                if ($key === 'filter_options') {
+                    foreach ($values as $variable => $options) {
+                        $result[$key][$variable] = array_unique(array_merge($result[$key][$variable] ?? [], $options));
+                    }
+                } else {
+                    $result[$key] = array_unique(array_merge($result[$key], $values));
+                }
+            }
+        }
+        return $result;
+    }
+
+    protected function parseTemplateContent(string $content): array
+    {
+        $result = ['variables' => [], 'loops' => [], 'conditions' => [], 'negated_conditions' => [], 'filters' => [], 'filter_options' => []];
+        preg_match_all('/\{\{(?:(\w+):)?(\w+)(?:\|(\w+))?\}\}/', $content, $matches, PREG_SET_ORDER);
+        foreach ($matches as $match) {
+            if (!empty($match[1])) $result['filters'][] = $match[1];
+            $result['variables'][] = $match[2];
+            if (!empty($match[3])) $result['filter_options'][$match[2]][] = $match[3];
+        }
+        preg_match_all('/\{\{#foreach:(\w+)\}\}/', $content, $matches);
+        $result['loops'] = $matches[1];
+        preg_match_all('/\{\{#(?:if|elseif):([^\}]+)\}\}/', $content, $matches);
+        $result['conditions'] = $matches[1];
+        preg_match_all('/\{\{#ifnot:(\w+)\}\}/', $content, $matches);
+        $result['negated_conditions'] = $matches[1];
+        foreach ($result as $key => $values) {
+            if ($key !== 'filter_options') $result[$key] = array_unique($values);
+        }
+        return $result;
+    }
+
+    public function enableDebugMode(): void
+    {
+        $this->debugMode = true;
+    }
+
+    protected function log(string $message): void
+    {
+        if ($this->debugMode) {
+            $this->log[] = $message;
+        }
+    }
+
+    public function getDebugLog(): array
+    {
+        return $this->log;
     }
 
 

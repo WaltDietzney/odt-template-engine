@@ -5,8 +5,7 @@ namespace OdtTemplateEngine\Elements;
 use DOMDocument;
 use DOMNode;
 use DOMElement;
-use OdtTemplateEngine\AbstractOdtTemplate;
-use OdtTemplateEngine\Contracts\HasStyles;
+use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Utils\StyleMapper;
 use OdtTemplateEngine\Utils\StyleOptionSplitter;
 
@@ -24,7 +23,7 @@ use OdtTemplateEngine\Utils\StyleOptionSplitter;
  *     ->setColspan(2);
  * ```
  */
-class RichTableCell extends OdtElement implements HasStyles
+class RichTableCell extends OdtElement
 {
     /**
      * The content of the cell.
@@ -120,6 +119,38 @@ class RichTableCell extends OdtElement implements HasStyles
         return $this->content;
     }
 
+    /** @return iterable<int, OdtElement> */
+    public function ownedElements(): iterable
+    {
+        if ($this->content instanceof OdtElement) {
+            yield $this->content;
+        }
+    }
+
+    /**
+     * Describe the cell-owned style definition for semantic materialization.
+     *
+     * Paragraph and text concerns are delegated to the owned content element.
+     *
+     * @return iterable<int, StyleRequirement>
+     */
+    public function getOwnStyleRequirements(): iterable
+    {
+        if ($this->style === []) {
+            return;
+        }
+
+        yield new StyleRequirement(
+            StyleRequirement::KIND_DEFINITION,
+            StyleRequirement::SCOPE_AUTOMATIC,
+            'table-cell',
+            StyleRequirement::PART_CONTENT,
+            $this->styleName,
+            'Default',
+            ['style:table-cell-properties' => $this->style]
+        );
+    }
+
     /**
      * Applies a style array to the cell.
      *
@@ -133,7 +164,6 @@ class RichTableCell extends OdtElement implements HasStyles
         $split = StyleOptionSplitter::split($style, 'table-cell');
         $this->style = StyleMapper::mapTableCellStyleOptions($split['cell']);
         $this->styleName = StyleMapper::generateStyleName($this->style);
-        StyleMapper::registerTableCellStyle($this->styleName, $this->style);
 
         if (
             $this->contentCreatedFromString
@@ -226,32 +256,6 @@ class RichTableCell extends OdtElement implements HasStyles
     public function getStyleName(): string
     {
         return $this->styleName;
-    }
-
-    /**
-     * Registers the current style with the global style map.
-     *
-     * @return void
-     */
-    public function registerStyles(): void
-    {
-        if (!empty($this->style)) {
-            $this->setStyle($this->style);
-        }
-    }
-
-    /**
-     * Returns the style definitions required by this cell.
-     *
-     * @return array<string, array<string, string>>
-     */
-    public function getStyleDefinitions(): array
-    {
-        if (empty($this->style)) {
-            return [];
-        }
-
-        return [$this->styleName => $this->style];
     }
 
     /**
@@ -538,7 +542,6 @@ class RichTableCell extends OdtElement implements HasStyles
     {
         $this->style = StyleMapper::mapTableCellStyleOptions($this->style);
         $this->styleName = StyleMapper::generateStyleName($this->style);
-        StyleMapper::registerTableCellStyle($this->styleName, $this->style);
         return $this;
     }
 

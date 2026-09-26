@@ -5,7 +5,8 @@ namespace OdtTemplateEngine\Elements;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
-use OdtTemplateEngine\Contracts\HasStyles;
+use OdtTemplateEngine\Document\StyleRequirement;
+use OdtTemplateEngine\Document\StructuredInsertionMode;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Utils\StyleMapper;
 
@@ -13,7 +14,7 @@ use OdtTemplateEngine\Utils\StyleMapper;
  * Represents an image element that can be inserted into an ODT document.
  * Handles image positioning, sizing, wrapping, and style definitions.
  */
-class ImageElement extends OdtElement implements HasStyles
+class ImageElement extends OdtElement
 {
     /**
      * Summary of imagePath
@@ -75,6 +76,9 @@ class ImageElement extends OdtElement implements HasStyles
      */
     protected array $styleMap = [];
 
+    private ?DrawingLayout $drawingLayout = null;
+    private DrawingLayoutProjector $drawingLayoutProjector;
+
     /**
      * Constructor.
      *
@@ -86,6 +90,7 @@ class ImageElement extends OdtElement implements HasStyles
     {
         $this->imagePath = $imagePath;
         $this->imageOptions = $options;
+        $this->drawingLayoutProjector = new DrawingLayoutProjector();
 
         $this->enabled = $options['enabled'] ?? true;
 
@@ -139,16 +144,25 @@ class ImageElement extends OdtElement implements HasStyles
         }
 
         $frame = $dom->createElement('draw:frame');
-        $styleName = $this->imageOptions['style-name'] ?? StyleMapper::generateStyleName($this->imageOptions);
-        $frame->setAttribute('draw:style-name', $styleName);
+        $styleName = $this->resolvedRenderedStyleName();
+        if ($styleName !== '') {
+            $frame->setAttribute('draw:style-name', $styleName);
+        }
 
-        // Basis-Attribute (mit Fallbacks)
-        $frame->setAttribute('text:anchor-type', $this->imageOptions['text:anchor-type'] ?? 'paragraph');
-        $frame->setAttribute('svg:width', $this->imageOptions['svg:width'] ?? '5cm');
-        $frame->setAttribute('svg:height', $this->imageOptions['svg:height'] ?? '3cm');
+        if ($this->drawingLayout !== null) {
+            $objectAttributes = $this->effectiveObjectAttributes();
+            foreach ($objectAttributes as $attribute => $value) {
+                $frame->setAttribute($attribute, $value);
+            }
+        } else {
+            // Basis-Attribute (mit Fallbacks)
+            $frame->setAttribute('text:anchor-type', $this->imageOptions['text:anchor-type'] ?? 'paragraph');
+            $frame->setAttribute('svg:width', $this->imageOptions['svg:width'] ?? '5cm');
+            $frame->setAttribute('svg:height', $this->imageOptions['svg:height'] ?? '3cm');
+        }
 
         // Alignment-Handling (zentriert, links, rechts, absolut etc.)
-        $align = $this->rawOptions['align'] ?? null;
+        $align = $this->drawingLayout === null ? ($this->rawOptions['align'] ?? null) : null;
 
         switch ($align) {
             case 'left':
@@ -172,40 +186,50 @@ class ImageElement extends OdtElement implements HasStyles
                 $frame->setAttribute('style:horizontal-rel', 'page-content');
                 break;
             default:
-                // Falls kein align gesetzt, dann eventuell wrap direkt übernehmen
-                if (!empty($this->imageOptions['style:wrap'])) {
-                    $frame->setAttribute('style:wrap', $this->imageOptions['style:wrap']);
+                if ($this->drawingLayout === null) {
+                    // Falls kein align gesetzt, dann eventuell wrap direkt übernehmen
+                    if (!empty($this->imageOptions['style:wrap'])) {
+                        $frame->setAttribute('style:wrap', $this->imageOptions['style:wrap']);
+                    }
+                    if (!empty($this->imageOptions['style:horizontal-pos'])) {
+                        $frame->setAttribute('style:horizontal-pos', $this->imageOptions['style:horizontal-pos']);
+                    }
+                    if (!empty($this->imageOptions['style:horizontal-rel'])) {
+                        $frame->setAttribute('style:horizontal-rel', $this->imageOptions['style:horizontal-rel']);
+                    }
                 }
-                if (!empty($this->imageOptions['style:horizontal-pos'])) {
-                    $frame->setAttribute('style:horizontal-pos', $this->imageOptions['style:horizontal-pos']);
-                }
-                if (!empty($this->imageOptions['style:horizontal-rel'])) {
-                    $frame->setAttribute('style:horizontal-rel', $this->imageOptions['style:horizontal-rel']);
-                }
         }
 
-        // Vertikale Ausrichtung
-        if (!empty($this->imageOptions['style:vertical-pos'])) {
-            $frame->setAttribute('style:vertical-pos', $this->imageOptions['style:vertical-pos']);
-            $frame->setAttribute('style:vertical-rel', $this->imageOptions['style:vertical-rel'] ?? 'paragraph');
+        if ($this->drawingLayout === null) {
+            // Vertikale Ausrichtung
+            if (!empty($this->imageOptions['style:vertical-pos'])) {
+                $frame->setAttribute('style:vertical-pos', $this->imageOptions['style:vertical-pos']);
+                $frame->setAttribute('style:vertical-rel', $this->imageOptions['style:vertical-rel'] ?? 'paragraph');
+            }
+
+            // Absolute Positionierungen (optional)
+            if (!empty($this->imageOptions['svg:x'])) {
+                $frame->setAttribute('svg:x', $this->imageOptions['svg:x']);
+            }
+            if (!empty($this->imageOptions['svg:y'])) {
+                $frame->setAttribute('svg:y', $this->imageOptions['svg:y']);
+            }
         }
 
-        // Absolute Positionierungen (optional)
-        if (!empty($this->imageOptions['svg:x'])) {
-            $frame->setAttribute('svg:x', $this->imageOptions['svg:x']);
-        }
-        if (!empty($this->imageOptions['svg:y'])) {
-            $frame->setAttribute('svg:y', $this->imageOptions['svg:y']);
-        }
+        // Preserve observable compatibility state after materialization.
+        if ($this->drawingLayout !== null) {
+            foreach ($this->drawingLayoutProjector->graphicLayoutProperties($this->drawingLayout) as $key => $value) {
+                $this->imageOptions[$key] = $value;
+            }
+        } else {
+            $this->imageOptions['style:wrap'] = $frame->getAttribute('style:wrap');
+            $this->imageOptions['style:horizontal-pos'] = $frame->getAttribute('style:horizontal-pos');
+            $this->imageOptions['style:horizontal-rel'] = $frame->getAttribute('style:horizontal-rel');
 
-        // 🔁 Synchrone Styles zur Verwendung in styles.xml
-        $this->imageOptions['style:wrap'] = $frame->getAttribute('style:wrap');
-        $this->imageOptions['style:horizontal-pos'] = $frame->getAttribute('style:horizontal-pos');
-        $this->imageOptions['style:horizontal-rel'] = $frame->getAttribute('style:horizontal-rel');
-
-        if ($frame->hasAttribute('style:vertical-pos')) {
-            $this->imageOptions['style:vertical-pos'] = $frame->getAttribute('style:vertical-pos');
-            $this->imageOptions['style:vertical-rel'] = $frame->getAttribute('style:vertical-rel');
+            if ($frame->hasAttribute('style:vertical-pos')) {
+                $this->imageOptions['style:vertical-pos'] = $frame->getAttribute('style:vertical-pos');
+                $this->imageOptions['style:vertical-rel'] = $frame->getAttribute('style:vertical-rel');
+            }
         }
 
         // ➕ Bild einfügen
@@ -217,13 +241,138 @@ class ImageElement extends OdtElement implements HasStyles
 
         $frame->appendChild($image);
 
-        // ✅ Registriere den Style für späteren Export in styles.xml
-        StyleMapper::registerImageStyle($styleName, $this->imageOptions);
-
-
         return $frame;
     }
 
+
+    /**
+     * Replaces the friendly semantic frame-layout state.
+     *
+     * @param array<string, mixed> $layout
+     */
+    public function setFrameLayout(array $layout): self
+    {
+        $this->drawingLayout = $layout === [] ? null : DrawingLayout::fromArray($layout);
+
+        return $this;
+    }
+
+    public function setFrameAnchor(string $anchor): self
+    {
+        $this->drawingLayout = ($this->drawingLayout ?? DrawingLayout::empty())
+            ->withAnchor($anchor);
+
+        return $this;
+    }
+
+    public function setFrameHorizontalAlignment(string $alignment, ?string $relativeTo = null): self
+    {
+        $this->drawingLayout = ($this->drawingLayout ?? DrawingLayout::empty())
+            ->withHorizontalAlignment($alignment, $relativeTo);
+
+        return $this;
+    }
+
+    public function setFrameVerticalAlignment(string $alignment, ?string $relativeTo = null): self
+    {
+        $this->drawingLayout = ($this->drawingLayout ?? DrawingLayout::empty())
+            ->withVerticalAlignment($alignment, $relativeTo);
+
+        return $this;
+    }
+
+    public function setFrameHorizontalOffset(string $offset, ?string $relativeTo = null): self
+    {
+        $this->drawingLayout = ($this->drawingLayout ?? DrawingLayout::empty())
+            ->withHorizontalOffset($offset, $relativeTo);
+
+        return $this;
+    }
+
+    public function setFrameVerticalOffset(string $offset, ?string $relativeTo = null): self
+    {
+        $this->drawingLayout = ($this->drawingLayout ?? DrawingLayout::empty())
+            ->withVerticalOffset($offset, $relativeTo);
+
+        return $this;
+    }
+
+    public function setFrameWrap(string $wrap): self
+    {
+        $this->drawingLayout = ($this->drawingLayout ?? DrawingLayout::empty())
+            ->withWrap($wrap);
+
+        return $this;
+    }
+
+    /** @return iterable<int, StyleRequirement> */
+    public function getOwnStyleRequirements(): iterable
+    {
+        if ($this->drawingLayout === null) {
+            return [];
+        }
+
+        $properties = $this->drawingLayoutProjector->graphicLayoutProperties($this->drawingLayout);
+        if ($properties === []) {
+            return [];
+        }
+
+        ksort($properties);
+
+        return [new StyleRequirement(
+            StyleRequirement::KIND_DEFINITION,
+            StyleRequirement::SCOPE_COMMON,
+            'graphic',
+            StyleRequirement::PART_STYLES,
+            StyleMapper::generateStyleName($properties),
+            'Frame',
+            ['style:graphic-properties' => $properties]
+        )];
+    }
+
+    /** @return array<string, string> */
+    private function effectiveObjectAttributes(): array
+    {
+        if ($this->drawingLayout === null) {
+            return [];
+        }
+
+        $attributes = [
+            'text:anchor-type' => $this->imageOptions['text:anchor-type'] ?? 'paragraph',
+            'svg:width' => $this->imageOptions['svg:width'] ?? '5cm',
+            'svg:height' => $this->imageOptions['svg:height'] ?? '3cm',
+        ];
+
+        return array_merge(
+            $attributes,
+            $this->drawingLayoutProjector->objectAttributes($this->drawingLayout)
+        );
+    }
+
+    private function resolvedRenderedStyleName(): string
+    {
+        if ($this->drawingLayout !== null) {
+            $properties = $this->drawingLayoutProjector->graphicLayoutProperties($this->drawingLayout);
+            if ($properties !== []) {
+                ksort($properties);
+
+                return StyleMapper::generateStyleName($properties);
+            }
+        }
+
+        return (string) ($this->imageOptions['style-name']
+            ?? StyleMapper::generateStyleName($this->imageOptions));
+    }
+
+    public function structuredInsertionMode(): StructuredInsertionMode
+    {
+        $anchor = $this->drawingLayout?->anchor()
+            ?? ($this->imageOptions['text:anchor-type'] ?? $this->anchor ?? 'paragraph');
+
+        return $anchor === 'as-char'
+            ? StructuredInsertionMode::INLINE_TEXT_FLOW
+            : StructuredInsertionMode::PRESERVE_TEXT_CONTAINER;
+    }
 
     /**
      * Returns a list of image assets required for the ODT (to be added to Pictures folder).
@@ -240,14 +389,10 @@ class ImageElement extends OdtElement implements HasStyles
         ];
     }
 
-    /**
-     * Returns style definitions (if any) associated with this image.
-     *
-     * @return array Empty or customized style array.
-     */
-    public function getStyleDefinitions(): array
+    /** @return array<int, array{id: string, path: string}> */
+    public function getOwnImageAssets(): array
     {
-        return [];
+        return $this->getImageAssets();
     }
 
     /**
@@ -274,13 +419,6 @@ class ImageElement extends OdtElement implements HasStyles
      * Summary of registerStyles
      * @return void
      */
-    public function registerStyles(): void
-    {
-        if (!empty($this->rawOptions)) {
-            $this->setStyle($this->rawOptions);
-        }
-    }
-
 
     /**
      * Summary of setStyle
@@ -295,9 +433,21 @@ class ImageElement extends OdtElement implements HasStyles
         $styleName = StyleMapper::generateStyleName($this->imageOptions);
         $this->imageOptions['style-name'] = $styleName;
 
-        StyleMapper::registerImageStyle($styleName, $this->imageOptions);
-
         return $this;
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function getImageStyleRequirements(): array
+    {
+        $styleName = $this->imageOptions['style-name'] ?? StyleMapper::generateStyleName($this->imageOptions);
+
+        return [$styleName => $this->imageOptions];
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function getOwnImageStyleRequirements(): array
+    {
+        return $this->getImageStyleRequirements();
     }
 
 

@@ -54,7 +54,7 @@ Paragraph styles can also be applied to the item paragraphs when spacing or othe
 A list can contain another `ListElement`:
 
 ```php
-$main = new ListElement('numbered');
+$main = new ListElement('bullet');
 $main->addItem((new Paragraph())->addText('Parent item'));
 
 $nested = new ListElement('bullet');
@@ -65,7 +65,7 @@ $nested
 $main->addSubList($nested);
 ```
 
-`addSubList()` raises the nested list level relative to the parent. List levels are constrained to the ODT-oriented range supported by the element.
+`addSubList()` stores the nested list level relative to the parent. The current renderer derives actual nesting from the nested `text:list` structure; the stored `setLevel()` value itself does not currently affect visual output. See the API Reference for the exact 1.0 contract.
 
 ## Convenience methods on RichText
 
@@ -111,11 +111,18 @@ They can also be used as part of richer table-cell content when the cell contain
 
 List rendering uses native ODF structures, but fine-grained list-layout control is still an active development area. In particular, indentation behavior and advanced nested-list style customization are tracked for future improvement.
 
+Mixed bullet/numbered nesting is not presented as a stable visual guarantee:
+LibreOffice may render a nested list using the surrounding list's numbering
+style even when the child `ListElement` names a different style. The canonical
+L05 sample therefore demonstrates numbered steps separately from a
+same-type nested bullet hierarchy. More advanced mixed nesting needs explicit
+LibreOffice validation in the target document/template.
+
 For documents where exact visual list geometry is critical, generate representative output and inspect it in the LibreOffice version used by your target workflow.
 
 ## Related samples
 
-- Sample 18 — native numbered, bulleted, and nested list structures
-- Sample 21 — native bullet lists used in a larger editable CV document
+- [L05 — Lists](../../samples/sample_L05_lists.php) combines a native numbered list with a same-type nested bullet hierarchy.
+- [S01b — Professional CV · Structured Template](../../samples/sample_S01b_cv_structured.php) — native bullet lists used in a larger editable CV document
 
 See [RichText & Paragraphs](richtext-and-paragraphs.md) for styling the paragraphs used as list items.

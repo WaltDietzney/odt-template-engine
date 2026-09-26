@@ -1,0 +1,150 @@
+<?php
+
+declare(strict_types=1);
+
+namespace OdtTemplateEngine\Tests\Integration;
+
+use DOMDocument;
+use DOMNode;
+use OdtTemplateEngine\Elements\ImageElement;
+use OdtTemplateEngine\Elements\OdtElement;
+use OdtTemplateEngine\OdtTemplate;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
+use PHPUnit\Framework\TestCase;
+use ZipArchive;
+
+final class StyleContextImageCompatibilityAdoptionTest extends TestCase
+{
+    /** @var list<OdtTemplate> */
+    private array $templates = [];
+
+    /** @var list<string> */
+    private array $outputs = [];
+
+    protected function tearDown(): void
+    {
+        foreach ($this->templates as $template) {
+            $template->cleanup();
+        }
+        foreach ($this->outputs as $output) {
+            if (is_file($output)) {
+                unlink($output);
+            }
+        }
+    }
+
+    #[RunInSeparateProcess]
+    public function testLegacyImageStylesAreAdoptedOnlyWhenReferencedByTheCurrentDocument(): void
+    {
+        $first = $this->template();
+        $firstImage = new ImageElement($this->imagePath(), ['width' => '4cm']);
+        $first->assign(['test1' => $firstImage]);
+        $first->render();
+        $firstName = (string) $firstImage->getImageOptions()['style-name'];
+
+        $second = $this->template();
+        $secondImage = new ImageElement($this->imagePath(), ['width' => '7cm']);
+        $second->assign(['test1' => $secondImage]);
+        $second->render();
+        $secondName = (string) $secondImage->getImageOptions()['style-name'];
+        $output = $this->outputPath('isolated-image');
+        $second->save($output);
+
+        $styles = $this->entry($output, 'styles.xml');
+        self::assertStringNotContainsString('style:name="' . $firstName . '"', $styles);
+        self::assertStringContainsString('style:name="' . $secondName . '"', $styles);
+        self::assertArrayHasKey($firstName, $first->imageStylesForAudit());
+        self::assertArrayHasKey($secondName, $second->imageStylesForAudit());
+    }
+
+    #[RunInSeparateProcess]
+    public function testRepeatedLegacySaveDoesNotDuplicateTheAdoptedImageStyle(): void
+    {
+        $template = $this->template();
+        $image = new ImageElement($this->imagePath(), ['width' => '5cm']);
+        $template->assign(['test1' => $image]);
+        $template->render();
+        $first = $this->outputPath('repeated-image-one');
+        $second = $this->outputPath('repeated-image-two');
+        $template->save($first);
+        $template->save($second);
+
+        $name = (string) $image->getImageOptions()['style-name'];
+        foreach ([$first, $second] as $output) {
+            self::assertSame(1, substr_count($this->entry($output, 'styles.xml'), 'style:name="' . $name . '"'));
+        }
+    }
+
+    #[RunInSeparateProcess]
+    public function testLoadRemovesCurrentDocumentReferenceBeforeLaterSave(): void
+    {
+        $template = $this->template();
+        $image = new ImageElement($this->imagePath(), ['width' => '3cm']);
+        $template->assign(['test1' => $image]);
+        $template->render();
+        $name = (string) $image->getImageOptions()['style-name'];
+        $template->load();
+        $output = $this->outputPath('after-load-image');
+        $template->save($output);
+
+        self::assertStringNotContainsString('style:name="' . $name . '"', $this->entry($output, 'styles.xml'));
+    }
+
+    private function template(): OdtTemplate
+    {
+        $template = new class($this->templatePath('sample_textfeld.odt')) extends OdtTemplate {
+            public function imageStylesForAudit(): array
+            {
+                return $this->documentContext()->styleContext()->imageStyles();
+            }
+        };
+        $this->templates[] = $template;
+        return $template;
+    }
+
+    private function outputPath(string $label): string
+    {
+        $path = sys_get_temp_dir() . '/sr06f5a-' . $label . '-' . bin2hex(random_bytes(5)) . '.odt';
+        $this->outputs[] = $path;
+        return $path;
+    }
+
+    private function entry(string $path, string $entry): string
+    {
+        $zip = new ZipArchive();
+        self::assertTrue($zip->open($path) === true);
+        try {
+            $value = $zip->getFromName($entry);
+            self::assertIsString($value);
+            return $value;
+        } finally {
+            $zip->close();
+        }
+    }
+
+    private function templatePath(string $name): string
+    {
+        return dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/' . $name;
+    }
+
+    private function imagePath(): string
+    {
+        return dirname(__DIR__, 2) . '/assets/WaltDietzney.png';
+    }
+}
+
+final class LegacyImageReferenceElement extends OdtElement
+{
+    public function __construct(private readonly string $styleName)
+    {
+    }
+
+    public function toDomNode(DOMDocument $dom): DOMNode
+    {
+        $frame = $dom->createElement('draw:frame');
+        $frame->setAttribute('draw:style-name', $this->styleName);
+        $frame->appendChild($dom->createElement('draw:image'));
+        return $frame;
+    }
+
+}

@@ -98,7 +98,7 @@ For local styling, the engine can generate style names automatically from style 
 For complex documents, semantic named paragraph styles can make the generated ODT easier to understand and maintain:
 
 ```php
-StyleMapper::registerParagraphStyle('CVEntryTitle', [
+$template->styles()->defineParagraph('CVEntryTitle', [
     'margin-top' => '0.1cm',
     'margin-bottom' => '0.03cm',
 ]);
@@ -108,38 +108,59 @@ $paragraph = new Paragraph('CVEntryTitle');
 
 Names such as `CVEntryTitle`, `ReportHeading`, or `InvoiceTotal` communicate intent when inspecting the generated XML or editing the resulting document.
 
+A named reference does not create a definition. `new Paragraph('CVEntryTitle')` means "use this paragraph style in the current document". Define generated reusable paragraph styles explicitly through `$template->styles()->defineParagraph(...)`, or reference a style already authored in the ODT template.
+
+## Public authoring model
+
+The current public styling model has three layers:
+
+```text
+Application authoring
+    element options / fluent element APIs
+
+Document style authoring
+    $template->styles()->defineParagraph(...)
+
+Custom structured-element extension
+    getOwnStyleRequirements()
+    ownedElements()
+    typed resource/dependency hooks
+    toDomNode()
+```
+
+For ordinary application code, the first two layers are normally sufficient.
+
+`DocumentStyles` is the public document-oriented facade for generated named paragraph definitions. It does not own process-global state; definitions belong to the current logical document.
+
+Custom `OdtElement` implementations can describe semantic style requirements through `StyleRequirement` without registering styles in a global registry.
+
+## Internal style pipeline
+
+The implementation behind the public API is document-local:
+
+```text
+Element options / DocumentStyles / custom StyleRequirement
+                    ↓
+             StyleRequirement
+                    ↓
+              StyleContext
+                    ↓
+               materializers
+                    ↓
+             ODF style output
+```
+
+`StyleContext` is an internal document-local semantic authority. `StyleMapper` is a stateless mapping and identity utility. `StyleWriter` is a narrow serialization helper for explicit data and is not an application-facing style registry or authoring API.
+
+There is no process-global paragraph/text registry fallback in the current style architecture.
+
 ## Where styles are stored
 
 An ODT package can contain styles in more than one XML location.
 
-The engine currently writes document styles primarily through `styles.xml`, while some generated automatic structures such as table-column and table-cell styles may also involve `content.xml` automatic styles.
+The engine writes document styles primarily through `styles.xml`, while generated automatic structures such as table-column and table-cell styles may also involve `content.xml` automatic styles.
 
 You normally do not need to manage those XML locations manually. The distinction becomes important when diagnosing missing or duplicated styles.
-
-## StyleMapper and StyleWriter
-
-`StyleMapper` translates developer-facing style options into ODF attributes and maintains several style registries.
-
-`StyleWriter` serializes registered and required styles into the ODT XML package.
-
-Normal application code should generally style elements through `Paragraph`, `RichTableCell`, `ImageElement`, and related public elements. Direct `StyleMapper` registration is useful for advanced reusable semantic styles.
-
-`StyleWriter` is an implementation utility and is not the recommended application-facing styling API.
-
-## Advanced registration and process scope
-
-The current `StyleMapper` registries are static. Explicit registrations such as:
-
-```php
-StyleMapper::registerParagraphStyle(...);
-StyleMapper::registerTextStyle(...);
-```
-
-can therefore persist across multiple documents generated within the same PHP process.
-
-This does not make semantic registration unusable, but it means the current API should not be treated as a document-scoped style configuration object. A future `StyleContext`-style architecture is tracked in `FUTURE_DEVELOPMENT.md`.
-
-For ordinary element-generated styles, use the element APIs and allow the engine to collect the required styles from the generated content.
 
 ## Prefer semantic intent over visual hacks
 

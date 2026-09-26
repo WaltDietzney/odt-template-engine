@@ -1,0 +1,17 @@
+mimetype
+Configurations2/accelerator/
+Configurations2/images/Bitmaps/
+Configurations2/toolpanel/
+Configurations2/floater/
+Configurations2/statusbar/
+Configurations2/toolbar/
+Configurations2/progressbar/
+Configurations2/popupmenu/
+Configurations2/menubar/
+styles.xml
+manifest.rdf
+content.xml
+meta.xml
+settings.xml
+Thumbnails/thumbnail.png
+META-INF/manifest.xml

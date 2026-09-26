@@ -1,0 +1,40 @@
+<?php
+
+/**
+ * Sample 5 - Replace Image by Frame Name
+ *
+ * This example demonstrates how to replace an existing image inside an ODT file
+ * by referencing the draw:name attribute of a <draw:frame> element.
+ *
+ * Highlights:
+ * - Replaces the image file inside the document.
+ * - Optionally updates the width and height of the image frame.
+ */
+
+use OdtTemplateEngine\OdtTemplate;
+
+require_once dirname(__DIR__, 3) . '/vendor/autoload.php';
+
+// [1] Initialize the template
+$template = new OdtTemplate(__DIR__ . '/templates/template_05_replaceImage.odt');
+
+// [2] Replace an image identified by the draw:name="Logo" in the document
+// - Replace the image file with "assets/WaltDietzney.png"
+// - Set the new width of the image frame to "6cm"
+// Legacy dimension behavior:
+// - No dimensions: 5cm x 3cm
+// - Width only: supplied width x 3cm
+// - Height only: 5cm x supplied height
+// - Width and height: supplied values verbatim
+$template->replaceImageByName('Logo', __DIR__ . '/../assets/WaltDietzney.png', [
+    'width' => '6cm' // Optional: you could also specify 'height' => '4cm'
+]);
+
+// No render() call is required when only replacing an existing image frame.
+
+// [4] Save the updated document
+$outputPath = __DIR__ . '/output/output_05_replaceImage.odt';
+$template->save($outputPath);
+
+// [5] Output success message
+echo "The file 'tests/Fixtures/LegacySamples/output/output_05_replaceImage.odt' was successfully created.\n";

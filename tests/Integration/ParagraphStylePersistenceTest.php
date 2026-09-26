@@ -8,6 +8,7 @@ use DOMDocument;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\RichText;
 use OdtTemplateEngine\OdtTemplate;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
 
@@ -29,7 +30,7 @@ final class ParagraphStylePersistenceTest extends TestCase
 
     public function testNamedParagraphStyleIsPersistedInStylesXml(): void
     {
-        $templatePath = dirname(__DIR__, 2) . '/samples/templates/template_18_ListStyles.odt';
+        $templatePath = dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_18_ListStyles.odt';
         self::assertFileExists($templatePath);
 
         $template = new OdtTemplate($templatePath);
@@ -79,6 +80,49 @@ final class ParagraphStylePersistenceTest extends TestCase
 
             $dom = new DOMDocument();
             self::assertTrue($dom->loadXML($stylesXml));
+        } finally {
+            $zip->close();
+        }
+    }
+
+    public function testNativeParagraphAndTextPropertiesReachFinalStylesXml(): void
+    {
+        $paragraph = (new Paragraph('SR4B_NativeParagraph', [
+            'fo:margin-top' => '0.42cm',
+            'fo:border-bottom' => '1pt solid #123456',
+            'fo:text-align' => 'center',
+        ]))->addText('Native text', [
+            'fo:color' => '#123456',
+            'fo:font-size' => '13pt',
+            'fo:font-weight' => 'bold',
+            'fo:font-style' => 'italic',
+            'style:font-name' => 'Liberation Sans',
+            'style:text-underline-style' => 'solid',
+        ]);
+
+        $template = new OdtTemplate(dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_18_ListStyles.odt');
+        $template->setElement('my_list', (new RichText())->addParagraph($paragraph));
+        $template->save($this->outputFile);
+
+        $zip = new ZipArchive();
+        self::assertTrue($zip->open($this->outputFile) === true);
+
+        try {
+            $stylesXml = $zip->getFromName('styles.xml');
+            self::assertIsString($stylesXml);
+            foreach ([
+                'fo:margin-top="0.42cm"',
+                'fo:border-bottom="1pt solid #123456"',
+                'fo:text-align="center"',
+                'fo:color="#123456"',
+                'fo:font-size="13pt"',
+                'fo:font-weight="bold"',
+                'fo:font-style="italic"',
+                'style:font-name="Liberation Sans"',
+                'style:text-underline-style="solid"',
+            ] as $attribute) {
+                self::assertStringContainsString($attribute, $stylesXml);
+            }
         } finally {
             $zip->close();
         }

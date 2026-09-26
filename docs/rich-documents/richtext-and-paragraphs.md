@@ -125,12 +125,11 @@ Keeping these responsibilities separate makes complex documents easier to reason
 
 ## Named paragraph styles
 
-For a reusable semantic style, create a paragraph with a meaningful style name and register its definition through the advanced style API:
+For a reusable semantic style, define a meaningful named paragraph style on the
+current document, then reference that name from paragraphs:
 
 ```php
-use OdtTemplateEngine\Utils\StyleMapper;
-
-StyleMapper::registerParagraphStyle('DocumentSectionHeading', [
+$template->styles()->defineParagraph('DocumentSectionHeading', [
     'margin-top' => '0.4cm',
     'margin-bottom' => '0.1cm',
     'border-bottom' => '1.5pt solid #12324a',
@@ -144,9 +143,16 @@ $heading->addText('Experience', [
 ]);
 ```
 
-This pattern is useful in larger documents because generated ODT styles retain understandable names such as `DocumentSectionHeading` instead of being only implementation-generated identifiers.
+The definition is document-local and semantically owned by the current
+document. `new Paragraph('DocumentSectionHeading')` is only a named style
+reference; it does not define or register the style. This pattern is useful in
+larger documents because generated ODT styles retain understandable names such
+as `DocumentSectionHeading` instead of being only implementation-generated
+identifiers.
 
-Direct `StyleMapper` registration is an advanced API. The current registry is static process state, so applications generating multiple independent documents in one PHP process should avoid treating global registrations as document-scoped configuration. A future document-scoped style context is tracked in the project roadmap.
+For one-off paragraph styling, pass friendly style options directly to the
+`Paragraph` constructor. The document-style facade is for reusable generated
+named paragraph definitions.
 
 ## Line breaks and tabs
 
@@ -230,9 +236,8 @@ This keeps application data separate from ODT rendering and prevents the LibreOf
 
 ## Related samples
 
-- Sample 07 — paragraphs and tabular lines
-- Sample 09 — RichText blocks and paragraph styling
-- Sample 14 — advanced tabs, margins, borders, and paragraph styles
-- Sample 21 — large real-world document assembled from reusable RichText sections
+- [L04 — Rich Content](../../samples/sample_L04_rich_content.php) builds several native `Paragraph` objects in a `RichText` block and inserts them into a template-owned placeholder.
+- B01 — advanced tabs, margins, borders, and paragraph styles
+- [S01b — Professional CV · Structured Template](../../samples/sample_S01b_cv_structured.php) — professional mixed-ownership document with bounded RichText regions
 
 Continue with [Lists](lists.md), [Tables](tables.md), and [Images](images.md) for structured child elements.

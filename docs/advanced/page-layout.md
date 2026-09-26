@@ -104,6 +104,17 @@ Prefer LibreOffice for stable design decisions such as:
 
 Use `PageLayoutOdtTemplate` when application data or a layout variant genuinely needs to change page geometry.
 
+### Flow is not pagination
+
+Paragraph options such as `keep-with-next`, `keep-together`, `widows`,
+`orphans`, `break-before`, and `break-after` express native paragraph-flow
+intent. They do not select a page style, define page geometry, or calculate
+physical page placement. Writer lays out content and computes pagination.
+The [C01 capability sample](../../samples/sample_C01_page_flow_layout.php)
+contrasts generated paragraph-flow properties with the authored master-page
+succession and page-number field in its template. This does not define a PHP
+page-style API.
+
 ## Why this is a separate class
 
 Page layout changes operate on `styles.xml` and have different responsibilities from normal placeholder replacement. Keeping them in `PageLayoutOdtTemplate` makes that advanced behavior explicit while preserving `OdtTemplate` as the normal entry point.
@@ -112,11 +123,11 @@ The implementation also overrides list-indentation adjustment so page margins ar
 
 ## Example: complex CV
 
-Sample 21 uses `PageLayoutOdtTemplate` because the LibreOffice template defines the two-column CV structure while PHP adjusts the page margins and fills the two large generated regions.
+S01b uses `PageLayoutOdtTemplate` because the LibreOffice template defines the two-column CV structure while PHP adjusts the page margins and fills the two large generated regions.
 
 ```php
 $template = new PageLayoutOdtTemplate(
-    __DIR__ . '/templates/template_21_cvProfile.odt'
+    __DIR__ . '/templates/template_S01b_cv_structured.odt'
 );
 
 $template->setPageMargins('0cm', '0.8cm', '0cm', '0cm');
@@ -126,7 +137,7 @@ This is a good example of the intended division of responsibility: LibreOffice o
 
 ## Related resources
 
-- Sample 21 — complex CV / page-layout usage
+- [S01b — Professional CV · Structured Template](../../samples/sample_S01b_cv_structured.php) — complex CV / page-layout usage
 - `PageLayoutOdtTemplateTest` — integration coverage for page-layout changes
 
 See [ODT Internals](odt-internals.md) for the role of `styles.xml` and master pages in the package.

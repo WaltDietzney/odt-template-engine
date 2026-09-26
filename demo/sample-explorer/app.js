@@ -1,41 +1,17 @@
 (() => {
+    const explorerBase = (window.ODT_EXPLORER_BASE || '').replace(/\/$/, '');
+    const explorerUrl = (path) => explorerBase + '/' + String(path).replace(/^\//, '');
+
     const showcaseStyles = document.createElement('link');
     showcaseStyles.rel = 'stylesheet';
-    showcaseStyles.href = 'showcase.css';
+    showcaseStyles.href = explorerUrl('showcase.css');
     document.head.appendChild(showcaseStyles);
 
-    const cvSampleName = 'sample_21_cvProfile';
-    const cvCard = document.querySelector(`[data-sample="${cvSampleName}"]`)?.closest('.sample-card');
+    const cvSampleId = 'S01b';
+    const cvCard = document.querySelector(`[data-sample-id="${cvSampleId}"]`);
 
     if (cvCard) {
-        cvCard.dataset.category = 'showcases';
         cvCard.dataset.search += ' showcase cv profile resume page layout editable odt real world';
-
-        const category = cvCard.querySelector('.category');
-        const title = cvCard.querySelector('h3');
-        const description = cvCard.querySelector('.description');
-
-        if (category) {
-            category.textContent = 'Showcases';
-        }
-
-        if (title) {
-            title.textContent = 'CV Profile';
-        }
-
-        if (description) {
-            description.textContent = 'Generate a complete two-column CV with page layout control, rich text, lists, images and editable ODT output.';
-        }
-
-        const filters = document.querySelector('.filters');
-        if (filters && !filters.querySelector('[data-filter="showcases"]')) {
-            const showcaseFilter = document.createElement('button');
-            showcaseFilter.className = 'filter-button';
-            showcaseFilter.type = 'button';
-            showcaseFilter.dataset.filter = 'showcases';
-            showcaseFilter.textContent = 'Showcases';
-            filters.appendChild(showcaseFilter);
-        }
     }
 
     const howItWorks = document.getElementById('how-it-works');
@@ -49,23 +25,25 @@
                 <span class="section-kicker">Real-world ODT showcase</span>
                 <h2 id="cv-showcase-title">See what the engine can build.</h2>
                 <p>
-                    Sample 21 generates a complete two-column CV as a native, editable OpenDocument file.
-                    It combines page layout control, rich text, images, native lists, reusable styles and structured PHP data in one document.
+                    S01b generates a professional structured CV as a native, editable OpenDocument file.
+                    It deliberately mixes ownership: Writer keeps stable page design and repeatable native Sections while PHP supplies application data, image content, and bounded RichText regions.
                 </p>
                 <div class="cv-showcase-features" aria-label="CV showcase features">
                     <span>Two-column layout</span>
                     <span>Editable ODT</span>
                     <span>Images &amp; lists</span>
-                    <span>Page layout API</span>
+                    <span>Mixed ownership</span>
                 </div>
-                <pre class="cv-showcase-code"><code>$template = new PageLayoutOdtTemplate('cv-template.odt');
-$template->setPageMargins('0cm', '0.8cm', '0cm', '0cm');
-$template->setElement('cv_sidebar', $sidebar);
-$template->setElement('cv_content', $content);
-$template->save('cv.odt');</code></pre>
+                <pre class="cv-showcase-code"><code>$template = new OdtTemplate('template_S01b_cv_structured.odt');
+$template->bookmark('Extract')->replaceText('PROFILE');
+$template->section('Experience')->section('JobSection')
+    ->instantiateMany($jobs);
+$template->setElement('CVSidebarPage1', $sidebarPage1);
+$template->render();
+$template->save('output_S01b_cv_structured.odt');</code></pre>
                 <div class="cv-showcase-actions">
-                    <a class="button button-primary" href="#sample-21-showcase">Try the CV showcase</a>
-                    <a class="text-link" href="https://github.com/WaltDietzney/odt-template-engine/blob/master/samples/sample_21_cvProfile.php" target="_blank" rel="noreferrer">View full PHP sample →</a>
+                    <a class="button button-primary" href="#s01b-showcase">Try the CV showcase</a>
+                    <a class="text-link" href="https://github.com/WaltDietzney/odt-template-engine/blob/develop/samples/sample_S01b_cv_structured.php" target="_blank" rel="noreferrer">View full PHP sample →</a>
                 </div>
             </div>
             <div class="cv-document-preview" aria-label="Stylized preview of the generated CV">
@@ -93,9 +71,9 @@ $template->save('cv.odt');</code></pre>
                 <span class="cv-preview-badge">Generated as .odt</span>
             </div>
         `;
-        howItWorks.parentNode.insertBefore(showcase, howItWorks);
+        howItWorks.parentNode.insertBefore(showcase, howItWorks.nextSibling);
 
-        cvCard.id = 'sample-21-showcase';
+        cvCard.id = 's01b-showcase';
     }
 
     const heroActions = document.querySelector('.hero-actions');
@@ -169,7 +147,7 @@ $template->save('cv.odt');</code></pre>
             button.textContent = 'Generating ODT…';
 
             try {
-                const response = await fetch('generate.php?sample=' + encodeURIComponent(sample));
+                const response = await fetch(explorerUrl('generate.php') + '?sample=' + encodeURIComponent(sample));
                 const data = await response.json();
 
                 if (!response.ok || data.status !== 'success') {
@@ -177,7 +155,7 @@ $template->save('cv.odt');</code></pre>
                 }
 
                 showToast('ODT generated successfully. Download starting…');
-                window.location.href = 'download.php?file=' + encodeURIComponent(data.file);
+                window.location.href = explorerUrl('download.php') + '?file=' + encodeURIComponent(data.file);
             } catch (error) {
                 showToast(error instanceof Error ? error.message : 'Sample generation failed.');
             } finally {
@@ -220,7 +198,7 @@ $template->save('cv.odt');</code></pre>
         paypalLink.innerHTML = `
             <strong>PayPal</strong>
             <span>Support via PayPal →</span>
-            <img src="assets/paypal-qr.svg" width="112" height="112" alt="QR code for PayPal support" style="padding: 6px; border-radius: 10px; background: #fff;">
+            <img src="${explorerUrl('assets/paypal-qr.svg')}" width="112" height="112" alt="QR code for PayPal support" style="padding: 6px; border-radius: 10px; background: #fff;">
         `;
         paypalPlaceholder.replaceWith(paypalLink);
     }
@@ -235,25 +213,20 @@ $template->save('cv.odt');</code></pre>
         lightningLink.innerHTML = `
             <strong>⚡ Bitcoin Lightning</strong>
             <span>Support via Lightning →</span>
-            <img src="assets/lightning-qr.svg" width="112" height="112" alt="QR code for Bitcoin Lightning support" style="padding: 6px; border-radius: 10px; background: #fff;">
+            <img src="${explorerUrl('assets/lightning-qr.svg')}" width="112" height="112" alt="QR code for Bitcoin Lightning support" style="padding: 6px; border-radius: 10px; background: #fff;">
         `;
         lightningPlaceholder.replaceWith(lightningLink);
-    }
-
-    const supportCopy = document.querySelector('.support-copy p');
-    if (supportCopy) {
-        supportCopy.textContent = 'ODT Template Engine is free and open source. If the library saves you time or helps with your project, you can support its continued development via PayPal or Bitcoin Lightning. Thank you!';
     }
 
     const footerLinks = document.querySelector('.footer-links');
     if (footerLinks && !footerLinks.querySelector('[data-legal-link]')) {
         const legalLink = document.createElement('a');
-        legalLink.href = 'impressum.php';
+        legalLink.href = explorerUrl('impressum.php');
         legalLink.textContent = 'Impressum';
         legalLink.dataset.legalLink = 'true';
 
         const privacyLink = document.createElement('a');
-        privacyLink.href = 'datenschutz.php';
+        privacyLink.href = explorerUrl('datenschutz.php');
         privacyLink.textContent = 'Datenschutz';
         privacyLink.dataset.legalLink = 'true';
 

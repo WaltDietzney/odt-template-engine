@@ -46,7 +46,7 @@ final class HtmlImportP2ATest extends TestCase
 
         $output = $this->temporaryDirectory . '/base64.odt';
         $template = new \OdtTemplateEngine\OdtTemplate(
-            dirname(__DIR__, 2) . '/samples/templates/template_18_ListStyles.odt'
+            dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/template_18_ListStyles.odt'
         );
         $template->setElement('my_list', $richText);
         $template->save($output);
@@ -69,6 +69,17 @@ final class HtmlImportP2ATest extends TestCase
         self::assertSame([], $richText->getImageAssets());
     }
 
+    public function testMissingLocalImageAndMalformedDataImageFailSafely(): void
+    {
+        self::assertSame([], HtmlImporter::fromHtml(
+            '<img src="' . $this->temporaryDirectory . '/missing.png">'
+        )->getImageAssets());
+
+        self::assertSame([], HtmlImporter::fromHtml(
+            '<img src="data:image/png;base64,@@@@">'
+        )->getImageAssets());
+    }
+
     public function testRemoteImagesAreDisabledByDefaultAndEnabledExplicitly(): void
     {
         $fixture = dirname(__DIR__, 2) . '/assets/banner.png';
@@ -78,10 +89,29 @@ final class HtmlImportP2ATest extends TestCase
             $html = '<img src="' . $server['url'] . '/image.png">';
 
             self::assertSame([], HtmlImporter::fromHtml($html)->getImageAssets());
+            self::assertFileDoesNotExist($server['request_marker']);
 
             $assets = HtmlImporter::fromHtml($html, ['allow_remote_images' => true])->getImageAssets();
             self::assertCount(1, $assets);
             self::assertFileExists($assets[0]['path']);
+            self::assertFileExists($server['request_marker']);
+        } finally {
+            proc_terminate($server['process']);
+            proc_close($server['process']);
+        }
+    }
+
+    public function testRemoteResolverRejectsOversizedNonImageAndRedirectResponses(): void
+    {
+        $server = $this->startHttpServer(dirname(__DIR__, 2) . '/assets/banner.png');
+
+        try {
+            foreach (['/large.png', '/plain.txt', '/redirect'] as $path) {
+                self::assertSame([], HtmlImporter::fromHtml(
+                    '<img src="' . $server['url'] . $path . '">',
+                    ['allow_remote_images' => true]
+                )->getImageAssets(), 'Unexpected remote image accepted from ' . $path);
+            }
         } finally {
             proc_terminate($server['process']);
             proc_close($server['process']);
@@ -100,12 +130,41 @@ final class HtmlImportP2ATest extends TestCase
         self::assertFileDoesNotExist($path);
     }
 
-    /** @return array{process: resource, url: string} */
+    /** @return array{process: resource, url: string, request_marker: string} */
     private function startHttpServer(string $fixture): array
     {
         $documentRoot = $this->temporaryDirectory . '/http';
         mkdir($documentRoot);
         copy($fixture, $documentRoot . '/image.png');
+        file_put_contents($documentRoot . '/large.png', file_get_contents($fixture) . str_repeat("\0", 5_000_001));
+        file_put_contents($documentRoot . '/plain.txt', 'not an image');
+        $marker = $this->temporaryDirectory . '/remote-requested';
+        $router = <<<'PHP'
+<?php
+$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+file_put_contents(__MARKER__, "requested\n", FILE_APPEND);
+if ($path === '/redirect') {
+    header('Location: /image.png', true, 302);
+    exit;
+}
+if ($path === '/plain.txt') {
+    header('Content-Type: text/plain');
+    readfile(__PLAIN__);
+    exit;
+}
+if ($path === '/large.png') {
+    readfile(__LARGE__);
+    exit;
+}
+readfile(__IMAGE__);
+PHP;
+        $router = str_replace(
+            ['__MARKER__', '__PLAIN__', '__LARGE__', '__IMAGE__'],
+            [var_export($marker, true), var_export($documentRoot . '/plain.txt', true), var_export($documentRoot . '/large.png', true), var_export($documentRoot . '/image.png', true)],
+            $router
+        );
+        $routerPath = $this->temporaryDirectory . '/router.php';
+        file_put_contents($routerPath, $router);
 
         $socket = stream_socket_server('tcp://127.0.0.1:0', $errorNumber, $errorMessage);
         self::assertNotFalse($socket, $errorMessage);
@@ -114,7 +173,7 @@ final class HtmlImportP2ATest extends TestCase
         [, $port] = explode(':', (string) $address);
 
         $process = proc_open(
-            [PHP_BINARY, '-S', '127.0.0.1:' . $port, '-t', $documentRoot],
+            [PHP_BINARY, '-S', '127.0.0.1:' . $port, $routerPath],
             [1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']],
             $pipes
         );
@@ -127,6 +186,7 @@ final class HtmlImportP2ATest extends TestCase
                 return [
                     'process' => $process,
                     'url' => 'http://127.0.0.1:' . $port,
+                    'request_marker' => $marker,
                 ];
             }
             usleep(50_000);

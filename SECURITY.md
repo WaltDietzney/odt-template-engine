@@ -2,7 +2,9 @@
 
 ## Supported Versions
 
-Until the project reaches a stable 1.0 release, security fixes are applied to the current `master` branch only.
+The current stable 1.x release line is supported for security fixes.
+
+Security fixes for released versions are applied to the stable `master` line. Unreleased development continues on `develop` and is not a separate supported release line.
 
 ## Reporting a Vulnerability
 

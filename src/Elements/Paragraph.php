@@ -3,7 +3,8 @@
 namespace OdtTemplateEngine\Elements;
 
 use OdtTemplateEngine\Utils\StyleMapper;
-use OdtTemplateEngine\Contracts\HasStyles;
+use OdtTemplateEngine\Utils\StyleOptionSplitter;
+use OdtTemplateEngine\Document\StyleRequirement;
 use DOMDocument;
 use DOMNode;
 
@@ -13,7 +14,7 @@ use DOMNode;
  * Supports inline text styling, line breaks, tabs, hyperlinks, paragraph styles,
  * list formatting (bulleted/numbered), and embedded elements (like images).
  */
-class Paragraph extends OdtElement implements HasStyles
+class Paragraph extends OdtElement
 {
     /**
      * Text parts and inline content of the paragraph.
@@ -406,71 +407,61 @@ public function setParagraphStyleOptions(array $options): self
         return !empty($this->listStyle);
     }
 
-    // ------------- Style Registration -------------
-
     /**
-     * Registers all text and paragraph styles used in this paragraph.
+     * Returns semantic style requirements owned directly by this paragraph.
+     *
+     * @return iterable<int, StyleRequirement>
      */
-    public function registerStyles(): void
+    public function getOwnStyleRequirements(): iterable
     {
-        foreach ($this->textStyleMap as $style) {
-            StyleMapper::registerTextStyle($style);
+        if ($this->paragraphStyle !== null) {
+            if ($this->paragraphStyleOptions !== []) {
+                $split = StyleOptionSplitter::split($this->paragraphStyleOptions, 'paragraph');
+                $propertyGroups = [];
+
+                if ($split['paragraph'] !== []) {
+                    $propertyGroups['style:paragraph-properties'] = StyleMapper::mapParagraphStyle(
+                        $split['paragraph']
+                    );
+                }
+
+                if ($split['text'] !== []) {
+                    $propertyGroups['style:text-properties'] = StyleMapper::mapTextStyleOptions(
+                        $split['text']
+                    );
+                }
+
+                yield new StyleRequirement(
+                    StyleRequirement::KIND_DEFINITION,
+                    StyleRequirement::SCOPE_COMMON,
+                    'paragraph',
+                    StyleRequirement::PART_STYLES,
+                    $this->paragraphStyle,
+                    'Standard',
+                    $propertyGroups
+                );
+            } else {
+                yield new StyleRequirement(
+                    StyleRequirement::KIND_REFERENCE,
+                    null,
+                    'paragraph',
+                    null,
+                    $this->paragraphStyle
+                );
+            }
         }
 
-        if ($this->paragraphStyle && !empty($this->paragraphStyleOptions)) {
-            StyleMapper::registerParagraphStyle($this->paragraphStyle, $this->paragraphStyleOptions);
+        foreach ($this->textStyleMap as $styleName => $style) {
+            yield new StyleRequirement(
+                StyleRequirement::KIND_DEFINITION,
+                StyleRequirement::SCOPE_COMMON,
+                'text',
+                StyleRequirement::PART_STYLES,
+                $styleName,
+                'Standard',
+                ['style:text-properties' => StyleMapper::mapTextStyleOptions($style)]
+            );
         }
-    }
-
-    /**
-     * Returns all inline text styles required by this paragraph.
-     *
-     * @return array<string, array>
-     */
-    public function getRequiredStyles(): array
-    {
-        return $this->textStyleMap;
-    }
-
-    /**
-     * Returns all paragraph style definitions.
-     *
-     * @return array<string, array>
-     */
-    public function getRequiredParagraphStyles(): array
-    {
-        if ($this->paragraphStyle && !empty($this->paragraphStyleOptions)) {
-            return [$this->paragraphStyle => $this->paragraphStyleOptions];
-        }
-        return [];
-    }
-
-    /**
-     * Returns all styles (inline and paragraph) used in this paragraph.
-     *
-     * @return array<string, array>
-     */
-    public function getStyleDefinitions(): array
-    {
-        return array_merge(
-            $this->getRequiredStyles(),
-            $this->getParagraphStyleDefinitions()
-        );
-    }
-
-    /**
-     * Returns mapped paragraph style definitions.
-     *
-     * @return array<string, array>
-     */
-    public function getParagraphStyleDefinitions(): array
-    {
-        if ($this->paragraphStyle && !empty($this->paragraphStyleOptions)) {
-            return [
-                $this->paragraphStyle => StyleMapper::mapParagraphStyle($this->paragraphStyleOptions)
-            ];
-        }
-        return [];
     }
 
     // ------------- Rendering -------------
@@ -503,7 +494,7 @@ public function setParagraphStyleOptions(array $options): self
 
                     } elseif (!empty($part['style'])) {
                         // 🛟 Fallback: styleName nachträglich generieren
-                        $styleName = StyleMapper::registerTextStyle($part['style']);
+                        $styleName = StyleMapper::generateStyleName($part['style']);
                         $span = $dom->createElement('text:span');
                         $span->setAttribute('text:style-name', $styleName);
                         $span->appendChild($node);

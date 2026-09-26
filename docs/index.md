@@ -2,7 +2,7 @@
 
 The ODT Template Engine generates fully editable OpenDocument Text (`.odt`) files from PHP applications.
 
-It combines LibreOffice/OpenOffice templates with PHP data and programmatically constructed document elements such as rich text, paragraphs, lists, images, and tables.
+It combines LibreOffice-authored templates with PHP data, programmatically constructed ODT elements, and an addressable model for native named document structures.
 
 ## Start here
 
@@ -10,10 +10,13 @@ It combines LibreOffice/OpenOffice templates with PHP data and programmatically 
 - [Generate your first document](getting-started/quick-start.md)
 - [Learn how to prepare ODT templates](getting-started/creating-templates.md)
 - [Understand the engine's processing model](concepts/how-it-works.md)
+- [Work with addressable native ODT structures](rich-documents/addressable-document.md)
 
-## Two ways to add dynamic content
+## Three complementary ways to make a document dynamic
 
-For simple values and template logic, place expressions directly inside the ODT template:
+### 1. Simple Template Processing
+
+For simple values and lightweight template logic, place expressions directly inside the ODT template:
 
 ```text
 {{customer_name}}
@@ -23,7 +26,11 @@ For simple values and template logic, place expressions directly inside the ODT 
 {{#endforeach}}
 ```
 
-For structured content, build ODT elements in PHP and inject them into a placeholder:
+This keeps the surrounding structure in LibreOffice while PHP supplies values, conditions, and repeating data.
+
+### 2. Structured ODT Construction
+
+When PHP should own a dynamic content subtree, build native ODT elements and insert them into a placeholder:
 
 ```php
 use OdtTemplateEngine\Elements\Paragraph;
@@ -40,11 +47,47 @@ $richText->addParagraph($paragraph);
 $template->setElement('content', $richText);
 ```
 
-## Real-world example
+RichText, paragraphs, lists, tables, images, frames, and text boxes can be composed as native ODT structures.
 
-The [Editable CV Showcase](examples/cv-showcase.md) demonstrates a two-column CV with a sidebar, rich text, native lists, images, styles, dynamic career entries, education, qualifications, skills, languages, and programmatic page margins.
+### 3. Writer-native Document Model
 
-The complete sample can also be executed through the public Sample Explorer.
+When LibreOffice should remain the structural designer but PHP needs stable semantic handles, address named structures already present in the document:
+
+```php
+$inspection = $template->inspect();
+$bookmark = $template->bookmark('ApplicantName');
+$experience = $template->section('ExperienceEntry');
+$table = $template->table('SkillsTable');
+$frame = $template->frame('ProfilePhoto');
+```
+
+The current addressable model covers sections, bookmarks, named tables, and named drawing frames. Supported operations are intentionally type-specific: named sections provide cloning and data-bound instantiation, bookmarks support bounded text replacement, named tables support bounded Writer-owned row population, while frame targets expose typed descriptors and participate in the bounded mapped image-replacement path.
+
+See [Addressable Native ODT Structures](rich-documents/addressable-document.md) and [Named Sections](rich-documents/named-sections.md).
+
+## LibreOffice remains the visual template designer
+
+The three models are complementary rather than competing. A professional document can keep page layout, stable tables, frames, styles, and repeatable prototypes in LibreOffice while PHP supplies values, generates genuinely dynamic subtrees, and instantiates named native structures.
+
+A useful rule of thumb is:
+
+> **Keep durable office-document design in LibreOffice. Move only genuinely dynamic structure and data into PHP.**
+
+## Real-world examples
+
+The canonical professional examples are ownership-oriented rather than
+chronological:
+
+- **S01b Professional CV · Structured Template** keeps page design, Frames,
+  styles and repeatable native Sections in LibreOffice while PHP supplies
+  application data and bounded generated regions.
+- **S03 Structured Professional Report** demonstrates Writer-native inspection,
+  mapping, preflight and bounded automation against a professional report
+  template.
+
+Use the [Sample Guide](examples/sample-guide.md) for the canonical L/C/B/S learning path and ownership-oriented examples.
+
+The samples can also be executed through the public Sample Explorer.
 
 ## Project links
 

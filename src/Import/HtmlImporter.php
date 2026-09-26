@@ -135,7 +135,6 @@ class HtmlImporter
                         );
                         
                         $cell = (new RichTableCell($paragraph))->setStyle($filtered); // paragraph + zellenstil
-                        $cell->registerStylesAndRefresh();
 
                         if ($cellNode->hasAttribute('colspan')) {
                             $cell->colspan((int) $cellNode->getAttribute('colspan'));
@@ -186,7 +185,6 @@ class HtmlImporter
             case 'pre':
                 $option = self::getRawStyleForTag($tag);
                 $style = StyleMapper::mapTextStyleOptions($option);
-                StyleMapper::registerTextStyle($style);
                 foreach ($node->childNodes as $child) {
                     self::processStyledNode($child, $rich, $currentParagraph, $style, $imageResolver);
                 }
@@ -202,12 +200,7 @@ class HtmlImporter
                 // 3. Mapping auf ODT-kompatible Keys → ['fo:color' => '#FF0000', ...]
                 $odtStyle = StyleMapper::mapTextStyleOptions($styleOptions);
 
-                // 4. Stil registrieren (für automatic-styles in styles.xml)
-                if (!empty($odtStyle)) {
-                    StyleMapper::registerTextStyle($odtStyle);
-                }
-
-                // 5. Kinder verarbeiten mit registriertem Stil
+                // 4. Kinder verarbeiten; Paragraph owns the semantic definition.
                 foreach ($node->childNodes as $child) {
                     if ($child instanceof DOMText) {
                         if (!$currentParagraph) {
@@ -255,11 +248,6 @@ class HtmlImporter
                 $inlineStyle = $node->getAttribute('style');
                 $styleOptions = StyleMapper::parseInlineStyle($inlineStyle);
                 $textStyle = StyleMapper::mapTextStyleOptions($styleOptions);
-
-                // ✅ Register the style (if needed)
-                if (!empty($textStyle)) {
-                    StyleMapper::registerTextStyle($textStyle);
-                }
 
                 // Add the heading text with style
                 $heading->addText(trim($node->textContent), $textStyle);
@@ -519,13 +507,8 @@ class HtmlImporter
         $textStyle = StyleMapper::mapTextStyleOptions($textCss);
         //$paraStyle = StyleMapper::mapParagraphStyle($paraCss); // falls du das hast
 
-        if (!empty($textStyle)) {
-            StyleMapper::registerTextStyle($textStyle);
-        }
-
         if (!empty($paraCss)) {
             $styleName = StyleMapper::generateParagraphStyleName();
-            StyleMapper::registerParagraphStyle($styleName, $paraCss);
 
             $para = new Paragraph($styleName, $paraCss);
         } else {

@@ -5,7 +5,7 @@ namespace OdtTemplateEngine\Elements;
 use OdtTemplateEngine\Utils\StyleMapper;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Elements\RichTableCell;
-use OdtTemplateEngine\Contracts\HasStyles;
+use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Utils\StyleWriter;
 use DOMDocument;
 use DOMNode;
@@ -15,9 +15,9 @@ use DOMElement;
  * Represents a rich, styleable table element in an ODT document.
  *
  * Supports cell and row styling, column width definitions, header row grouping,
- * style presets, and ratio-based virtual column spans.
+ * style presets, and relative column width definitions.
  */
-class RichTable extends OdtElement implements HasStyles
+class RichTable extends OdtElement
 {
     /**
      * Global counter to auto-generate unique table names.
@@ -39,6 +39,9 @@ class RichTable extends OdtElement implements HasStyles
      * @var string|null
      */
     protected ?string $tableStyleName = null;
+
+    /** @var array<string, mixed> Element-owned table style properties. */
+    protected array $tableStyleOptions = [];
 
     /**
      * Number of header rows that will be wrapped in `<table:table-header-rows>`.
@@ -76,7 +79,7 @@ class RichTable extends OdtElement implements HasStyles
     private array $columnWidths = [];
 
     /**
-     * Relative width ratios for columns. Used to compute colspan.
+     * Relative width ratios for columns.
      *
      * @var array<int, int>
      */
@@ -96,14 +99,17 @@ class RichTable extends OdtElement implements HasStyles
      * Accepts RichTableCell instances or plain strings, Paragraphs, or RichText.
      * Automatically wraps non-cell content into a RichTableCell.
      *
-     * If column ratios are defined, colspans will be applied accordingly.
+     * Column ratios define relative column widths for semantic table-column
+     * requirements; they do not alter caller-defined cell spans.
      *
      * @param array $cells Array of cell content or RichTableCell instances.
-     * @param array $style Optional row-level style (currently unused).
+     * @param array $style Optional row-level style; currently supports `min-row-height`.
      * @return self
      */
     public function addRow(array $cells, array $style = []): self
     {
+        $style = $this->normalizeRowStyle($style);
+
         foreach ($cells as &$cell) {
             if (!$cell instanceof RichTableCell) {
                 $cell = new RichTableCell($cell);
@@ -111,38 +117,21 @@ class RichTable extends OdtElement implements HasStyles
         }
         unset($cell);
 
-        if (!empty($this->columnWidthRatios)) {
-            $sum = array_sum($this->columnWidthRatios);
-            $virtualColCount = 12;
-            $colspans = [];
-
-            foreach ($this->columnWidthRatios as $ratio) {
-                $colspans[] = max(1, round($virtualColCount * ($ratio / $sum)));
-            }
-
-            foreach ($cells as $i => $cell) {
-                if ($cell instanceof RichTableCell && isset($colspans[$i])) {
-                    $cell->setColspan($colspans[$i]);
-                }
-            }
-        }
-
         $this->rows[] = ['cells' => $cells, 'style' => $style];
         return $this;
     }
 
-    private function calculateColspansFromRatios(int $virtualColCount): array
+    /** @return iterable<int, OdtElement> */
+    public function ownedElements(): iterable
     {
-        $sum = array_sum($this->columnWidthRatios);
-        $colspans = [];
-
-        foreach ($this->columnWidthRatios as $ratio) {
-            $colspans[] = max(1, round($virtualColCount * ($ratio / $sum)));
+        foreach ($this->rows as $row) {
+            foreach ($row['cells'] as $cell) {
+                if ($cell instanceof RichTableCell) {
+                    yield $cell;
+                }
+            }
         }
-
-        return $colspans;
     }
-
 
     /**
      * Defines how many rows should be treated as table headers.
@@ -165,7 +154,190 @@ class RichTable extends OdtElement implements HasStyles
     public function setTableStyleName(string $styleName): self
     {
         $this->tableStyleName = $styleName;
+        $this->tableStyleOptions = [];
         return $this;
+    }
+
+    /**
+     * Assigns element-owned properties for a generated table style.
+     *
+     * The resulting style is materialized through semantic requirements and
+     * is not registered in process-global StyleMapper state.
+     *
+     * @param array<string, mixed> $style
+     * @return self
+     */
+    public function setStyle(array $style): self
+    {
+        return $this->replaceElementOwnedTableStyle($style);
+    }
+
+    /**
+     * Assigns a friendly element-owned table style.
+     *
+     * This is the semantic master API for table-level style/layout authoring.
+     * It replaces the complete current local table style and explicitly
+     * switches away from a named-style reference when necessary.
+     *
+     * @param array<string, mixed> $options
+     * @return self
+     */
+    public function setTableStyle(array $options): self
+    {
+        if ($options === []) {
+            return $this->replaceElementOwnedTableStyle([]);
+        }
+
+        if (array_key_exists('width', $options) && array_key_exists('relative-width', $options)) {
+            throw new \InvalidArgumentException(
+                'Table style cannot define both width and relative-width.'
+            );
+        }
+
+        $this->validateFriendlyTableStyleOptions($options);
+
+        if (isset($options['width']) && is_string($options['width'])) {
+            $options['width'] = trim($options['width']);
+        }
+        if (isset($options['relative-width']) && is_string($options['relative-width'])) {
+            $options['relative-width'] = trim($options['relative-width']);
+        }
+        if (isset($options['alignment']) && is_string($options['alignment'])) {
+            $options['alignment'] = strtolower(trim($options['alignment']));
+        }
+
+        return $this->replaceElementOwnedTableStyle(
+            StyleMapper::mapTableStyleOptions($options)
+        );
+    }
+
+    /**
+     * Sets the absolute width of the table.
+     */
+    public function setTableWidth(string $width): self
+    {
+        $this->assertElementOwnedTableStyleMutationAllowed();
+
+        $width = trim($width);
+        $this->assertOdfLength($width, 'Table width');
+
+        $options = $this->tableStyleOptions;
+        unset($options['style:rel-width']);
+        $options['style:width'] = $width;
+
+        return $this->replaceElementOwnedTableStyle($options);
+    }
+
+    /**
+     * Sets the relative width of the table.
+     */
+    public function setTableRelativeWidth(string $width): self
+    {
+        $this->assertElementOwnedTableStyleMutationAllowed();
+
+        if (!preg_match('/^(?:\d+(?:\.\d+)?|\.\d+)%$/', trim($width))) {
+            throw new \InvalidArgumentException(
+                'Relative table width must be a percentage string such as "60%".'
+            );
+        }
+
+        $options = $this->tableStyleOptions;
+        unset($options['style:width']);
+        $options['style:rel-width'] = trim($width);
+
+        return $this->replaceElementOwnedTableStyle($options);
+    }
+
+    /**
+     * Sets the horizontal alignment of the table as a whole.
+     */
+    public function setTableAlignment(string $alignment): self
+    {
+        $this->assertElementOwnedTableStyleMutationAllowed();
+
+        $alignment = strtolower(trim($alignment));
+        if (!in_array($alignment, ['left', 'center', 'right', 'margins'], true)) {
+            throw new \InvalidArgumentException(
+                'Table alignment must be one of: left, center, right, margins.'
+            );
+        }
+
+        $options = $this->tableStyleOptions;
+        $options['table:align'] = $alignment;
+
+        return $this->replaceElementOwnedTableStyle($options);
+    }
+
+    /**
+     * Replaces the complete element-owned normalized table property state.
+     *
+     * @param array<string, mixed> $properties
+     */
+    private function replaceElementOwnedTableStyle(array $properties): self
+    {
+        if ($properties === []) {
+            $this->tableStyleOptions = [];
+            $this->tableStyleName = null;
+            return $this;
+        }
+
+        $this->tableStyleOptions = $properties;
+        $this->tableStyleName = StyleMapper::generateStyleName($properties);
+
+        return $this;
+    }
+
+    private function assertElementOwnedTableStyleMutationAllowed(): void
+    {
+        if ($this->tableStyleName !== null && $this->tableStyleOptions === []) {
+            throw new \LogicException(
+                'Cannot mutate table style properties while a named table style reference is active.'
+            );
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     */
+    private function validateFriendlyTableStyleOptions(array $options): void
+    {
+        if (array_key_exists('width', $options)) {
+            if (!is_string($options['width'])) {
+                throw new \InvalidArgumentException('Table width must be a length string.');
+            }
+            $this->assertOdfLength($options['width'], 'Table width');
+        }
+
+        if (array_key_exists('relative-width', $options)) {
+            if (!is_string($options['relative-width'])
+                || !preg_match('/^(?:\d+(?:\.\d+)?|\.\d+)%$/', trim($options['relative-width']))) {
+                throw new \InvalidArgumentException(
+                    'Relative table width must be a percentage string such as "60%".'
+                );
+            }
+        }
+
+        if (array_key_exists('alignment', $options)) {
+            if (!is_string($options['alignment'])
+                || !in_array(strtolower(trim($options['alignment'])), ['left', 'center', 'right', 'margins'], true)) {
+                throw new \InvalidArgumentException(
+                    'Table alignment must be one of: left, center, right, margins.'
+                );
+            }
+
+            $options['alignment'] = strtolower(trim($options['alignment']));
+        }
+    }
+
+    private function assertOdfLength(string $value, string $label): void
+    {
+        $value = trim($value);
+
+        if (!preg_match('/^(?:\d+(?:\.\d+)?|\.\d+)(?:cm|mm|in|pt|pc|px)$/', $value)) {
+            throw new \InvalidArgumentException(
+                sprintf('%s must be a non-empty ODF-compatible length string.', $label)
+            );
+        }
     }
 
     /**
@@ -184,10 +356,15 @@ class RichTable extends OdtElement implements HasStyles
     {
         $styles = [];
 
-        $columnWidths = $this->getColumnWidths(); // falls vorhanden
+        $columnWidths = $this->getColumnWidths();
         $columnStyleNames = [];
-        if (!empty($columnWidths)) {
-            $columnStyleNames = StyleWriter::writeColumnStyles($dom, $columnWidths);
+        if (!empty($this->columnWidthRatios)) {
+            $columnStyleNames = $this->columnStyleNames($this->columnWidthRatios);
+        } elseif (!empty($columnWidths)) {
+            $columnStyleNames = $this->columnStyleNames($columnWidths);
+            if (!$this->hasAllColumnStyles($dom, $columnStyleNames)) {
+                StyleWriter::writeColumnStyles($dom, $columnWidths);
+            }
         }
 
 
@@ -208,7 +385,9 @@ class RichTable extends OdtElement implements HasStyles
 
         if ($autoStyles && $styles) {
             foreach ($styles as $styleNode) {
-                $autoStyles->appendChild($styleNode);
+                if (!$this->styleExistsInContainer($autoStyles, $styleNode)) {
+                    $autoStyles->appendChild($styleNode);
+                }
             }
         }
 
@@ -219,17 +398,7 @@ class RichTable extends OdtElement implements HasStyles
             $table->setAttribute('table:style-name', $this->tableStyleName);
         }
 
-        if (!empty($this->columnWidthRatios)) {
-            // Option C: Verhältnisse in virtuelle Spalten umrechnen
-            $virtualColCount = 12;
-            $sum = array_sum($this->columnWidthRatios);
-            foreach ($this->columnWidthRatios as $ratio) {
-                $repeat = max(1, round($virtualColCount * ($ratio / $sum)));
-                $col = $dom->createElement('table:table-column');
-                $col->setAttribute('table:number-columns-repeated', $repeat);
-                $table->appendChild($col);
-            }
-        } elseif (!empty($columnStyleNames)) {
+        if (!empty($columnStyleNames)) {
             foreach ($columnStyleNames as $styleName) {
                 $col = $dom->createElement('table:table-column');
                 $col->setAttribute('table:style-name', $styleName);
@@ -265,6 +434,9 @@ class RichTable extends OdtElement implements HasStyles
             }
 
             $tr = $dom->createElement('table:table-row');
+            if ($this->hasSupportedRowStyle($row['style'])) {
+                $tr->setAttribute('table:style-name', $this->rowStyleName($currentRow));
+            }
 
             foreach ($row['cells'] as $cell) {
                 $tc = $dom->createElement('table:table-cell');
@@ -313,44 +485,234 @@ class RichTable extends OdtElement implements HasStyles
         return $table;
     }
 
-    public function getRequiredStyles(): array
+    private function styleExistsInContainer(DOMElement $container, DOMElement $candidate): bool
     {
-        $styles = [];
+        $styleNamespace = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
+        $candidateName = $candidate->getAttributeNS($styleNamespace, 'name')
+            ?: $candidate->getAttribute('style:name');
+        $candidateFamily = $candidate->getAttributeNS($styleNamespace, 'family')
+            ?: $candidate->getAttribute('style:family');
 
-        foreach ($this->rows as $row) {
-            foreach ($row['cells'] as $cell) {
-                if (method_exists($cell, 'getStyleDefinitions')) {
-                    $cellStyles = $cell->getStyleDefinitions();
-                    if ($cellStyles) {
-                        $styles += $cellStyles;
-                    }
-                }
+        foreach ($container->getElementsByTagName('*') as $style) {
+            if (!$style instanceof DOMElement || $style->localName !== 'style') {
+                continue;
+            }
 
-                if (property_exists($cell, 'content')) {
-                    $reflection = new \ReflectionClass($cell);
-                    $contentProp = $reflection->getProperty('content');
-                    $contentProp->setAccessible(true);
-                    $inner = $contentProp->getValue($cell);
+            $name = $style->getAttributeNS($styleNamespace, 'name')
+                ?: $style->getAttribute('style:name');
+            $family = $style->getAttributeNS($styleNamespace, 'family')
+                ?: $style->getAttribute('style:family');
 
-                    if ($inner instanceof OdtElement) {
-                        $styles += $inner->getRequiredStyles();
-                    }
-                }
+            if ($name === $candidateName && $family === $candidateFamily) {
+                return true;
             }
         }
 
-        return $styles;
+        return false;
     }
 
-    public function registerStyles(): void
+    /** @param array<int, int|string> $widths */
+    private function columnStyleNames(array $widths): array
     {
-        foreach ($this->rows as $row) {
-            foreach ($row['cells'] as $cell) {
-                if ($cell instanceof HasStyles) {
-                    $cell->registerStyles();
+        $names = [];
+        foreach (array_values($widths) as $index => $_width) {
+            $names[] = 'co' . $index;
+        }
+        return $names;
+    }
+
+    /** @param list<string> $styleNames */
+    private function hasAllColumnStyles(DOMDocument $dom, array $styleNames): bool
+    {
+        $xpath = new \DOMXPath($dom);
+        $xpath->registerNamespace('office', 'urn:oasis:names:tc:opendocument:xmlns:office:1.0');
+        $automaticStyles = $xpath->query('//office:automatic-styles')->item(0);
+        if (!$automaticStyles instanceof DOMElement) {
+            return false;
+        }
+
+        foreach ($styleNames as $styleName) {
+            $found = false;
+            foreach ($automaticStyles->getElementsByTagName('*') as $style) {
+                if (!$style instanceof DOMElement || !in_array($style->localName, ['style', 'style:style'], true)) {
+                    continue;
+                }
+                $name = $style->getAttributeNS(
+                    'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+                    'name'
+                ) ?: $style->getAttribute('style:name');
+                $family = $style->getAttributeNS(
+                    'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+                    'family'
+                ) ?: $style->getAttribute('style:family');
+                if ($name === $styleName && $family === 'table-column') {
+                    $found = true;
+                    break;
                 }
             }
+            if (!$found) {
+                return false;
+            }
         }
+
+        return true;
+    }
+
+    /** @return iterable<int, StyleRequirement> */
+    public function getOwnStyleRequirements(): iterable
+    {
+        if (!empty($this->columnWidthRatios)) {
+            foreach ($this->normalizedRelativeColumnWidths() as $index => $width) {
+                yield new StyleRequirement(
+                    StyleRequirement::KIND_DEFINITION,
+                    StyleRequirement::SCOPE_AUTOMATIC,
+                    'table-column',
+                    StyleRequirement::PART_CONTENT,
+                    'co' . $index,
+                    null,
+                    ['style:table-column-properties' => ['style:rel-column-width' => $width]]
+                );
+            }
+        } else {
+            foreach (array_values($this->columnWidths) as $index => $width) {
+                yield new StyleRequirement(
+                    StyleRequirement::KIND_DEFINITION,
+                    StyleRequirement::SCOPE_AUTOMATIC,
+                    'table-column',
+                    StyleRequirement::PART_CONTENT,
+                    'co' . $index,
+                    null,
+                    ['style:table-column-properties' => ['style:column-width' => $width]]
+                );
+            }
+        }
+
+        foreach ($this->rows as $index => $row) {
+            if (!$this->hasSupportedRowStyle($row['style'])) {
+                continue;
+            }
+
+            $rowProperties = [];
+            if (array_key_exists('row-height', $row['style'])) {
+                $rowProperties['style:row-height'] = $row['style']['row-height'];
+            } elseif (array_key_exists('min-row-height', $row['style'])) {
+                $rowProperties['style:min-row-height'] = $row['style']['min-row-height'];
+            }
+
+            yield new StyleRequirement(
+                StyleRequirement::KIND_DEFINITION,
+                StyleRequirement::SCOPE_AUTOMATIC,
+                'table-row',
+                StyleRequirement::PART_CONTENT,
+                $this->rowStyleName($index),
+                null,
+                ['style:table-row-properties' => $rowProperties]
+            );
+        }
+
+        if ($this->tableStyleName === null) {
+            return;
+        }
+
+        if ($this->tableStyleOptions !== []) {
+            yield new StyleRequirement(
+                StyleRequirement::KIND_DEFINITION,
+                StyleRequirement::SCOPE_AUTOMATIC,
+                'table',
+                StyleRequirement::PART_CONTENT,
+                $this->tableStyleName,
+                null,
+                ['style:table-properties' => $this->tableStyleOptions]
+            );
+
+            return;
+        }
+
+        yield new StyleRequirement(
+            StyleRequirement::KIND_REFERENCE,
+            null,
+            'table',
+            null,
+            $this->tableStyleName
+        );
+    }
+
+    private function hasSupportedRowStyle(array $style): bool
+    {
+        return array_key_exists('row-height', $style)
+            || array_key_exists('min-row-height', $style);
+    }
+
+    /**
+     * Normalizes supported friendly row-height options while leaving unrelated
+     * row-style keys untouched for compatibility.
+     *
+     * @param array<string, mixed> $style
+     * @return array<string, mixed>
+     */
+    private function normalizeRowStyle(array $style): array
+    {
+        if (array_key_exists('row-height', $style) && array_key_exists('min-row-height', $style)) {
+            throw new \InvalidArgumentException(
+                'Row style cannot define both row-height and min-row-height.'
+            );
+        }
+
+        foreach (['row-height' => 'Row height', 'min-row-height' => 'Minimum row height'] as $key => $label) {
+            if (!array_key_exists($key, $style)) {
+                continue;
+            }
+
+            if (!is_string($style[$key])) {
+                throw new \InvalidArgumentException(
+                    sprintf('%s must be a length string.', $label)
+                );
+            }
+
+            $value = trim($style[$key]);
+            $this->assertOdfLength($value, $label);
+            $style[$key] = $value;
+        }
+
+        return $style;
+    }
+
+    private function rowStyleName(int $rowIndex): string
+    {
+        return $this->tableName . '_ro' . $rowIndex;
+    }
+
+    /** @return list<string> */
+    private function normalizedRelativeColumnWidths(): array
+    {
+        $ratios = array_values($this->columnWidthRatios);
+        $positiveIntegers = $ratios !== [] && array_reduce(
+            $ratios,
+            static fn (bool $valid, mixed $ratio): bool => $valid && is_int($ratio) && $ratio > 0,
+            true
+        );
+
+        if (!$positiveIntegers) {
+            return array_map(static fn (mixed $ratio): string => (string) $ratio . '*', $ratios);
+        }
+
+        $sum = array_sum($ratios);
+        $unit = intdiv(65535, $sum);
+        $widths = [];
+        $materialized = 0;
+
+        foreach ($ratios as $index => $ratio) {
+            if ($index === array_key_last($ratios)) {
+                $width = 65535 - $materialized;
+            } else {
+                $width = $unit * $ratio;
+                $materialized += $width;
+            }
+
+            $widths[] = $width . '*';
+        }
+
+        return $widths;
     }
 
     public function buildTableFromArray(array $tableData, string $styleName = 'default'): self

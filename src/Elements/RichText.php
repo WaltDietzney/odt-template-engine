@@ -5,7 +5,6 @@ namespace OdtTemplateEngine\Elements;
 use DOMDocument;
 use DOMNode;
 use OdtTemplateEngine\OdtTemplate;
-use OdtTemplateEngine\Contracts\HasStyles;
 use OdtTemplateEngine\Elements\NumberedList;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Utils\StyleMapper;
@@ -18,7 +17,7 @@ use OdtTemplateEngine\Utils\StyleOptionSplitter;
  *
  * @package OdtTemplateEngine\Elements
  */
-class RichText extends OdtElement implements HasStyles
+class RichText extends OdtElement
 {
     /**
      * @var array<int, OdtElement> List of contained elements (Paragraph, ImageElement, RichTable, etc.)
@@ -208,72 +207,16 @@ class RichText extends OdtElement implements HasStyles
     }
 
 
-    /**
-     * Get all required text styles (e.g., font styles, text properties).
-     *
-     * @return array
-     */
-    public function getRequiredStyles(): array
-    {
-        $styles = [];
-        foreach ($this->elements as $element) {
-            if ($element instanceof HasStyles) {
-                $styles = array_merge($styles, $element->getRequiredStyles());
-            }
-        }
-        return $styles;
-    }
-
-    /**
-     * Get all required paragraph styles.
-     *
-     * @return array<string, array> [styleName => styleOptions]
-     */
-    public function getRequiredParagraphStyles(): array
-    {
-        $all = [];
-        foreach ($this->elements as $element) {
-            if ($element instanceof Paragraph) {
-                $all += $element->getRequiredParagraphStyles();
-            }
-        }
-        return $all;
-    }
-
-    /**
-     * Register all styles for all contained elements.
-     *
-     * @return void
-     */
-    public function registerStyles(): void
-    {
-        foreach ($this->elements as $element) {
-            if ($element instanceof HasStyles) {
-                $element->registerStyles();
-            }
-        }
-    }
-
-    /**
-     * Collect style definitions from all elements.
-     *
-     * @return array
-     */
-    public function getStyleDefinitions(): array
-    {
-        $styles = [];
-        foreach ($this->elements as $element) {
-            if ($element instanceof HasStyles) {
-                $styles = array_merge_recursive($styles, $element->getStyleDefinitions());
-            }
-        }
-        return $styles;
-    }
-
     public function addElement(OdtElement $element): self
     {
         $this->elements[] = $element;
         return $this;
+    }
+
+    /** @return iterable<int, OdtElement> */
+    public function ownedElements(): iterable
+    {
+        return $this->elements;
     }
 
     /**

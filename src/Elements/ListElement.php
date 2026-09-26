@@ -3,11 +3,10 @@ namespace OdtTemplateEngine\Elements;
 
 use DOMDocument;
 use DOMNode;
-use OdtTemplateEngine\Contracts\HasStyles;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Elements\Paragraph;
 
-class ListElement extends OdtElement implements HasStyles
+class ListElement extends OdtElement
 {
     protected string $styleName;
     protected string $type; // 'numbered' oder 'bullet'
@@ -44,6 +43,12 @@ class ListElement extends OdtElement implements HasStyles
         return $this->addItem($list);
     }
 
+    /** @return iterable<int, OdtElement> */
+    public function ownedElements(): iterable
+    {
+        return $this->items;
+    }
+
 
     public function toDomNode(DOMDocument $dom): DOMNode
     {
@@ -64,40 +69,6 @@ class ListElement extends OdtElement implements HasStyles
 
         
         return $list;
-    }
-
-    public function registerStyles(): void{}
-
-    /**
-     * Collect text styles from all list items.
-     *
-     * @return array<string, array>
-     */
-    public function getRequiredStyles(): array
-    {
-        $styles = [];
-        foreach ($this->items as $item) {
-            if ($item instanceof HasStyles) {
-                $styles = array_merge($styles, $item->getRequiredStyles());
-            }
-        }
-        return $styles;
-    }
-
-    /**
-     * Collect paragraph styles from all list items.
-     *
-     * @return array<string, array>
-     */
-    public function getRequiredParagraphStyles(): array
-    {
-        $styles = [];
-        foreach ($this->items as $item) {
-            if ($item instanceof Paragraph) {
-                $styles += $item->getRequiredParagraphStyles();
-            }
-        }
-        return $styles;
     }
 
     /**

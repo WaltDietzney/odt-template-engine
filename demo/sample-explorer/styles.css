@@ -100,6 +100,51 @@ input {
     color: #fff;
 }
 
+
+.nav-support-link {
+    padding: 7px 11px;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+
+.support-callout {
+    display: flex;
+    width: min(1180px, calc(100% - 40px));
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin: 22px auto 50px;
+    padding: 15px 20px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 8px 24px rgba(31, 45, 78, 0.05);
+}
+
+.support-callout div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    align-items: baseline;
+}
+
+.support-callout span {
+    color: var(--muted);
+    font-size: 0.86rem;
+}
+
+.support-callout a {
+    flex: 0 0 auto;
+    color: var(--brand);
+    font-size: 0.84rem;
+    font-weight: 750;
+    text-decoration: none;
+}
+
 .hero {
     display: grid;
     grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.75fr);
@@ -552,6 +597,13 @@ pre {
 
     .nav-links {
         display: none;
+    }
+
+    .support-callout {
+        width: min(100% - 28px, 1180px);
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
     }
 
     .hero {

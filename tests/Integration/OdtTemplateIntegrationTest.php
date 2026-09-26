@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OdtTemplateEngine\Tests\Integration;
 
 use DOMDocument;
+use DOMXPath;
 use OdtTemplateEngine\Elements\ListElement;
 use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\RichTable;
@@ -106,6 +107,94 @@ final class OdtTemplateIntegrationTest extends TestCase
         self::assertSame('Integration Metadata', $metadata['title'] ?? null);
         self::assertSame('ODT Test Suite', $metadata['author'] ?? null);
         self::assertSame('en', $metadata['language'] ?? null);
+    }
+
+    public function testCanonicalMetadataKeywordsCoverageAndCreatorRoundTrip(): void
+    {
+        $template = new OdtTemplate($this->templatePath('template_04_metadata.odt'));
+        $template->setMeta([
+            'creator' => 'Current Creator',
+            'initial_creator' => 'Original Creator',
+            'keywords' => ['finance', 'report', '2026'],
+            'coverage' => 'Extended geographic and temporal coverage',
+            'language' => 'en-US',
+            'creation_date' => '2026-09-18T10:30:00Z',
+            'date' => '2026-09-18T10:31:00+02:00',
+            'editing_cycles' => 0,
+            'editing_duration' => 'P1Y2M3DT4H5M6.5S',
+        ]);
+        $template->save($this->outputFile);
+
+        $this->withArchive(function (ZipArchive $zip): void {
+            $metaXml = $this->readEntry($zip, 'meta.xml');
+            $dom = new DOMDocument();
+            self::assertTrue($dom->loadXML($metaXml));
+            $xpath = new DOMXPath($dom);
+            $xpath->registerNamespace('meta', 'urn:oasis:names:tc:opendocument:xmlns:meta:1.0');
+            $xpath->registerNamespace('dc', 'http://purl.org/dc/elements/1.1/');
+
+            $keywordNodes = $xpath->query('//meta:keyword');
+            self::assertNotFalse($keywordNodes);
+            self::assertSame(3, $keywordNodes->length);
+            self::assertSame(['finance', 'report', '2026'], array_map(
+                static fn ($node): string => $node->textContent,
+                iterator_to_array($keywordNodes)
+            ));
+            self::assertSame('Current Creator', $xpath->evaluate('string(//dc:creator)'));
+            self::assertSame('Original Creator', $xpath->evaluate('string(//meta:initial-creator)'));
+            self::assertSame('Extended geographic and temporal coverage', $xpath->evaluate('string(//dc:coverage)'));
+            self::assertSame('Demonstration of setting and displaying metadata', $xpath->evaluate('string(//dc:subject)'));
+            self::assertSame('Walter Diezt', $xpath->evaluate('string(//dc:publisher)'));
+            self::assertSame('https://github.com/WaltDietzney/odt-template-engine', $xpath->evaluate('string(//dc:source)'));
+            self::assertSame(0, $xpath->query('//meta:not_a_supported_key')->length);
+        });
+
+        $reopened = new OdtTemplate($this->outputFile);
+        $metadata = $reopened->getMeta();
+        self::assertSame('Current Creator', $metadata['creator'] ?? null);
+        self::assertSame('Current Creator', $metadata['author'] ?? null);
+        self::assertSame('Original Creator', $metadata['initial_creator'] ?? null);
+        self::assertSame('Original Creator', $metadata['initial_author'] ?? null);
+        self::assertSame(['finance', 'report', '2026'], $metadata['keywords'] ?? null);
+        self::assertSame('Extended geographic and temporal coverage', $metadata['coverage'] ?? null);
+        self::assertSame('en-US', $metadata['language'] ?? null);
+        self::assertSame('2026-09-18T10:30:00Z', $metadata['creation_date'] ?? null);
+        self::assertSame('2026-09-18T10:31:00+02:00', $metadata['date'] ?? null);
+        self::assertSame('0', $metadata['editing_cycles'] ?? null);
+        self::assertSame('P1Y2M3DT4H5M6.5S', $metadata['editing_duration'] ?? null);
+    }
+
+    public function testEmptyKeywordCollectionRemovesEveryKeywordElement(): void
+    {
+        $template = new OdtTemplate($this->templatePath('template_04_metadata.odt'));
+        $template->setMeta(['keywords' => []]);
+        $template->save($this->outputFile);
+
+        $this->withArchive(function (ZipArchive $zip): void {
+            $dom = new DOMDocument();
+            self::assertTrue($dom->loadXML($this->readEntry($zip, 'meta.xml')));
+            $xpath = new DOMXPath($dom);
+            $xpath->registerNamespace('meta', 'urn:oasis:names:tc:opendocument:xmlns:meta:1.0');
+            self::assertSame(0, $xpath->query('//meta:keyword')->length);
+        });
+    }
+
+    public function testSingleCanonicalKeywordWritesOneMetaKeywordElement(): void
+    {
+        $template = new OdtTemplate($this->templatePath('template_04_metadata.odt'));
+        $template->setMeta(['keywords' => ['single']]);
+        $template->save($this->outputFile);
+
+        $this->withArchive(function (ZipArchive $zip): void {
+            $dom = new DOMDocument();
+            self::assertTrue($dom->loadXML($this->readEntry($zip, 'meta.xml')));
+            $xpath = new DOMXPath($dom);
+            $xpath->registerNamespace('meta', 'urn:oasis:names:tc:opendocument:xmlns:meta:1.0');
+            $keywords = $xpath->query('//meta:keyword');
+            self::assertNotFalse($keywords);
+            self::assertSame(1, $keywords->length);
+            self::assertSame('single', $keywords->item(0)?->textContent);
+        });
     }
 
     public function testImageInsertionUpdatesContentAndManifest(): void
@@ -216,7 +305,7 @@ final class OdtTemplateIntegrationTest extends TestCase
 
     private function templatePath(string $fileName): string
     {
-        $path = dirname(__DIR__, 2) . '/samples/templates/' . $fileName;
+        $path = dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/' . $fileName;
         self::assertFileExists($path);
 
         return $path;
