@@ -6,7 +6,7 @@ The project aims to keep ODT document generation practical, predictable and comp
 
 ## Before opening an issue
 
-Please check whether the problem can be reproduced with the current `master` branch and whether a similar issue already exists.
+Please check whether the problem can be reproduced with the current `develop` branch and whether a similar issue already exists.
 
 For ODT rendering problems, a small reproducible example is especially valuable. ODT files are ZIP packages containing XML, and behavior can depend on how an office application generated the document structure.
 
