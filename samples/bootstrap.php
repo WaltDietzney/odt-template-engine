@@ -8,7 +8,7 @@ declare(strict_types=1);
  */
 $autoloadCandidates = [
     dirname(__DIR__) . '/vendor/autoload.php',
-    dirname(__DIR__, 4) . '/autoload.php',
+    dirname(__DIR__, 3) . '/autoload.php',
 ];
 
 foreach ($autoloadCandidates as $autoload) {
