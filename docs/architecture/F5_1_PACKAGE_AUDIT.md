@@ -30,20 +30,19 @@ LibreOffice is correctly described as an authoring/visual-validation tool, not a
 
 ## Archive policy
 
-The Composer archive excludes development/demo surfaces including `demo/`, `docker/`, root `output/`, root `qrcode/`, and `tests/`.
+The `composer.json` `archive.exclude` configuration excludes development/demo surfaces including `demo/`, `docker/`, root `output/`, root `qrcode/`, and `tests/` from archives created through Composer's archive mechanism.
 
 The public canonical `samples/` surface and documentation are not excluded. This is consistent with the sample registry's `distribution = composer` classification and with the project using samples as executable public documentation.
 
-The exact generated Composer archive contents must still be exercised during F5.2 on the clean consumer machine. In particular, F5.2 must verify that all resources needed by the documented consumer path are present and that no workflow depends on repository-only files.
+**F5.2 correction:** the real consumer installation used a GitHub-generated dist zipball, whose contents are not defined by Composer's `archive.exclude` setting. That installed dependency included `demo/`, `docker/`, and `tests/`. See `F5_2_CLEAN_CONSUMER_INSTALLATION.md` for the runtime evidence.
 
-## Public installation path / Packagist prerequisite
+## Public installation path / Packagist
 
-The public documentation intentionally teaches `composer require waltdietzney/odt-template-engine`. That is the correct final 1.0 installation path, but it requires the package to be registered and available through Packagist. During this audit, public Packagist search did not establish an existing package entry for this package name.
+The public documentation intentionally teaches `composer require waltdietzney/odt-template-engine`.
 
-This is a **distribution prerequisite**, not an engine defect. Before the final public 1.0 installation test, either:
+**F5.2 correction:** the package was already registered on Packagist. The clean consumer test established that it is publicly discoverable and that the documented command installs normally; the current stable public version during that exercise was `v0.9.0`. Packagist also exposed `dev-develop` for the release-candidate consumer exercise, so no explicit VCS repository override was required.
 
-1. register/connect the GitHub repository on Packagist and use the appropriate development/pre-release constraint for F5.2; or
-2. perform the first F5.2 clean-room exercise through an explicit Composer VCS repository configuration, then repeat the final installation path after Packagist publication.
+The earlier F5.1 statement that public search had not established an existing package entry was incorrect and is superseded by the direct installation evidence in `F5_2_CLEAN_CONSUMER_INSTALLATION.md`.
 
 The `1.0.0` tag is not required merely to register/test the package. The tag belongs to release creation after the candidate has passed the required gates.
 
@@ -59,9 +58,8 @@ Do not add a `version` field such as `"version": "1.0.0"` to `composer.json`. Th
 
 ## F5.1 result
 
-**GO to F5.2**, with two explicit external/runtime checks:
+**GO to F5.2.**
 
-- establish the pre-release Composer source (Packagist registration or bounded VCS configuration);
-- on the clean machine, inspect the actual installed package and prove the documented Recommended workflow without relying on development-checkout knowledge.
+F5.2 subsequently established the public Packagist installation path, inspected the real installed distribution, proved the documented Recommended workflow, and corrected the two static assumptions noted above. See `F5_2_CLEAN_CONSUMER_INSTALLATION.md`.
 
-No engine/API behavior change or package restructuring is justified by the static F5.1 audit.
+No engine/API behavior change or package restructuring was justified by the static F5.1 audit.
