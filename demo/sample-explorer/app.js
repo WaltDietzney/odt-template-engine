@@ -66,7 +66,7 @@ $template->save('cv.odt');</code></pre>
                 <span class="cv-preview-badge">Generated as .odt</span>
             </div>
         `;
-        howItWorks.parentNode.insertBefore(showcase, howItWorks);
+        howItWorks.parentNode.insertBefore(showcase, howItWorks.nextSibling);
 
         cvCard.id = 's01b-showcase';
     }
@@ -211,11 +211,6 @@ $template->save('cv.odt');</code></pre>
             <img src="assets/lightning-qr.svg" width="112" height="112" alt="QR code for Bitcoin Lightning support" style="padding: 6px; border-radius: 10px; background: #fff;">
         `;
         lightningPlaceholder.replaceWith(lightningLink);
-    }
-
-    const supportCopy = document.querySelector('.support-copy p');
-    if (supportCopy) {
-        supportCopy.textContent = 'ODT Template Engine is free and open source. If the library saves you time or helps with your project, you can support its continued development via PayPal or Bitcoin Lightning. Thank you!';
     }
 
     const footerLinks = document.querySelector('.footer-links');
