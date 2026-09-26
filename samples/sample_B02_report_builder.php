@@ -12,7 +12,7 @@ declare(strict_types=1);
  * example. Compare S03 when LibreOffice should own stable report structure.
  */
 
-require_once dirname(__DIR__) . '/vendor/autoload.php';
+require_once __DIR__ . '/bootstrap.php';
 
 use OdtTemplateEngine\Elements\DrawTextBox;
 use OdtTemplateEngine\Elements\ImageElement;

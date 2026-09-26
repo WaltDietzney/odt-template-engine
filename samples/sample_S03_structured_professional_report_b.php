@@ -16,7 +16,7 @@ declare(strict_types=1);
  * through replaceContent().
  */
 
-require_once dirname(__DIR__) . '/vendor/autoload.php';
+require_once __DIR__ . '/bootstrap.php';
 
 use OdtTemplateEngine\Elements\ListElement;
 use OdtTemplateEngine\Elements\Paragraph;

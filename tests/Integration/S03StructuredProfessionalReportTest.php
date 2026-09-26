@@ -115,6 +115,10 @@ final class S03StructuredProfessionalReportTest extends TestCase
             $temporaryRoot . '/samples/sample_S03_structured_professional_report.php'
         ));
         self::assertTrue(copy(
+            $repositoryRoot . '/samples/bootstrap.php',
+            $temporaryRoot . '/samples/bootstrap.php'
+        ));
+        self::assertTrue(copy(
             $repositoryRoot . '/samples/assets/s03-participant-outcomes-2027.png',
             $temporaryRoot . '/samples/assets/s03-participant-outcomes-2027.png'
         ));

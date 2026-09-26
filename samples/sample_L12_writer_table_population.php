@@ -14,7 +14,7 @@ declare(strict_types=1);
  * populated or cloned as needed.
  */
 
-require_once dirname(__DIR__) . '/vendor/autoload.php';
+require_once __DIR__ . '/bootstrap.php';
 
 use OdtTemplateEngine\OdtTemplate;
 

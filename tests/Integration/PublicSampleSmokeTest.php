@@ -393,6 +393,28 @@ final class PublicSampleSmokeTest extends TestCase
         self::assertSame($beforeOutput, $this->directorySnapshot($repositoryRoot . '/samples/output'));
     }
 
+    public function testPackagedSampleRunsFromComposerConsumerLayout(): void
+    {
+        $repositoryRoot = dirname(__DIR__, 2);
+        $packageRoot = $this->temporaryDirectory
+            . '/vendor/waltdietzney/odt-template-engine';
+
+        $this->copyDirectory($repositoryRoot . '/samples', $packageRoot . '/samples', [
+            'output',
+        ]);
+        mkdir($packageRoot . '/samples/output', 0755, true);
+
+        [$exitCode, $stdout, $stderr] = $this->runSample(
+            $packageRoot . '/samples/sample_L01_variables_filters.php'
+        );
+
+        self::assertSame('', trim($stderr), 'Packaged L01 emitted stderr: ' . $stderr);
+        self::assertSame(0, $exitCode, 'Packaged L01 failed. Output: ' . $stdout);
+        self::assertFileExists(
+            $packageRoot . '/samples/output/output_L01_variables_filters.odt'
+        );
+    }
+
     /**
      * @return array{0: int, 1: string, 2: string}
      */
