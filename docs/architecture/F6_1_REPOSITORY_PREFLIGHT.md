@@ -1,6 +1,6 @@
 # F6.1 — Repository-wide Consistency / Preflight
 
-**Status:** READY FOR EXECUTION — final repository-wide validation gate
+**Status:** PASS / COMPLETE — repository-wide validation gate satisfied
 
 ## Objective
 
@@ -10,9 +10,9 @@ F6.1 is a validation gate, not a feature or cleanup milestone. A failure is hand
 
 ## Baseline
 
-Run this preflight from the current `develop` baseline after F5.3 has merged.
+F6.1 was executed on 2026-09-26 from branch `finalization/01-f6-1-repository-preflight`, based on the current `develop` state after F5.3.
 
-The preceding finalization blocks have already established:
+The preceding finalization blocks had already established:
 
 - canonical public L/C/B/S sample surface;
 - classified/documented public 1.0 API;
@@ -22,11 +22,11 @@ The preceding finalization blocks have already established:
 - Composer-installed canonical sample execution across all three 1.0 product models;
 - supported environment reconciliation for PHP `^8.2`, DOM, ZIP, Composer/Packagist, and the LibreOffice boundary.
 
-F6.1 does not reopen those decisions without new contradictory evidence.
+F6.1 found no contradictory evidence requiring those decisions to be reopened.
 
 ## Automated repository preflight
 
-Run from a clean checkout of the F6.1 candidate:
+The following commands were executed locally:
 
 ```bash
 composer install --no-interaction --prefer-dist --no-progress
@@ -36,11 +36,27 @@ composer test
 git diff --check
 ```
 
-The full `composer test` run includes the repository PHPUnit suite and therefore the current public-sample smoke/integration coverage. If a failure makes that assumption false, record and run the missing focused suite explicitly rather than silently weakening the gate.
+Results:
+
+- Composer installed the locked dependency set without changes and generated autoload files successfully.
+- `composer validate --strict --no-check-lock` reported `composer.json` valid.
+- PHP lint completed across `src/` and `tests/` with no syntax errors.
+- `composer test` completed on PHP 8.3.6 with **995 tests / 7,656 assertions**.
+- The full suite includes the current `PublicSampleSmokeTest` integration coverage.
+- `git diff --check` completed without output.
+
+The PHPUnit run reported one PHP warning:
+
+```text
+tests/Integration/S03StructuredProfessionalReportTest.php:154
+mkdir(): File exists
+```
+
+This is a non-blocking test-fixture hygiene warning: the test attempts to create an already existing directory. It did not indicate an engine/API semantic failure and was not changed opportunistically during F6.1. PHPUnit also reported eight deprecations in the aggregate summary; no accepted-1.0 blocker was evidenced by them.
 
 ## Documentation preflight
 
-Using the documented isolated documentation environment, run:
+Using the isolated documentation environment:
 
 ```bash
 python3 -m venv .venv-docs
@@ -49,13 +65,19 @@ pip install zensical
 zensical build --strict
 ```
 
-An already established compatible docs virtual environment may be reused; the requirement is a strict successful documentation build, not recreation of the environment for its own sake.
+Result:
+
+```text
+Build started
+No issues found
+Build finished in 11.41s
+```
+
+The strict documentation build therefore passed locally.
 
 ## Public-surface consistency scans
 
-Perform repository scans for release-facing stale terminology or removed historical public paths that would contradict the accepted 1.0 presentation.
-
-At minimum review hits for:
+The required repository scans were executed and reviewed:
 
 ```bash
 grep -RInE 'sample_[0-9]+|samples/sample_[0-9]+' README.md docs demo samples --exclude-dir=output || true
@@ -63,60 +85,59 @@ grep -RInE 'master|develop' README.md docs CONTRIBUTING.md SECURITY.md || true
 grep -RInE 'PHP 8\.[0-9]|PHP 8\.2\+|\^8\.2|ext-dom|ext-zip' README.md docs composer.json .github || true
 ```
 
-These scans are evidence-gathering, not automatic defect declarations. Historical architecture records, compatibility documentation, and the explicitly pre-1.0 `SECURITY.md` wording may legitimately contain terms that should not be mechanically replaced.
+Disposition:
+
+- numbered legacy sample references are retained where they are historical architecture, closeout, regression, or `tests/Fixtures/LegacySamples/` evidence; no stale current public sample path requiring a finalization fix was identified;
+- branch references are consistent with the documented repository model: `master` is the conservative stable/public line and `develop` is the integration line;
+- `SECURITY.md` still intentionally describes the pre-1.0 policy that security fixes apply to `master`; F5.1/F5.3 already identified this as release-time policy wording to review when stable 1.0 is actually published, not as an F6.1 blocker;
+- runtime/environment references remain consistent: Composer requires PHP `^8.2`, DOM and ZIP; public installation documentation states PHP 8.2+ with DOM/ZIP; CI exercises PHP 8.2, 8.3 and 8.4.
+
+**Result:** REVIEWED / no unresolved accepted-1.0 blocker.
 
 ## CI evidence
 
-The F6.1 pull request must pass the normal GitHub CI matrix:
+For PR #133 at preflight-record head `f270732b1c71b61cbc33d14c7f5d87af14658847`, GitHub Actions completed successfully:
 
-- PHP 8.2;
-- PHP 8.3;
-- PHP 8.4.
+- CI — PHP 8.2: PASS;
+- CI — PHP 8.3: PASS;
+- CI — PHP 8.4: PASS;
+- Documentation — Zensical build: PASS.
 
-The repository CI performs strict Composer validation, dependency installation, PHP lint, and `composer test` for each matrix version.
-
-The documentation workflow/check must also be green.
+The final evidence-record commit must retain the same green CI status before merge; a documentation-only record update does not weaken the required gate.
 
 ## Rendering / LibreOffice boundary
 
-F6.1 must not pretend automated tests replace visual LibreOffice regression.
+F6.1 introduced no rendering-sensitive engine change. The immediately preceding finalization slices likewise did not introduce rendering semantics.
 
-The finalization slices immediately preceding F6.1 did not introduce rendering semantics; F5.2 nevertheless supplied a real external LibreOffice proof for the documented Quick Start and successful ODT generation for representative installed samples.
-
-For F6.1:
-
-- if no rendering-sensitive code has changed since the last relevant manual regression, record that evidence rather than inventing a redundant rendering change;
-- if the preflight or a bounded blocker fix changes rendering-sensitive code, repeat the established relevant LibreOffice regression before F6.1 can pass.
+F5.2 supplied recent external LibreOffice evidence for the documented Quick Start and successful ODT generation for representative Composer-installed samples across the 1.0 product models. Because F6.1 required no rendering-sensitive blocker fix, no redundant rendering regression was triggered.
 
 The broader integrated visual, headless, PDF, DOCX, save/reopen, and professional CV acceptance remains the separate RELEASE-1.0 INTEGRATION PRE-FLIGHT defined by the controlling plan.
 
-## Required result record
+## Result record
 
-Before F6.1 is marked COMPLETE, record the actual result of each gate:
-
-| Gate | Required result |
+| Gate | Actual result |
 | --- | --- |
 | Composer install | PASS |
 | `composer validate --strict --no-check-lock` | PASS |
 | PHP lint for `src/` and `tests/` | PASS |
-| full `composer test` | PASS |
-| PublicSampleSmokeTest / included equivalent | PASS |
+| full `composer test` | PASS — 995 tests / 7,656 assertions; one non-blocking fixture warning |
+| PublicSampleSmokeTest / included equivalent | PASS — included in full PHPUnit suite |
 | `git diff --check` | PASS |
-| `zensical build --strict` | PASS |
+| `zensical build --strict` | PASS — no issues found |
 | release-facing consistency scans | REVIEWED / no unresolved blocker |
 | GitHub CI PHP 8.2 | PASS |
 | GitHub CI PHP 8.3 | PASS |
 | GitHub CI PHP 8.4 | PASS |
 | GitHub documentation check | PASS |
-| LibreOffice regression requirement | SATISFIED by existing evidence or repeated if rendering-sensitive changes occur |
-
-Do not replace an unexecuted gate with an assumption.
+| LibreOffice regression requirement | SATISFIED by existing F5.2 evidence; no rendering-sensitive F6.1 change |
 
 ## Acceptance
 
-F6.1 is **PASS / COMPLETE** only when all required repository and CI gates above have actual evidence and no unresolved accepted-1.0 blocker remains.
+F6.1 is **PASS / COMPLETE**.
 
-After F6.1 passes, proceed to:
+All required local repository, documentation, consistency, CI, and rendering-boundary gates have actual evidence. No unresolved accepted-1.0 blocker was found. The one PHPUnit warning is characterized as non-blocking test-fixture hygiene and does not justify opportunistic finalization cleanup.
+
+After this record update receives green CI, FINALIZATION-01 may proceed to:
 
 - F6.2 — Finalization closeout record;
 - F6.3 — handoff and release-candidate freeze for RELEASE-1.0 INTEGRATION PRE-FLIGHT.
