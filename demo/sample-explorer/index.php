@@ -164,13 +164,13 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
                 <span class="step-number">2</span>
                 <h3>Structured ODT Construction</h3>
                 <p>When PHP owns a dynamic subtree, build native RichText, paragraphs, lists, tables, images, frames, and text boxes.</p>
-                <div class="mini-code">$template->assign([<br>&nbsp;&nbsp;'customer_name' => 'Jane Smith',<br>]);<br>$template->render();</div>
+                <div class="mini-code">$richText = new RichText();<br>$richText->addParagraph('Dynamic content');<br><br>$template->setElement('content', $richText);</div>
             </article>
             <article class="step-card">
                 <span class="step-number">3</span>
                 <h3>Writer-native Document Model</h3>
                 <p>Keep named Sections, Bookmarks, tables, frames, and User Fields owned by Writer and address them through bounded semantic APIs.</p>
-                <div class="mini-code">$template->save(<br>&nbsp;&nbsp;'output/result.odt'<br>);</div>
+                <div class="mini-code">$template->bookmark('FullName')<br>&nbsp;&nbsp;->replaceText('Jane Smith');</div>
             </article>
         </div>
     </section>
