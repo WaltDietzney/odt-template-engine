@@ -31,11 +31,13 @@
                     <span>Images &amp; lists</span>
                     <span>Mixed ownership</span>
                 </div>
-                <pre class="cv-showcase-code"><code>$template = new PageLayoutOdtTemplate('cv-template.odt');
-$template->setPageMargins('0cm', '0.8cm', '0cm', '0cm');
-$template->setElement('cv_sidebar', $sidebar);
-$template->setElement('cv_content', $content);
-$template->save('cv.odt');</code></pre>
+                <pre class="cv-showcase-code"><code>$template = new OdtTemplate('template_S01b_cv_structured.odt');
+$template->bookmark('Extract')->replaceText('PROFILE');
+$template->section('Experience')->section('JobSection')
+    ->instantiateMany($jobs);
+$template->setElement('CVSidebarPage1', $sidebarPage1);
+$template->render();
+$template->save('output_S01b_cv_structured.odt');</code></pre>
                 <div class="cv-showcase-actions">
                     <a class="button button-primary" href="#s01b-showcase">Try the CV showcase</a>
                     <a class="text-link" href="https://github.com/WaltDietzney/odt-template-engine/blob/develop/samples/sample_S01b_cv_structured.php" target="_blank" rel="noreferrer">View full PHP sample →</a>
