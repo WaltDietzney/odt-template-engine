@@ -129,6 +129,14 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
     </section>
 </header>
 
+<section class="support-callout" aria-label="Support the project">
+    <div>
+        <strong>Free, open source, independently developed.</strong>
+        <span>If ODT Template Engine is useful to you, you can help continued development.</span>
+    </div>
+    <a href="#support">Ways to support the project →</a>
+</section>
+
 <section class="install-strip" aria-label="Composer installation">
     <div>
         <strong>Install with Composer</strong>
