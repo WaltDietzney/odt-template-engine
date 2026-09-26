@@ -29,6 +29,13 @@ asort($categories);
 $canonicalUrl = 'https://odt.walter-dietz.de/';
 $githubUrl = 'https://github.com/WaltDietzney/odt-template-engine';
 $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine';
+
+$scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '/');
+$explorerBasePath = rtrim(dirname($scriptName), '/');
+if ($explorerBasePath === '.' || $explorerBasePath === '/') {
+    $explorerBasePath = '';
+}
+$explorerAsset = static fn (string $path): string => $explorerBasePath . '/' . ltrim($path, '/');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -59,7 +66,7 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
         'url' => $canonicalUrl,
     ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) ?>
     </script>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="<?= htmlspecialchars($explorerAsset('styles.css'), ENT_QUOTES, 'UTF-8') ?>">
     <style>
         .install-strip { width:min(1180px,calc(100% - 40px)); margin:-32px auto 52px; position:relative; z-index:2; display:grid; grid-template-columns:1fr auto; gap:24px; align-items:center; padding:22px 26px; border:1px solid var(--line); border-radius:18px; background:#fff; box-shadow:var(--shadow); }
         .install-strip p { margin:3px 0 0; color:var(--muted); }
@@ -85,7 +92,7 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
 <body>
 <header class="site-header">
     <nav class="nav" aria-label="Main navigation">
-        <a class="brand" href="./" aria-label="ODT Template Engine home">
+        <a class="brand" href="<?= htmlspecialchars($explorerAsset(''), ENT_QUOTES, 'UTF-8') ?>" aria-label="ODT Template Engine home">
             <span class="brand-mark">ODT</span>
             <span>ODT Template Engine</span>
         </a>
@@ -380,14 +387,15 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
     <div class="footer-inner">
         <span>ODT Template Engine · PHP library for native OpenDocument generation</span>
         <div class="footer-links">
-            <a href="impressum.php">Imprint</a>
-            <a href="datenschutz.php">Privacy</a>
+            <a href="<?= htmlspecialchars($explorerAsset('impressum.php'), ENT_QUOTES, 'UTF-8') ?>">Imprint</a>
+            <a href="<?= htmlspecialchars($explorerAsset('datenschutz.php'), ENT_QUOTES, 'UTF-8') ?>">Privacy</a>
             <a href="<?= $githubUrl ?>" target="_blank" rel="noreferrer">GitHub repository →</a>
         </div>
     </div>
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="app.js"></script>
+<script>window.ODT_EXPLORER_BASE = <?= json_encode($explorerBasePath, JSON_UNESCAPED_SLASHES) ?>;</script>
+<script src="<?= htmlspecialchars($explorerAsset('app.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
 </body>
 </html>
