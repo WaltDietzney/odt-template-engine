@@ -1,7 +1,10 @@
 (() => {
+    const explorerBase = (window.ODT_EXPLORER_BASE || '').replace(/\/$/, '');
+    const explorerUrl = (path) => explorerBase + '/' + String(path).replace(/^\//, '');
+
     const showcaseStyles = document.createElement('link');
     showcaseStyles.rel = 'stylesheet';
-    showcaseStyles.href = 'showcase.css';
+    showcaseStyles.href = explorerUrl('showcase.css');
     document.head.appendChild(showcaseStyles);
 
     const cvSampleId = 'S01b';
@@ -144,7 +147,7 @@ $template->save('output_S01b_cv_structured.odt');</code></pre>
             button.textContent = 'Generating ODT…';
 
             try {
-                const response = await fetch('generate.php?sample=' + encodeURIComponent(sample));
+                const response = await fetch(explorerUrl('generate.php') + '?sample=' + encodeURIComponent(sample));
                 const data = await response.json();
 
                 if (!response.ok || data.status !== 'success') {
@@ -152,7 +155,7 @@ $template->save('output_S01b_cv_structured.odt');</code></pre>
                 }
 
                 showToast('ODT generated successfully. Download starting…');
-                window.location.href = 'download.php?file=' + encodeURIComponent(data.file);
+                window.location.href = explorerUrl('download.php') + '?file=' + encodeURIComponent(data.file);
             } catch (error) {
                 showToast(error instanceof Error ? error.message : 'Sample generation failed.');
             } finally {
@@ -195,7 +198,7 @@ $template->save('output_S01b_cv_structured.odt');</code></pre>
         paypalLink.innerHTML = `
             <strong>PayPal</strong>
             <span>Support via PayPal →</span>
-            <img src="assets/paypal-qr.svg" width="112" height="112" alt="QR code for PayPal support" style="padding: 6px; border-radius: 10px; background: #fff;">
+            <img src="${explorerUrl('assets/paypal-qr.svg')}" width="112" height="112" alt="QR code for PayPal support" style="padding: 6px; border-radius: 10px; background: #fff;">
         `;
         paypalPlaceholder.replaceWith(paypalLink);
     }
@@ -210,7 +213,7 @@ $template->save('output_S01b_cv_structured.odt');</code></pre>
         lightningLink.innerHTML = `
             <strong>⚡ Bitcoin Lightning</strong>
             <span>Support via Lightning →</span>
-            <img src="assets/lightning-qr.svg" width="112" height="112" alt="QR code for Bitcoin Lightning support" style="padding: 6px; border-radius: 10px; background: #fff;">
+            <img src="${explorerUrl('assets/lightning-qr.svg')}" width="112" height="112" alt="QR code for Bitcoin Lightning support" style="padding: 6px; border-radius: 10px; background: #fff;">
         `;
         lightningPlaceholder.replaceWith(lightningLink);
     }
@@ -218,12 +221,12 @@ $template->save('output_S01b_cv_structured.odt');</code></pre>
     const footerLinks = document.querySelector('.footer-links');
     if (footerLinks && !footerLinks.querySelector('[data-legal-link]')) {
         const legalLink = document.createElement('a');
-        legalLink.href = 'impressum.php';
+        legalLink.href = explorerUrl('impressum.php');
         legalLink.textContent = 'Impressum';
         legalLink.dataset.legalLink = 'true';
 
         const privacyLink = document.createElement('a');
-        privacyLink.href = 'datenschutz.php';
+        privacyLink.href = explorerUrl('datenschutz.php');
         privacyLink.textContent = 'Datenschutz';
         privacyLink.dataset.legalLink = 'true';
 
