@@ -25,47 +25,51 @@ and supplies bounded RichText sidebar regions.
 
 ## S01b — Professional mixed-ownership template
 
-S01b combines:
+S01b deliberately chooses ownership per document region:
 
-- a two-column LibreOffice template;
-- a dark sidebar and main content column;
-- `PageLayoutOdtTemplate` for programmatic page margins;
-- `RichText` and `Paragraph` for structured text;
-- native ODT bullet lists through `ListElement`;
-- an embedded image through `ImageElement`;
-- text and paragraph styles;
-- dynamic professional experience, education, qualifications, skills, and languages.
+- Writer owns the two-column page design, native Sections, named image-frame geometry, Writer Frames, and the `S01bSidebar*` paragraph styles;
+- PHP supplies scalar application data, replaces the authored image resource, fills bounded RichText sidebar regions, replaces bounded bookmark text, and instantiates Writer-authored Section collections;
+- Writer remains responsible for physical pagination.
 
-The ODT template defines the stable column structure and contains two large placeholders:
-
-```text
-{{cv_sidebar}}
-{{cv_content}}
-```
-
-PHP builds the content that belongs in those areas.
-
-```text
-LibreOffice template
-├── sidebar column
-│   └── {{cv_sidebar}}
-└── main column
-    └── {{cv_content}}
-
-PHP
-├── builds sidebar content
-├── builds main CV content
-└── adjusts page margins
-```
-
-After both content blocks have been built, they are assigned to the template placeholders:
+The current sample uses the normal `OdtTemplate` facade:
 
 ```php
-$template->setElement('cv_sidebar', $sidebar);
-$template->setElement('cv_content', $content);
+$template = new OdtTemplate(
+    __DIR__ . '/templates/template_S01b_cv_structured.odt'
+);
 ```
 
-Use this model when PHP genuinely owns the internal structure of a dynamic region.
+The profile/extract area is Writer-owned and addressed through bookmarks:
+
+```php
+$template->bookmark('Extract')->replaceText('PROFILE');
+$template->bookmark('ExtractJobHeadline')
+    ->replaceText('Senior Project Manager with 10+ years of delivery leadership');
+```
+
+Repeatable main-column entries remain native Sections authored in LibreOffice:
+
+```php
+$experienceInstances = $template
+    ->section('Experience')
+    ->section('JobSection')
+    ->instantiateMany($experienceRows);
+```
+
+The sidebar is an intentional PHP-owned region inserted into template-authored
+Writer Frames:
+
+```php
+$template->setElement('CVSidebarPage1', $sidebarPage1);
+$template->setElement('CVSidebarPage2', $sidebarPage2);
+```
+
+The authored `CVImage` frame keeps its geometry and placement while PHP replaces
+its image resource through the current compatibility facade.
+
+This is the central S01b lesson: do not impose one rendering mechanism on the
+whole document. Keep stable visual structure in Writer and use PHP-owned
+elements only where PHP genuinely owns the dynamic subtree.
 
 ## C04 — Declarative Writer-owned collections
 
