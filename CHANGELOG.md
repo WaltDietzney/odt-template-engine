@@ -6,6 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-09-26
+
+### Added
+
+- Three complementary authoring models: simple template processing, structured native ODT construction, and bounded Writer-native document addressing.
+- Native named Section and bookmark inspection/mutation, nested Section collections, Writer table population, named frame inspection, and string Writer User Field binding.
+- Source-oriented template contract inspection plus optional application-data mapping, concrete preflight, and atomic automation.
+- Document-local semantic style handling, named paragraph-style authoring, paragraph-flow controls, advanced table geometry, and shared frame/image layout semantics.
+- Canonical L/C/B/S sample and learning path, including professional CV and report showcases.
+
+### Changed
+
+- Public API guidance now distinguishes Recommended, Advanced, Compatibility, Deprecated, and infrastructure-only surfaces.
+- Documentation and samples now use structure ownership — Writer or PHP — as the primary architectural decision.
+- Composer-installed canonical samples now bootstrap correctly both from a repository checkout and from a consumer project's `vendor/` directory.
+- Release documentation defines PHP 8.2+ with DOM and ZIP as runtime requirements; LibreOffice is an authoring and visual-validation tool rather than a PHP runtime dependency.
+
+### Compatibility
+
+- Existing compatibility and deprecated entry points required by the 1.0 contract are retained and documented rather than removed during finalization.
+- PHP 8.2, 8.3, and 8.4 are exercised by CI.
+- Generated documents remain native editable ODT; DOCX export/interoperability is not part of the 1.0 contract.
+
+### Validation
+
+- Repository finalization completed with 995 PHPUnit tests and 7,656 assertions passing, including public sample smoke coverage.
+- A clean external Composer consumer exercised the Simple, Structured, and Writer-native models.
+- The professional multi-page S01b CV passed generation, LibreOffice open/save/reopen, visual regression, and PDF export checks during the 1.0 integration pre-flight.
+
 ## [0.9.0] - 2026-08-22
 
 ### Added
@@ -38,5 +67,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Requires the PHP DOM and ZIP extensions.
 - Generated documents target the OpenDocument Text format and are primarily exercised with LibreOffice-oriented templates and workflows.
 
-[Unreleased]: https://github.com/WaltDietzney/odt-template-engine/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/WaltDietzney/odt-template-engine/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/WaltDietzney/odt-template-engine/compare/v0.9.0...v1.0.0
 [0.9.0]: https://github.com/WaltDietzney/odt-template-engine/releases/tag/v0.9.0
