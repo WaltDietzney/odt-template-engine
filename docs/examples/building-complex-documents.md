@@ -2,7 +2,7 @@
 
 Complex ODT generation becomes manageable when the application does **not** try to generate every aspect of the document from PHP.
 
-The engine supports more than one useful ownership boundary between LibreOffice and application code. This chapter focuses on the **programmatically generated region** pattern demonstrated by S01b:
+The engine supports more than one useful ownership boundary between LibreOffice and application code. This chapter explains the **programmatically generated region** pattern that S01b uses for its bounded sidebar regions, while S01b keeps its main repeatable structures Writer-owned:
 
 ```text
 application data
@@ -24,19 +24,9 @@ The samples use CVs, but both patterns apply to reports, dossiers, offers, profi
 
 ## 1. Let the template own durable layout
 
-S01b starts from a LibreOffice-designed template containing the two-column CV structure. PHP does not rebuild the entire page from low-level XML.
+S01b starts from a LibreOffice-designed template containing the two-column CV structure, Writer Frames, native repeatable Sections, and named image geometry. PHP does not rebuild the entire page from low-level XML.
 
-Conceptually, the template contains large insertion regions such as:
-
-```text
-┌──────────────────────┬───────────────────────────────┐
-│                      │                               │
-│   {{cv_sidebar}}     │       {{cv_content}}          │
-│                      │                               │
-└──────────────────────┴───────────────────────────────┘
-```
-
-The table/column structure, page design, and stable visual composition remain editable in LibreOffice.
+Conceptually, Writer owns the stable page and repeatable main-column structures while PHP owns only bounded generated regions such as the sidebar Frames.
 
 This is one form of the template-first principle at application scale.
 
@@ -152,30 +142,26 @@ $sidebar = new RichText();
 $content = new RichText();
 ```
 
-Finally, they are assigned to the large template placeholders:
+In S01b the bounded sidebar regions are assigned to template-authored Writer Frame insertion points:
 
 ```php
-$template->setElement('cv_sidebar', $sidebar);
-$template->setElement('cv_content', $content);
+$template->setElement('CVSidebarPage1', $sidebarPage1);
+$template->setElement('CVSidebarPage2', $sidebarPage2);
 ```
 
 This is a useful scale boundary when PHP owns the region. Avoid hundreds of tiny placeholders when one coherent generated region is easier to own in PHP.
 
 Conversely, do not replace a complete LibreOffice-authored structure merely because PHP can rebuild it. If a repeatable block should remain visually authored in the template, consider a named native section instead.
 
-## 7. Use page-layout code only where it adds value
+## 7. Keep stable page geometry in Writer
 
-The canonical S01b sample uses `PageLayoutOdtTemplate` to adjust margins:
+The current canonical S01b template owns its page geometry and stable two-column
+composition in LibreOffice. The sample uses the normal `OdtTemplate` facade;
+it does not require `PageLayoutOdtTemplate` or programmatic margin changes.
 
-```php
-$template = new PageLayoutOdtTemplate(
-    __DIR__ . '/templates/template_S01b_cv_structured.odt'
-);
-
-$template->setPageMargins('0cm', '0.8cm', '0cm', '0cm');
-```
-
-It does **not** recreate the full two-column design programmatically. This is the intended balance between template-owned layout and application-controlled variation.
+Use the advanced page-layout API only when an application genuinely needs to
+change bounded page geometry. Do not move stable template design into PHP merely
+because the API can express it.
 
 ## 8. Separate data, rendering, and template responsibilities
 
@@ -223,7 +209,7 @@ These choices make the output easier to edit and reduce surprises in LibreOffice
 
 A useful question is not only “Can PHP generate this?” but **“Who should own this structure?”**
 
-Use a large generated region, as in S01b, when application code genuinely controls its internal structure and composition.
+Use a bounded generated region, as in S01b's sidebar, when application code genuinely controls its internal structure and composition.
 
 Use native named sections, as in C04, when LibreOffice should remain the visual authoring environment for a repeatable semantic block and PHP should mainly bind and repeat it.
 
