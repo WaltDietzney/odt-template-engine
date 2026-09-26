@@ -123,19 +123,11 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
                 <div class="stat"><strong>MIT</strong><span>open source</span></div>
             </div>
             <p style="margin:18px 0 0;color:rgba(255,255,255,.68);font-size:.88rem;">
-                Inspect the PHP source and template variables, click Generate, then open the actual downloaded .odt file yourself.
+                Inspect the PHP source and template contract, click Generate, then open the actual downloaded .odt file yourself.
             </p>
         </aside>
     </section>
 </header>
-
-<section class="support-callout" aria-label="Support the project">
-    <div>
-        <strong>Free, open source, independently developed.</strong>
-        <span>If ODT Template Engine is useful to you, you can help continued development.</span>
-    </div>
-    <a href="#support">Ways to support the project →</a>
-</section>
 
 <section class="install-strip" aria-label="Composer installation">
     <div>
@@ -214,7 +206,7 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
                 <span class="section-kicker">Live Sample Explorer</span>
                 <h2>Don't take the feature list on trust. Generate an ODT.</h2>
                 <p>
-                    Inspect the template variables and the real PHP source behind each example, then generate and download the actual ODT file.
+                    Inspect the semantic template contract and the real PHP source behind each example, then generate and download the actual ODT file.
                     The examples use the same engine code and templates that ship with the repository.
                 </p>
             </div>
@@ -224,7 +216,7 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
         <section class="toolbar" aria-label="Sample filters">
             <label class="search-wrap" for="searchInput">
                 <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
-                <input class="search-input" id="searchInput" type="search" placeholder="Search variables, tables, images, HTML…" autocomplete="off">
+                <input class="search-input" id="searchInput" type="search" placeholder="Search variables, sections, bookmarks, tables, images…" autocomplete="off">
             </label>
             <div class="filters" role="group" aria-label="Filter samples by category">
                 <button class="filter-button is-active" type="button" data-filter="all">All</button>
@@ -243,7 +235,7 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
                     : $projectRoot . '/' . $sampleEntry['template_path'];
                 $category = $sampleEntry['role'];
                 $categoryLabel = $roleLabels[$category];
-                $variables = null;
+                $templateContract = null;
                 $templateAvailable = is_string($templateFile) && is_file($templateFile);
                 $canGenerate = $sampleEntry['distribution'] === 'composer'
                     && $sampleEntry['execution_mode'] === 'odt';
@@ -251,10 +243,9 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
                 if ($templateAvailable) {
                     try {
                         $template = new OdtTemplate($templateFile);
-                        $template->load();
-                        $variables = $template->extractTemplateVariables();
+                        $templateContract = $template->inspectTemplate();
                     } catch (Throwable) {
-                        $variables = null;
+                        $templateContract = null;
                     }
                 }
 
@@ -276,17 +267,39 @@ $packagistUrl = 'https://packagist.org/packages/waltdietzney/odt-template-engine
                         <div class="meta-row">
                             <span class="meta-pill">Canonical sample</span>
                             <span class="meta-pill <?= $templateAvailable ? 'ok' : '' ?>"><?= $templateAvailable ? '✓ Template available' : ($sampleEntry['template_path'] === null ? 'No template required' : 'Template unavailable') ?></span>
-                            <?php if (is_array($variables)): ?><span class="meta-pill"><?= count($variables) ?> template entries</span><?php endif; ?>
+                            <?php if ($templateContract !== null): ?><span class="meta-pill"><?= count($templateContract->dependencies()) ?> dependencies · <?= count($templateContract->nativeObjects()) ?> native objects</span><?php endif; ?>
                         </div>
                     </div>
                     <div class="card-details">
                         <details>
-                            <summary>Template variables</summary>
+                            <summary>Template contract</summary>
                             <div class="detail-content">
-                                <?php if (is_array($variables)): ?>
-                                    <pre><?= htmlspecialchars(print_r($variables, true), ENT_QUOTES, 'UTF-8') ?></pre>
+                                <?php if ($templateContract !== null): ?>
+                                    <?php
+                                    $contractSummary = [
+                                        'dependencies' => array_map(
+                                            static fn ($dependency): string => $dependency->path(),
+                                            $templateContract->dependencies()
+                                        ),
+                                        'native_objects' => array_map(
+                                            static fn ($object): array => [
+                                                'kind' => $object->kind(),
+                                                'name' => $object->name(),
+                                            ],
+                                            $templateContract->nativeObjects()
+                                        ),
+                                        'controls' => array_map(
+                                            static fn ($control): array => [
+                                                'kind' => $control->kind(),
+                                                'representation' => $control->representation(),
+                                            ],
+                                            $templateContract->controls()
+                                        ),
+                                    ];
+                                    ?>
+                                    <pre><?= htmlspecialchars(print_r($contractSummary, true), ENT_QUOTES, 'UTF-8') ?></pre>
                                 <?php elseif ($templateAvailable): ?>
-                                    <p>Template variables could not be extracted.</p>
+                                    <p>Template contract could not be inspected.</p>
                                 <?php elseif ($sampleEntry['template_path'] === null): ?>
                                     <p>This sample has no ODT template; it reports semantic inspection output only.</p>
                                 <?php else: ?>
