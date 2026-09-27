@@ -11,6 +11,65 @@ The roadmap is intentionally conservative about public API changes. Existing app
 
 The current sequencing incorporates the completed semantic/style architecture, the post-RESEARCH-01 version-1.0 reassessment recorded in [`architecture/RESEARCH-01_1_0_REASSESSMENT_DECISION.md`](architecture/RESEARCH-01_1_0_REASSESSMENT_DECISION.md), the completed PAGE-FLOW-01, TABLE-LAYOUT-01, and FRAME-LAYOUT-01 milestones, and the subsequent decision to make template-driven authoring a mandatory part of the 1.0 product contract.
 
+## Post-1.0 development sequence
+
+Version 1.0 is released. Post-1.0 work is organized into capability rounds rather than treating every known backlog item as part of the next feature release. Version labels below are proposed working labels and may change.
+
+The controlling plan for this sequence is [`architecture/ODT_CONSTRUCTION_01_PLAN.md`](architecture/ODT_CONSTRUCTION_01_PLAN.md).
+
+### Round A — 1.0.x Fix & Complete
+
+The first post-release round is maintenance-only. It completes or corrects the 1.0 delivery without introducing the new construction architecture.
+
+Known scope includes:
+
+- source-controlled Sample Explorer/documentation navigation fixes discovered after release;
+- a bounded compatibility-preserving fix for the concrete `replaceImageByName()` defect once characterized;
+- correction of stale release/planning documentation;
+- additional evidenced 1.0 regressions, packaging, installation, documentation, or sample defects discovered through real use.
+
+The broader image replacement/layout API remains later work. Section construction, page/master authoring, data-source integration, and new automation convenience APIs do not belong in this maintenance round.
+
+### Round B — proposed 1.1 / ODT-CONSTRUCTION-01
+
+The next feature round extends the engine from template processing plus isolated PHP-owned structured content toward composition of complete native ODT document structures from a minimal/prepared ODT base.
+
+The planned capability sequence is:
+
+```text
+construction baseline / ODF research
+    ↓
+document/body construction surface
+    ↓
+native Section construction
+    ↓
+column layout + explicit page/column breaks
+    ↓
+bounded page/master construction + header/footer
+    ↓
+template-structure construction
+    ↓
+construction correctness hardening
+    ↓
+LibreOffice round-trip integration showcase
+```
+
+Existing `Paragraph`, `RichText`, `RichTable`, `ListElement`, `ImageElement`, `CircularImageElement`, `DrawTextBox`, style, resource, inspection, and package infrastructure remain the foundation and should not be replaced by a competing document model.
+
+Page-break and column-break support are explicit capability requirements. No method spelling such as `addPageBreak()`, `addColumnBreak()`, or `page()->break()` is approved by this roadmap. API shape follows native Writer/ODF semantics and the existing architecture.
+
+`TABLE-COLUMN-IDENTITY-01` is a likely correctness dependency for composing multiple generated tables. Other future topics enter this round only when concrete construction work proves them necessary.
+
+### Round C — later capability expansion
+
+Later work may add higher-level automation orchestration, application data-source/provider boundaries, richer native addressing and named-object operations, Writer-native list population, template-declared structural semantics, broader fields, format-preservation semantics, advanced image/custom-shape replacement, document import, dynamic content, and broader document features.
+
+The version number for this round is intentionally open. The construction milestone should be completed and reassessed before assigning later capabilities to a release.
+
+### Product / integration layer
+
+LibreOffice extensions, AI-assisted document editing, Nextcloud/contact/database integrations, template kits, and application-specific workflows are product/integration directions above the core engine. They may inform engine ergonomics but must not force external-system concerns into the ODF document model.
+
 ## Current baseline
 
 The project has moved beyond treating ODT primarily as text with placeholders. The current `develop` line combines the classic template language with an increasingly addressable structured document model and a document-local semantic dependency model.
