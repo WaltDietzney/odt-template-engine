@@ -359,6 +359,98 @@ Define:
 
 A universal engine-side evaluator for every Writer field/condition is not required for 1.0. A coherent lifecycle/export contract is.
 
+## ODT Construction and post-1.0 release rounds
+
+The strategic sequencing for the post-1.0 line is defined in [`ROADMAP.md`](ROADMAP.md) and the controlling [`architecture/ODT_CONSTRUCTION_01_PLAN.md`](architecture/ODT_CONSTRUCTION_01_PLAN.md).
+
+### 1.0.x Fix & Complete
+
+The maintenance round is intentionally open to additional evidenced 1.0 defects.
+
+Known candidates are:
+
+- integrate the Sample Explorer fragment/navigation correction into the repository;
+- apply a bounded compatibility-preserving `replaceImageByName()` fix after characterizing the exact defect;
+- update planning/release documentation that still describes completed 1.0 work as pending.
+
+This maintenance fix must not be confused with the broader future image-layout/replacement design. Intrinsic ratio, contain/cover/crop, Writer-owned frame preservation, and resource-only replacement remain separate architecture work.
+
+### ODT-CONSTRUCTION-01 — Native document construction
+
+**Priority:** next feature-development round; proposed 1.1.
+
+The engine already owns useful PHP-generated content primitives, but does not yet expose a coherent document-construction surface for composing complete native ODT structures without pre-authored insertion placeholders.
+
+The milestone must research and then provide bounded capabilities for:
+
+- direct document/body insertion of existing PHP-owned elements;
+- programmatic creation of native named Sections;
+- column layout, especially Section-associated multi-column content and its distinction from page-layout columns;
+- explicit page-break and column-break capabilities;
+- the minimum page/master-style authoring needed for generated headers and footers;
+- generated template-addressable structures such as named Sections and bookmarks;
+- optional bounded String User Field creation only if research shows it belongs naturally in the construction milestone;
+- round-trip stability through LibreOffice and subsequent inspection/template processing.
+
+No concrete public method names are approved. Examples such as `addSection()`, `addPageBreak()`, `addColumnBreak()`, `body()->add()`, or `page()->break()` express desired capabilities only.
+
+The milestone must preserve the existing ownership distinctions:
+
+```text
+Writer-owned structure != PHP-owned generated structure
+reference != definition != mutation
+page flow != page-style identity != page-layout geometry
+addressability != mutation capability
+```
+
+### COLUMN-LAYOUT-01 — Section/page column semantics
+
+**Priority:** research dependency of ODT-CONSTRUCTION-01.
+
+Characterize real Writer/ODF column structures before selecting an API. At minimum determine:
+
+- how Writer represents multi-column Sections;
+- how Section columns differ from page-layout columns;
+- column count, spacing, relative/absolute width semantics, and separators where relevant;
+- how explicit column breaks are represented and scoped;
+- save/reopen and nested-Section behavior;
+- style ownership, identity, and materialization requirements.
+
+Do not model columns as independent content elements unless native semantics justify that design.
+
+### FLOW-BREAK-CONSTRUCTION-01 — Explicit page and column breaks
+
+**Priority:** construction capability; API undecided.
+
+The engine already supports paragraph `break-before` / `break-after` flow properties. The construction milestone must determine the correct semantic surface for explicit page and column breaks in freely composed documents.
+
+The required capability is stable; the method spelling and owning abstraction are not. Research must determine whether the existing paragraph-flow model is sufficient, whether a document-flow operation is needed, or whether another semantic representation integrates better with current structured construction.
+
+LibreOffice/Writer remains responsible for physical pagination and column flow.
+
+### TEMPLATE-STRUCTURE-CONSTRUCTION-01 — Generate reusable template structures
+
+**Priority:** later stage of ODT-CONSTRUCTION-01.
+
+A generated document should be able to become an engine template rather than merely a final static document. Research and implementation should therefore consider creation of stable native identities that the existing inspection/template model can rediscover after save/reopen.
+
+Initial candidates are named Sections and bookmarks. Classic template expressions may already be present in generated paragraph/rich-text content. String User Field declaration/reference creation is a bounded candidate, not an automatic requirement.
+
+The acceptance direction is:
+
+```text
+construct
+    -> save
+    -> LibreOffice open/save
+    -> reload
+    -> inspect
+    -> template process
+```
+
+### TABLE-COLUMN-IDENTITY-01 as construction dependency
+
+The existing generated table-column identity issue becomes more important once multiple PHP-owned tables are freely composed in one document. Treat it as a likely ODT-CONSTRUCTION-01 correctness dependency rather than automatically broadening the public table API.
+
 ## Document defaults and state
 
 ### DOCUMENT-DEFAULTS-01 — Document-level defaults — DEFERRED UNLESS DEPENDENCY EMERGES
