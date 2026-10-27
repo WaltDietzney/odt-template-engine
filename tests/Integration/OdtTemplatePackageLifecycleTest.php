@@ -93,6 +93,42 @@ final class OdtTemplatePackageLifecycleTest extends TestCase
         }
     }
 
+    public function testCustomYamlMetadataSurvivesSaveAndReopen(): void
+    {
+        $template = new OdtTemplate($this->templatePath('template_04_metadata.odt'));
+        $output = $this->newOutputPath('custom-yaml');
+        $yaml = "schema: bewerbungstools.cv.v1\nname: Änne & Co\nnotes: |\n  A < B\n";
+        $template->setMeta(['custom' => ['bewerbungstools.profile' => $yaml]]);
+        $template->setMeta(['custom' => ['bewerbungstools.profile' => $yaml . "updated: true\n"]]);
+        self::assertSame($yaml . "updated: true\n", $template->getMeta()['custom']['bewerbungstools.profile']);
+        $template->save($output);
+        $template->cleanup();
+
+        $reopened = new OdtTemplate($output);
+        try {
+            self::assertSame($yaml . "updated: true\n", $reopened->getMeta()['custom']['bewerbungstools.profile']);
+            self::assertArrayHasKey('title', $reopened->getMeta());
+        } finally {
+            $reopened->cleanup();
+        }
+    }
+
+    public function testInvalidCustomMetadataDoesNotPartiallyUpdate(): void
+    {
+        $template = new OdtTemplate($this->templatePath('template_04_metadata.odt'));
+        try {
+            $before = $template->getMeta();
+            try {
+                $template->setMeta(['custom' => ['valid' => 'value', 'invalid' => ['nested']]]);
+                self::fail('Expected InvalidArgumentException');
+            } catch (\InvalidArgumentException) {
+                self::assertSame($before, $template->getMeta());
+            }
+        } finally {
+            $template->cleanup();
+        }
+    }
+
     public function testLegacyMetadataAliasesAndStringKeywordInputRemainCompatible(): void
     {
         $template = new OdtTemplate($this->templatePath('template_04_metadata.odt'));

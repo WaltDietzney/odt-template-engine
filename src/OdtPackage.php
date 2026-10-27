@@ -472,6 +472,15 @@ final class OdtPackage
             throw new RuntimeException(sprintf('Unable to serialize XML for %s.', $path));
         }
 
+        // Custom meta:user-defined values may contain YAML with significant
+        // newlines and indentation. Do not minify meta.xml text content.
+        if (basename($path) === 'meta.xml') {
+            if (file_put_contents($path, $xml) === false) {
+                throw new RuntimeException(sprintf('Unable to write XML file %s.', $path));
+            }
+            return;
+        }
+
         // Only remove serializer indentation containing a line break. A
         // single whitespace text node between ODF elements is document data.
         $xml = preg_replace('/>[\r\n\t ]*[\r\n]+[\r\n\t ]*</', '><', $xml) ?? $xml;
