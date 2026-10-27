@@ -44,3 +44,15 @@ payloads. Custom metadata is not tamper-proof and is not a purchase token.
 
 No production deployment or change to Bewerbungstools runtime. The S01b
 showcase and its original template remain unchanged.
+
+## Regressionstest nach Implementierung
+
+- Isolierte Composer-Testabhängigkeiten unter `/tmp`, PHPUnit 11.5.57 mit PHP 8.5.4.
+- `OdtTemplatePackageLifecycleTest.php`: **9 Tests, 52 Assertions, bestanden**.
+- Vollständige Suite mit temporär eingebundenem `vendor`-Verzeichnis:
+  **997 Tests, 7.662 Assertions, Exit 0**; PHPUnit meldet 1 Warnung,
+  4 Deprecations und 8 PHPUnit-Deprecations. Diese Hinweise wurden
+  nicht als behoben eingestuft.
+- Temporärer `vendor`-Link nach dem Test entfernt; Arbeitsverzeichnis sauber.
+- `master` und Tag `v1.0.0` bleiben auf `c3558ff`; die Erweiterung liegt
+  ausschließlich auf `feature/custom-odt-metadata`. Kein Push, Merge oder Release.
