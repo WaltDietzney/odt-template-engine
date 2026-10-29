@@ -4,6 +4,7 @@ The normal 1.0 style model is document-oriented:
 
 - use friendly element options for local generated content;
 - use `$template->styles()->defineParagraph()` for a reusable generated paragraph style;
+- use `$template->styles()->updateParagraph()` when an authored paragraph style needs a bounded flow-property mutation;
 - use `setDocumentDefaults()` for document-wide Writer defaults based on the `Standard` paragraph style.
 
 Low-level style serialization helpers are not normal application API.
@@ -41,6 +42,31 @@ public function defineParagraph(string $name, array $options): void
 ```
 
 The mixed option array is split into text and paragraph responsibilities before the native ODF style is materialized.
+
+## `DocumentStyles::updateParagraph()`
+
+**Recommended · Existing Writer Style Mutation**
+
+Mutates an existing paragraph style without replacing its native identity or
+unrelated authored properties.
+
+```php
+public function updateParagraph(string $name, array $options): void
+```
+
+The method is useful for bounded flow changes on authored styles, for example:
+
+```php
+$template->styles()->updateParagraph('QualificationHeading', [
+    'keep-with-next' => 'always',
+    'keep-together' => 'always',
+]);
+```
+
+The style may be stored in the common `styles.xml` styles or in
+`content.xml` automatic styles. Missing or ambiguous names fail explicitly.
+The method changes native style properties only; Writer remains responsible
+for physical pagination.
 
 The complete shared text/paragraph option vocabulary will be consolidated with the Structured Content style-option reference in F2.3. Do not infer additional style families from this method: the current public document-style facade defines paragraph styles only.
 

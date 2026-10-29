@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace OdtTemplateEngine\Tests\Integration;
 
+use OdtTemplateEngine\Elements\ListElement;
+use OdtTemplateEngine\Elements\Paragraph;
 use OdtTemplateEngine\Elements\RichText;
 use OdtTemplateEngine\OdtTemplate;
 use PHPUnit\Framework\TestCase;
@@ -91,6 +93,39 @@ final class StylePipelineP2BTest extends TestCase
         self::assertStringContainsString('fo:margin-left="2cm"', $styles);
         self::assertStringContainsString('<style:list-level-label-alignment', $styles);
         self::assertStringContainsString('fo:text-indent="-0.25cm"', $styles);
+    }
+
+    public function testNativeMultiItemListUsesHangingLabelAlignmentAndSurvivesRoundTrip(): void
+    {
+        $list = new ListElement('bullet');
+        $list->addItem((new Paragraph('List item'))->addText(
+            'A deliberately long list item that must wrap while retaining the native list label position.'
+        ));
+        $list->addItem((new Paragraph('List item'))->addText('Second list item'));
+
+        $richText = new RichText();
+        $richText->addElement($list);
+        $output = $this->saveRichText($richText, 'native-multiline-list');
+
+        $zip = new ZipArchive();
+        self::assertTrue($zip->open($output) === true);
+        try {
+            $content = $zip->getFromName('content.xml');
+            $styles = $zip->getFromName('styles.xml');
+            self::assertIsString($content);
+            self::assertIsString($styles);
+            self::assertSame(1, substr_count($content, '<text:list '));
+            self::assertSame(2, substr_count($content, '<text:list-item>'));
+            self::assertStringNotContainsString('• A deliberately', $content);
+            self::assertStringContainsString('text:style-name="Bullet_20_Symbol"', $content);
+            self::assertStringContainsString('text:space-before="0.5cm"', $styles);
+            self::assertStringContainsString('text:min-label-width="0.5cm"', $styles);
+        } finally {
+            $zip->close();
+        }
+
+        $reopened = new OdtTemplate($output);
+        $reopened->cleanup();
     }
 
     private function saveRichText(RichText $richText, string $suffix): string

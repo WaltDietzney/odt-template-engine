@@ -37,7 +37,7 @@ Compatibility input aliases:
 - `author` -> `creator`
 - `initial_author` -> `initial_creator`
 
-Unknown keys are silently ignored for compatibility.
+Unknown keys are silently ignored for compatibility. The special `custom` key accepts a map of ODF user-defined metadata field names to string values.
 
 ### Keywords
 
@@ -88,9 +88,23 @@ $title = $metadata['title'] ?? null;
 $keywords = $metadata['keywords'] ?? [];
 ```
 
+## Custom user-defined metadata
+
+`setMeta(['custom' => ['bewerbungstools.profile' => $yaml]])` writes a native
+`meta:user-defined` entry with `meta:value-type="string"` in `meta.xml`.
+`getMeta()['custom']['bewerbungstools.profile']` reads it back. Values are stored
+verbatim as strings, so callers may use YAML or other text formats. Names must
+be nonempty strings; values must be strings. Invalid input throws
+`InvalidArgumentException` without partially updating custom fields.
+
+Existing custom fields with other names are retained. Updating the same name
+replaces its value; duplicate entries of that name are consolidated. This is
+not a cryptographic integrity or purchase-proof mechanism. Writer may change
+custom metadata on editing; callers must handle stale data and conflicts.
+
 ## Limitations
 
-This API does not expose arbitrary custom `meta.xml` element authoring. It is limited to the supported mappings above.
+This API does not expose arbitrary `meta.xml` element authoring. Standard fields and string-valued user-defined metadata are supported.
 
 ## See also
 

@@ -77,6 +77,60 @@ final class DocumentStyles
     }
 
     /**
+     * Update an existing authored paragraph style in the current document.
+     *
+     * This is intentionally a mutation operation: existing Writer style
+     * identity, inheritance, and unrelated properties remain intact while
+     * supplied semantic paragraph/text properties are merged.
+     *
+     * @param array<string, mixed> $options
+     */
+    public function updateParagraph(string $name, array $options): void
+    {
+        $name = trim($name);
+        if ($name === '') {
+            throw new \InvalidArgumentException('Paragraph style name must not be empty.');
+        }
+
+        $split = StyleOptionSplitter::split($options, 'paragraph');
+        $paragraphProperties = $split['paragraph'] === []
+            ? []
+            : StyleMapper::mapParagraphStyle($split['paragraph']);
+        $textProperties = $split['text'] === []
+            ? []
+            : StyleMapper::mapTextStyleOptions($split['text']);
+
+        if ($paragraphProperties === [] && $textProperties === []) {
+            return;
+        }
+
+        $context = ($this->contextProvider)();
+        $matches = [];
+        foreach ([$context->stylesDom(), $context->contentDom()] as $document) {
+            $xpath = new \DOMXPath($document);
+            $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
+            foreach ($xpath->query(sprintf(
+                '//style:style[@style:name=%s and @style:family="paragraph"]',
+                $this->xpathLiteral($name)
+            )) ?: [] as $match) {
+                if ($match instanceof \DOMElement) {
+                    $matches[] = $match;
+                }
+            }
+        }
+        if ($matches === []) {
+            throw new \RuntimeException(sprintf('Paragraph style "%s" was not found.', $name));
+        }
+        if (count($matches) > 1) {
+            throw new \RuntimeException(sprintf('Paragraph style "%s" is ambiguous.', $name));
+        }
+
+        $style = $matches[0];
+        $this->mergeProperties($style->ownerDocument, $style, 'paragraph-properties', $paragraphProperties);
+        $this->mergeProperties($style->ownerDocument, $style, 'text-properties', $textProperties);
+    }
+
+    /**
      * Apply document-wide Writer defaults to the named paragraph style "Standard".
      *
      * Existing authored properties are preserved unless the corresponding
@@ -213,6 +267,21 @@ final class DocumentStyles
                 (string) $value
             );
         }
+    }
+
+    private function xpathLiteral(string $value): string
+    {
+        if (!str_contains($value, "'")) {
+            return "'" . $value . "'";
+        }
+        if (!str_contains($value, '"')) {
+            return '"' . $value . '"';
+        }
+
+        return 'concat(' . implode(', "\'", ', array_map(
+            static fn (string $part): string => "'" . $part . "'",
+            explode("'", $value)
+        )) . ')';
     }
 
 }

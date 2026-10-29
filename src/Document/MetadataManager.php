@@ -58,6 +58,10 @@ final class MetadataManager
         $xpath = $this->createXPath();
 
         foreach ($metadata as $inputKey => $value) {
+            if ($inputKey === 'custom') {
+                $this->setCustomFields($dom, $xpath, $value);
+                continue;
+            }
             $key = self::INPUT_ALIASES[$inputKey] ?? $inputKey;
             $qualifiedName = self::FIELD_MAP[$key] ?? null;
             if ($qualifiedName === null) {
@@ -112,7 +116,58 @@ final class MetadataManager
             }
         }
 
+        $custom = $xpath->query('//office:document-meta/office:meta/meta:user-defined');
+        if ($custom !== false && $custom->length > 0) {
+            $result['custom'] = [];
+            foreach ($custom as $field) {
+                if (!$field instanceof DOMElement) {
+                    continue;
+                }
+                $name = $field->getAttributeNS(self::META_NS, 'name');
+                if ($name !== '') {
+                    $result['custom'][$name] = $field->textContent;
+                }
+            }
+        }
+
         return $result;
+    }
+
+    /** @param mixed $fields */
+    private function setCustomFields(DOMDocument $dom, DOMXPath $xpath, mixed $fields): void
+    {
+        if (!is_array($fields)) {
+            throw new InvalidArgumentException('Custom metadata must be a map of field names to strings.');
+        }
+        foreach ($fields as $name => $value) {
+            if (!is_string($name) || trim($name) === '' || !is_string($value)) {
+                throw new InvalidArgumentException('Custom metadata requires nonempty string names and string values.');
+            }
+        }
+
+        $root = $xpath->query('//office:document-meta/office:meta')->item(0);
+        if (!$root instanceof DOMElement) {
+            return;
+        }
+        foreach ($fields as $name => $value) {
+            $matches = [];
+            foreach ($xpath->query('//office:document-meta/office:meta/meta:user-defined') as $field) {
+                if ($field instanceof DOMElement && $field->getAttributeNS(self::META_NS, 'name') === $name) {
+                    $matches[] = $field;
+                }
+            }
+            $field = array_shift($matches);
+            foreach ($matches as $duplicate) {
+                $duplicate->parentNode?->removeChild($duplicate);
+            }
+            if (!$field instanceof DOMElement) {
+                $field = $dom->createElementNS(self::META_NS, 'meta:user-defined');
+                $root->appendChild($field);
+            }
+            $field->setAttributeNS(self::META_NS, 'meta:name', $name);
+            $field->setAttributeNS(self::META_NS, 'meta:value-type', 'string');
+            $field->textContent = $value;
+        }
     }
 
     private function setSingularField(DOMDocument $dom, DOMXPath $xpath, string $qualifiedName, string $value): void

@@ -49,11 +49,11 @@ The completed milestone established:
 
 The accepted completion contract is recorded in [`architecture/PAGE_FLOW_01_CHANGE_CONTRACT.md`](architecture/PAGE_FLOW_01_CHANGE_CONTRACT.md).
 
-### PAGE-STYLE-AUTHORING-01 — Programmatic page-style authoring — REQUIRED FUTURE CAPABILITY
+### PAGE-STYLE-AUTHORING-01 — Programmatic page-style authoring — COMPLETE / BOUNDED BASELINE
 
-**Priority:** Confirmed future architecture requirement; sequencing after PAGE-FLOW-01 / not part of the completed PAGE-FLOW-01 implementation scope
+**Priority:** Completed bounded capability; further page-style inspection/variant work remains optional follow-up
 
-PAGE-FLOW-01 research confirms that page styles are not merely template-owned implementation detail. The engine should eventually support semantically explicit programmatic page-style work while preserving the native distinction between `style:master-page` identity/content and referenced `style:page-layout` geometry.
+PAGE-FLOW-01 research confirmed that page styles are not merely template-owned implementation detail. PAGE-STYLE-AUTHORING-01 now supports bounded semantically explicit programmatic page-style work while preserving the native distinction between `style:master-page` identity/content and referenced `style:page-layout` geometry.
 
 The future capability must investigate and design at least:
 
@@ -73,11 +73,11 @@ This future work should follow the style-architecture distinction already establ
 reference != definition != mutation
 ```
 
-The exact public API is not approved yet. Do not infer symmetric methods such as `definePageStyle()` merely from the existence of paragraph-style APIs. The capability must be designed from actual ODF ownership and concrete application needs.
+The public API is `PageLayoutOdtTemplate::definePageLayout()`, `definePageStyle()`, `assignPageStyle()`, and `setNextPageStyle()`. The implementation is intentionally bounded to generic page layouts, master pages, page-owned structured header/footer content, succession, and paragraph-style assignment.
 
 A practical motivation is document-wide/template-wide authoring: applications should be able to modify meaningful base/page styles and rely on native Writer inheritance and references instead of repeating equivalent formatting or rebuilding Writer layout in PHP.
 
-Deferral from PAGE-FLOW-01 is a sequencing decision, not rejection of page-style authoring.
+Future work may add page-style inspection targets and additional native variants, but must preserve the established ownership split. Section authoring, Section columns, column breaks, and pagination remain separate capabilities.
 
 ### Paragraph flow semantics — completed baseline
 
@@ -550,6 +550,19 @@ Treat dynamic graphics initially as content supplied to or replacing content in 
 
 Provide reliable list indentation and nested list style control using native list/paragraph semantics. May be inserted before 1.0 only if it is independent and does not destabilize the mandatory sequence or if PAGE-FLOW/TEMPLATE-RELIABILITY exposes a concrete dependency.
 
+### LAYOUT-OPTIMIZATION-01 — Bounded visual-layout parameter control
+
+**Priority:** Future architecture/planning; not implemented
+
+Define the later boundary between rendered-page assessment and deterministic
+engine mutation. The first candidate is bounded mutation of existing paragraph
+style spacing (`fo:margin-top`, `fo:margin-bottom`, and possibly
+`fo:line-height`) while preserving identity, inheritance, and existing flow
+rules. AI integration, image analysis, PDF evaluation, optimization loops, and
+pagination heuristics are explicitly outside this capability. The planning
+boundary is documented in
+[`architecture/LAYOUT_OPTIMIZATION_01.md`](architecture/LAYOUT_OPTIMIZATION_01.md).
+
 ### LIST-ITEM-POPULATION-01 — Application-owned items in Writer-native lists
 
 **Priority:** Post-1.0 architecture/research; not a 1.0 blocker
@@ -733,3 +746,17 @@ Word-converted custom-shape fixtures before selecting an API. It must decide:
 
 No public API shape is approved by this entry.
 
+
+
+## Strategic long-term direction — universal document creation and AI-assisted optimization
+
+**Status:** Strategic vision only; not an approved implementation milestone or a new 1.0 blocker.
+
+The ODT Template Engine should evolve into a general-purpose engine for native, editable OpenDocument Text documents. Two complementary long-term goals share the same technical foundation:
+
+1. **Programmatic document creation:** Starting from a minimal, valid ODT container, applications should be able to create complete Writer documents through public PHP APIs without manually pre-authoring the required page styles, headers/footers, paragraph and character styles, lists, tables, frames, Sections, and flow/layout structures in LibreOffice. Existing template-based processing remains a first-class, supported mode.
+2. **AI-assisted document analysis and optimization:** Structured, bounded engine capabilities should be accessible through controlled interfaces so that an AI system can inspect documents, propose targeted changes, and apply only authorized modifications. A possible feedback loop is inspection → proposed change → deterministic engine operation → LibreOffice rendering → renewed evaluation. Content changes require explicit authorization; native ODT editability must be preserved.
+
+The CV Generator Pro is a demanding reference application and quality benchmark, **not** the architectural boundary of the engine. Potential future integrations include LibreOffice Writer extensions, Collabora Online/Nextcloud, and independent AI-assisted document applications. These are separate integration layers around a reusable engine core, not current implementation commitments.
+
+**Development discipline:** This vision does not reopen completed milestones or expand PAGE-STYLE-AUTHORING-01. Finish and verify the currently bounded page-style capability against its original acceptance criteria before prioritizing the next narrowly scoped capability. Native Section creation, Section columns, column breaks, and AI orchestration remain separate future decisions. LibreOffice/Writer remains responsible for physical pagination; do not introduce a PHP pagination engine.
