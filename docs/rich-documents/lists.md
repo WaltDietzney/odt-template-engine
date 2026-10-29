@@ -109,7 +109,18 @@ They can also be used as part of richer table-cell content when the cell contain
 
 ## Current limitations
 
-List rendering uses native ODF structures, but fine-grained list-layout control is still an active development area. In particular, indentation behavior and advanced nested-list style customization are tracked for future improvement.
+List rendering uses native ODF structures. The current renderer emits
+`text:list` and `text:list-item`; the referenced list style supplies the native
+label geometry. With the authored `Bullet_20_Symbol` style used by the S01b
+template, wrapped lines retain a hanging indent rather than starting beneath
+the bullet. Do not prefix ordinary paragraphs with a bullet character when
+native list semantics are required.
+
+Fine-grained list-layout control remains an active development area. In
+particular, programmatic list-style authoring and advanced nested-list style
+customization are tracked for future improvement. `setLevel()` records the
+requested semantic level, but does not currently author a new per-level ODF
+geometry definition by itself.
 
 Mixed bullet/numbered nesting is not presented as a stable visual guarantee:
 LibreOffice may render a nested list using the surrounding list's numbering

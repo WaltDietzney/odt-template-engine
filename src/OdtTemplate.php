@@ -156,6 +156,12 @@ class OdtTemplate
         return $this->package->context();
     }
 
+    /** @internal Exposes package ownership to document-scoped facade extensions. */
+    protected function documentPackage(): OdtPackage
+    {
+        return $this->package;
+    }
+
     /**
      * Access the document-local style authoring facade.
      *

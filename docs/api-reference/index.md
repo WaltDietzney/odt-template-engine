@@ -33,6 +33,7 @@ These approaches can be combined in one document. Ownership is decided per piece
 - [Metadata](template-document/metadata.md)
 - [Images](template-document/images.md)
 - [Styles & Document Defaults](template-document/styles-and-defaults.md)
+- [Programmatic Page Styles](template-document/page-styles.md)
 
 ### Structured Content
 

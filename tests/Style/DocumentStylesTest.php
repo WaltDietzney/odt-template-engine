@@ -96,6 +96,87 @@ XML);
         self::assertSame('9cm', $properties->getAttribute('fo:margin-top'));
     }
 
+    public function testUpdateParagraphMergesSpacingAndFlowWithoutChangingIdentityOrInheritance(): void
+    {
+        $context = $this->context(<<<'XML'
+<office:document-styles
+    xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+    xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
+    xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0">
+    <office:font-face-decls/>
+    <office:styles>
+        <style:style style:name="Entry" style:family="paragraph" style:parent-style-name="Standard">
+            <style:paragraph-properties fo:margin-left="1cm" fo:margin-bottom="0.1cm"/>
+            <style:text-properties fo:color="#123456"/>
+        </style:style>
+    </office:styles>
+    <office:automatic-styles/>
+    <office:master-styles/>
+</office:document-styles>
+XML);
+        $styles = new DocumentStyles(static fn (): OdtDocumentContext => $context);
+
+        $styles->updateParagraph('Entry', [
+            'margin-top' => '0.2cm',
+            'margin-bottom' => '0.35cm',
+            'line-height' => '110%',
+            'keep-with-next' => 'always',
+        ]);
+
+        $style = $this->paragraphStyle($context->stylesDom(), 'Entry');
+        self::assertInstanceOf(DOMElement::class, $style);
+        self::assertSame('Standard', $style->getAttribute('style:parent-style-name'));
+
+        $paragraph = $style->getElementsByTagNameNS(
+            'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+            'paragraph-properties'
+        )->item(0);
+        self::assertInstanceOf(DOMElement::class, $paragraph);
+        self::assertSame('1cm', $paragraph->getAttribute('fo:margin-left'));
+        self::assertSame('0.2cm', $paragraph->getAttribute('fo:margin-top'));
+        self::assertSame('0.35cm', $paragraph->getAttribute('fo:margin-bottom'));
+        self::assertSame('110%', $paragraph->getAttribute('fo:line-height'));
+        self::assertSame('always', $paragraph->getAttribute('fo:keep-with-next'));
+
+        $text = $style->getElementsByTagNameNS(
+            'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+            'text-properties'
+        )->item(0);
+        self::assertInstanceOf(DOMElement::class, $text);
+        self::assertSame('#123456', $text->getAttribute('fo:color'));
+    }
+
+    public function testUpdateParagraphMutatesContentAutomaticStyle(): void
+    {
+        $context = $this->context();
+        $automaticStyles = $context->contentDom()->getElementsByTagNameNS(
+            'urn:oasis:names:tc:opendocument:xmlns:office:1.0',
+            'automatic-styles'
+        )->item(0);
+        self::assertInstanceOf(DOMElement::class, $automaticStyles);
+
+        $style = $context->contentDom()->createElementNS(
+            'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+            'style:style'
+        );
+        $style->setAttribute('style:name', 'ContentEntry');
+        $style->setAttribute('style:family', 'paragraph');
+        $style->setAttribute('style:parent-style-name', 'Standard');
+        $properties = $context->contentDom()->createElementNS(
+            'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
+            'style:paragraph-properties'
+        );
+        $properties->setAttribute('fo:margin-bottom', '0.1cm');
+        $style->appendChild($properties);
+        $automaticStyles->appendChild($style);
+
+        $styles = new DocumentStyles(static fn (): OdtDocumentContext => $context);
+        $styles->updateParagraph('ContentEntry', ['margin-bottom' => '0.4cm']);
+
+        self::assertSame('0.4cm', $properties->getAttribute('fo:margin-bottom'));
+        self::assertSame('Standard', $style->getAttribute('style:parent-style-name'));
+    }
+
     public function testRetainedFacadeUsesResetCurrentDocumentState(): void
     {
         $context = $this->context();

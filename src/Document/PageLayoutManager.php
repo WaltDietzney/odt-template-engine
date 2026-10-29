@@ -43,6 +43,48 @@ final class PageLayoutManager
     {
         $properties = $this->findPageLayoutProperties($masterPage);
 
+        $this->applyLayoutProperties($properties, $options);
+    }
+
+    /**
+     * Define a new native style:page-layout in styles.xml.
+     *
+     * @param array<string, string> $options
+     */
+    public function defineLayout(string $layoutName, array $options): void
+    {
+        $layoutName = trim($layoutName);
+        if ($layoutName === '') {
+            throw new RuntimeException('Page layout name must not be empty.');
+        }
+
+        $dom = $this->context->stylesDom();
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('style', self::STYLE_NS);
+        if ($xpath->query(sprintf('//style:page-layout[@style:name=%s]', $this->xpathLiteral($layoutName)))->length > 0) {
+            throw new RuntimeException(sprintf('Page layout "%s" already exists.', $layoutName));
+        }
+
+        $automaticStyles = $this->findOrCreateContainer($dom, 'automatic-styles');
+        $layout = $dom->createElementNS(self::STYLE_NS, 'style:page-layout');
+        $layout->setAttributeNS(self::STYLE_NS, 'style:name', $layoutName);
+        $properties = $dom->createElementNS(self::STYLE_NS, 'style:page-layout-properties');
+        $layout->appendChild($properties);
+        $layout->appendChild($dom->createElementNS(self::STYLE_NS, 'style:header-style'));
+        $layout->appendChild($dom->createElementNS(self::STYLE_NS, 'style:footer-style'));
+        $automaticStyles->appendChild($layout);
+
+        try {
+            $this->applyLayoutProperties($properties, $options);
+        } catch (\Throwable $exception) {
+            $automaticStyles->removeChild($layout);
+            throw $exception;
+        }
+    }
+
+    private function applyLayoutProperties(DOMElement $properties, array $options): void
+    {
+
         $foProperties = [
             'margin-top' => 'margin-top',
             'margin-right' => 'margin-right',
@@ -79,6 +121,27 @@ final class PageLayoutManager
             'style:print-orientation',
             $orientation
         );
+    }
+
+    private function findOrCreateContainer(\DOMDocument $dom, string $localName): DOMElement
+    {
+        foreach ($dom->getElementsByTagNameNS('urn:oasis:names:tc:opendocument:xmlns:office:1.0', $localName) as $node) {
+            if ($node instanceof DOMElement) {
+                return $node;
+            }
+        }
+
+        $root = $dom->documentElement;
+        if (!$root instanceof DOMElement) {
+            throw new RuntimeException('ODF styles.xml has no document element.');
+        }
+        $container = $dom->createElementNS(
+            'urn:oasis:names:tc:opendocument:xmlns:office:1.0',
+            'office:' . $localName
+        );
+        $root->appendChild($container);
+
+        return $container;
     }
 
     private function findPageLayoutProperties(string $masterPage): DOMElement

@@ -41,8 +41,10 @@ Established capabilities include:
 - native paragraph-flow authoring for keep/break/widow/orphan semantics through the existing style architecture;
 - preservation of authored master-page succession, page-layout references, and paragraph-to-master-page references;
 - page/master-style-owned header/footer content participating in normal template processing and supported structured insertion;
+- programmatic creation of page layouts and master pages, First Page/following-page succession, and paragraph-style page assignment through PAGE-STYLE-AUTHORING-01;
 - Section flow preservation without engine-side pagination ownership;
 - a complete CV showcase proving the structured-section model against a realistic LibreOffice-authored document.
+- bounded paragraph-style mutation suitable for future deterministic layout-parameter control;
 
 The rendering-sensitive validation workflow remains:
 
@@ -61,6 +63,16 @@ Poppler PNG pages
     ↓
 visual review against known-good baseline
 ```
+
+### LAYOUT-OPTIMIZATION-01 — Future bounded layout-parameter control
+
+LAYOUT-OPTIMIZATION-01 is a planning capability for a later workflow in which
+an external evaluator proposes bounded style changes after LibreOffice
+rendering. It is not an AI implementation, does not assess PDFs, and does not
+give PHP pagination ownership. The first candidate slice is deterministic,
+validated mutation of existing paragraph-style spacing with preserved flow
+rules and reproducible save/render evidence. See
+[`architecture/LAYOUT_OPTIMIZATION_01.md`](architecture/LAYOUT_OPTIMIZATION_01.md).
 
 Generated sample outputs and visual baselines are validation artifacts. Locally modified files under `samples/output/` are not normal source changes and must not be committed, restored, deleted, or regenerated unless a task explicitly concerns those artifacts.
 
@@ -131,7 +143,7 @@ Completed outcomes include:
 - an explicit boundary between page-style identity/content and page-layout geometry;
 - no PHP pagination engine and no premature broad page-style authoring API.
 
-Programmatic page-style definition/mutation/assignment remains the required future capability `PAGE-STYLE-AUTHORING-01`. The former `GRAPHIC-PART-COMPAT-01` ImageElement header discrepancy was resolved by FRAME-LAYOUT-01 through correct frame carrier and insertion semantics.
+PAGE-STYLE-AUTHORING-01 now provides bounded programmatic page-layout/master-page definition, page-owned header/footer authoring, succession, and paragraph-style assignment. Section columns, column breaks, and PHP pagination remain outside this capability. The former `GRAPHIC-PART-COMPAT-01` ImageElement header discrepancy was resolved by FRAME-LAYOUT-01 through correct frame carrier and insertion semantics.
 
 The accepted contract and completion evidence are recorded in [`architecture/PAGE_FLOW_01_CHANGE_CONTRACT.md`](architecture/PAGE_FLOW_01_CHANGE_CONTRACT.md) and the accompanying PAGE-FLOW-01 research/evidence documents.
 
