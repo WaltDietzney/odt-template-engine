@@ -155,6 +155,14 @@ return [
             'status' => 'canonical', 'distribution' => 'composer', 'execution_mode' => 'odt',
         ],
         [
+            'id' => 'C06', 'title' => 'Section Authoring', 'role' => 'capability', 'ownership' => 'programmatic-elements',
+            'entry_point' => 'samples/sample_C06_section_authoring.php',
+            'template_path' => 'samples/templates/template_C06_section_authoring.odt',
+            'output_path' => 'samples/output/output_C06_section_authoring.odt',
+            'purpose' => 'Constructs native named and nested Sections with mixed content and edits a generated Section through its target.',
+            'status' => 'canonical', 'distribution' => 'composer', 'execution_mode' => 'odt',
+        ],
+        [
             'id' => 'B01', 'title' => 'Invoice Template Builder', 'role' => 'builder', 'ownership' => 'programmatic-elements',
             'entry_point' => 'samples/sample_B01_invoice_template_builder.php',
             'template_path' => 'samples/templates/invoice-richtext-prototype.odt',

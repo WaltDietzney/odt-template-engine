@@ -42,6 +42,7 @@ final class StyleRequirementMaterializer
             'table-column',
             'table-row',
             'table-cell',
+            'section',
         ], true)) {
             throw new InvalidArgumentException(sprintf(
                 'Unsupported semantic style family "%s".',
@@ -80,6 +81,10 @@ final class StyleRequirementMaterializer
         foreach ($requirement->propertyGroups() as $groupName => $properties) {
             $group = $this->createQualifiedElement($dom, $groupName);
             foreach ($properties as $attribute => $value) {
+                if (in_array($attribute, ['style:columns', 'style:column-sep'], true) && is_array($value)) {
+                    $this->appendNestedSectionProperties($dom, $group, $attribute, $value);
+                    continue;
+                }
                 if ($attribute === 'style:tab-stops' && is_array($value)) {
                     $tabStops = $this->createQualifiedElement($dom, 'style:tab-stops');
                     foreach ($value as $tabStopProperties) {
@@ -104,6 +109,37 @@ final class StyleRequirementMaterializer
         }
 
         $container->appendChild($style);
+    }
+
+    /** @param array<string, mixed> $properties */
+    private function appendNestedSectionProperties(DOMDocument $dom, DOMElement $parent, string $name, array $properties): void
+    {
+        $nested = $this->createQualifiedElement($dom, $name);
+        foreach ($properties as $key => $value) {
+            if ($key === 'style:column' && is_array($value)) {
+                foreach ($value as $columnProperties) {
+                    $column = $this->createQualifiedElement($dom, 'style:column');
+                    foreach ($columnProperties as $attribute => $columnValue) {
+                        $this->setAttribute($column, $attribute, (string) $columnValue);
+                    }
+                    $nested->appendChild($column);
+                }
+                continue;
+            }
+            if ($key === 'style:column-sep' && is_array($value)) {
+                $separator = $this->createQualifiedElement($dom, 'style:column-sep');
+                foreach ($value as $attribute => $separatorValue) {
+                    $this->setAttribute($separator, (string) $attribute, (string) $separatorValue);
+                }
+                $nested->appendChild($separator);
+                continue;
+            }
+            if (is_array($value)) {
+                throw new InvalidArgumentException(sprintf('Unsupported nested Section style attribute "%s".', $key));
+            }
+            $this->setAttribute($nested, (string) $key, (string) $value);
+        }
+        $parent->appendChild($nested);
     }
 
     private function container(DOMDocument $dom, string $scope): DOMElement

@@ -49,7 +49,7 @@ $template->setElement('content', $richText);
 
 The template contains a placeholder such as `{{content}}`, but PHP supplies a native document structure rather than plain text.
 
-This is useful for dynamic lists, tables, styled paragraphs, images, and larger generated regions.
+This is useful for dynamic lists, tables, styled paragraphs, images, and larger generated regions. When PHP also owns the body structure, use `appendBody()` and `appendSection()` instead of a placeholder. A minimal ODT shell is sufficient. Generated named Sections can subsequently be addressed with the same native target API. See [Named Sections](../rich-documents/named-sections.md#create-native-sections-in-php).
 
 ## Writer-native Document Model
 

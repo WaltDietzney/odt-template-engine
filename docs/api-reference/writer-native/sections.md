@@ -1,6 +1,38 @@
 # Sections
 
-A Writer Section is a named native structured container owned by the Writer template. `SectionTarget` lets PHP inspect, replace, clone, or instantiate that structure without turning the Section itself into PHP-owned document structure.
+A Section is a named native structured container, either authored in Writer or constructed in PHP. `SectionTarget` addresses the existing native container regardless of its origin.
+
+SA-01 also provides the bounded PHP-owned construction surface described in
+the [Section Authoring contract](../../architecture/SECTION_AUTHORING_01_CONTRACT.md):
+
+```php
+new SectionElement(string $name)
+OdtTemplate::appendBody(OdtElement $content): void
+OdtTemplate::appendSection(SectionElement $section): SectionTarget
+```
+
+Construction appends to the working `office:body/office:text` document only;
+it does not use placeholders or add Section style/layout options. Existing
+`replaceContent()` behavior remains unchanged.
+
+SA-02 adds bounded Section style authoring:
+
+```php
+$template->styles()->defineSection('ReportColumns', [
+    'margin-left' => '1cm',
+    'background-color' => '#f2f2f2',
+    'columns' => ['count' => 2, 'gap' => '0.4cm', 'relative-widths' => [2, 3], 'balance' => true],
+]);
+$section = (new SectionElement('Report'))->setSectionStyle('ReportColumns');
+$template->appendSection($section);
+```
+
+Section styles are automatic styles in `content.xml` (ODF family `section`),
+not common paragraph styles. Equal-width `gap` is a native `fo:column-gap`;
+unequal widths use native per-column indents and split the gap across adjacent
+edges. Explicit `column-indents` and `gap` are mutually exclusive. Existing
+authored styles are reused by reference, not redefined. See the
+[SA-02 contract](../../architecture/SECTION_AUTHORING_02_CONTRACT.md).
 
 ## Resolve a Section
 
@@ -253,7 +285,7 @@ Equivalent instance-relative logical targeting of nested bookmarks and other nat
 
 ## Ownership
 
-The Section container is Writer-owned.
+An existing Section container retains its native identity regardless of whether Writer or PHP originally created it. Use [Named Sections](../../rich-documents/named-sections.md#create-native-sections-in-php) for the PHP construction example and lifecycle.
 
 The individual operation determines what PHP owns inside that boundary:
 

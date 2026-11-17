@@ -79,6 +79,8 @@ These models can coexist in one document. The important design choice is **who o
 - **Document inspection** — inspect native named sections, bookmarks, tables, frames, template dependencies, and supported Writer User Fields.
 - **Typed native targets** — resolve native ODT objects by semantic name instead of application XPath.
 - **Named sections** — replace section content, clone native structure, and instantiate repeatable section collections.
+- **Native Section construction (development branch)** — create named and nested Sections with `SectionElement`, `appendBody()` and `appendSection()` from a minimal ODT shell; see [C06](samples/sample_C06_section_authoring.php) and [the construction guide](docs/rich-documents/named-sections.md#create-native-sections-in-php).
+- **Section style and column authoring (development branch)** — define document-local native Section styles with margins, colors, columns, relative widths, gaps, balance and separators; see the [SA-02 contract](docs/architecture/SECTION_AUTHORING_02_CONTRACT.md).
 - **Nested collections** — expand owner-scoped nested section prototypes without manually constructing generated native names.
 - **Native Writer User Fields** — inspect and explicitly bind document-global string User Fields while preserving native Writer reevaluation semantics.
 - **ODT-aware processing** — preserve and manipulate native ODF structures inside real ODT packages.

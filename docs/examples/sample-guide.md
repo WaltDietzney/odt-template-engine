@@ -45,6 +45,7 @@ The capability layer adds native ODF behavior above the Learn path.
 | [C03](../../samples/sample_C03_frame_layout.php) | Frame Layout | Shared frame-layout semantics for floating and as-character text/image elements |
 | [C04](../../samples/sample_C04_declarative_structured_collections.php) | Declarative Structured Collections | Direct Phase-D execution of Writer-authored nested Sections with template-shaped data |
 | [C05](../../samples/sample_C05_mapping_automation.php) | Mapping & Automation | Explicit mapping, concrete preflight, and common atomic Phase-E execution |
+| [C06](../../samples/sample_C06_section_authoring.php) | Section Authoring | PHP-owned named/nested Sections, equal and unequal Writer-safe columns, separators, explicit indents, real column breaks, mixed content, and SectionTarget editing |
 
 ## Canonical builder samples
 
@@ -124,7 +125,7 @@ repository renderer after generating the ODT through the normal sample or CLI
 path:
 
 ```bash
-tools/visual-regression/render-odt.sh path/to/document.odt
+tools/visual-regression/render.sh path/to/document.odt
 ```
 
 The renderer performs:

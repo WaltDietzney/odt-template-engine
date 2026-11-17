@@ -13,6 +13,40 @@ tooling.
 This page documents the public `OdtTemplate` and `SectionTarget` APIs. Internal
 clone, identity, and removal services are implementation details.
 
+## Create native Sections in PHP
+
+Use `SectionElement` when PHP owns the structure itself. Start with an existing ODT document (a blank Writer document is sufficient); no placeholder or pre-authored Section is required.
+
+```php
+use OdtTemplateEngine\Elements\Paragraph;
+use OdtTemplateEngine\Elements\SectionElement;
+use OdtTemplateEngine\OdtTemplate;
+
+$template = new OdtTemplate('templates/blank.odt');
+$template->appendBody((new Paragraph())->addText('Professional profile'));
+$experience = (new SectionElement('Experience'))
+    ->addElement((new Paragraph())->addText('Work experience'))
+    ->addSection((new SectionElement('CurrentRole'))
+        ->addElement((new Paragraph())->addText('Software developer')));
+$target = $template->appendSection($experience);
+$target->section('CurrentRole')->replaceContent(
+    (new Paragraph())->addText('Senior software developer')
+);
+$template->save('profile.odt');
+```
+
+`appendBody()` returns `void`; `appendSection()` returns a live `SectionTarget`. Both append immediately to the working document body, in call order. `save()` does not require `render()` for this construction alone. Use `render()` for staged classic bindings when needed. `inspect()` sees generated Sections; `inspectTemplate()` remains source-oriented, and `load()` resets the working document. Repeated save/render does not repeat insertion; calling append again is a new operation.
+
+Sections accept native block content including paragraphs, RichText, lists, tables, frames and nested Sections. Direct frames receive a paragraph host. Empty Sections are supported; Writer may add an empty paragraph on save. Names must be non-empty and unique within their native object type in the working content. Invalid structure, identity collisions and resource failures are rejected atomically.
+
+SA-02 also supports `$template->styles()->defineSection($name, $options)` and
+`SectionElement::setSectionStyle($name)` for bounded native margins, colors,
+columns, relative weights, gaps, balance, explicit per-column indents, and separators. These are automatic
+document-local `section` styles in `content.xml`, not paragraph styles. See
+the [SA-02 contract](../architecture/SECTION_AUTHORING_02_CONTRACT.md).
+
+Do not use this API to recreate a stable Writer-designed Section just to bind data: use `section()`, `replaceContent()`, `instantiate()` or `instantiateMany()` as appropriate. Section styles, columns, protection and visibility authoring, and `SectionTarget::appendSection()` are not available in SA-01. Use the executable [C06 Section Authoring sample](../../samples/sample_C06_section_authoring.php) for mixed content and nesting.
+
 ## Address a section
 
 ```php
@@ -37,7 +71,7 @@ echo $section->text();
 $descriptor = $section->descriptor();
 ```
 
-The native name comes from the section authoring in LibreOffice. Keep the name
+The native name comes from Writer authoring or PHP `SectionElement` construction. Keep the name
 stable if application code will address it.
 
 ## `clone()` — structural duplication
