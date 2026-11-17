@@ -2,6 +2,8 @@
 
 ## Purpose
 
+The [CV handoff crosswalk](H00_CV_BASELINE_INTEGRATION.md) relates H01–H10 to this existing planning baseline without approving new APIs or release scope.
+
 This document defines the planning baseline for development after version 1.0.
 
 The work is intentionally split into three rounds. Version numbers are proposed working labels, not commitments. In particular, the first round is a 1.0.x maintenance line so that additional evidenced fixes can be included without forcing feature work into a patch release.

@@ -361,6 +361,8 @@ A universal engine-side evaluator for every Writer field/condition is not requir
 
 ## ODT Construction and post-1.0 release rounds
 
+The [CV handoff crosswalk](architecture/H00_CV_BASELINE_INTEGRATION.md) relates H01–H10 to this existing planning baseline without approving new APIs or release scope.
+
 The strategic sequencing for the post-1.0 line is defined in [`ROADMAP.md`](ROADMAP.md) and the controlling [`architecture/ODT_CONSTRUCTION_01_PLAN.md`](architecture/ODT_CONSTRUCTION_01_PLAN.md).
 
 ### 1.0.x Fix & Complete

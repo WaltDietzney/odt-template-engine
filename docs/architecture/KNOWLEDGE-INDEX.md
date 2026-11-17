@@ -9,6 +9,8 @@ Stand: 17.11.2026
 - [API-Referenz](../api-reference/index.md): vorhandene öffentliche Fähigkeiten vor Erweiterungen prüfen.
 - [Konsolidierung](REPOSITORY_CONSOLIDATION_2026_11_17.md): lokale Nachweise und Teststand.
 
-E009 native geometrische Zeichenobjekte bleibt unverified bis eigenständigem Nachweis. Neue Erkenntnisse mit Baseline, Quelle, Versuch, Ergebnis, Grenzen und Status ergänzen; keine Freigaben aus bloßen PoCs ableiten.
+E009: nativer Writer-PoC visuell abgenommen; Engine-Implementierung und deren eigenständiger Nachweis offen. E011: begrenzter Writer-Roundtrip, visuelle Abnahme und Engine-Integration offen. Neue Erkenntnisse mit Baseline, Quelle, Versuch, Ergebnis, Grenzen und Status ergänzen; keine Freigaben aus bloßen PoCs ableiten.
 
 - [CV-Engine-Übergabe](cv-handoff/README.md): versionierte Herkunft, E009/E011-ODF-Nachweise und DOE-Anschluss; Implementierung offen.
+
+- [ODT Construction](ODT_CONSTRUCTION_01_PLAN.md): controlling post-1.0 plan; [H00 crosswalk](H00_CV_BASELINE_INTEGRATION.md) links CV requirements without replacing the roadmap.
