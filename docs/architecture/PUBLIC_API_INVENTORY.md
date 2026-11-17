@@ -140,6 +140,8 @@ frame(string $name): FrameTarget
 
 setValues(array $values): void
 setElement(string $placeholder, OdtElement $element): void
+appendBody(OdtElement $content): void
+appendSection(SectionElement $section): SectionTarget
 setRepeating(string $key, array $rows): void
 setRepeatingData(array $data): void
 setMeta(array $meta): void
@@ -274,6 +276,14 @@ distinct from legacy OdtElement values passed through assign()/render().
 
 **Status:** VERIFIED as intended public facade capability; complete option/
 element-specific behavior belongs to the structured-content audit.
+
+### SA-01 construction
+
+SA-01 adds `SectionElement`, `appendBody()`, and `appendSection()` as the
+approved PHP-owned native Section construction surface. Construction is
+working-document-only and keeps `replaceContent()` on its existing lifecycle;
+the bounded contract is documented in
+[`SECTION_AUTHORING_01_CONTRACT.md`](SECTION_AUTHORING_01_CONTRACT.md).
 
 ### Inspection views
 

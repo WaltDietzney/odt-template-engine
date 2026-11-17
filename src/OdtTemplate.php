@@ -25,6 +25,7 @@ use OdtTemplateEngine\Document\BookmarkTarget;
 use OdtTemplateEngine\Document\FrameTarget;
 use OdtTemplateEngine\Document\MetadataManager;
 use OdtTemplateEngine\Document\SectionTarget;
+use OdtTemplateEngine\Document\SectionMutationService;
 use OdtTemplateEngine\Document\StructuredElementMaterializer;
 use OdtTemplateEngine\Document\StructuredInsertionMode;
 use OdtTemplateEngine\Document\StructuredResourceCollector;
@@ -34,6 +35,7 @@ use OdtTemplateEngine\Document\TableTarget;
 use OdtTemplateEngine\Document\TemplateTargetResolver;
 use OdtTemplateEngine\Document\TypedTargetResolver;
 use OdtTemplateEngine\Elements\OdtElement;
+use OdtTemplateEngine\Elements\SectionElement;
 use OdtTemplateEngine\Style\DocumentStyles;
 use OdtTemplateEngine\Template\TemplateContract;
 use OdtTemplateEngine\Mapping\ConcretePreflightResult;
@@ -434,6 +436,42 @@ class OdtTemplate
         $this->prepareStructuredResources($element);
         $this->materializeStructuredElement($placeholder, $element);
         $this->finalizeStructuredCompatibility($element);
+    }
+
+    public function appendBody(OdtElement $content): void
+    {
+        $this->performConstruction($content, 'appendBody', function (SectionMutationService $service, OdtElement $content): void {
+            $service->appendBody($this->documentContext(), $content, $this->package);
+        });
+    }
+
+    public function appendSection(SectionElement $section): SectionTarget
+    {
+        return $this->performConstruction($section, 'appendSection', function (SectionMutationService $service, OdtElement $content): SectionTarget {
+            $name = $service->appendSection($this->documentContext(), $content, $this->package);
+            return new SectionTarget($this->documentContext(), $name, $this->package);
+        });
+    }
+
+    /** @template T @param callable(SectionMutationService, OdtElement): T $operation @return T */
+    private function performConstruction(OdtElement $content, string $operation, callable $callback): mixed
+    {
+        $service = new SectionMutationService();
+        $sectionName = $content instanceof SectionElement ? $content->name() : '';
+        // This must precede semantic/resource collectors and DOM rendering.
+        $service->validateOwnershipTree($content, $operation, $sectionName);
+        $snapshot = $this->package->snapshotWorkingState();
+        try {
+            $this->prepareStructuredSemanticState($content);
+            $result = $callback($service, $content);
+            $this->finalizeStructuredCompatibility($content);
+            return $result;
+        } catch (\Throwable $exception) {
+            $this->package->restoreWorkingState($snapshot);
+            throw $exception;
+        } finally {
+            $snapshot->cleanup();
+        }
     }
 
     /**

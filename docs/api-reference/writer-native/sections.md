@@ -2,6 +2,19 @@
 
 A Writer Section is a named native structured container owned by the Writer template. `SectionTarget` lets PHP inspect, replace, clone, or instantiate that structure without turning the Section itself into PHP-owned document structure.
 
+SA-01 also provides the bounded PHP-owned construction surface described in
+the [Section Authoring contract](../../architecture/SECTION_AUTHORING_01_CONTRACT.md):
+
+```php
+new SectionElement(string $name)
+OdtTemplate::appendBody(OdtElement $content): void
+OdtTemplate::appendSection(SectionElement $section): SectionTarget
+```
+
+Construction appends to the working `office:body/office:text` document only;
+it does not use placeholders or add Section style/layout options. Existing
+`replaceContent()` behavior remains unchanged.
+
 ## Resolve a Section
 
 **Recommended**
