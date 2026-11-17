@@ -1,0 +1,1003 @@
+[
+  {
+    "source": "research/visual-template-references/prototypes/E009/preview/e009-1.odt",
+    "sha256": "73d83c16942d7deafae28481cec8a0d01ce6179752a89a9d6b4929b244ac0367",
+    "objects": [
+      {
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}custom-shape",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}anchor-type": "paragraph",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}z-index": "0",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "Form 1",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}style-name": "gr8",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}width": "9.501cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}height": "5.751cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}x": "1.041cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}y": "1.998cm"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}p",
+            "attributes": {},
+            "children": []
+          },
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-geometry",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}viewBox": "0 0 21600 21600",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}type": "rectangle",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-path": "M 0 0 L 21600 0 21600 21600 0 21600 0 0 Z N"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}custom-shape",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}anchor-type": "paragraph",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}z-index": "1",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "Form 2",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}style-name": "gr7",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}width": "5.001cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}height": "5.001cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}x": "12.79cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}y": "2.499cm"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}p",
+            "attributes": {},
+            "children": []
+          },
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-geometry",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}viewBox": "0 0 21600 21600",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}glue-points": "10800 0 3163 3163 0 10800 3163 18437 10800 21600 18437 18437 21600 10800 18437 3163",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}text-areas": "3163 3163 18437 18437",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}type": "ellipse",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-path": "U 10800 10800 10800 10800 0 360 Z N"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}custom-shape",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}anchor-type": "paragraph",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}z-index": "2",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "Form 3",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}style-name": "gr6",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}width": "5.252cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}height": "2.752cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}x": "3.291cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}y": "9.998cm"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}p",
+            "attributes": {},
+            "children": []
+          },
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-geometry",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}viewBox": "0 0 21600 21600",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}glue-points": "10800 0 3163 3163 0 10800 3163 18437 10800 21600 18437 18437 21600 10800 18437 3163",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}text-areas": "3163 3163 18437 18437",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}type": "ellipse",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-path": "U 10800 10800 10800 10800 0 360 Z N"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}custom-shape",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}anchor-type": "paragraph",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}z-index": "3",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "Form 4",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}style-name": "gr5",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}width": "3.751cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}height": "3.252cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}x": "11.543cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}y": "9.999cm"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}p",
+            "attributes": {},
+            "children": []
+          },
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-geometry",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}viewBox": "0 0 21600 21600",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}glue-points": "10800 0 0 10800 10800 21600 21600 10800",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}text-areas": "5400 5400 16200 16200",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}type": "diamond",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-path": "M 10800 0 L 21600 10800 10800 21600 0 10800 10800 0 Z N"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}custom-shape",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}anchor-type": "paragraph",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}z-index": "4",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "Form 5",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}style-name": "gr4",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}width": "5.001cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}height": "4.252cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}x": "2.542cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}y": "14cm"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}p",
+            "attributes": {},
+            "children": []
+          },
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-geometry",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}viewBox": "0 0 21600 21600",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}glue-points": "?f0 0 ?f1 10800 0 21600 10800 21600 21600 21600 ?f7 10800",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}text-areas": "?f1 10800 ?f2 18000 ?f3 7200 ?f4 21600",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}type": "isosceles-triangle",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}modifiers": "10800",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-path": "M ?f0 0 L 21600 21600 0 21600 Z N"
+            },
+            "children": [
+              {
+                "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}equation",
+                "attributes": {
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "f0",
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}formula": "$0 "
+                },
+                "children": []
+              },
+              {
+                "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}equation",
+                "attributes": {
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "f1",
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}formula": "$0 /2"
+                },
+                "children": []
+              },
+              {
+                "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}equation",
+                "attributes": {
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "f2",
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}formula": "?f1 +10800"
+                },
+                "children": []
+              },
+              {
+                "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}equation",
+                "attributes": {
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "f3",
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}formula": "$0 *2/3"
+                },
+                "children": []
+              },
+              {
+                "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}equation",
+                "attributes": {
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "f4",
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}formula": "?f3 +7200"
+                },
+                "children": []
+              },
+              {
+                "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}equation",
+                "attributes": {
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "f5",
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}formula": "21600-?f0 "
+                },
+                "children": []
+              },
+              {
+                "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}equation",
+                "attributes": {
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "f6",
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}formula": "?f5 /2"
+                },
+                "children": []
+              },
+              {
+                "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}equation",
+                "attributes": {
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "f7",
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}formula": "21600-?f6 "
+                },
+                "children": []
+              },
+              {
+                "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}handle",
+                "attributes": {
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}handle-position": "$0 top",
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}handle-range-x-minimum": "0",
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}handle-range-x-maximum": "21600"
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}line",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}anchor-type": "paragraph",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}z-index": "5",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "Horizontale Linie 1",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}style-name": "gr3",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}text-style-name": "P1",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}x1": "6.292cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}y1": "-0.002cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}x2": "12.792cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}y2": "-0.002cm"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}p",
+            "attributes": {},
+            "children": []
+          }
+        ]
+      },
+      {
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}custom-shape",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}anchor-type": "paragraph",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}z-index": "6",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "Form 6",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}style-name": "gr2",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}width": "4.252cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}height": "4.252cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}x": "11.792cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}y": "15.501cm"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}p",
+            "attributes": {},
+            "children": []
+          },
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-geometry",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}viewBox": "0 0 21600 21600",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}glue-points": "10800 0 3163 3163 0 10800 3163 18437 10800 21600 18437 18437 21600 10800 18437 3163",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}text-areas": "3163 3163 18437 18437",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}type": "ring",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}modifiers": "5400",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-path": "U 10800 10800 10800 10800 0 360 Z U 10800 10800 ?f1 ?f1 0 360 N"
+            },
+            "children": [
+              {
+                "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}equation",
+                "attributes": {
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "f0",
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}formula": "$0 "
+                },
+                "children": []
+              },
+              {
+                "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}equation",
+                "attributes": {
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "f1",
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}formula": "10800-$0 "
+                },
+                "children": []
+              },
+              {
+                "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}handle",
+                "attributes": {
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}handle-position": "$0 10800",
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}handle-range-x-minimum": "0",
+                  "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}handle-range-x-maximum": "10800"
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}custom-shape",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}anchor-type": "paragraph",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}z-index": "7",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "Form 7",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}style-name": "gr1",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}text-style-name": "P1",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}width": "4.252cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}height": "2.502cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}x": "2.79cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}y": "21.001cm"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}p",
+            "attributes": {},
+            "children": []
+          },
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-geometry",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}viewBox": "0 0 153 132",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}type": "non-primitive",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-path": "M 123 39 C 116 26 113 13 114 0 103 7 90 11 76 11 62 11 49 7 38 0 37 0 37 0 37 0 38 13 35 27 28 39 22 51 11 60 0 66 0 66 0 66 0 66 0 67 0 67 0 67 12 73 22 82 28 93 35 105 38 119 38 131 38 132 38 132 38 132 38 132 38 132 38 132 49 125 62 121 76 121 90 121 103 125 114 132 114 132 114 132 114 132 113 119 116 106 123 93 130 81 141 72 153 66 153 66 153 66 153 66 141 60 130 51 123 39 Z N"
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "graphic_styles": [
+      {
+        "part": "content.xml",
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}style",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}name": "gr1",
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}family": "graphic"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}graphic-properties",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-vertical-align": "middle",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}auto-grow-height": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-height": "2.501cm",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-width": "4.251cm",
+              "{urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0}decorative": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}run-through": "foreground",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}wrap": "run-through",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}number-wrapped-paragraphs": "no-limit",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-pos": "from-top",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-rel": "paragraph",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-pos": "from-left",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-rel": "paragraph"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "part": "content.xml",
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}style",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}name": "gr2",
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}family": "graphic"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}graphic-properties",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-horizontal-align": "justify",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-vertical-align": "middle",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}auto-grow-height": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-height": "3.006cm",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-width": "3.006cm",
+              "{urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0}decorative": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}run-through": "foreground",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}wrap": "run-through",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}number-wrapped-paragraphs": "no-limit",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-pos": "from-top",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-rel": "paragraph",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-pos": "from-left",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-rel": "paragraph"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "part": "content.xml",
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}style",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}name": "gr3",
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}family": "graphic"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}graphic-properties",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-horizontal-align": "center",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-vertical-align": "middle",
+              "{urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0}decorative": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}run-through": "foreground",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}wrap": "run-through",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}number-wrapped-paragraphs": "no-limit",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-pos": "from-top",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-rel": "paragraph",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-pos": "from-left",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-rel": "paragraph"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "part": "content.xml",
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}style",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}name": "gr4",
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}family": "graphic"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}graphic-properties",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-horizontal-align": "justify",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-vertical-align": "middle",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}auto-grow-height": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-height": "1.418cm",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-width": "2.501cm",
+              "{urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0}decorative": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}run-through": "foreground",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}wrap": "run-through",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}number-wrapped-paragraphs": "no-limit",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-pos": "from-top",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-rel": "paragraph",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-pos": "from-left",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-rel": "paragraph"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "part": "content.xml",
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}style",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}name": "gr5",
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}family": "graphic"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}graphic-properties",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-horizontal-align": "justify",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-vertical-align": "middle",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}auto-grow-height": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-height": "1.626cm",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-width": "1.877cm",
+              "{urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0}decorative": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}run-through": "foreground",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}wrap": "run-through",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}number-wrapped-paragraphs": "no-limit",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-pos": "from-top",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-rel": "paragraph",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-pos": "from-left",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-rel": "paragraph"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "part": "content.xml",
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}style",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}name": "gr6",
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}family": "graphic"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}graphic-properties",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-horizontal-align": "justify",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-vertical-align": "middle",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}auto-grow-height": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-height": "1.947cm",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-width": "3.713cm",
+              "{urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0}decorative": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}run-through": "foreground",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}wrap": "run-through",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}number-wrapped-paragraphs": "no-limit",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-pos": "from-top",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-rel": "paragraph",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-pos": "from-left",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-rel": "paragraph"
+            },
+            "children": []
+          },
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}paragraph-properties",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}writing-mode": "lr-tb"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "part": "content.xml",
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}style",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}name": "gr7",
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}family": "graphic"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}graphic-properties",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-horizontal-align": "justify",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-vertical-align": "middle",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}auto-grow-height": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-height": "3.537cm",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-width": "3.537cm",
+              "{urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0}decorative": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}run-through": "foreground",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}wrap": "run-through",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}number-wrapped-paragraphs": "no-limit",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-pos": "from-top",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-rel": "paragraph",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-pos": "from-left",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-rel": "paragraph"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "part": "content.xml",
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}style",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}name": "gr8",
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}family": "graphic"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}graphic-properties",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-horizontal-align": "justify",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-vertical-align": "middle",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}auto-grow-height": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-height": "5.75cm",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-width": "9.5cm",
+              "{urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0}decorative": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}run-through": "foreground",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}wrap": "run-through",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}number-wrapped-paragraphs": "no-limit",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-pos": "from-top",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-rel": "paragraph",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-pos": "from-left",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-rel": "paragraph"
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "fill_images": [],
+    "manifest": [],
+    "pictures": []
+  },
+  {
+    "source": "research/visual-template-references/prototypes/E009/preview/e009-2.odt",
+    "sha256": "824c662ef94b1ab26197a2a5465c98f327a4be392e0b01636af6400ce8b002f0",
+    "objects": [
+      {
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}custom-shape",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}anchor-type": "paragraph",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}z-index": "0",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "Form 1",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}style-name": "gr3",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}width": "4.001cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}height": "3.751cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}x": "2.79cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}y": "1.499cm"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}p",
+            "attributes": {},
+            "children": []
+          },
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-geometry",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}viewBox": "0 0 21600 21600",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}glue-points": "10800 0 0 10800 10800 21600 18000 10800",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}text-areas": "3600 0 18000 21600",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}type": "flowchart-stored-data",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-path": "M 3600 21600 X 0 10800 3600 0 L 21600 0 X 18000 10800 21600 21600 Z N"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}custom-shape",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}anchor-type": "paragraph",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}z-index": "1",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "Form 2",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}style-name": "gr2",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}width": "3.252cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}height": "4.502cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}x": "12.042cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}y": "1.748cm"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}p",
+            "attributes": {},
+            "children": []
+          },
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-geometry",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}viewBox": "0 0 21600 21600",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}glue-points": "10800 0 0 10800 10800 21600 21600 10800",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}text-areas": "0 0 21600 17150",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}type": "flowchart-off-page-connector",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-path": "M 0 0 L 21600 0 21600 17150 10800 21600 0 17150 0 0 Z N"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}custom-shape",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}anchor-type": "paragraph",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}z-index": "2",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "Form 3",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}style-name": "gr1",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}width": "6.252cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}height": "2.251cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}x": "3.291cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}y": "7.25cm"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}p",
+            "attributes": {},
+            "children": []
+          },
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-geometry",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}viewBox": "0 0 21600 21600",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}glue-points": "10800 2020 0 10800 10800 19320 21600 10800",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}text-areas": "0 4360 21600 17240",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}type": "flowchart-punched-tape",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-path": "M 0 2230 C 820 3990 3410 3980 5370 4360 7430 4030 10110 3890 10690 2270 11440 300 14200 160 16150 0 18670 170 20690 390 21600 2230 L 21600 19420 C 20640 17510 18320 17490 16140 17240 14710 17370 11310 17510 10770 19430 10150 21150 7380 21290 5290 21600 3220 21250 610 21130 0 19420 Z N"
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "graphic_styles": [
+      {
+        "part": "content.xml",
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}style",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}name": "gr1",
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}family": "graphic"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}graphic-properties",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-horizontal-align": "justify",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-vertical-align": "middle",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}auto-grow-height": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-height": "1.344cm",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-width": "6.253cm",
+              "{urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0}decorative": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}run-through": "foreground",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}wrap": "run-through",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}number-wrapped-paragraphs": "no-limit",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-pos": "from-top",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-rel": "paragraph",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-pos": "from-left",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-rel": "paragraph"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "part": "content.xml",
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}style",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}name": "gr2",
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}family": "graphic"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}graphic-properties",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-horizontal-align": "justify",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-vertical-align": "middle",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}auto-grow-height": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-height": "3.575cm",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-width": "3.253cm",
+              "{urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0}decorative": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}run-through": "foreground",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}wrap": "run-through",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}number-wrapped-paragraphs": "no-limit",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-pos": "from-top",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-rel": "paragraph",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-pos": "from-left",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-rel": "paragraph"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "part": "content.xml",
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}style",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}name": "gr3",
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}family": "graphic"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}graphic-properties",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-horizontal-align": "justify",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-vertical-align": "middle",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}auto-grow-height": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-height": "3.752cm",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-width": "2.667cm",
+              "{urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0}decorative": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}run-through": "foreground",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}wrap": "run-through",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}number-wrapped-paragraphs": "no-limit",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-pos": "from-top",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-rel": "paragraph",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-pos": "from-left",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-rel": "paragraph"
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "fill_images": [],
+    "manifest": [],
+    "pictures": []
+  },
+  {
+    "source": "research/visual-template-references/prototypes/E009/preview/e009-3.odt",
+    "sha256": "784d14529b6a66c2aade672a5a2711b260e53e9fa643d3fcb2258f8c9b2f240e",
+    "objects": [
+      {
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}custom-shape",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}anchor-type": "paragraph",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}z-index": "0",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "Form 1",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}style-name": "gr3",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}width": "4.001cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}height": "3.751cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}transform": "rotate (0.35) translate (3cm 3cm)"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}p",
+            "attributes": {},
+            "children": []
+          },
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-geometry",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}viewBox": "0 0 21600 21600",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}glue-points": "10800 0 0 10800 10800 21600 18000 10800",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}text-areas": "3600 0 18000 21600",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}type": "flowchart-stored-data",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-path": "M 3600 21600 X 0 10800 3600 0 L 21600 0 X 18000 10800 21600 21600 Z N"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}custom-shape",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}anchor-type": "paragraph",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}z-index": "1",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "Form 2",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}style-name": "gr2",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}width": "3.252cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}height": "4.502cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}x": "12.042cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}y": "1.748cm"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}p",
+            "attributes": {},
+            "children": []
+          },
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-geometry",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}viewBox": "0 0 21600 21600",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}glue-points": "10800 0 0 10800 10800 21600 21600 10800",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}text-areas": "0 0 21600 17150",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}type": "flowchart-off-page-connector",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-path": "M 0 0 L 21600 0 21600 17150 10800 21600 0 17150 0 0 Z N"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}custom-shape",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}anchor-type": "paragraph",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}z-index": "2",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "Form 3",
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}style-name": "gr1",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}width": "6.252cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}height": "2.251cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}x": "11cm",
+          "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}y": "3cm"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:text:1.0}p",
+            "attributes": {},
+            "children": []
+          },
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-geometry",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}viewBox": "0 0 21600 21600",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}glue-points": "10800 2020 0 10800 10800 19320 21600 10800",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}text-areas": "0 4360 21600 17240",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}type": "flowchart-punched-tape",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}enhanced-path": "M 0 2230 C 820 3990 3410 3980 5370 4360 7430 4030 10110 3890 10690 2270 11440 300 14200 160 16150 0 18670 170 20690 390 21600 2230 L 21600 19420 C 20640 17510 18320 17490 16140 17240 14710 17370 11310 17510 10770 19430 10150 21150 7380 21290 5290 21600 3220 21250 610 21130 0 19420 Z N"
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "graphic_styles": [
+      {
+        "part": "content.xml",
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}style",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}name": "gr1",
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}family": "graphic"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}graphic-properties",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-horizontal-align": "justify",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-vertical-align": "middle",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}auto-grow-height": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-height": "1.344cm",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-width": "6.253cm",
+              "{urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0}decorative": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}run-through": "foreground",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}wrap": "run-through",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}number-wrapped-paragraphs": "no-limit",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-pos": "from-top",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-rel": "paragraph",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-pos": "from-left",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-rel": "paragraph",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}fill": "solid",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}fill-color": "#e57b42",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}opacity": "45%",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}stroke": "none"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "part": "content.xml",
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}style",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}name": "gr2",
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}family": "graphic"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}graphic-properties",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-horizontal-align": "justify",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-vertical-align": "middle",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}auto-grow-height": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-height": "3.575cm",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-width": "3.253cm",
+              "{urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0}decorative": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}run-through": "foreground",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}wrap": "run-through",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}number-wrapped-paragraphs": "no-limit",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-pos": "from-top",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-rel": "paragraph",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-pos": "from-left",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-rel": "paragraph",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}fill": "bitmap",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}fill-image-name": "E009Bitmap",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}repeat": "stretch",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}stroke": "solid",
+              "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}stroke-color": "#182c40",
+              "{urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0}stroke-width": "0.06cm"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "part": "content.xml",
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}style",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}name": "gr3",
+          "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}family": "graphic"
+        },
+        "children": [
+          {
+            "tag": "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}graphic-properties",
+            "attributes": {
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-horizontal-align": "justify",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}textarea-vertical-align": "middle",
+              "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}auto-grow-height": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-height": "3.752cm",
+              "{urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0}min-width": "2.667cm",
+              "{urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0}decorative": "false",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}run-through": "foreground",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}wrap": "run-through",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}number-wrapped-paragraphs": "no-limit",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-pos": "from-top",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}vertical-rel": "paragraph",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-pos": "from-left",
+              "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}horizontal-rel": "paragraph"
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "fill_images": [
+      {
+        "part": "styles.xml",
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}fill-image",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:drawing:1.0}name": "E009Bitmap",
+          "{http://www.w3.org/1999/xlink}href": "Pictures/e009-test.png",
+          "{http://www.w3.org/1999/xlink}type": "simple",
+          "{http://www.w3.org/1999/xlink}show": "embed",
+          "{http://www.w3.org/1999/xlink}actuate": "onLoad"
+        },
+        "children": []
+      }
+    ],
+    "manifest": [
+      {
+        "tag": "{urn:oasis:names:tc:opendocument:xmlns:manifest:1.0}file-entry",
+        "attributes": {
+          "{urn:oasis:names:tc:opendocument:xmlns:manifest:1.0}full-path": "Pictures/e009-test.png",
+          "{urn:oasis:names:tc:opendocument:xmlns:manifest:1.0}media-type": "image/png"
+        },
+        "children": []
+      }
+    ],
+    "pictures": [
+      {
+        "path": "Pictures/e009-test.png",
+        "sha256": "f2e5fe97353481c7935f3612852d1774ace7fac25bbd14511112332c3f1a1007"
+      }
+    ]
+  }
+]

@@ -17,6 +17,8 @@ Version 1.0 is released. Post-1.0 work is organized into capability rounds rathe
 
 The controlling plan for this sequence is [`architecture/ODT_CONSTRUCTION_01_PLAN.md`](architecture/ODT_CONSTRUCTION_01_PLAN.md).
 
+The [CV handoff crosswalk](architecture/H00_CV_BASELINE_INTEGRATION.md) relates H01–H10 to this existing planning baseline without approving new APIs or release scope.
+
 ### Round A — 1.0.x Fix & Complete
 
 The first post-release round is maintenance-only. It completes or corrects the 1.0 delivery without introducing the new construction architecture.

@@ -315,3 +315,7 @@ Created and maintained by **Walter Dietz** (`@WaltDietzney`).
 ## License
 
 ODT Template Engine is released under the [MIT License](LICENSE).
+
+## Contributor knowledge entry point
+
+Before development, read [READ-FIRST.md](READ-FIRST.md) and the [knowledge index](docs/architecture/KNOWLEDGE-INDEX.md).
