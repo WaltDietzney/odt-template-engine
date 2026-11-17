@@ -16,3 +16,13 @@ composer.lock
 *.log
 .DS_Store
 Thumbs.db
+
+# Local MCP and agent context
+/.mcp-write.lock
+/IDENTITY.md
+/SOUL.md
+/USER.md
+
+# Generated S01b sample outputs; tracked reference samples remain tracked
+/samples/output/output_S01b_cv_structured_3pages.odt
+/samples/output/output_S01b_cv_structured_3pages.pdf
