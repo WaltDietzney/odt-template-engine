@@ -4,7 +4,7 @@ Status: native reference inspected, 2026-11-17. Architecture/API approval and im
 
 ## Evidence
 
-Owner-authored `tests/fixtures/libreoffice-reference/odt/SECTION-AUTHORING-01-reference.odt` (ODF 1.3), inspected from the original upload. Repository placement by owner pending; verify SHA-256 `9d3414253440f49d1c395c172bf1067bf896224f9a7257a9e66acc03d15d4862` before accepting the fixture. Confirm embedded image redistribution rights and remove personal metadata if needed before publication; any sanitized derivative must have its own checksum. No fixture regeneration required for architecture work.
+Owner-authored `tests/fixtures/libreoffice-reference/odt/SECTION-AUTHORING-01-reference.odt` (ODF 1.3), inspected from the original upload. Repository placement by owner completed; verified SHA-256 `9d3414253440f49d1c395c172bf1067bf896224f9a7257a9e66acc03d15d4862` before accepting the fixture. Confirm embedded image redistribution rights and remove personal metadata if needed before publication; any sanitized derivative must have its own checksum. No fixture regeneration required for architecture work.
 
 All 15 named Sections and 12 automatic Section styles occur in content.xml. The following records observed Writer serialization, not a comprehensive ODF conformance claim.
 
