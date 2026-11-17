@@ -47,7 +47,7 @@ $richText->addParagraph($paragraph);
 $template->setElement('content', $richText);
 ```
 
-RichText, paragraphs, lists, tables, images, frames, and text boxes can be composed as native ODT structures.
+RichText, paragraphs, lists, tables, images, frames, and text boxes can be composed as native ODT structures. PHP can also append body blocks and create named, nested native Sections without placeholders; see [Section construction](rich-documents/named-sections.md#create-native-sections-in-php).
 
 ### 3. Writer-native Document Model
 

@@ -1,6 +1,6 @@
 # Sections
 
-A Writer Section is a named native structured container owned by the Writer template. `SectionTarget` lets PHP inspect, replace, clone, or instantiate that structure without turning the Section itself into PHP-owned document structure.
+A Section is a named native structured container, either authored in Writer or constructed in PHP. `SectionTarget` addresses the existing native container regardless of its origin.
 
 SA-01 also provides the bounded PHP-owned construction surface described in
 the [Section Authoring contract](../../architecture/SECTION_AUTHORING_01_CONTRACT.md):
@@ -266,7 +266,7 @@ Equivalent instance-relative logical targeting of nested bookmarks and other nat
 
 ## Ownership
 
-The Section container is Writer-owned.
+An existing Section container retains its native identity regardless of whether Writer or PHP originally created it. Use [Named Sections](../../rich-documents/named-sections.md#create-native-sections-in-php) for the PHP construction example and lifecycle.
 
 The individual operation determines what PHP owns inside that boundary:
 

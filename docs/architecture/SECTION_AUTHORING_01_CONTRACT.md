@@ -56,6 +56,10 @@ save/render operations do not duplicate constructed nodes or resources.
 `inspectTemplate()` remain source-oriented. `load()` resets constructed content
 from the original template.
 
+## Visual acceptance evidence
+
+2026-11-17: C06 generated from the blank Writer shell, with six named Sections, nested content, hyperlink, list, table, image, text box, empty Section and target replacement. `tools/visual-regression/render.sh samples/output/output_C06_section_authoring.odt` produced one PDF page and one PNG at 150 DPI under `tmp/visual-regression/`. The complete PNG was inspected: expected content and order, no visible clipping or overlap. Visual GO for C06 / SA-01; first visual reference, not a pixel comparison. The PNG cannot prove native identity or editability; structural tests and Writer inspection complement it. Local output and rendering artifacts are not committed.
+
 ## Explicit boundary
 
 This slice does not add Section styles or layout authoring, SectionTarget

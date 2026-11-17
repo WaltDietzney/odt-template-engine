@@ -10,6 +10,10 @@ The ownership rule is:
 
 If the structure already exists in the Writer template and should remain Writer-owned, use the Writer-native object APIs instead.
 
+## Direct body and Section construction
+
+Use `appendBody(OdtElement $content): void` for native blocks at the end of the working document body, or `appendSection(SectionElement $section): SectionTarget` for a named native Section. Neither requires a placeholder. Compose nested Sections with `SectionElement::addSection()` before insertion. See [Named Sections](../../rich-documents/named-sections.md#create-native-sections-in-php) and [C06](../../../samples/sample_C06_section_authoring.php).
+
 ## `setElement()`
 
 **Recommended · Structured Content**
