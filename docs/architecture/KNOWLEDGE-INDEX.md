@@ -10,3 +10,5 @@ Stand: 17.11.2026
 - [Konsolidierung](REPOSITORY_CONSOLIDATION_2026_11_17.md): lokale Nachweise und Teststand.
 
 E009 native geometrische Zeichenobjekte bleibt unverified bis eigenständigem Nachweis. Neue Erkenntnisse mit Baseline, Quelle, Versuch, Ergebnis, Grenzen und Status ergänzen; keine Freigaben aus bloßen PoCs ableiten.
+
+- [CV-Engine-Übergabe](cv-handoff/README.md): versionierte Herkunft, E009/E011-ODF-Nachweise und DOE-Anschluss; Implementierung offen.
