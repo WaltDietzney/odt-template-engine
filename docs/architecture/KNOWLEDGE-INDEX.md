@@ -18,6 +18,7 @@ E009: nativer Writer-PoC visuell abgenommen; Engine-Implementierung und deren ei
 - [Section Authoring reference](SECTION_AUTHORING_01_REFERENCE.md): inspected native Writer fixture, H01 implementation handoff; reuse completed Section and style architecture, no repeated general research.
 - [Section Authoring SA-01 contract](SECTION_AUTHORING_01_CONTRACT.md): approved minimal working-document construction surface and validation/rollback contract.
 - [Section Authoring SA-02 contract](SECTION_AUTHORING_02_CONTRACT.md): bounded document-local Section styles, columns, balancing, gaps, separators, validation, and lifecycle semantics.
+- [H01 Section Authoring closeout](H01_SECTION_AUTHORING_CLOSEOUT.md): generated nested styled Sections, Writer-roundtrip integration test, 0/1/n station collections, sandbox boundary, and fixture human gate.
 
 SA-02-R1 correction pass (baseline `84a3d99`, 2026-11-17): unequal Writer
 columns now use explicit native column indents with exact adjacent-gap splits;
