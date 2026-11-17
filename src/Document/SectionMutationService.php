@@ -48,7 +48,7 @@ final class SectionMutationService
         ?OdtPackage $package = null
     ): void {
         $body = $this->findBodyText($context->contentDom());
-        $nodes = $this->buildValidatedNodes($context->contentDom(), $content, 'appendBody', '');
+        $nodes = $this->buildValidatedNodes($context, $content, 'appendBody', '');
         $this->appendNodes($context->contentDom(), $body, $nodes, $content, $package, 'appendBody', '');
     }
 
@@ -58,7 +58,7 @@ final class SectionMutationService
         ?OdtPackage $package = null
     ): string {
         $body = $this->findBodyText($context->contentDom());
-        $nodes = $this->buildValidatedNodes($context->contentDom(), $section, 'appendSection', $section->name());
+        $nodes = $this->buildValidatedNodes($context, $section, 'appendSection', $section->name());
         $this->appendNodes($context->contentDom(), $body, $nodes, $section, $package, 'appendSection', $section->name());
 
         return $section->name();
@@ -93,11 +93,12 @@ final class SectionMutationService
 
     /** @return list<DOMElement> */
     private function buildValidatedNodes(
-        DOMDocument $document,
+        OdtDocumentContext $context,
         OdtElement $content,
         string $operation,
         string $sectionName
     ): array {
+        $document = $context->contentDom();
         $replacement = $content->toDomNode($document->cloneNode(true));
         if ($replacement instanceof DOMElement) {
             $nodes = [$replacement];
@@ -116,6 +117,7 @@ final class SectionMutationService
             }
             $this->normalizeSectionFrames($node);
             $this->validateConstructedSubtree($node, $operation, $sectionName);
+            $this->validateSectionStyleReferences($context, $node, $operation, $sectionName);
             $result[] = $this->hostFrameInTextFlow($node);
         }
 
@@ -139,6 +141,54 @@ final class SectionMutationService
         }
 
         return $result;
+    }
+
+    private function validateSectionStyleReferences(
+        OdtDocumentContext $context,
+        DOMElement $node,
+        string $operation,
+        string $sectionName
+    ): void {
+        if ($node->nodeName === 'text:section') {
+            $styleName = $node->getAttribute('text:style-name');
+            if ($styleName !== '' && !$this->hasAutomaticSectionStyle($context->contentDom(), $styleName)) {
+                $this->constructionFail(
+                    $operation,
+                    $sectionName,
+                    sprintf('Section style "%s" is missing or does not belong to the section family', $styleName),
+                    'section',
+                    $styleName
+                );
+            }
+        }
+        foreach ($node->childNodes as $child) {
+            if ($child instanceof DOMElement) {
+                $this->validateSectionStyleReferences($context, $child, $operation, $sectionName);
+            }
+        }
+    }
+
+    private function hasAutomaticSectionStyle(DOMDocument $dom, string $name): bool
+    {
+        $xpath = new \DOMXPath($dom);
+        $xpath->registerNamespace('office', self::OFFICE_NAMESPACE);
+        $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
+        return $xpath->query(sprintf(
+            '//office:automatic-styles/style:style[@style:name=%s and @style:family="section"]',
+            $this->xpathLiteral($name)
+        ))?->length === 1;
+    }
+
+    private function xpathLiteral(string $value): string
+    {
+        if (!str_contains($value, "'")) {
+            return "'" . $value . "'";
+        }
+        if (!str_contains($value, '"')) {
+            return '"' . $value . '"';
+        }
+        $parts = explode("'", $value);
+        return 'concat(' . implode(", \"'\", ", array_map(static fn (string $part): string => "'" . $part . "'", $parts)) . ')';
     }
 
     private function appendNodes(

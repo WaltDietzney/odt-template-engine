@@ -36,7 +36,7 @@ The broader image replacement/layout API remains later work. Section constructio
 
 The next feature round extends the engine from template processing plus isolated PHP-owned structured content toward composition of complete native ODT document structures from a minimal/prepared ODT base.
 
-SA-01 body and native Section construction is implemented on `feature/section-authoring-01` (`c31a7f2`), with C06 visual acceptance. Section style and column authoring remain open. See the [SA-01 contract](architecture/SECTION_AUTHORING_01_CONTRACT.md).
+SA-01 body and native Section construction is implemented on `feature/section-authoring-01` (`c31a7f2`), with C06 visual acceptance. SA-02 adds bounded Section style and column authoring, including Writer-safe unequal-width indents, balancing, separators, validation and authored-style reuse by reference. See the [SA-01 contract](architecture/SECTION_AUTHORING_01_CONTRACT.md) and [SA-02 contract](architecture/SECTION_AUTHORING_02_CONTRACT.md).
 
 The planned capability sequence is:
 

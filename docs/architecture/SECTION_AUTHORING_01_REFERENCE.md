@@ -36,6 +36,14 @@ All 15 named Sections and 12 automatic Section styles occur in content.xml. The 
 - `text:notes-configuration` is nested under section-properties; actual notes are not present.
 - Column break belongs to paragraph style (`fo:break-before="column"`), not Section identity. Writer owns physical flow; columns are not independent content nodes.
 
+The observed equal-width `32767*/32768*` and unequal `3826*/5811*` values are
+authored Writer output. Newly generated Section relative weights use the
+SA-02 65535 materialization convention and exact GCD-reduced normalization;
+this is an engine generation rule, not an ODF physical-width requirement.
+Writer source details (`SwFormatCol::Init`, `CalcColWidth`, and `PutValue`)
+are verified only when the local source checkout is available; otherwise they
+remain unverified implementation evidence.
+
 ## Reuse and boundaries
 
 SECTION-01/02/03, PAGE-FLOW-01, TEMPLATE-AUTHORING-01D, STYLE-CONTEXT-01, STYLE-API-02 and PAGE-STYLE-AUTHORING-01 are established baseline. Reuse inspection, identity, clone/instantiate/collections, declarative controls, existing structured materialization, document-local style and package resource services. No repeat of completed nesting, scope, rollback or pagination research. Existing S01b/C04 and SECTION-03 fixtures remain regression evidence. Public SectionTarget targets existing content.xml structures; authoring must not silently broaden its contract.

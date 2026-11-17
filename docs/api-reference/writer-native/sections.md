@@ -15,6 +15,25 @@ Construction appends to the working `office:body/office:text` document only;
 it does not use placeholders or add Section style/layout options. Existing
 `replaceContent()` behavior remains unchanged.
 
+SA-02 adds bounded Section style authoring:
+
+```php
+$template->styles()->defineSection('ReportColumns', [
+    'margin-left' => '1cm',
+    'background-color' => '#f2f2f2',
+    'columns' => ['count' => 2, 'gap' => '0.4cm', 'relative-widths' => [2, 3], 'balance' => true],
+]);
+$section = (new SectionElement('Report'))->setSectionStyle('ReportColumns');
+$template->appendSection($section);
+```
+
+Section styles are automatic styles in `content.xml` (ODF family `section`),
+not common paragraph styles. Equal-width `gap` is a native `fo:column-gap`;
+unequal widths use native per-column indents and split the gap across adjacent
+edges. Explicit `column-indents` and `gap` are mutually exclusive. Existing
+authored styles are reused by reference, not redefined. See the
+[SA-02 contract](../../architecture/SECTION_AUTHORING_02_CONTRACT.md).
+
 ## Resolve a Section
 
 **Recommended**

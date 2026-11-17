@@ -285,6 +285,18 @@ working-document-only and keeps `replaceContent()` on its existing lifecycle;
 the bounded contract is documented in
 [`SECTION_AUTHORING_01_CONTRACT.md`](SECTION_AUTHORING_01_CONTRACT.md).
 
+### SA-02 Section styles
+
+`DocumentStyles::defineSection(string $name, array $options): void` defines a
+document-local automatic ODF `section` style in `content.xml`.
+`SectionElement::setSectionStyle(string $name): self` references that style.
+`SectionElement::getSectionStyle(): ?string` returns the assigned reference
+for inspection of a PHP-owned element before materialization.
+Authored styles are referenced by name and are never redefined by
+`defineSection()`.
+The bounded option vocabulary and native ownership are documented in the
+[SA-02 contract](SECTION_AUTHORING_02_CONTRACT.md).
+
 ### Inspection views
 
 Current facade semantics distinguish three views:

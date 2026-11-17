@@ -39,6 +39,12 @@ $template->save('profile.odt');
 
 Sections accept native block content including paragraphs, RichText, lists, tables, frames and nested Sections. Direct frames receive a paragraph host. Empty Sections are supported; Writer may add an empty paragraph on save. Names must be non-empty and unique within their native object type in the working content. Invalid structure, identity collisions and resource failures are rejected atomically.
 
+SA-02 also supports `$template->styles()->defineSection($name, $options)` and
+`SectionElement::setSectionStyle($name)` for bounded native margins, colors,
+columns, relative weights, gaps, balance, explicit per-column indents, and separators. These are automatic
+document-local `section` styles in `content.xml`, not paragraph styles. See
+the [SA-02 contract](../architecture/SECTION_AUTHORING_02_CONTRACT.md).
+
 Do not use this API to recreate a stable Writer-designed Section just to bind data: use `section()`, `replaceContent()`, `instantiate()` or `instantiateMany()` as appropriate. Section styles, columns, protection and visibility authoring, and `SectionTarget::appendSection()` are not available in SA-01. Use the executable [C06 Section Authoring sample](../../samples/sample_C06_section_authoring.php) for mixed content and nesting.
 
 ## Address a section

@@ -9,6 +9,7 @@ use OdtTemplateEngine\Document\FontFaceRequirementDiscovery;
 use OdtTemplateEngine\Document\FontFaceRequirementMaterializer;
 use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Document\StyleRequirementMaterializer;
+use OdtTemplateEngine\Document\SectionStyleOptions;
 use OdtTemplateEngine\OdtDocumentContext;
 use OdtTemplateEngine\Utils\StyleMapper;
 use OdtTemplateEngine\Utils\StyleOptionSplitter;
@@ -74,6 +75,90 @@ final class DocumentStyles
         }
 
         (new StyleRequirementMaterializer())->materialize($context, $requirement);
+    }
+
+    /** Define a document-local automatic Writer Section style. */
+    public function defineSection(string $name, array $options): void
+    {
+        $name = trim($name);
+        if ($name === '') {
+            throw new \InvalidArgumentException('Section style name must not be empty.');
+        }
+        $propertyGroups = SectionStyleOptions::propertyGroups($options);
+        $context = ($this->contextProvider)();
+        $snapshot = $context->snapshotState();
+        try {
+            $this->assertSectionFamilyName($context, $name);
+            if ($this->hasAuthoredSectionStyle($context, $name) && !$this->hasPendingSectionDefinition($context, $name)) {
+                throw new \LogicException(sprintf(
+                    'Section style "%s" already exists in the authored document; reuse it with SectionElement::setSectionStyle() instead of redefining it.',
+                    $name
+                ));
+            }
+            $requirement = new StyleRequirement(
+                StyleRequirement::KIND_DEFINITION,
+                StyleRequirement::SCOPE_AUTOMATIC,
+                'section',
+                StyleRequirement::PART_CONTENT,
+                $name,
+                null,
+                $propertyGroups
+            );
+            $context->styleContext()->registerRequirement($requirement);
+            (new StyleRequirementMaterializer())->materialize($context, $requirement);
+        } catch (\Throwable $exception) {
+            $context->restoreState($snapshot);
+            throw $exception;
+        }
+    }
+
+    private function hasAuthoredSectionStyle(OdtDocumentContext $context, string $name): bool
+    {
+        $styleNs = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
+        $officeNs = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0';
+        $dom = $context->contentDom();
+        foreach ($dom->getElementsByTagNameNS($styleNs, 'style') as $style) {
+            if ($style->getAttributeNS($styleNs, 'name') !== $name
+                || $style->getAttributeNS($styleNs, 'family') !== 'section') {
+                continue;
+            }
+            $parent = $style->parentNode;
+            while ($parent instanceof \DOMElement) {
+                if ($parent->namespaceURI === $officeNs && $parent->localName === 'automatic-styles') {
+                    return true;
+                }
+                $parent = $parent->parentNode;
+            }
+        }
+        return false;
+    }
+
+    private function hasPendingSectionDefinition(OdtDocumentContext $context, string $name): bool
+    {
+        foreach ($context->styleContext()->semanticDefinitions() as $definition) {
+            if ($definition->family() === 'section' && $definition->name() === $name) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function assertSectionFamilyName(OdtDocumentContext $context, string $name): void
+    {
+        $styleNs = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
+        foreach ([$context->contentDom(), $context->stylesDom()] as $dom) {
+            foreach ($dom->getElementsByTagNameNS($styleNs, 'style') as $style) {
+                if ($style->getAttributeNS($styleNs, 'name') === $name
+                    && $style->getAttributeNS($styleNs, 'family') !== 'section'
+                ) {
+                    throw new \LogicException(sprintf(
+                        'Style name "%s" already belongs to the "%s" family.',
+                        $name,
+                        $style->getAttributeNS($styleNs, 'family')
+                    ));
+                }
+            }
+        }
     }
 
     /**
