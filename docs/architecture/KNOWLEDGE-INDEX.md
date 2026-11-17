@@ -14,3 +14,5 @@ E009: nativer Writer-PoC visuell abgenommen; Engine-Implementierung und deren ei
 - [CV-Engine-Übergabe](cv-handoff/README.md): versionierte Herkunft, E009/E011-ODF-Nachweise und DOE-Anschluss; Implementierung offen.
 
 - [ODT Construction](ODT_CONSTRUCTION_01_PLAN.md): controlling post-1.0 plan; [H00 crosswalk](H00_CV_BASELINE_INTEGRATION.md) links CV requirements without replacing the roadmap.
+
+- [Section Authoring reference](SECTION_AUTHORING_01_REFERENCE.md): inspected native Writer fixture, H01 implementation handoff; reuse completed Section and style architecture, no repeated general research.
