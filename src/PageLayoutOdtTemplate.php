@@ -110,6 +110,15 @@ class PageLayoutOdtTemplate extends OdtTemplate
         return $this;
     }
 
+    /** Replace, create or remove normal master-page regions without changing layout geometry. */
+    public function updatePageStyle(string $name, array $options): static
+    {
+        (new PageStyleManager($this->documentContext(), $this->documentPackage()))
+            ->updatePageStyle($name, $options);
+
+        return $this;
+    }
+
     /** Assign a master page to a paragraph style used by a document area. */
     public function assignPageStyle(string $paragraphStyleName, string $masterPageName): static
     {

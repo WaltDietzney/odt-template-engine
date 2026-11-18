@@ -163,6 +163,14 @@ return [
             'status' => 'canonical', 'distribution' => 'composer', 'execution_mode' => 'odt',
         ],
         [
+            'id' => 'C07', 'title' => 'Page Region Mutation', 'role' => 'capability', 'ownership' => 'programmatic-elements',
+            'entry_point' => 'samples/sample_C07_page_region_mutation.php',
+            'template_path' => 'samples/templates/template_C01_page_flow_layout.odt',
+            'output_path' => 'samples/output/output_C07_page_region_mutation.odt',
+            'purpose' => 'Replaces and creates native master-page regions without changing layout geometry.',
+            'status' => 'canonical', 'distribution' => 'composer', 'execution_mode' => 'odt',
+        ],
+        [
             'id' => 'B01', 'title' => 'Invoice Template Builder', 'role' => 'builder', 'ownership' => 'programmatic-elements',
             'entry_point' => 'samples/sample_B01_invoice_template_builder.php',
             'template_path' => 'samples/templates/invoice-richtext-prototype.odt',
