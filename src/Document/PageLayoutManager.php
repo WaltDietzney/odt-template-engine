@@ -54,13 +54,13 @@ final class PageLayoutManager
             $properties = $this->layoutProperties($layout, $masterPage);
             $this->applyLayoutProperties($properties, $options);
             PageLayoutOptions::applyPage($properties, $options);
+            FillProjection::apply($this->context, $properties, $options);
+            $this->synchronizeDrawingPageFill($layout, $options);
             foreach (['header', 'footer'] as $region) {
                 if (array_key_exists($region, $options)) {
-                    PageLayoutOptions::applyRegion(
-                        $this->regionProperties($layout, $region, $masterPage),
-                        $options[$region],
-                        $region
-                    );
+                    $regionProperties = $this->regionProperties($layout, $region, $masterPage);
+                    PageLayoutOptions::applyRegion($regionProperties, $options[$region], $region);
+                    FillProjection::apply($this->context, $regionProperties, $options[$region]);
                 }
             }
         } catch (\Throwable $exception) {
@@ -101,13 +101,13 @@ final class PageLayoutManager
         try {
             $this->applyLayoutProperties($properties, $options);
             PageLayoutOptions::applyPage($properties, $options);
+            FillProjection::apply($this->context, $properties, $options);
+            $this->synchronizeDrawingPageFill($layout, $options);
             foreach (['header', 'footer'] as $region) {
                 if (array_key_exists($region, $options)) {
-                    PageLayoutOptions::applyRegion(
-                        $this->regionProperties($layout, $region, $layoutName),
-                        $options[$region],
-                        $region
-                    );
+                    $regionProperties = $this->regionProperties($layout, $region, $layoutName);
+                    PageLayoutOptions::applyRegion($regionProperties, $options[$region], $region);
+                    FillProjection::apply($this->context, $regionProperties, $options[$region]);
                 }
             }
         } catch (\Throwable $exception) {
@@ -124,13 +124,13 @@ final class PageLayoutManager
             $properties = $this->layoutProperties($layout, 'Page layout ' . $layoutName);
             $this->applyLayoutProperties($properties, $options);
             PageLayoutOptions::applyPage($properties, $options);
+            FillProjection::apply($this->context, $properties, $options);
+            $this->synchronizeDrawingPageFill($layout, $options);
             foreach (['header', 'footer'] as $region) {
                 if (array_key_exists($region, $options)) {
-                    PageLayoutOptions::applyRegion(
-                        $this->regionProperties($layout, $region, $layoutName),
-                        $options[$region],
-                        $region
-                    );
+                    $regionProperties = $this->regionProperties($layout, $region, $layoutName);
+                    PageLayoutOptions::applyRegion($regionProperties, $options[$region], $region);
+                    FillProjection::apply($this->context, $regionProperties, $options[$region]);
                 }
             }
         } catch (\Throwable $exception) {
@@ -153,6 +153,7 @@ final class PageLayoutManager
         ];
         $xpath = new DOMXPath($this->context->stylesDom());
         $xpath->registerNamespace('style', self::STYLE_NS);
+        $xpath->registerNamespace('draw', self::DRAW_NS);
         foreach ($xpath->query('//style:master-page[@style:page-layout-name=' . $this->xpathLiteral($layoutName) . ']') as $master) {
             if ($master instanceof DOMElement) {
                 $result['master-pages'][] = [
@@ -179,12 +180,7 @@ final class PageLayoutManager
             }
             $result['regions'][$region] = $values;
         }
-        if ($properties->hasAttributeNS(self::FO_NS, 'background-color')
-            || $properties->hasAttributeNS(self::DRAW_NS, 'fill')
-            || $properties->hasAttributeNS(self::DRAW_NS, 'fill-gradient-name')
-            || $properties->getElementsByTagNameNS(self::STYLE_NS, 'background-image')->length > 0) {
-            $result['unsupported'][] = 'fill';
-        }
+        $result['fill'] = $this->resolvedFill($properties);
         foreach ($properties->childNodes as $child) {
             if (!$child instanceof DOMElement
                 || $child->namespaceURI !== self::STYLE_NS
@@ -211,6 +207,126 @@ final class PageLayoutManager
             }
             $result['properties']['columns'] = $columns;
         }
+        return $result;
+    }
+
+    /** Synchronize an existing layout fill when a new master starts using it. */
+    public function synchronizeLayoutFill(string $layoutName): void
+    {
+        $layout = $this->findLayout($layoutName);
+        $properties = $this->layoutProperties($layout, 'Page layout ' . $layoutName);
+        $options = $this->fillOptionsFromProperties($properties);
+        if ($options !== []) $this->synchronizeDrawingPageFill($layout, $options);
+    }
+
+    /** @return array<string, mixed> */
+    private function fillOptionsFromProperties(DOMElement $properties): array
+    {
+        $type = $properties->getAttributeNS(self::DRAW_NS, 'fill');
+        if ($type === 'solid') return ['background' => ['type' => 'solid', 'color' => $properties->getAttributeNS(self::DRAW_NS, 'fill-color')]];
+        if ($type === 'gradient') return ['background' => ['type' => 'gradient', 'name' => $properties->getAttributeNS(self::DRAW_NS, 'fill-gradient-name')]];
+        if ($type === 'bitmap') return ['background' => ['type' => 'bitmap', 'name' => $properties->getAttributeNS(self::DRAW_NS, 'fill-image-name'), 'repeat' => $properties->getAttributeNS(self::STYLE_NS, 'repeat') ?: 'stretch']];
+        if ($type === 'none') return ['background' => ['type' => 'none']];
+        return [];
+    }
+
+    /** Keep Writer's drawing-page carrier aligned with a page-layout fill. */
+    private function synchronizeDrawingPageFill(DOMElement $layout, array $options): void
+    {
+        if (!array_key_exists('background', $options) && !array_key_exists('background-color', $options)) {
+            return;
+        }
+        $layoutName = $layout->getAttributeNS(self::STYLE_NS, 'name');
+        $xpath = new DOMXPath($this->context->stylesDom());
+        $xpath->registerNamespace('style', self::STYLE_NS);
+        $xpath->registerNamespace('draw', self::DRAW_NS);
+        $masters = [];
+        foreach ($xpath->query('//style:master-page[@style:page-layout-name=' . $this->xpathLiteral($layoutName) . ']') ?: [] as $master) {
+            if ($master instanceof DOMElement) {
+                $masters[] = $master;
+            }
+        }
+        foreach ($masters as $master) {
+            $styleName = $master->getAttributeNS(self::DRAW_NS, 'style-name');
+            $style = $this->drawingPageStyle($styleName);
+            if ($styleName === '' || !$style instanceof DOMElement || $this->drawingStyleUsedByOtherLayout($styleName, $layoutName)) {
+                $styleName = $this->privateDrawingStyleName($master->getAttributeNS(self::STYLE_NS, 'name'));
+                $style = $this->cloneDrawingPageStyle($style, $styleName);
+                $master->setAttributeNS(self::DRAW_NS, 'draw:style-name', $styleName);
+            }
+            $properties = $this->drawingPageProperties($style);
+            FillProjection::apply($this->context, $properties, $options, false);
+        }
+    }
+
+    private function drawingStyleUsedByOtherLayout(string $styleName, string $layoutName): bool
+    {
+        $xpath = new DOMXPath($this->context->stylesDom());
+        $xpath->registerNamespace('style', self::STYLE_NS);
+        $xpath->registerNamespace('draw', self::DRAW_NS);
+        foreach ($xpath->query('//style:master-page[@draw:style-name=' . $this->xpathLiteral($styleName) . ']', null) ?: [] as $master) {
+            if ($master instanceof DOMElement && $master->getAttributeNS(self::STYLE_NS, 'page-layout-name') !== $layoutName) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function drawingPageStyle(string $name): ?DOMElement
+    {
+        if ($name === '') return null;
+        $xpath = new DOMXPath($this->context->stylesDom());
+        $xpath->registerNamespace('style', self::STYLE_NS);
+        $node = $xpath->query('//style:style[@style:name=' . $this->xpathLiteral($name) . '][@style:family="drawing-page"]')->item(0);
+        return $node instanceof DOMElement ? $node : null;
+    }
+
+    private function cloneDrawingPageStyle(?DOMElement $source, string $name): DOMElement
+    {
+        $dom = $this->context->stylesDom();
+        $container = $this->findOrCreateContainer($dom, 'automatic-styles');
+        if ($source instanceof DOMElement) {
+            $clone = $source->cloneNode(true);
+            if (!$clone instanceof DOMElement) throw new RuntimeException('Unable to clone drawing-page style.');
+            $clone->setAttributeNS(self::STYLE_NS, 'style:name', $name);
+        } else {
+            $clone = $dom->createElementNS(self::STYLE_NS, 'style:style');
+            $clone->setAttributeNS(self::STYLE_NS, 'style:name', $name);
+            $clone->setAttributeNS(self::STYLE_NS, 'style:family', 'drawing-page');
+            $clone->appendChild($dom->createElementNS(self::STYLE_NS, 'style:drawing-page-properties'));
+        }
+        $container->appendChild($clone);
+        return $clone;
+    }
+
+    private function privateDrawingStyleName(string $masterName): string
+    {
+        $base = 'H02_' . preg_replace('/[^A-Za-z0-9_]+/', '_', $masterName) . '_DrawingPage';
+        $name = $base; $i = 2;
+        while ($this->drawingPageStyle($name) !== null) $name = $base . '_' . $i++;
+        return $name;
+    }
+
+    private function drawingPageProperties(DOMElement $style): DOMElement
+    {
+        foreach ($style->childNodes as $child) {
+            if ($child instanceof DOMElement && $child->namespaceURI === self::STYLE_NS && $child->localName === 'drawing-page-properties') return $child;
+        }
+        $properties = $this->context->stylesDom()->createElementNS(self::STYLE_NS, 'style:drawing-page-properties');
+        $style->appendChild($properties);
+        return $properties;
+    }
+
+    /** @return array<string, mixed> */
+    private function resolvedFill(DOMElement $properties): array
+    {
+        $fill = $properties->getAttributeNS(self::DRAW_NS, 'fill');
+        if ($fill === '') return ['type' => 'unsupported'];
+        $result = ['type' => $fill];
+        foreach (['fill-color', 'fill-gradient-name', 'fill-image-name'] as $key) {
+            if ($properties->hasAttributeNS(self::DRAW_NS, $key)) $result[$key] = $properties->getAttributeNS(self::DRAW_NS, $key);
+        }
+        if ($properties->hasAttributeNS(self::FO_NS, 'background-color')) $result['background-color'] = $properties->getAttributeNS(self::FO_NS, 'background-color');
         return $result;
     }
 

@@ -97,6 +97,7 @@ final class PageStyleManager
             }
 
             $masterStyles->appendChild($master);
+            (new PageLayoutManager($this->context))->synchronizeLayoutFill($pageLayoutName);
         } catch (\Throwable $exception) {
             $this->context->restoreState($snapshot);
             if ($createdResources !== []) {
@@ -190,6 +191,8 @@ final class PageStyleManager
             'footer' => ['present' => false, 'content' => false, 'properties' => null],
             'unsupported' => [],
         ];
+        $result['fill'] = (new PageLayoutManager($this->context))
+            ->inspectLayout($result['page-layout-name'])['fill'];
         foreach (['header', 'footer'] as $region) {
             foreach ($master->childNodes as $child) {
                 if (!$child instanceof DOMElement
@@ -212,6 +215,7 @@ final class PageStyleManager
 
     private function materializeElementStyles(OdtElement $element): void
     {
+        FillProjection::validateElementTree($this->context, $element);
         $collector = new StyleRequirementCollector();
         $materializer = new StyleRequirementMaterializer();
         foreach ($collector->collectSemantic($element) as $requirement) {

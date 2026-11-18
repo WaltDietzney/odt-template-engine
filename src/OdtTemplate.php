@@ -173,7 +173,8 @@ class OdtTemplate
     public function styles(): DocumentStyles
     {
         return $this->documentStyles ??= new DocumentStyles(
-            fn (): OdtDocumentContext => $this->documentContext()
+            fn (): OdtDocumentContext => $this->documentContext(),
+            fn (): OdtPackage => $this->package
         );
     }
 
@@ -480,6 +481,7 @@ class OdtTemplate
      */
     private function prepareStructuredSemanticState(OdtElement $element): void
     {
+        \OdtTemplateEngine\Document\FillProjection::validateElementTree($this->documentContext(), $element);
         $collector = new StyleRequirementCollector();
         $semanticRequirements = iterator_to_array($collector->collectSemantic($element), false);
         $fontDiscovery = new FontFaceRequirementDiscovery();

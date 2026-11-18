@@ -51,6 +51,7 @@ final class PageLayoutOptions
         }
         self::assertKeys($options, [
             'height', 'min-height', 'spacing', 'margin-left', 'margin-right', 'dynamic-spacing',
+            'background', 'background-color',
             'border', 'border-top', 'border-right', 'border-bottom', 'border-left',
             'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
             'shadow', 'border-line-width', 'border-line-width-top',
@@ -132,7 +133,7 @@ final class PageLayoutOptions
         ];
         foreach ($options as $key => $_value) {
             if (in_array($key, ['background', 'background-color'], true)) {
-                throw new InvalidArgumentException(sprintf('%s fill options are deferred to H02 C2.', $label));
+                continue;
             }
             if (in_array($key, $allowed, true)) {
                 continue;
@@ -386,7 +387,7 @@ final class PageLayoutOptions
                 throw new InvalidArgumentException(sprintf('Unsupported %s option "%s".', $label, (string) $key));
             }
             if ($ignoreUnknown && in_array($key, ['background', 'background-color'], true)) {
-                throw new InvalidArgumentException(sprintf('%s fill options are deferred to H02 C2.', $label));
+                continue;
             }
         }
     }

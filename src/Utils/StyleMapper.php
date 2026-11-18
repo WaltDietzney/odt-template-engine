@@ -245,6 +245,27 @@ class StyleMapper
 
         foreach ($options as $key => $value) {
             switch ($key) {
+                case 'background':
+                    $value = \OdtTemplateEngine\Document\FillProjection::validate($value);
+                    $type = $value['type'];
+                    if ($type === 'none') {
+                        $mapped['draw:fill'] = 'none';
+                        $mapped['fo:background-color'] = 'transparent';
+                    } elseif ($type === 'solid') {
+                        $mapped['draw:fill'] = 'solid';
+                        $mapped['draw:fill-color'] = $value['color'] ?? '';
+                        $mapped['fo:background-color'] = $value['color'] ?? '';
+                    } elseif ($type === 'gradient') {
+                        $mapped['draw:fill'] = 'gradient';
+                        $mapped['draw:fill-gradient-name'] = $value['name'] ?? '';
+                    } elseif ($type === 'bitmap') {
+                        $mapped['draw:fill'] = 'bitmap';
+                        $mapped['draw:fill-image-name'] = $value['name'] ?? '';
+                        $mapped['style:repeat'] = $value['repeat'] ?? 'stretch';
+                    } else {
+                        throw new \InvalidArgumentException('Unsupported frame background type.');
+                    }
+                    break;
                 // Hintergrund
                 case 'background-color':
                 case 'fo:background-color':
