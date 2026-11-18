@@ -24,6 +24,7 @@ final class PageStyleManager
 {
     private const OFFICE_NS = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0';
     private const STYLE_NS = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
+    private const DRAW_NS = 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0';
 
     public function __construct(
         private readonly OdtDocumentContext $context,
@@ -167,6 +168,46 @@ final class PageStyleManager
         $nextMasterPageName = $this->requiredName($nextMasterPageName, 'Next page style');
         $this->assertPageStyleExists($nextMasterPageName);
         $master->setAttributeNS(self::STYLE_NS, 'style:next-style-name', $nextMasterPageName);
+    }
+
+    /**
+     * Bounded, detached inspection of one master-page identity.
+     *
+     * The returned shape intentionally exposes names, region presence and
+     * authored geometry only; it is not a generic style round-trip API.
+     *
+     * @return array<string, mixed>
+     */
+    public function inspectPageStyle(string $masterPageName): array
+    {
+        $master = $this->masterPage($masterPageName);
+        $result = [
+            'name' => $masterPageName,
+            'page-layout-name' => $master->getAttributeNS(self::STYLE_NS, 'page-layout-name'),
+            'drawing-style-name' => $master->getAttributeNS(self::DRAW_NS, 'style-name') ?: null,
+            'next-style-name' => $master->getAttributeNS(self::STYLE_NS, 'next-style-name') ?: null,
+            'header' => ['present' => false, 'content' => false, 'properties' => null],
+            'footer' => ['present' => false, 'content' => false, 'properties' => null],
+            'unsupported' => [],
+        ];
+        foreach (['header', 'footer'] as $region) {
+            foreach ($master->childNodes as $child) {
+                if (!$child instanceof DOMElement
+                    || $child->namespaceURI !== self::STYLE_NS
+                    || $child->localName !== $region) {
+                    continue;
+                }
+                $result[$region]['present'] = true;
+                foreach ($child->childNodes as $content) {
+                    if ($content instanceof DOMElement) {
+                        $result[$region]['content'] = true;
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+        return $result;
     }
 
     private function materializeElementStyles(OdtElement $element): void

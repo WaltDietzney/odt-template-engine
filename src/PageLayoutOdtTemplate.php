@@ -73,6 +73,27 @@ class PageLayoutOdtTemplate extends OdtTemplate
         return $this;
     }
 
+    /** Explicitly mutate a native page-layout identity (shared references remain shared). */
+    public function updatePageLayout(string $name, array $options): static
+    {
+        (new PageLayoutManager($this->documentContext()))->updateLayout($name, $options);
+
+        return $this;
+    }
+
+    /** @return array<string, mixed> */
+    public function inspectPageLayout(string $name): array
+    {
+        return (new PageLayoutManager($this->documentContext()))->inspectLayout($name);
+    }
+
+    /** @return array<string, mixed> */
+    public function inspectPageStyle(string $name): array
+    {
+        return (new PageStyleManager($this->documentContext(), $this->documentPackage()))
+            ->inspectPageStyle($name);
+    }
+
     /**
      * Define a native style:master-page and associate it with a page layout.
      *

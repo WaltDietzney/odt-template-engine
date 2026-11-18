@@ -16,6 +16,7 @@ final class PageLayoutManager
 {
     private const STYLE_NS = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
     private const FO_NS = 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0';
+    private const DRAW_NS = 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0';
 
     public function __construct(private readonly OdtDocumentContext $context)
     {
@@ -41,9 +42,31 @@ final class PageLayoutManager
      */
     public function setLayout(array $options, string $masterPage = 'Standard'): void
     {
-        $properties = $this->findPageLayoutProperties($masterPage);
+        if (!PageLayoutOptions::isExtended($options)) {
+            $properties = $this->findPageLayoutProperties($masterPage);
+            $this->applyLayoutProperties($properties, $options);
+            return;
+        }
 
-        $this->applyLayoutProperties($properties, $options);
+        $snapshot = $this->context->snapshotState();
+        try {
+            $layout = $this->findLayoutForMaster($masterPage);
+            $properties = $this->layoutProperties($layout, $masterPage);
+            $this->applyLayoutProperties($properties, $options);
+            PageLayoutOptions::applyPage($properties, $options);
+            foreach (['header', 'footer'] as $region) {
+                if (array_key_exists($region, $options)) {
+                    PageLayoutOptions::applyRegion(
+                        $this->regionProperties($layout, $region, $masterPage),
+                        $options[$region],
+                        $region
+                    );
+                }
+            }
+        } catch (\Throwable $exception) {
+            $this->context->restoreState($snapshot);
+            throw $exception;
+        }
     }
 
     /**
@@ -53,6 +76,7 @@ final class PageLayoutManager
      */
     public function defineLayout(string $layoutName, array $options): void
     {
+        $snapshot = $this->context->snapshotState();
         $layoutName = trim($layoutName);
         if ($layoutName === '') {
             throw new RuntimeException('Page layout name must not be empty.');
@@ -76,10 +100,123 @@ final class PageLayoutManager
 
         try {
             $this->applyLayoutProperties($properties, $options);
+            PageLayoutOptions::applyPage($properties, $options);
+            foreach (['header', 'footer'] as $region) {
+                if (array_key_exists($region, $options)) {
+                    PageLayoutOptions::applyRegion(
+                        $this->regionProperties($layout, $region, $layoutName),
+                        $options[$region],
+                        $region
+                    );
+                }
+            }
         } catch (\Throwable $exception) {
-            $automaticStyles->removeChild($layout);
+            $this->context->restoreState($snapshot);
             throw $exception;
         }
+    }
+
+    public function updateLayout(string $layoutName, array $options): void
+    {
+        $snapshot = $this->context->snapshotState();
+        try {
+            $layout = $this->findLayout($layoutName);
+            $properties = $this->layoutProperties($layout, 'Page layout ' . $layoutName);
+            $this->applyLayoutProperties($properties, $options);
+            PageLayoutOptions::applyPage($properties, $options);
+            foreach (['header', 'footer'] as $region) {
+                if (array_key_exists($region, $options)) {
+                    PageLayoutOptions::applyRegion(
+                        $this->regionProperties($layout, $region, $layoutName),
+                        $options[$region],
+                        $region
+                    );
+                }
+            }
+        } catch (\Throwable $exception) {
+            $this->context->restoreState($snapshot);
+            throw $exception;
+        }
+    }
+
+    /** @return array<string, mixed> */
+    public function inspectLayout(string $layoutName): array
+    {
+        $layout = $this->findLayout($layoutName);
+        $properties = $this->layoutProperties($layout, 'Page layout ' . $layoutName);
+        $result = [
+            'name' => $layoutName,
+            'master-pages' => [],
+            'properties' => [],
+            'regions' => ['header' => null, 'footer' => null],
+            'unsupported' => [],
+        ];
+        $xpath = new DOMXPath($this->context->stylesDom());
+        $xpath->registerNamespace('style', self::STYLE_NS);
+        foreach ($xpath->query('//style:master-page[@style:page-layout-name=' . $this->xpathLiteral($layoutName) . ']') as $master) {
+            if ($master instanceof DOMElement) {
+                $result['master-pages'][] = [
+                    'name' => $master->getAttributeNS(self::STYLE_NS, 'name'),
+                    'drawing-style-name' => $master->getAttributeNS(self::DRAW_NS, 'style-name') ?: null,
+                ];
+            }
+        }
+        foreach ($properties->attributes as $attribute) {
+            if ($attribute instanceof \DOMAttr) {
+                $result['properties'][$this->qualifiedAttribute($attribute)] = $attribute->value;
+            }
+        }
+        foreach (['header', 'footer'] as $region) {
+            $regionNode = $this->regionPropertiesOrNull($layout, $region);
+            if (!$regionNode instanceof DOMElement) {
+                continue;
+            }
+            $values = [];
+            foreach ($regionNode->attributes as $attribute) {
+                if ($attribute instanceof \DOMAttr) {
+                    $values[$this->qualifiedAttribute($attribute)] = $attribute->value;
+                }
+            }
+            $result['regions'][$region] = $values;
+        }
+        if ($properties->hasAttributeNS(self::FO_NS, 'background-color')
+            || $properties->hasAttributeNS(self::DRAW_NS, 'fill')
+            || $properties->hasAttributeNS(self::DRAW_NS, 'fill-gradient-name')
+            || $properties->getElementsByTagNameNS(self::STYLE_NS, 'background-image')->length > 0) {
+            $result['unsupported'][] = 'fill';
+        }
+        foreach ($properties->childNodes as $child) {
+            if (!$child instanceof DOMElement
+                || $child->namespaceURI !== self::STYLE_NS
+                || $child->localName !== 'columns') {
+                continue;
+            }
+            $columns = ['attributes' => [], 'children' => []];
+            foreach ($child->attributes as $attribute) {
+                if ($attribute instanceof \DOMAttr) {
+                    $columns['attributes'][$this->qualifiedAttribute($attribute)] = $attribute->value;
+                }
+            }
+            foreach ($child->childNodes as $column) {
+                if (!$column instanceof DOMElement) {
+                    continue;
+                }
+                $entry = ['name' => $column->localName, 'attributes' => []];
+                foreach ($column->attributes as $attribute) {
+                    if ($attribute instanceof \DOMAttr) {
+                        $entry['attributes'][$this->qualifiedAttribute($attribute)] = $attribute->value;
+                    }
+                }
+                $columns['children'][] = $entry;
+            }
+            $result['properties']['columns'] = $columns;
+        }
+        return $result;
+    }
+
+    private function qualifiedAttribute(\DOMAttr $attribute): string
+    {
+        return $attribute->prefix === '' ? $attribute->localName : $attribute->prefix . ':' . $attribute->localName;
     }
 
     private function applyLayoutProperties(DOMElement $properties, array $options): void
@@ -146,6 +283,11 @@ final class PageLayoutManager
 
     private function findPageLayoutProperties(string $masterPage): DOMElement
     {
+        return $this->layoutProperties($this->findLayoutForMaster($masterPage), $masterPage);
+    }
+
+    private function findLayoutForMaster(string $masterPage): DOMElement
+    {
         $xpath = new DOMXPath($this->context->stylesDom());
         $xpath->registerNamespace('style', self::STYLE_NS);
 
@@ -173,15 +315,94 @@ final class PageLayoutManager
             throw new RuntimeException(sprintf('Page layout "%s" was not found in styles.xml.', $layoutName));
         }
 
+        return $layout;
+    }
+
+    private function findLayout(string $layoutName): DOMElement
+    {
+        $xpath = new DOMXPath($this->context->stylesDom());
+        $xpath->registerNamespace('style', self::STYLE_NS);
+        $layout = $xpath->query(sprintf('//style:page-layout[@style:name=%s]', $this->xpathLiteral($layoutName)))->item(0);
+        if (!$layout instanceof DOMElement) {
+            throw new RuntimeException(sprintf('Page layout "%s" was not found.', $layoutName));
+        }
+        return $layout;
+    }
+
+    private function layoutProperties(DOMElement $layout, string $owner): DOMElement
+    {
+        $xpath = new DOMXPath($this->context->stylesDom());
+        $xpath->registerNamespace('style', self::STYLE_NS);
         $properties = $xpath->query('./style:page-layout-properties', $layout)->item(0);
         if (!$properties instanceof DOMElement) {
             throw new RuntimeException(sprintf(
-                'Page layout "%s" has no style:page-layout-properties element.',
-                $layoutName
+                '%s has no style:page-layout-properties element.',
+                $owner
             ));
         }
-
         return $properties;
+    }
+
+    private function regionProperties(DOMElement $layout, string $region, string $owner): DOMElement
+    {
+        $existing = $this->regionPropertiesOrNull($layout, $region);
+        if ($existing instanceof DOMElement) {
+            return $existing;
+        }
+        $container = null;
+        foreach ($layout->childNodes as $child) {
+            if ($child instanceof DOMElement
+                && $child->namespaceURI === self::STYLE_NS
+                && $child->localName === $region . '-style') {
+                $container = $child;
+                break;
+            }
+        }
+        if (!$container instanceof DOMElement) {
+            $container = $this->context->stylesDom()->createElementNS(self::STYLE_NS, 'style:' . $region . '-style');
+        }
+        $properties = $this->context->stylesDom()->createElementNS(self::STYLE_NS, 'style:header-footer-properties');
+        $container->appendChild($properties);
+        if ($container->parentNode === null) {
+            $reference = null;
+            if ($region === 'header') {
+                foreach ($layout->childNodes as $child) {
+                    if ($child instanceof DOMElement
+                        && $child->namespaceURI === self::STYLE_NS
+                        && $child->localName === 'footer-style') {
+                        $reference = $child;
+                        break;
+                    }
+                }
+            }
+            if ($reference instanceof DOMElement) {
+                $layout->insertBefore($container, $reference);
+            } else {
+                $layout->appendChild($container);
+            }
+        } elseif ($container->parentNode !== $layout) {
+            $layout->appendChild($container);
+        }
+        return $properties;
+    }
+
+    private function regionPropertiesOrNull(DOMElement $layout, string $region): ?DOMElement
+    {
+        foreach ($layout->childNodes as $child) {
+            if (!$child instanceof DOMElement
+                || $child->namespaceURI !== self::STYLE_NS
+                || $child->localName !== $region . '-style') {
+                continue;
+            }
+            foreach ($child->childNodes as $nested) {
+                if ($nested instanceof DOMElement
+                    && $nested->namespaceURI === self::STYLE_NS
+                    && $nested->localName === 'header-footer-properties') {
+                    return $nested;
+                }
+            }
+        }
+        return null;
     }
 
     private function xpathLiteral(string $value): string
