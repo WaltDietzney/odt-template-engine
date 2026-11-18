@@ -171,6 +171,14 @@ return [
             'status' => 'canonical', 'distribution' => 'composer', 'execution_mode' => 'odt',
         ],
         [
+            'id' => 'C08', 'title' => 'Programmatic CV Composition', 'role' => 'capability', 'ownership' => 'programmatic-elements',
+            'entry_point' => 'samples/sample_C08_cv_composition.php',
+            'template_path' => 'samples/templates/template_C06_section_authoring.odt',
+            'output_path' => 'samples/output/output_C08_cv_composition.odt',
+            'purpose' => 'Builds and reopens a native CV template with distinct masters, shared fills, and nested Section collections.',
+            'status' => 'canonical', 'distribution' => 'composer', 'execution_mode' => 'odt',
+        ],
+        [
             'id' => 'B01', 'title' => 'Invoice Template Builder', 'role' => 'builder', 'ownership' => 'programmatic-elements',
             'entry_point' => 'samples/sample_B01_invoice_template_builder.php',
             'template_path' => 'samples/templates/invoice-richtext-prototype.odt',

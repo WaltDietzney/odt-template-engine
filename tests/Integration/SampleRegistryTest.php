@@ -16,7 +16,7 @@ final class SampleRegistryTest extends TestCase
 
         self::assertSame(
             ['L01', 'L02', 'L03', 'L04', 'L05', 'L06', 'L07', 'L08', 'L09', 'L10', 'L11', 'L12',
-                'C01', 'C02', 'C03', 'C04', 'C05', 'C06', 'C07', 'B01', 'B02', 'S01b', 'S03', 'S03-B'],
+                'C01', 'C02', 'C03', 'C04', 'C05', 'C06', 'C07', 'C08', 'B01', 'B02', 'S01b', 'S03', 'S03-B'],
             $ids
         );
 
@@ -97,7 +97,7 @@ final class SampleRegistryTest extends TestCase
         self::assertStringContainsString('Sample is not registered for public discovery.', $unregistered);
 
         $html = $this->runExplorer();
-        foreach (['L01', 'L12', 'C01', 'C05', 'C06', 'C07', 'B01', 'B02', 'S01b', 'S03', 'S03-B'] as $id) {
+        foreach (['L01', 'L12', 'C01', 'C05', 'C06', 'C07', 'C08', 'B01', 'B02', 'S01b', 'S03', 'S03-B'] as $id) {
             self::assertStringContainsString('data-sample-id="' . $id . '"', $html);
         }
         foreach (['legacy.sample-', 'sample_01_', 'sample_21_', 'sample_S02_', 'sample_S03_structured_professional_report_b'] as $legacyMarker) {
