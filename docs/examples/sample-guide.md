@@ -46,6 +46,8 @@ The capability layer adds native ODF behavior above the Learn path.
 | [C04](../../samples/sample_C04_declarative_structured_collections.php) | Declarative Structured Collections | Direct Phase-D execution of Writer-authored nested Sections with template-shaped data |
 | [C05](../../samples/sample_C05_mapping_automation.php) | Mapping & Automation | Explicit mapping, concrete preflight, and common atomic Phase-E execution |
 | [C06](../../samples/sample_C06_section_authoring.php) | Section Authoring | PHP-owned named/nested Sections, equal and unequal Writer-safe columns, separators, explicit indents, real column breaks, mixed content, and SectionTarget editing |
+| [C07](../../samples/sample_C07_page_region_mutation.php) | Page Region Mutation | Replace or create normal master-page header/footer content while preserving layout geometry |
+| [C08](../../samples/sample_C08_cv_composition.php) | Programmatic CV Composition | Generate a reusable CV template from a blank shell, reopen and populate nested Sections, with shared fills and distinct page masters |
 
 ## Canonical builder samples
 

@@ -19,6 +19,105 @@ final class PageStyleAuthoring01Test extends TestCase
     private const FO = 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0';
     private const TEXT = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0';
 
+    public function testUpdateRegionsPreservesLayoutAndSurvivesReopen(): void
+    {
+        $template = new PageLayoutOdtTemplate($this->templatePath());
+        $template->definePageLayout('C3Layout', ['header' => ['min-height' => '1cm']]);
+        $template->definePageStyle('C3Master', 'C3Layout', [
+            'footer' => (new Paragraph())->addText('Original footer'),
+        ]);
+        $before = $template->inspectPageLayout('C3Layout');
+        self::assertSame($template, $template->updatePageStyle('C3Master', [
+            'header' => (new Paragraph())->addText('New header'),
+        ]));
+        $template->updatePageStyle('C3Master', ['footer' => null]);
+        self::assertSame($before, $template->inspectPageLayout('C3Layout'));
+        $output = sys_get_temp_dir() . '/c3-' . uniqid() . '.odt';
+        try {
+            $template->save($output);
+            [$styles] = $this->readXml($output);
+            $xpath = $this->xpath($styles);
+            self::assertSame('New header', $xpath->evaluate('string(//style:master-page[@style:name="C3Master"]/style:header)'));
+            self::assertSame(0, $xpath->query('//style:master-page[@style:name="C3Master"]/style:footer')->length);
+            $reopened = new PageLayoutOdtTemplate($output);
+            $reopened->updatePageStyle('C3Master', ['header' => new Paragraph()]);
+            self::assertTrue($reopened->inspectPageStyle('C3Master')['header']['present']);
+        } finally {
+            @unlink($output);
+        }
+    }
+
+    public function testUpdateRegionsRejectsInvalidOptionsAtomically(): void
+    {
+        $template = new PageLayoutOdtTemplate($this->templatePath());
+        $template->definePageLayout('C3Layout', []);
+        $template->definePageStyle('C3Master', 'C3Layout');
+        $before = $template->inspectPageStyle('C3Master');
+        foreach ([['header' => new Paragraph(), 'footer' => 'invalid'], ['unknown' => null]] as $options) {
+            try {
+                $template->updatePageStyle('C3Master', $options);
+                self::fail('Invalid options accepted.');
+            } catch (\InvalidArgumentException $exception) {
+                self::assertSame($before, $template->inspectPageStyle('C3Master'));
+            }
+        }
+    }
+
+    public function testUpdateRejectsVariantsAndRollsBackResources(): void
+    {
+        $template = new class($this->templatePath()) extends PageLayoutOdtTemplate {
+            public function contextForTest(): \OdtTemplateEngine\OdtDocumentContext
+            {
+                return $this->documentContext();
+            }
+        };
+        $template->definePageLayout('C3Layout', []);
+        $template->definePageStyle('C3Master', 'C3Layout', ['footer' => new Paragraph()]);
+        $dom = $template->contextForTest()->stylesDom();
+        $xpath = $this->xpath($dom);
+        $master = $xpath->query('//style:master-page[@style:name="C3Master"]')->item(0);
+        $variant = $dom->createElementNS(self::STYLE, 'style:header-left');
+        $master->appendChild($variant);
+        $before = $dom->saveXML();
+        try {
+            $template->updatePageStyle('C3Master', ['header' => null]);
+            self::fail('Variant mutation accepted.');
+        } catch (\InvalidArgumentException $exception) {
+            self::assertSame($before, $dom->saveXML());
+        }
+        $master->removeChild($variant);
+        $before = $dom->saveXML();
+        $image = new \OdtTemplateEngine\Elements\ImageElement(
+            'tests/Fixtures/LegacySamples/templates/sample_23_image.png'
+        );
+        try {
+            $template->updatePageStyle('C3Master', [
+                'header' => (new Paragraph())->addElement($image),
+                'footer' => new class extends \OdtTemplateEngine\Elements\OdtElement {
+                    public function toDomNode(DOMDocument $dom): \DOMNode
+                    {
+                        return $dom->createElement('text:span', 'Invalid root');
+                    }
+                },
+            ]);
+            self::fail('Invalid block accepted.');
+        } catch (\InvalidArgumentException $exception) {
+            self::assertSame($before, $template->contextForTest()->stylesDom()->saveXML());
+        }
+        $template->updatePageStyle('C3Master', ['header' => (new Paragraph())->addElement($image)]);
+        $output = sys_get_temp_dir() . '/c3-image-' . uniqid() . '.odt';
+        try {
+            $template->save($output);
+            $zip = new ZipArchive();
+            self::assertTrue($zip->open($output));
+            self::assertNotFalse($zip->locateName('Pictures/sample_23_image.png'));
+            self::assertStringContainsString('Pictures/sample_23_image.png', $zip->getFromName('META-INF/manifest.xml'));
+            $zip->close();
+        } finally {
+            @unlink($output);
+        }
+    }
+
     public function testDefinesPageLayoutsMasterPagesSuccessionAssignmentAndPageOwnedContent(): void
     {
         $template = new PageLayoutOdtTemplate($this->templatePath());

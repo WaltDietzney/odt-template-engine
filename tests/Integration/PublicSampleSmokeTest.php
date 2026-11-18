@@ -369,6 +369,52 @@ final class PublicSampleSmokeTest extends TestCase
                 self::assertStringContainsString('style:next-style-name="CV_20_Continuation"', $styles);
                 self::assertStringContainsString('style:display-name="CV Continuation"', $styles);
             }
+            if ($sample['id'] === 'C08') {
+                $content = $archive->getFromName('content.xml');
+                $styles = $archive->getFromName('styles.xml');
+                self::assertIsString($content);
+                self::assertIsString($styles);
+                self::assertStringNotContainsString('{{', $content);
+                self::assertStringNotContainsString('{{', $styles);
+                $body = $this->contentXPath($content);
+                $layout = $this->contentXPath($styles);
+                foreach (['JobSection_' => 4, 'ActivitySection_' => 9,
+                    'EducationSection_' => 2, 'QualificationSection_' => 3] as $prefix => $count) {
+                    self::assertCount($count, $body->query('//text:section[starts-with(@text:name, "' . $prefix . '")]'));
+                }
+                self::assertCount(1, $layout->query('//style:master-page[@style:name="FirstPage"][@style:next-style-name="NextPage"]'));
+                self::assertCount(2, $layout->query('//style:master-page[@style:name="FirstPage" or @style:name="NextPage"]/style:footer[contains(., "Andrew Thompson")]'));
+                self::assertCount(2, $layout->query('//style:header//draw:frame[@svg:height="29.7cm"]'));
+                self::assertCount(1, $layout->query('//draw:gradient[@draw:name="CVSidebarGradient"]'));
+                self::assertCount(1, $layout->query('//draw:fill-image[@draw:name="CVFooterBitmap"]'));
+                self::assertCount(2, $layout->query('//style:footer-style/style:header-footer-properties[@draw:fill-image-name="CVFooterBitmap"]'));
+                self::assertNotFalse($archive->locateName('Pictures/cv-footer-texture.png'));
+                self::assertNotFalse($archive->locateName('Pictures/BFoto.png'));
+                $prototype = new ZipArchive();
+                self::assertTrue($prototype->open($this->temporaryDirectory . '/samples/output/template_C08_cv_composition.odt'));
+                $prototypeContent = $prototype->getFromName('content.xml');
+                self::assertIsString($prototypeContent);
+                $prototypeBody = $this->contentXPath($prototypeContent);
+                self::assertCount(1, $prototypeBody->query('//text:section[@text:name="JobSection"]/text:section[@text:name="ActivitySection"]'));
+                self::assertStringContainsString('{{JobName}}', $prototypeContent);
+                $prototype->close();
+                $reopened = new \OdtTemplateEngine\OdtTemplate($expectedOutput);
+                $reopened->render();
+                $reopened->save($this->temporaryDirectory . '/c08-repeat.odt');
+                $reopened->render();
+                $reopened->save($this->temporaryDirectory . '/c08-repeat.odt');
+                $reopened->cleanup();
+                $repeat = new ZipArchive();
+                self::assertTrue($repeat->open($this->temporaryDirectory . '/c08-repeat.odt'));
+                foreach (['content.xml', 'styles.xml'] as $part) {
+                    $original = $archive->getFromName($part);
+                    $actual = $repeat->getFromName($part);
+                    self::assertIsString($actual);
+                    self::assertXmlStringEqualsXmlString($original, $actual);
+                }
+                $repeat->close();
+
+            }
             $archive->close();
         }
 

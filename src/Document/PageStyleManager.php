@@ -24,6 +24,7 @@ final class PageStyleManager
 {
     private const OFFICE_NS = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0';
     private const STYLE_NS = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
+    private const DRAW_NS = 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0';
 
     public function __construct(
         private readonly OdtDocumentContext $context,
@@ -96,11 +97,91 @@ final class PageStyleManager
             }
 
             $masterStyles->appendChild($master);
+            (new PageLayoutManager($this->context))->synchronizeLayoutFill($pageLayoutName);
         } catch (\Throwable $exception) {
             $this->context->restoreState($snapshot);
             if ($createdResources !== []) {
                 $this->package?->removePreparedPackageFiles($createdResources);
             }
+            throw $exception;
+        }
+    }
+
+    /** @param array{header?: OdtElement|null, footer?: OdtElement|null} $options */
+    public function updatePageStyle(string $name, array $options): void
+    {
+        $master = $this->masterPage($name);
+        $regions = [];
+        foreach ($options as $region => $element) {
+            if (!in_array($region, ['header', 'footer'], true)
+                || ($element !== null && !$element instanceof OdtElement)) {
+                throw new InvalidArgumentException('Invalid page region mutation.');
+            }
+            foreach ($master->childNodes as $child) {
+                if (!$child instanceof DOMElement || $child->namespaceURI !== self::STYLE_NS) {
+                    continue;
+                }
+                if (in_array($child->localName, [$region . '-left', $region . '-first'], true)) {
+                    throw new InvalidArgumentException('Cannot mutate a page region with authored variants.');
+                }
+                if ($child->localName === $region) {
+                    if (isset($regions[$region])) {
+                        throw new InvalidArgumentException('Ambiguous page region.');
+                    }
+                    $regions[$region] = $child;
+                }
+            }
+            if ($element !== null) {
+                (new SectionMutationService())->validateOwnershipTree($element, 'updatePageStyle', $name);
+                FillProjection::validateElementTree($this->context, $element);
+            }
+        }
+        $snapshot = $this->context->snapshotState();
+        $created = [];
+        try {
+            foreach ($options as $region => $element) {
+                $old = $regions[$region] ?? null;
+                if ($element === null) {
+                    if ($old !== null) {
+                        $master->removeChild($old);
+                    }
+                    continue;
+                }
+                $resources = iterator_to_array((new StructuredResourceCollector())->collect($element), false);
+                if ($resources !== [] && $this->package === null) {
+                    throw new InvalidArgumentException('Page region resources require a package.');
+                }
+                $created = array_merge($created, $this->package?->copyImageResourcesAtomically($resources) ?? []);
+                $this->materializeElementStyles($element);
+                $container = $this->context->stylesDom()->createElementNS(self::STYLE_NS, 'style:' . $region);
+                $this->appendElementChildren($container, $element->toDomNode($this->context->stylesDom()));
+                if (!$container->hasChildNodes()) {
+                    throw new InvalidArgumentException('Use an empty paragraph for empty page region content.');
+                }
+                foreach ($container->childNodes as $node) {
+                    if (!$node instanceof DOMElement || !in_array($node->nodeName, ['text:p', 'text:h', 'text:list', 'table:table'], true)) {
+                        throw new InvalidArgumentException('Page region requires native block content.');
+                    }
+                }
+                if ($old !== null) {
+                    $master->replaceChild($container, $old);
+                } else {
+                    $before = null;
+                    if ($region === 'header') {
+                        foreach ($master->childNodes as $child) {
+                            if ($child instanceof DOMElement && $child->namespaceURI === self::STYLE_NS
+                                && str_starts_with($child->localName, 'footer')) {
+                                $before = $child;
+                                break;
+                            }
+                        }
+                    }
+                    $master->insertBefore($container, $before);
+                }
+            }
+        } catch (\Throwable $exception) {
+            $this->context->restoreState($snapshot);
+            $this->package?->removePreparedPackageFiles($created);
             throw $exception;
         }
     }
@@ -169,8 +250,51 @@ final class PageStyleManager
         $master->setAttributeNS(self::STYLE_NS, 'style:next-style-name', $nextMasterPageName);
     }
 
+    /**
+     * Bounded, detached inspection of one master-page identity.
+     *
+     * The returned shape intentionally exposes names, region presence and
+     * authored geometry only; it is not a generic style round-trip API.
+     *
+     * @return array<string, mixed>
+     */
+    public function inspectPageStyle(string $masterPageName): array
+    {
+        $master = $this->masterPage($masterPageName);
+        $result = [
+            'name' => $masterPageName,
+            'page-layout-name' => $master->getAttributeNS(self::STYLE_NS, 'page-layout-name'),
+            'drawing-style-name' => $master->getAttributeNS(self::DRAW_NS, 'style-name') ?: null,
+            'next-style-name' => $master->getAttributeNS(self::STYLE_NS, 'next-style-name') ?: null,
+            'header' => ['present' => false, 'content' => false, 'properties' => null],
+            'footer' => ['present' => false, 'content' => false, 'properties' => null],
+            'unsupported' => [],
+        ];
+        $result['fill'] = (new PageLayoutManager($this->context))
+            ->inspectLayout($result['page-layout-name'])['fill'];
+        foreach (['header', 'footer'] as $region) {
+            foreach ($master->childNodes as $child) {
+                if (!$child instanceof DOMElement
+                    || $child->namespaceURI !== self::STYLE_NS
+                    || $child->localName !== $region) {
+                    continue;
+                }
+                $result[$region]['present'] = true;
+                foreach ($child->childNodes as $content) {
+                    if ($content instanceof DOMElement) {
+                        $result[$region]['content'] = true;
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+        return $result;
+    }
+
     private function materializeElementStyles(OdtElement $element): void
     {
+        FillProjection::validateElementTree($this->context, $element);
         $collector = new StyleRequirementCollector();
         $materializer = new StyleRequirementMaterializer();
         foreach ($collector->collectSemantic($element) as $requirement) {

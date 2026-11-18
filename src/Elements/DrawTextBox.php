@@ -221,11 +221,32 @@ class DrawTextBox extends OdtElement
         return $this;
     }
 
-    public function setBackground(string $color): self
+    public function setBackground(string|array $color): self
     {
-        $this->frameOptions['background-color'] = $color;
+        if (is_array($color)) {
+            \OdtTemplateEngine\Document\FillProjection::validate($color);
+        }
+        foreach (['background', 'background-color', 'fo:background-color', 'fill', 'draw:fill',
+            'fill-color', 'draw:fill-color', 'draw:fill-gradient-name', 'draw:fill-image-name',
+            'draw:fill-image-width', 'draw:fill-image-height', 'style:repeat'] as $key) {
+            unset($this->frameOptions[$key]);
+        }
+        if (is_string($color)) {
+            unset($this->frameOptions['background']);
+            $this->frameOptions['background-color'] = $color;
+        } else {
+            unset($this->frameOptions['background-color'], $this->frameOptions['fo:background-color']);
+            $this->frameOptions['background'] = $color;
+        }
         $this->registerFrameStyle();
         return $this;
+    }
+
+    /** @return array<string, mixed>|null */
+    public function semanticBackgroundOptions(): ?array
+    {
+        return isset($this->frameOptions['background']) && is_array($this->frameOptions['background'])
+            ? $this->frameOptions['background'] : null;
     }
 
     public function setFill(string $fill): self
@@ -377,6 +398,7 @@ class DrawTextBox extends OdtElement
             'draw:fill-color',
             'draw:stroke',
             'draw:fill-image-name',
+            'draw:fill-gradient-name',
             'draw:fill-image-width',
             'draw:fill-image-height',
             'style:repeat',

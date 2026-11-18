@@ -28,9 +28,28 @@ final class DocumentStyles
     /**
      * @param Closure(): OdtDocumentContext $contextProvider
      */
-    public function __construct(Closure $contextProvider)
+    public function __construct(Closure $contextProvider, private ?Closure $packageProvider = null)
     {
         $this->contextProvider = $contextProvider;
+    }
+
+    /** Define a reusable two-stop gradient in the current document. */
+    public function defineGradient(string $name, array $options): void
+    {
+        \OdtTemplateEngine\Document\FillResourceAuthoring::defineGradient(
+            ($this->contextProvider)(), $name, $options
+        );
+    }
+
+    /** Define a reusable local bitmap fill in the current document. */
+    public function defineFillImage(string $name, string $imagePath): void
+    {
+        if ($this->packageProvider === null) {
+            throw new \LogicException('Fill image authoring requires a package provider.');
+        }
+        \OdtTemplateEngine\Document\FillResourceAuthoring::defineImage(
+            ($this->contextProvider)(), ($this->packageProvider)(), $name, $imagePath
+        );
     }
 
     /**

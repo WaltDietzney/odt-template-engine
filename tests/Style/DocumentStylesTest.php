@@ -14,6 +14,65 @@ use PHPUnit\Framework\TestCase;
 
 final class DocumentStylesTest extends TestCase
 {
+    public function testGradientDefinitionsAreDocumentLocalAndIdempotent(): void
+    {
+        $context = $this->context();
+        $styles = new DocumentStyles(static fn (): OdtDocumentContext => $context);
+        $options = ['type' => 'linear', 'start-color' => '#112233', 'end-color' => '#abcdef', 'angle' => 45];
+        $styles->defineGradient('CVGradient', $options);
+        $styles->defineGradient('CVGradient', $options);
+        $nodes = $context->stylesDom()->getElementsByTagNameNS(
+            'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0', 'gradient'
+        );
+        self::assertCount(1, $nodes);
+        self::assertSame('45deg', $nodes->item(0)->getAttribute('draw:angle'));
+        self::assertSame('#abcdef', $nodes->item(0)->getAttribute('draw:end-color'));
+        $before = $context->stylesDom()->saveXML();
+        try {
+            $styles->defineGradient('CVGradient', array_replace($options, ['angle' => 90]));
+            self::fail('Conflicting definition must fail.');
+        } catch (LogicException $exception) {
+            self::assertStringContainsString('Conflicting', $exception->getMessage());
+        }
+        self::assertSame($before, $context->stylesDom()->saveXML());
+        self::assertCount(0, $this->context()->stylesDom()->getElementsByTagNameNS(
+            'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0', 'gradient'
+        ));
+    }
+
+    public function testGradientNativeTypesAndNames(): void
+    {
+        $context = $this->context();
+        $styles = new DocumentStyles(static fn (): OdtDocumentContext => $context);
+        $options = ['start-color' => '#112233', 'end-color' => '#abcdef'];
+        foreach (['linear', 'axial', 'radial', 'elliptical', 'square', 'rectangular'] as $type) {
+            $styles->defineGradient('Gradient_' . $type, $options + ['type' => $type]);
+        }
+        $nodes = $context->stylesDom()->getElementsByTagNameNS(
+            'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0', 'gradient'
+        );
+        self::assertSame(['linear', 'axial', 'radial', 'ellipsoid', 'square', 'rectangular'],
+            array_map(static fn ($node) => $node->getAttribute('draw:style'), iterator_to_array($nodes)));
+        foreach (['', 'bad name', '1bad', 'bad:name'] as $name) {
+            try {
+                $styles->defineGradient($name, $options + ['type' => 'linear']);
+                self::fail('Invalid NCName accepted.');
+            } catch (\InvalidArgumentException $exception) {
+                self::assertStringContainsString('NCName', $exception->getMessage());
+            }
+        }
+        $styles->defineGradient('Überblendung', $options + ['type' => 'linear']);
+        self::assertCount(7, $nodes);
+    }
+
+    public function testFillImageWithoutPackageProviderFails(): void
+    {
+        $context = $this->context();
+        $styles = new DocumentStyles(static fn (): OdtDocumentContext => $context);
+        $this->expectException(LogicException::class);
+        $styles->defineFillImage('Bitmap', 'unused.png');
+    }
+
     public function testDefineParagraphMaterializesDocumentLocalSemanticStyle(): void
     {
         $context = $this->context();
