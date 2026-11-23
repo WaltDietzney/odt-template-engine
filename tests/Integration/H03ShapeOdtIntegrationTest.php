@@ -89,6 +89,13 @@ final class H03ShapeOdtIntegrationTest extends TestCase
                 self::assertSame(1, $stylesXPath->query('//draw:fill-image')->length);
                 self::assertStringContainsString('draw:fill-image-name', $content);
                 self::assertStringContainsString('draw:fill="bitmap"', $content);
+                $contentXPath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
+                self::assertSame(1, $contentXPath->query(
+                    '//style:style[@style:family="graphic"][style:graphic-properties[@draw:fill="bitmap"]]'
+                )->length);
+                self::assertSame(0, $contentXPath->query(
+                    '//style:style[@style:family="graphic"][style:graphic-properties[@draw:fill="bitmap"]]/@style:parent-style-name'
+                )->length);
             } finally {
                 $zip->close();
             }

@@ -59,7 +59,7 @@ final class ShapeElement extends OdtElement
             'graphic',
             StyleRequirement::PART_CONTENT,
             $this->styleName(),
-            'Frame',
+            null,
             ['style:graphic-properties' => $this->graphicProperties()]
         )];
     }
