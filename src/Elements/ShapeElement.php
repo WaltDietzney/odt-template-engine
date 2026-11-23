@@ -37,10 +37,31 @@ final class ShapeElement extends OdtElement
             $shape->setAttribute($name, $value);
         }
         $shape->setAttribute('draw:style-name', $this->styleName());
+        // Writer-authored custom shapes contain an empty text paragraph before
+        // the enhanced geometry. Keep this native ODF child in the emitted
+        // object so text-container and roundtrip semantics remain explicit.
+        $shape->appendChild($dom->createElement('text:p'));
         $geometry = $dom->createElement('draw:enhanced-geometry');
         $geometry->setAttribute('svg:viewBox', $this->geometry->viewBox());
         $geometry->setAttribute('draw:type', $this->geometry->type());
         $geometry->setAttribute('draw:enhanced-path', $this->geometry->path());
+        foreach ($this->geometry->additionalAttributes() as $name => $value) {
+            $geometry->setAttribute('draw:' . $name, $value);
+        }
+        foreach ($this->geometry->equations() as $equation) {
+            $node = $dom->createElement('draw:equation');
+            foreach ($equation as $name => $value) {
+                $node->setAttribute('draw:' . $name, $value);
+            }
+            $geometry->appendChild($node);
+        }
+        foreach ($this->geometry->handles() as $handle) {
+            $node = $dom->createElement('draw:handle');
+            foreach ($handle as $name => $value) {
+                $node->setAttribute('draw:' . $name, $value);
+            }
+            $geometry->appendChild($node);
+        }
         $shape->appendChild($geometry);
 
         return $shape;
