@@ -14,3 +14,19 @@ The shared failure is consistent with invalid or unsupported nested shape placem
 ## Acceptance gate
 
 H03 is not Writer-roundtrip approved. A passing Writer-native preservation test for the three agreed shapes and their fills, plus visual inspection, is required before completion.
+
+## Follow-up: paragraph placement confirmed (23 November 2026)
+
+A namespace-preserving copy of `sample_textfeld.odt` was prepared in `/tmp/h03-geometry-check/in/h03-paragraph-fixture.odt` by appending an ordinary `text:p` with `{{shape}}` directly under `office:body/office:text`. No source sample or `samples/output` artifact was modified. The H03 element was inserted via the public `setElement()` API and saved through the normal ODT package pipeline.
+
+Headless Writer ODT-to-ODT conversion with isolated LibreOffice profiles preserved **one native `draw:custom-shape` before and after** for each of the three first-slice cases:
+
+| Geometry | Source native shapes | Writer roundtrip native shapes | `draw:type` retained |
+| --- | ---: | ---: | --- |
+| Solid rectangle | 1 | 1 | `rectangle` |
+| Bitmap ellipse | 1 | 1 | `ellipse` |
+| Solid arrow-like contour | 1 | 1 | `arrow-contour` |
+
+Writer renamed/repackaged the bitmap from `Pictures/WaltDietzney.png` to a generated internal `Pictures/...png` path. Therefore the output bitmap filename is **not** a stable identity across Writer roundtrips. This is not by itself resource loss; image presence and visual correctness require independent checks.
+
+**Conclusion:** The earlier loss is specific to the nested textbox test setup under these conditions. Normal paragraph insertion preserves the native shape carrier through headless Writer save. This does not yet prove that the arrow path is rendered as intended, that bitmap appearance is correct, or that the result passes manual Writer visual review. Keep H03 human gate open.
