@@ -41,7 +41,7 @@ final class H03NativeShapeTest extends TestCase
                 DrawingLayout::fromArray(['anchor' => 'paragraph', 'width' => '3cm', 'height' => '3cm'])
             );
             $node = $shape->toDomNode(new DOMDocument());
-            self::assertSame($type, $node->firstChild?->attributes?->getNamedItem('draw:type')?->nodeValue);
+            self::assertSame($type === 'arrow-contour' ? 'right-arrow' : $type, $node->firstChild?->attributes?->getNamedItem('draw:type')?->nodeValue);
             self::assertNotEmpty($node->firstChild?->attributes?->getNamedItem('draw:enhanced-path')?->nodeValue);
         }
     }

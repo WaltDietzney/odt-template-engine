@@ -87,7 +87,8 @@ final class H03ShapeOdtIntegrationTest extends TestCase
                 $stylesXPath = new DOMXPath($stylesDom);
                 $stylesXPath->registerNamespace('draw', 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0');
                 self::assertSame(1, $stylesXPath->query('//draw:fill-image')->length);
-                self::assertStringContainsString('draw:fill-image-name', $styles);
+                self::assertStringContainsString('draw:fill-image-name', $content);
+                self::assertStringContainsString('draw:fill="bitmap"', $content);
             } finally {
                 $zip->close();
             }

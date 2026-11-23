@@ -55,9 +55,9 @@ final class ShapeElement extends OdtElement
     {
         return [new StyleRequirement(
             StyleRequirement::KIND_DEFINITION,
-            StyleRequirement::SCOPE_COMMON,
+            StyleRequirement::SCOPE_AUTOMATIC,
             'graphic',
-            StyleRequirement::PART_STYLES,
+            StyleRequirement::PART_CONTENT,
             $this->styleName(),
             'Frame',
             ['style:graphic-properties' => $this->graphicProperties()]
