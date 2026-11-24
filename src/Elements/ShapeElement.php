@@ -19,6 +19,11 @@ final class ShapeElement extends OdtElement
 {
     private DrawingLayoutProjector $projector;
 
+    /** @var list<Paragraph> */
+    private array $paragraphs = [];
+
+    private ?ShapeTextLayout $textLayout = null;
+
     public function __construct(
         private readonly ShapeGeometry $geometry,
         private readonly ShapeAppearance $appearance,
@@ -30,6 +35,30 @@ final class ShapeElement extends OdtElement
         $this->projector = new DrawingLayoutProjector();
     }
 
+    /**
+     * Adds editable text inside the native shape.
+     * Text formatting and paragraph alignment are owned by Paragraph.
+     */
+    public function addParagraph(Paragraph $paragraph): self
+    {
+        $this->paragraphs[] = $paragraph;
+        return $this;
+    }
+
+    /**
+     * Configures text placement without changing the native shape geometry.
+     */
+    public function setTextLayout(ShapeTextLayout $layout): self
+    {
+        $this->textLayout = $layout;
+        return $this;
+    }
+
+    public function ownedElements(): iterable
+    {
+        return $this->paragraphs;
+    }
+
     public function toDomNode(DOMDocument $dom): DOMNode
     {
         $shape = $dom->createElement('draw:custom-shape');
@@ -37,6 +66,17 @@ final class ShapeElement extends OdtElement
             $shape->setAttribute($name, $value);
         }
         $shape->setAttribute('draw:style-name', $this->styleName());
+        foreach ($this->paragraphs as $index => $paragraph) {
+            $paragraphNode = $paragraph->toDomNode($dom);
+            if ($index === 0 && $paragraphNode->attributes?->getNamedItem('text:style-name') !== null) {
+                $shape->setAttribute(
+                    'draw:text-style-name',
+                    $paragraphNode->attributes->getNamedItem('text:style-name')->nodeValue
+                );
+            }
+            $shape->appendChild($paragraphNode);
+        }
+
         $geometry = $dom->createElement('draw:enhanced-geometry');
         $geometry->setAttribute('svg:viewBox', $this->geometry->viewBox());
         $geometry->setAttribute('draw:type', $this->geometry->type());
@@ -89,7 +129,9 @@ final class ShapeElement extends OdtElement
     {
         return array_merge(
             $this->appearance->graphicProperties(),
-            $this->projector->graphicLayoutProperties($this->layout)
+            $this->projector->graphicLayoutProperties($this->layout),
+            $this->layout->wrap() === 'run-through' ? ['style:run-through' => 'foreground'] : [],
+            $this->textLayout?->graphicProperties() ?? []
         );
     }
 

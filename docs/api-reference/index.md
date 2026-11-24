@@ -24,6 +24,13 @@ The most important API choice is often who owns a piece of document structure:
 
 These approaches can be combined in one document. Ownership is decided per piece of structure, not once for the entire document.
 
+## CV construction milestones (H00–H03)
+
+- [H00: CV Integration Baseline](h00-baseline.md) — planning, no new API
+- [H01: Native Section Authoring](structured-content/section-authoring.md)
+- [H02: Multi-page Layouts and Sidebars](template-document/sidebar-composition.md)
+- [H03: Native Drawing Shapes](structured-content/native-shapes.md) and [Skill Bars](structured-content/skillbars.md)
+
 ## Current reference sections
 
 ### Template & Document
@@ -34,6 +41,7 @@ These approaches can be combined in one document. Ownership is decided per piece
 - [Images](template-document/images.md)
 - [Styles & Document Defaults](template-document/styles-and-defaults.md)
 - [Programmatic Page Styles](template-document/page-styles.md)
+- [Multi-page Layouts and Sidebars](template-document/sidebar-composition.md)
 
 ### Structured Content
 
@@ -44,6 +52,9 @@ These approaches can be combined in one document. Ownership is decided per piece
 - [Tables & Cells](structured-content/tables.md)
 - [Images](structured-content/images.md)
 - [Frames & Text Boxes](structured-content/frames-text-boxes.md)
+- [Native Section Authoring](structured-content/section-authoring.md)
+- [Native Drawing Shapes](structured-content/native-shapes.md)
+- [Skill Bars](structured-content/skillbars.md)
 
 ### Writer-native Objects
 

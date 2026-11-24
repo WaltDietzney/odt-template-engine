@@ -49,3 +49,5 @@ created. If no style exists, a new Standard-derived content-local style is
 created. Existing `text:p`/`text:h` references are not rewritten.
 
 Writer remains responsible for actual pagination and page selection.
+
+For multi-page CV composition with floating header sidebars, see [Multi-page Layouts and Sidebars](sidebar-composition.md).
