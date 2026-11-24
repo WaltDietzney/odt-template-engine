@@ -1,0 +1,659 @@
+{
+    "compact": {
+        "items": [
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-map-pin-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "street",
+                        "value": "Am Wissenschaftspark"
+                    },
+                    " ",
+                    {
+                        "name": "house",
+                        "value": "128 a"
+                    },
+                    "\n",
+                    {
+                        "name": "postal",
+                        "value": "32049"
+                    },
+                    " ",
+                    {
+                        "name": "city",
+                        "value": "Herford"
+                    },
+                    "\n",
+                    {
+                        "name": "country",
+                        "value": "Deutschland"
+                    }
+                ],
+                "width": null
+            },
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-phone-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "phone",
+                        "value": "+49 5221 123456"
+                    }
+                ],
+                "width": null
+            },
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-mail-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "email",
+                        "value": "ada.beispiel@example.invalid"
+                    }
+                ],
+                "width": null
+            },
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-globe-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "website",
+                        "value": "example.invalid\/ada"
+                    }
+                ],
+                "width": null
+            }
+        ],
+        "data": {
+            "name": "Ada Beispiel",
+            "street": "Am Wissenschaftspark",
+            "house": "128 a",
+            "postal": "32049",
+            "city": "Herford",
+            "country": "Deutschland",
+            "phone": "+49 5221 123456",
+            "email": "ada.beispiel@example.invalid",
+            "website": "example.invalid\/ada"
+        },
+        "style": {
+            "width": 5.8,
+            "fontSize": 8.5,
+            "iconSize": 0.28,
+            "iconGap": 0.12,
+            "rowGap": 0.1
+        },
+        "strip": false
+    },
+    "sidebar-round": {
+        "items": [
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-map-pin-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "street",
+                        "value": "Am Wissenschaftspark"
+                    },
+                    " ",
+                    {
+                        "name": "house",
+                        "value": "128 a"
+                    },
+                    "\n",
+                    {
+                        "name": "postal",
+                        "value": "32049"
+                    },
+                    " ",
+                    {
+                        "name": "city",
+                        "value": "Herford"
+                    },
+                    "\n",
+                    {
+                        "name": "country",
+                        "value": "Deutschland"
+                    }
+                ],
+                "width": null
+            },
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-phone-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "phone",
+                        "value": "+49 5221 123456"
+                    }
+                ],
+                "width": null
+            },
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-mail-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "email",
+                        "value": "ada.beispiel@example.invalid"
+                    }
+                ],
+                "width": null
+            },
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-globe-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "website",
+                        "value": "example.invalid\/ada"
+                    }
+                ],
+                "width": null
+            }
+        ],
+        "data": {
+            "name": "Ada Beispiel",
+            "street": "Am Wissenschaftspark",
+            "house": "128 a",
+            "postal": "32049",
+            "city": "Herford",
+            "country": "Deutschland",
+            "phone": "+49 5221 123456",
+            "email": "ada.beispiel@example.invalid",
+            "website": "example.invalid\/ada"
+        },
+        "style": {
+            "width": 5.8,
+            "background": "#203A52",
+            "backing": "ellipse",
+            "backingColor": "#DCE8F2",
+            "color": "#FFFFFF",
+            "fontSize": 8.5,
+            "rowGap": 0.13
+        },
+        "strip": false
+    },
+    "sidebar-rounded": {
+        "items": [
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/tabler-map-pin-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "street",
+                        "value": "Am Wissenschaftspark"
+                    },
+                    " ",
+                    {
+                        "name": "house",
+                        "value": "128 a"
+                    },
+                    "\n",
+                    {
+                        "name": "postal",
+                        "value": "32049"
+                    },
+                    " ",
+                    {
+                        "name": "city",
+                        "value": "Herford"
+                    },
+                    "\n",
+                    {
+                        "name": "country",
+                        "value": "Deutschland"
+                    }
+                ],
+                "width": null
+            },
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/tabler-phone-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "phone",
+                        "value": "+49 5221 123456"
+                    }
+                ],
+                "width": null
+            },
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/tabler-mail-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "email",
+                        "value": "ada.beispiel@example.invalid"
+                    }
+                ],
+                "width": null
+            },
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/tabler-world-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "website",
+                        "value": "example.invalid\/ada"
+                    }
+                ],
+                "width": null
+            }
+        ],
+        "data": {
+            "name": "Ada Beispiel",
+            "street": "Am Wissenschaftspark",
+            "house": "128 a",
+            "postal": "32049",
+            "city": "Herford",
+            "country": "Deutschland",
+            "phone": "+49 5221 123456",
+            "email": "ada.beispiel@example.invalid",
+            "website": "example.invalid\/ada"
+        },
+        "style": {
+            "width": 5.8,
+            "background": "#203A52",
+            "backing": "round-rectangle",
+            "backingColor": "#DCE8F2",
+            "color": "#FFFFFF",
+            "fontSize": 8.5
+        },
+        "strip": false
+    },
+    "editorial": {
+        "items": [
+            {
+                "label": "ANSCHRIFT",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-map-pin-9A5439.svg",
+                "tokens": [
+                    {
+                        "name": "street",
+                        "value": "Am Wissenschaftspark"
+                    },
+                    " ",
+                    {
+                        "name": "house",
+                        "value": "128 a"
+                    },
+                    "\n",
+                    {
+                        "name": "postal",
+                        "value": "32049"
+                    },
+                    " ",
+                    {
+                        "name": "city",
+                        "value": "Herford"
+                    },
+                    "\n",
+                    {
+                        "name": "country",
+                        "value": "Deutschland"
+                    }
+                ],
+                "width": null
+            },
+            {
+                "label": "TELEFON",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-phone-9A5439.svg",
+                "tokens": [
+                    {
+                        "name": "phone",
+                        "value": "+49 5221 123456"
+                    }
+                ],
+                "width": null
+            },
+            {
+                "label": "E-MAIL",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-mail-9A5439.svg",
+                "tokens": [
+                    {
+                        "name": "email",
+                        "value": "ada.beispiel@example.invalid"
+                    }
+                ],
+                "width": null
+            },
+            {
+                "label": "WEBSEITE",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-globe-9A5439.svg",
+                "tokens": [
+                    {
+                        "name": "website",
+                        "value": "example.invalid\/ada"
+                    }
+                ],
+                "width": null
+            }
+        ],
+        "data": {
+            "name": "Ada Beispiel",
+            "street": "Am Wissenschaftspark",
+            "house": "128 a",
+            "postal": "32049",
+            "city": "Herford",
+            "country": "Deutschland",
+            "phone": "+49 5221 123456",
+            "email": "ada.beispiel@example.invalid",
+            "website": "example.invalid\/ada"
+        },
+        "style": {
+            "font": "Liberation Serif",
+            "fontSize": 9.5,
+            "color": "#6E3D2C",
+            "labelColor": "#9A5439",
+            "labelSize": 6.5,
+            "rowGap": 0.12
+        },
+        "strip": false
+    },
+    "strip-above": {
+        "items": [
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-phone-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "phone",
+                        "value": "+49 5221 123456"
+                    }
+                ],
+                "width": 2.7
+            },
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-mail-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "email",
+                        "value": "ada.beispiel@example.invalid"
+                    }
+                ],
+                "width": 4.1
+            },
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-globe-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "website",
+                        "value": "example.invalid\/ada"
+                    }
+                ],
+                "width": 3.6
+            }
+        ],
+        "data": {
+            "name": "Ada Beispiel",
+            "phone": "+49 5221 123456",
+            "email": "ada.beispiel@example.invalid",
+            "website": "example.invalid\/ada"
+        },
+        "style": {
+            "width": 18,
+            "fontSize": 8.5,
+            "placement": "above",
+            "iconGap": 0.09
+        },
+        "strip": true
+    },
+    "strip-inline": {
+        "items": [
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-phone-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "phone",
+                        "value": "+49 5221 123456"
+                    }
+                ],
+                "width": 3.3
+            },
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-mail-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "email",
+                        "value": "ada.beispiel@example.invalid"
+                    }
+                ],
+                "width": 5.2
+            },
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-globe-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "website",
+                        "value": "example.invalid\/ada"
+                    }
+                ],
+                "width": 4
+            }
+        ],
+        "data": {
+            "name": "Ada Beispiel",
+            "phone": "+49 5221 123456",
+            "email": "ada.beispiel@example.invalid",
+            "website": "example.invalid\/ada"
+        },
+        "style": {
+            "width": 18,
+            "fontSize": 8.5,
+            "placement": "left",
+            "iconGap": 0.12
+        },
+        "strip": true
+    },
+    "long": {
+        "items": [
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-map-pin-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "street",
+                        "value": "An der alten naturwissenschaftlichen Forschungsstation"
+                    },
+                    " ",
+                    {
+                        "name": "house",
+                        "value": "128 a"
+                    },
+                    "\n",
+                    {
+                        "name": "postal",
+                        "value": "32049"
+                    },
+                    " ",
+                    {
+                        "name": "city",
+                        "value": "Bad Oeynhausen – Stadtteil Rehme"
+                    },
+                    "\n",
+                    {
+                        "name": "country",
+                        "value": "Deutschland"
+                    }
+                ],
+                "width": null
+            },
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-phone-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "phone",
+                        "value": "+49 5221 123456"
+                    }
+                ],
+                "width": null
+            },
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-mail-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "email",
+                        "value": "ada.beispiel@example.invalid"
+                    }
+                ],
+                "width": null
+            },
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-globe-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "website",
+                        "value": "https:\/\/example.invalid\/ausfuehrlichesportfolioohnetrennzeichen\/beruflicherwerdegang"
+                    }
+                ],
+                "width": null
+            }
+        ],
+        "data": {
+            "name": "Ada Beispiel",
+            "street": "An der alten naturwissenschaftlichen Forschungsstation",
+            "house": "128 a",
+            "postal": "32049",
+            "city": "Bad Oeynhausen – Stadtteil Rehme",
+            "country": "Deutschland",
+            "phone": "+49 5221 123456",
+            "email": "ada.beispiel@example.invalid",
+            "website": "https:\/\/example.invalid\/ausfuehrlichesportfolioohnetrennzeichen\/beruflicherwerdegang"
+        },
+        "style": {
+            "width": 5.8,
+            "fontSize": 8.5,
+            "rowGap": 0.12,
+            "backing": "ellipse"
+        },
+        "strip": false
+    },
+    "minimal": {
+        "items": [
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-mail-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "email",
+                        "value": "ada.beispiel@example.invalid"
+                    }
+                ],
+                "width": null
+            }
+        ],
+        "data": {
+            "name": "Ada Beispiel",
+            "email": "ada.beispiel@example.invalid"
+        },
+        "style": {
+            "width": 5.8,
+            "fontSize": 8.5,
+            "backing": "ellipse"
+        },
+        "strip": false
+    },
+    "empty": {
+        "items": [],
+        "data": {
+            "name": "Ada Beispiel"
+        },
+        "style": [],
+        "strip": false
+    },
+    "rebound": {
+        "items": [
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-map-pin-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "street",
+                        "value": "An der alten naturwissenschaftlichen Forschungsstation"
+                    },
+                    " ",
+                    {
+                        "name": "house",
+                        "value": "128 a"
+                    },
+                    "\n",
+                    {
+                        "name": "postal",
+                        "value": "32049"
+                    },
+                    " ",
+                    {
+                        "name": "city",
+                        "value": "Bad Oeynhausen – Stadtteil Rehme"
+                    },
+                    "\n",
+                    {
+                        "name": "country",
+                        "value": "Deutschland"
+                    }
+                ],
+                "width": null
+            },
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-phone-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "phone",
+                        "value": "+49 5221 123456"
+                    }
+                ],
+                "width": null
+            },
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-mail-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "email",
+                        "value": "ada.beispiel@example.invalid"
+                    }
+                ],
+                "width": null
+            },
+            {
+                "label": "",
+                "icon": "\/srv\/projects\/odt-template-engine-p2\/research\/p2-capability-audit\/v04\/composition\/assets\/lucide-globe-375E80.svg",
+                "tokens": [
+                    {
+                        "name": "website",
+                        "value": "https:\/\/example.invalid\/ausfuehrlichesportfolioohnetrennzeichen\/beruflicherwerdegang"
+                    }
+                ],
+                "width": null
+            }
+        ],
+        "data": {
+            "name": "Ada Beispiel",
+            "street": "An der alten naturwissenschaftlichen Forschungsstation",
+            "house": "128 a",
+            "postal": "32049",
+            "city": "Bad Oeynhausen mit weiterem Ortsteil und langem Zusatz",
+            "country": "Deutschland",
+            "phone": "+49 5221 123456",
+            "email": "sehrlangerkontaktnameohnemanuelletrennzeichen@example.invalid",
+            "website": "https:\/\/example.invalid\/ausfuehrlichesportfolioohnetrennzeichen\/beruflicherwerdegang"
+        },
+        "style": {
+            "width": 5.8,
+            "fontSize": 8.5,
+            "rowGap": 0.12,
+            "backing": "ellipse"
+        },
+        "strip": false
+    }
+}

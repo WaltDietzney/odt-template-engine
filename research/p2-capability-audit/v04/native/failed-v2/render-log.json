@@ -1,0 +1,1025 @@
+[
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-ma2qa4ou",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-classic.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-classic.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-classic.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-on5yrs52",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-classic.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-classic.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-classic.odt using filter : writer8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-6fz08h_f",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-classic.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-classic.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-classic.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-classic.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images/contact-classic"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-classic.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-classic.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-classic.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images-rt/contact-classic"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-classic.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-classic.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-13o4m1ku",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-sidebar.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-sidebar.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-sidebar.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-2d7gw1vo",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-sidebar.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-sidebar.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-sidebar.odt using filter : writer8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-yx18fhz6",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-sidebar.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-sidebar.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-sidebar.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-sidebar.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images/contact-sidebar"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-sidebar.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-sidebar.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-sidebar.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images-rt/contact-sidebar"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-sidebar.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-sidebar.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-b5fpm4qx",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-horizontal.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-horizontal.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-horizontal.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-76qapas_",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-horizontal.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-horizontal.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-horizontal.odt using filter : writer8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-vygagi98",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-horizontal.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-horizontal.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-horizontal.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-horizontal.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images/contact-horizontal"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-horizontal.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-horizontal.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-horizontal.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images-rt/contact-horizontal"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-horizontal.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-horizontal.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-7zkjmqlv",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-editorial.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-editorial.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-editorial.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-y6tdg_pp",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-editorial.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-editorial.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-editorial.odt using filter : writer8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-02_cnx3v",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-editorial.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-editorial.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-editorial.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-editorial.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images/contact-editorial"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-editorial.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-editorial.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-editorial.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images-rt/contact-editorial"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-editorial.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-editorial.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-dxg9r18k",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-long.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-long.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-long.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-omnr8llm",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-long.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-long.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-long.odt using filter : writer8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-fn6sdaq7",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-long.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-long.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-long.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-long.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images/contact-long"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-long.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-long.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-long.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images-rt/contact-long"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-long.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-long.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-vx4vv60e",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-minimal.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-minimal.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-minimal.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-9n9filij",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-minimal.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-minimal.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-minimal.odt using filter : writer8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-puteomxw",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-minimal.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-minimal.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-minimal.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-minimal.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images/contact-minimal"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-minimal.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-minimal.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-minimal.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images-rt/contact-minimal"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-minimal.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-minimal.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-pmoyyc4g",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-empty.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-empty.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-empty.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-8oj52kjq",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-empty.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-empty.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-empty.odt using filter : writer8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-1mw9kirn",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-empty.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-empty.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-empty.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-empty.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images/contact-empty"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-empty.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-empty.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-empty.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images-rt/contact-empty"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-empty.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-empty.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-zew3_s26",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-one-address.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-one-address.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-one-address.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-kwu6fo_v",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-one-address.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-one-address.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-one-address.odt using filter : writer8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-9abiv68p",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-one-address.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-one-address.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-one-address.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-one-address.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images/contact-one-address"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-one-address.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-one-address.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-one-address.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images-rt/contact-one-address"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-one-address.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-one-address.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-e837325e",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-hidden.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-hidden.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-hidden.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-mg9ge3a3",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-hidden.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-hidden.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-hidden.odt using filter : writer8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-ok_rfqkw",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-hidden.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-hidden.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-hidden.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-hidden.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images/contact-hidden"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-hidden.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-hidden.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-hidden.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images-rt/contact-hidden"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-hidden.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-hidden.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-h54cb089",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-resources.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-resources.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-resources.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-33_h4cxi",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-resources.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-resources.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-resources.odt using filter : writer8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-hc0nevtd",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-resources.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-resources.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-resources.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-resources.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images/contact-resources"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-resources.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-resources.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-resources.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images-rt/contact-resources"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-resources.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-resources.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-nqkep2x8",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-header-sidebar.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-header-sidebar.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-header-sidebar.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-05lppv1_",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-header-sidebar.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/contact-header-sidebar.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-header-sidebar.odt using filter : writer8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-wxb33lig",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-header-sidebar.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/roundtrip/contact-header-sidebar.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-header-sidebar.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-header-sidebar.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images/contact-header-sidebar"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-header-sidebar.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf/contact-header-sidebar.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-header-sidebar.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/images-rt/contact-header-sidebar"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-header-sidebar.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v04/native/pdf-rt/contact-header-sidebar.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

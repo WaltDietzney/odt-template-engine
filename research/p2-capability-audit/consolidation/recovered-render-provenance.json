@@ -1,0 +1,314 @@
+[
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v01-engine-1.png",
+    "destination": "research/p2-capability-audit/v01/historical-render/images/p2-v01-engine-1.png",
+    "bytes": 46716,
+    "sha256": "17e0b3e351b5a3fe92f79744d467e318132debd1671ff586f3e81ab855f01964"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v01-final-1.png",
+    "destination": "research/p2-capability-audit/v01/historical-render/images/p2-v01-final-1.png",
+    "bytes": 118913,
+    "sha256": "caf5de666f3269d4019de6e4a0864f23bc6bead7ab6d433f2187220181d6e920"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v01-final-roundtrip-1.png",
+    "destination": "research/p2-capability-audit/v01/historical-render/images/p2-v01-final-roundtrip-1.png",
+    "bytes": 118913,
+    "sha256": "caf5de666f3269d4019de6e4a0864f23bc6bead7ab6d433f2187220181d6e920"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v01-native-1.png",
+    "destination": "research/p2-capability-audit/v01/historical-render/images/p2-v01-native-1.png",
+    "bytes": 73187,
+    "sha256": "e712d36ef53ef1d0db244b9283f74c69099d7bd582564358df3f17b0eecce131"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v01-padding-1.png",
+    "destination": "research/p2-capability-audit/v01/historical-render/images/p2-v01-padding-1.png",
+    "bytes": 135874,
+    "sha256": "fbcc1f448e14373d80f36c46d6e0d88010f6e5a7fc62d7ac7e02e1def0ea901d"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v01-roundtrip-1.png",
+    "destination": "research/p2-capability-audit/v01/historical-render/images/p2-v01-roundtrip-1.png",
+    "bytes": 73187,
+    "sha256": "e712d36ef53ef1d0db244b9283f74c69099d7bd582564358df3f17b0eecce131"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v02-alternating-1.png",
+    "destination": "research/p2-capability-audit/v02/historical-render/images/p2-v02-alternating-1.png",
+    "bytes": 248703,
+    "sha256": "855a48cbfdb05df943f3eed3a863de59056358cbc67bce1c8bc50375422506e9"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v02-alternating-2.png",
+    "destination": "research/p2-capability-audit/v02/historical-render/images/p2-v02-alternating-2.png",
+    "bytes": 304037,
+    "sha256": "d6ef1a6b19e63d6c9258662c830073052ec7fe9c568fadaa12cfc1030fd3ba61"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v02-alternating-3.png",
+    "destination": "research/p2-capability-audit/v02/historical-render/images/p2-v02-alternating-3.png",
+    "bytes": 135149,
+    "sha256": "e7afbb6a34023fd7a420f9907f586ba4dc878de34827974d6858eb2929ffab66"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v02-alternating-flow-1.png",
+    "destination": "research/p2-capability-audit/v02/historical-render/images/p2-v02-alternating-flow-1.png",
+    "bytes": 231089,
+    "sha256": "10a677833edb334c0ace518c0b623f734b3ddf43eac177f2e4a295a75076f32e"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v02-alternating-flow-2.png",
+    "destination": "research/p2-capability-audit/v02/historical-render/images/p2-v02-alternating-flow-2.png",
+    "bytes": 382811,
+    "sha256": "a4247072843b33eba9993190b98215279db40670479d230eca8c79e2812a1ae0"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v02-alternating-flow-3.png",
+    "destination": "research/p2-capability-audit/v02/historical-render/images/p2-v02-alternating-flow-3.png",
+    "bytes": 236707,
+    "sha256": "d95ab20c0ff2bbdbfc126b15656db5b9c0feecec0d5e82f029cd418afd06dae0"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v02-alternating-flow-4.png",
+    "destination": "research/p2-capability-audit/v02/historical-render/images/p2-v02-alternating-flow-4.png",
+    "bytes": 67881,
+    "sha256": "3336956f6ca1bc6918d39baac24a9f513e75fa67a5167625b3c8a669df700e86"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v02-alternating-roundtrip-1.png",
+    "destination": "research/p2-capability-audit/v02/historical-render/images/p2-v02-alternating-roundtrip-1.png",
+    "bytes": 231089,
+    "sha256": "10a677833edb334c0ace518c0b623f734b3ddf43eac177f2e4a295a75076f32e"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v02-alternating-roundtrip-2.png",
+    "destination": "research/p2-capability-audit/v02/historical-render/images/p2-v02-alternating-roundtrip-2.png",
+    "bytes": 382811,
+    "sha256": "a4247072843b33eba9993190b98215279db40670479d230eca8c79e2812a1ae0"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v02-alternating-roundtrip-3.png",
+    "destination": "research/p2-capability-audit/v02/historical-render/images/p2-v02-alternating-roundtrip-3.png",
+    "bytes": 236707,
+    "sha256": "d95ab20c0ff2bbdbfc126b15656db5b9c0feecec0d5e82f029cd418afd06dae0"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v02-alternating-roundtrip-4.png",
+    "destination": "research/p2-capability-audit/v02/historical-render/images/p2-v02-alternating-roundtrip-4.png",
+    "bytes": 67881,
+    "sha256": "3336956f6ca1bc6918d39baac24a9f513e75fa67a5167625b3c8a669df700e86"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v02-centered-1.png",
+    "destination": "research/p2-capability-audit/v02/historical-render/images/p2-v02-centered-1.png",
+    "bytes": 158188,
+    "sha256": "55cbaee3688d7461bc5ee99a65597e5244a313feb50e96b3a7a0c063d1695048"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v02-linear-1.png",
+    "destination": "research/p2-capability-audit/v02/historical-render/images/p2-v02-linear-1.png",
+    "bytes": 385366,
+    "sha256": "cb979b454faa371bcb113d9a01c15c46e91cd999d9ec2b74d49c064b2ba22037"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v02-linear-2.png",
+    "destination": "research/p2-capability-audit/v02/historical-render/images/p2-v02-linear-2.png",
+    "bytes": 220557,
+    "sha256": "692951910f14ec79b6975c1bf1c238880759af8e33cb99aa48c0814f0639a2b5"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v02-native-drawing-1.png",
+    "destination": "research/p2-capability-audit/v02/historical-render/images/p2-v02-native-drawing-1.png",
+    "bytes": 24313,
+    "sha256": "de106aaf6fbaf5a7fcbc59b42db7beb78c2d21c5aa8d47c7bc96fbcdc5a601b8"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v02-native-section-1.png",
+    "destination": "research/p2-capability-audit/v02/historical-render/images/p2-v02-native-section-1.png",
+    "bytes": 158615,
+    "sha256": "620fc11c1fdae4444d5052b8d8e76070fed9b799d9d9e3f51b01d650253de345"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v02-nested-1.png",
+    "destination": "research/p2-capability-audit/v02/historical-render/images/p2-v02-nested-1.png",
+    "bytes": 137297,
+    "sha256": "34938f9706628a355a4fd94a659b16c4fd057bfe27221c34074fab0153235225"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v02-paragraph-1.png",
+    "destination": "research/p2-capability-audit/v02/historical-render/images/p2-v02-paragraph-1.png",
+    "bytes": 432442,
+    "sha256": "14872353233f41e367cc65d3f8151f526a43297b4cafd7185aa76e0d9cd9fc8e"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v02-paragraph-2.png",
+    "destination": "research/p2-capability-audit/v02/historical-render/images/p2-v02-paragraph-2.png",
+    "bytes": 155708,
+    "sha256": "4ad5bac3af7c7a66ad22f564941c0afa67ae4d16ca2c92dd325d9b84e28b57b4"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v03-centered-1.png",
+    "destination": "research/p2-capability-audit/v03/historical-render/images/p2-v03-centered-1.png",
+    "bytes": 58701,
+    "sha256": "c053a6ad7dd827611824ed80e4ef27fc3f762bb8b13cf2eb6e672fd15c1373f2"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v03-fixed-1.png",
+    "destination": "research/p2-capability-audit/v03/historical-render/images/p2-v03-fixed-1.png",
+    "bytes": 60702,
+    "sha256": "b8037ce556248d4c3721d12a5f00f2c267d72a9a00bd61c8cc91172f4c50ae54"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v03-grouped-1.png",
+    "destination": "research/p2-capability-audit/v03/historical-render/images/p2-v03-grouped-1.png",
+    "bytes": 41527,
+    "sha256": "f59a1ff3f4114f97f3438a8262c136db937b51c8c6f23c46ee64a72827009dcc"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v03-grouped-roundtrip-1.png",
+    "destination": "research/p2-capability-audit/v03/historical-render/images/p2-v03-grouped-roundtrip-1.png",
+    "bytes": 41527,
+    "sha256": "f59a1ff3f4114f97f3438a8262c136db937b51c8c6f23c46ee64a72827009dcc"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v03-headings-1.png",
+    "destination": "research/p2-capability-audit/v03/historical-render/images/p2-v03-headings-1.png",
+    "bytes": 49749,
+    "sha256": "cfa81ae1d21522ab8ccb0c144c8dbda40d5acd3e934b06793ff08af9ab49cd3b"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/images/p2-v03-integrated-1.png",
+    "destination": "research/p2-capability-audit/v03/historical-render/images/p2-v03-integrated-1.png",
+    "bytes": 59707,
+    "sha256": "c24ffb036a0236ac88944fcd19fc2921f18603b9af5a9a91a286c42e9e118fa2"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v01-engine.pdf",
+    "destination": "research/p2-capability-audit/v01/historical-render/pdf/p2-v01-engine.pdf",
+    "bytes": 27971,
+    "sha256": "986f3db4030c49eb02a7db117723e9d8f1e67187f06b7aefa0f2e695f3c9fb64"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v01-final-roundtrip.pdf",
+    "destination": "research/p2-capability-audit/v01/historical-render/pdf/p2-v01-final-roundtrip.pdf",
+    "bytes": 39387,
+    "sha256": "04368bc65b6d41b0e89382b2afe59469a00f570f16d8b062ea165d31d9d93c33"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v01-final.pdf",
+    "destination": "research/p2-capability-audit/v01/historical-render/pdf/p2-v01-final.pdf",
+    "bytes": 39387,
+    "sha256": "1a4bcef33a746dd32b50233e55e1f257e64e28ad7ca9c189b982bad48ce51d0c"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v01-native.pdf",
+    "destination": "research/p2-capability-audit/v01/historical-render/pdf/p2-v01-native.pdf",
+    "bytes": 32726,
+    "sha256": "36c5148b44a5a692d75920b792b5d6871280aa8aede0f93fee49c9c9d706ef1f"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v01-padding.pdf",
+    "destination": "research/p2-capability-audit/v01/historical-render/pdf/p2-v01-padding.pdf",
+    "bytes": 41674,
+    "sha256": "095a939531fc7d288a13c9367b5ebe4f4a574723e0828863bfecfb357f1a4df7"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v01-roundtrip.pdf",
+    "destination": "research/p2-capability-audit/v01/historical-render/pdf/p2-v01-roundtrip.pdf",
+    "bytes": 32726,
+    "sha256": "d589a8ef70eb89cf3f17a592050cf871f6a222880426d7288e07b2f523136353"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v02-alternating-flow.pdf",
+    "destination": "research/p2-capability-audit/v02/historical-render/pdf/p2-v02-alternating-flow.pdf",
+    "bytes": 54736,
+    "sha256": "5f75bacd78bf804e80b2df3e0e4006ca1c5c5e8dbd19e6237f2b05cae130feb9"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v02-alternating-roundtrip.pdf",
+    "destination": "research/p2-capability-audit/v02/historical-render/pdf/p2-v02-alternating-roundtrip.pdf",
+    "bytes": 54736,
+    "sha256": "fbd981be892c9a22d8b83d2a6a56ceffc3c8d44a4d121b750a552a8b1eb1287b"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v02-alternating.pdf",
+    "destination": "research/p2-capability-audit/v02/historical-render/pdf/p2-v02-alternating.pdf",
+    "bytes": 66870,
+    "sha256": "12242e93e5e2b05e811014825f576f28e5d13ccd682b9f4670a3108280e44163"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v02-centered.pdf",
+    "destination": "research/p2-capability-audit/v02/historical-render/pdf/p2-v02-centered.pdf",
+    "bytes": 29682,
+    "sha256": "e03d64f03c3d2095e8da08b60fa59fa473b23541f82f7180d911186c62ab51d8"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v02-linear.pdf",
+    "destination": "research/p2-capability-audit/v02/historical-render/pdf/p2-v02-linear.pdf",
+    "bytes": 67495,
+    "sha256": "7dcb795cb7a82e75a3ef6e5a7eac51fcf33e5c8789ffb954c7dc4624214aba72"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v02-native-drawing.pdf",
+    "destination": "research/p2-capability-audit/v02/historical-render/pdf/p2-v02-native-drawing.pdf",
+    "bytes": 27452,
+    "sha256": "a04ce96a7b5caac1217739ff551e1f76e7186d539e5b38cc4fda4210bccf2d18"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v02-native-section.pdf",
+    "destination": "research/p2-capability-audit/v02/historical-render/pdf/p2-v02-native-section.pdf",
+    "bytes": 29937,
+    "sha256": "2d09400281a6208126104eea225bbf34cce835fe996b70afdb578dc00d85a167"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v02-nested.pdf",
+    "destination": "research/p2-capability-audit/v02/historical-render/pdf/p2-v02-nested.pdf",
+    "bytes": 29746,
+    "sha256": "134f5792e5be553cabfd5d49d006e1a50635f888af8e4d0cf7f72037222b72a4"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v02-paragraph.pdf",
+    "destination": "research/p2-capability-audit/v02/historical-render/pdf/p2-v02-paragraph.pdf",
+    "bytes": 53772,
+    "sha256": "b67b9eaa08ac7347e63756838593c0daca803ababb4012aaa1c146566e4dd8fc"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v03-centered.pdf",
+    "destination": "research/p2-capability-audit/v03/historical-render/pdf/p2-v03-centered.pdf",
+    "bytes": 30976,
+    "sha256": "e4a5fbc9950fa8c4d2a8015f964d374a0ba56edb0fae44f5264377a68355db81"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v03-fixed.pdf",
+    "destination": "research/p2-capability-audit/v03/historical-render/pdf/p2-v03-fixed.pdf",
+    "bytes": 30029,
+    "sha256": "988fbe4aaca0e428ddd07e8b1adb55e7b5c7978c2b59c36e4b5b4e1714a30433"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v03-grouped-roundtrip.pdf",
+    "destination": "research/p2-capability-audit/v03/historical-render/pdf/p2-v03-grouped-roundtrip.pdf",
+    "bytes": 30516,
+    "sha256": "eeca2e07e11e306d283220f58d5cc8e834bdd2a9d6ba44e537799281e142a780"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v03-grouped.pdf",
+    "destination": "research/p2-capability-audit/v03/historical-render/pdf/p2-v03-grouped.pdf",
+    "bytes": 30516,
+    "sha256": "fb1b99d8c0f54d4712ea8d1686c6378a9544b4e5ab18d6f02c5e8df43b6a2235"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v03-headings.pdf",
+    "destination": "research/p2-capability-audit/v03/historical-render/pdf/p2-v03-headings.pdf",
+    "bytes": 30979,
+    "sha256": "3306df8478903019f72375e0d2464de42c9cb4f564660cd2d9e915a3bc5f5123"
+  },
+  {
+    "source": "/tmp/odt-h04-analysis/tmp/visual-regression/pdf/p2-v03-integrated.pdf",
+    "destination": "research/p2-capability-audit/v03/historical-render/pdf/p2-v03-integrated.pdf",
+    "bytes": 30055,
+    "sha256": "9d19c5715321ffdd0870577191e2de2c53d5468af85598596b9370a87ff0a4e5"
+  }
+]

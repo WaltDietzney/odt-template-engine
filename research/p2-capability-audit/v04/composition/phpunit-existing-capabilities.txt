@@ -1,0 +1,11 @@
+PHPUnit 11.5.58 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /srv/projects/odt-template-engine-p2/phpunit.xml.dist
+
+............................................                      44 / 44 (100%)
+
+Time: 00:00.474, Memory: 28.00 MB
+
+OK, but there were issues!
+Tests: 44, Assertions: 528, PHPUnit Deprecations: 3.

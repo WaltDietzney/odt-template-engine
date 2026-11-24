@@ -1,0 +1,560 @@
+[
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-j4d9dzb2",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-hkjwse9x",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings.odt using filter : writer8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-vnqq3lwd",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/images/semantic-headings"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/images-rt/semantic-headings"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-dvftzh17",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings-repeat.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings-repeat.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings-repeat.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-on_w3mx1",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings-repeat.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings-repeat.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings-repeat.odt using filter : writer8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-bmgcstdy",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings-repeat.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings-repeat.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings-repeat.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings-repeat.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/images/semantic-headings-repeat"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings-repeat.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings-repeat.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings-repeat.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/images-rt/semantic-headings-repeat"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings-repeat.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings-repeat.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-ove4n7vu",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings-reloaded.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings-reloaded.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings-reloaded.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-0_jqvgyi",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings-reloaded.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings-reloaded.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings-reloaded.odt using filter : writer8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-dq2hdgke",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings-reloaded.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings-reloaded.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings-reloaded.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings-reloaded.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/images/semantic-headings-reloaded"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings-reloaded.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings-reloaded.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings-reloaded.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/images-rt/semantic-headings-reloaded"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings-reloaded.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings-reloaded.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-f1w1f3o8",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings.pdf using filter : writer_pdf_Export\nOverwriting: /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings.pdf\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-93jm50bk",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings.odt using filter : writer8\nOverwriting: /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings.odt\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-rewa6bol",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings.pdf using filter : writer_pdf_Export\nOverwriting: /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings.pdf\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/images/semantic-headings"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/images-rt/semantic-headings"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-rw3i1crm",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings-repeat.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings-repeat.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings-repeat.pdf using filter : writer_pdf_Export\nOverwriting: /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings-repeat.pdf\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-9a7022gx",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings-repeat.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings-repeat.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings-repeat.odt using filter : writer8\nOverwriting: /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings-repeat.odt\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-jdpaezgd",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings-repeat.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings-repeat.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings-repeat.pdf using filter : writer_pdf_Export\nOverwriting: /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings-repeat.pdf\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings-repeat.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/images/semantic-headings-repeat"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings-repeat.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings-repeat.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings-repeat.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/images-rt/semantic-headings-repeat"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings-repeat.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings-repeat.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-py86wtyo",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings-reloaded.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings-reloaded.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings-reloaded.pdf using filter : writer_pdf_Export\nOverwriting: /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings-reloaded.pdf\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-lzyrmlh6",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings-reloaded.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/semantic-headings-reloaded.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings-reloaded.odt using filter : writer8\nOverwriting: /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings-reloaded.odt\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-lx4kwoxx",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings-reloaded.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/roundtrip/semantic-headings-reloaded.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings-reloaded.pdf using filter : writer_pdf_Export\nOverwriting: /srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings-reloaded.pdf\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings-reloaded.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/images/semantic-headings-reloaded"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings-reloaded.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf/semantic-headings-reloaded.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings-reloaded.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/images-rt/semantic-headings-reloaded"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings-reloaded.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/v03/semantic/pdf-rt/semantic-headings-reloaded.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

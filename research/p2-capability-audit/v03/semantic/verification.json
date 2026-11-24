@@ -1,0 +1,148 @@
+{
+  "status": "PASS",
+  "documents": {
+    "semantic-headings": {
+      "engine": {
+        "headings": [
+          "Berufserfahrung",
+          "Ausbildung und berufliche Weiterbildung",
+          "Qualifikationen"
+        ],
+        "outline_levels": [
+          1,
+          1,
+          1
+        ],
+        "decorative_shapes": 5
+      },
+      "roundtrip/": {
+        "headings": [
+          "Berufserfahrung",
+          "Ausbildung und berufliche Weiterbildung",
+          "Qualifikationen"
+        ],
+        "outline_levels": [
+          1,
+          1,
+          1
+        ],
+        "decorative_shapes": 5
+      },
+      "pdf": {
+        "outline_titles": [
+          "Berufserfahrung",
+          "Ausbildung und berufliche Weiterbildung",
+          "Qualifikationen"
+        ],
+        "visible_text_once": true
+      },
+      "pdf-rt": {
+        "outline_titles": [
+          "Berufserfahrung",
+          "Ausbildung und berufliche Weiterbildung",
+          "Qualifikationen"
+        ],
+        "visible_text_once": true
+      },
+      "identical_png_pages": [
+        true
+      ]
+    },
+    "semantic-headings-repeat": {
+      "engine": {
+        "headings": [
+          "Berufserfahrung",
+          "Ausbildung und berufliche Weiterbildung",
+          "Qualifikationen"
+        ],
+        "outline_levels": [
+          1,
+          1,
+          1
+        ],
+        "decorative_shapes": 5
+      },
+      "roundtrip/": {
+        "headings": [
+          "Berufserfahrung",
+          "Ausbildung und berufliche Weiterbildung",
+          "Qualifikationen"
+        ],
+        "outline_levels": [
+          1,
+          1,
+          1
+        ],
+        "decorative_shapes": 5
+      },
+      "pdf": {
+        "outline_titles": [
+          "Berufserfahrung",
+          "Ausbildung und berufliche Weiterbildung",
+          "Qualifikationen"
+        ],
+        "visible_text_once": true
+      },
+      "pdf-rt": {
+        "outline_titles": [
+          "Berufserfahrung",
+          "Ausbildung und berufliche Weiterbildung",
+          "Qualifikationen"
+        ],
+        "visible_text_once": true
+      },
+      "identical_png_pages": [
+        true
+      ]
+    },
+    "semantic-headings-reloaded": {
+      "engine": {
+        "headings": [
+          "Berufserfahrung",
+          "Ausbildung und berufliche Weiterbildung",
+          "Qualifikationen"
+        ],
+        "outline_levels": [
+          1,
+          1,
+          1
+        ],
+        "decorative_shapes": 5
+      },
+      "roundtrip/": {
+        "headings": [
+          "Berufserfahrung",
+          "Ausbildung und berufliche Weiterbildung",
+          "Qualifikationen"
+        ],
+        "outline_levels": [
+          1,
+          1,
+          1
+        ],
+        "decorative_shapes": 5
+      },
+      "pdf": {
+        "outline_titles": [
+          "Berufserfahrung",
+          "Ausbildung und berufliche Weiterbildung",
+          "Qualifikationen"
+        ],
+        "visible_text_once": true
+      },
+      "pdf-rt": {
+        "outline_titles": [
+          "Berufserfahrung",
+          "Ausbildung und berufliche Weiterbildung",
+          "Qualifikationen"
+        ],
+        "visible_text_once": true
+      },
+      "identical_png_pages": [
+        true
+      ]
+    }
+  },
+  "accepted_graphic_control_native_heading_count": 0,
+  "source_sha256": "1df36c79e2142ed47ba970a4dcb32651959dadd2139c020b6c95093180dfc213"
+}

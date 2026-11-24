@@ -1,0 +1,23 @@
+{
+    "runtime": "8.5.4",
+    "getimagesize_svg": {
+        "0": 24,
+        "1": 24,
+        "2": 21,
+        "3": "width=\"24\" height=\"24\"",
+        "mime": "image/svg+xml",
+        "width_unit": "px",
+        "height_unit": "px"
+    },
+    "preflight_svg_supported": false,
+    "image_element": {
+        "explicit": "<draw:frame draw:style-name=\"auto_7a5b1442\" text:anchor-type=\"paragraph\" svg:width=\"0.45cm\" svg:height=\"0.45cm\"><draw:image xlink:href=\"Pictures/lucide-mail.svg\" xlink:type=\"simple\" xlink:show=\"embed\" xlink:actuate=\"onLoad\"/></draw:frame>",
+        "width-only": "<draw:frame draw:style-name=\"auto_7a5b1442\" text:anchor-type=\"paragraph\" svg:width=\"0.45cm\" svg:height=\"0.45cm\"><draw:image xlink:href=\"Pictures/lucide-mail.svg\" xlink:type=\"simple\" xlink:show=\"embed\" xlink:actuate=\"onLoad\"/></draw:frame>",
+        "default": "<draw:frame draw:style-name=\"auto_85cb5310\" text:anchor-type=\"paragraph\" svg:width=\"5cm\" svg:height=\"3cm\"><draw:image xlink:href=\"Pictures/lucide-mail.svg\" xlink:type=\"simple\" xlink:show=\"embed\" xlink:actuate=\"onLoad\"/></draw:frame>"
+    },
+    "missing_field": {
+        "contact-classic": "OdtTemplateEngine\\Template\\UserFieldBindingException: User Field \"new-absent-field\" was not found.",
+        "contact-sidebar": "OdtTemplateEngine\\Template\\UserFieldBindingException: User Field \"new-absent-field\" was not found.",
+        "contact-header-sidebar": "OdtTemplateEngine\\Template\\UserFieldBindingException: User Field \"new-absent-field\" was not found."
+    }
+}

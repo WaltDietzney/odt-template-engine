@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "source_head": "f8679a782a23b82ca2b9a0536d7affff6554301c",
+  "summary": {
+    "packages": 19,
+    "render_documents": 18,
+    "render_pages": 21,
+    "reference_documents": 17,
+    "reference_pages": 20,
+    "unavailable_original_render_references": [
+      "v01/p2-v01-padding-spacing"
+    ],
+    "accepted_evidence_changed": []
+  },
+  "comparison_policy": "Only known legacy para_[0-9a-f]{8} paragraph identities and typed references are normalized using their exact part/scope/definition. Other XML, counts/order, geometry, field data and image bytes are compared. Accepted files are never modified.",
+  "accepted_artifacts_untouched": true
+}

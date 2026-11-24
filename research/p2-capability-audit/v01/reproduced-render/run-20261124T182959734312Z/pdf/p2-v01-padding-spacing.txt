@@ -1,0 +1,31 @@
+P2-V01 | Engine capability baseline
+E02: overlapping native shapes (insertion order)
+
+
+
+
+E03: stars, segments and full ring
+
+
+
+
+E05: legacy auto-grow inline frames
+ PHP    PostgreSQL      Docker       Projektmanagement    Longer editable label
+E03 native experimental ring: 70 percent
+
+
+
+
+E01 native image: proportional / stretched / crop candidate
+
+
+
+
+E05 wrapping:
+ PHP      PostgreSQL      Docker      Projektmanagement       Longer editable label   PHP
+
+ PostgreSQL      Docker     Projektmanagement        Longer editable label    PHP     PostgreSQL
+
+ Docker     Projektmanagement         Longer editable label
+E01 bitmap fill: original / independently replaced
+

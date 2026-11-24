@@ -1,0 +1,9 @@
+H07 · Ada Beispiel
+
+
+
+
+H07 · Sidebar im Seitenkopf nach H02
+Textfluss rechts neben der Sidebar muss im CV über die bestehende H02-Section freigehalten werden.
+ENDE KONTAKT · Kontrollmarke
+

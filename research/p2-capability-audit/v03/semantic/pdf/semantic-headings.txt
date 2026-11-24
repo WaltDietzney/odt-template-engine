@@ -1,0 +1,18 @@
+A | Plain band
+
+ Berufserfahrung
+
+Editable body text follows the grouped heading.
+
+B | Folded ribbon
+
+ Ausbildung und berufliche Weiterbildung
+
+Editable body text follows the grouped heading.
+
+C | Angled accent
+
+ Qualifikationen
+
+Editable body text follows the grouped heading.
+

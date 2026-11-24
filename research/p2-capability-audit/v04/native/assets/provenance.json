@@ -1,0 +1,100 @@
+[
+  {
+    "family": "lucide",
+    "commit": "f6358a4161c657a1122cea463ae88dd9ed3a5f95",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/f6358a4161c657a1122cea463ae88dd9ed3a5f95/LICENSE",
+    "file": "lucide-LICENSE",
+    "sha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57"
+  },
+  {
+    "family": "lucide",
+    "commit": "f6358a4161c657a1122cea463ae88dd9ed3a5f95",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/f6358a4161c657a1122cea463ae88dd9ed3a5f95/icons/map-pin.svg",
+    "file": "lucide-map-pin.svg",
+    "sha256": "16f1042a62f1bda20ebab8bfc1cb79c0be285c980dea6c2c733a17902631405b"
+  },
+  {
+    "family": "lucide",
+    "commit": "f6358a4161c657a1122cea463ae88dd9ed3a5f95",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/f6358a4161c657a1122cea463ae88dd9ed3a5f95/icons/phone.svg",
+    "file": "lucide-phone.svg",
+    "sha256": "bd59dd10667cbe410a69e2fbbf4d9645d08abe862c8d89082bd4f533957859a8"
+  },
+  {
+    "family": "lucide",
+    "commit": "f6358a4161c657a1122cea463ae88dd9ed3a5f95",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/f6358a4161c657a1122cea463ae88dd9ed3a5f95/icons/smartphone.svg",
+    "file": "lucide-smartphone.svg",
+    "sha256": "f9fdb700b50feb5fc6436f53eb9813e9eb56a9071ac4cdcba69c7f7c1c13877d"
+  },
+  {
+    "family": "lucide",
+    "commit": "f6358a4161c657a1122cea463ae88dd9ed3a5f95",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/f6358a4161c657a1122cea463ae88dd9ed3a5f95/icons/mail.svg",
+    "file": "lucide-mail.svg",
+    "sha256": "3236a51d5b8ce9b0528cf2e6ad07e527bd636dded6f5a9d656072052b99caea8"
+  },
+  {
+    "family": "lucide",
+    "commit": "f6358a4161c657a1122cea463ae88dd9ed3a5f95",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/f6358a4161c657a1122cea463ae88dd9ed3a5f95/icons/globe.svg",
+    "file": "lucide-globe.svg",
+    "sha256": "82c6b8fa0b8e8d775ec9becd86f74a4e50bff7bee4c81f7362de45348504f14d"
+  },
+  {
+    "family": "lucide",
+    "commit": "f6358a4161c657a1122cea463ae88dd9ed3a5f95",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/f6358a4161c657a1122cea463ae88dd9ed3a5f95/icons/user-round.svg",
+    "file": "lucide-user-round.svg",
+    "sha256": "84870f26f3faf8da45da84174517519e81b9e8f00319c78954fcbb74f50038a1"
+  },
+  {
+    "family": "tabler",
+    "commit": "53635822b021190128f32b2c198dcf1b2b66a4c7",
+    "url": "https://raw.githubusercontent.com/tabler/tabler-icons/53635822b021190128f32b2c198dcf1b2b66a4c7/LICENSE",
+    "file": "tabler-LICENSE",
+    "sha256": "b740a1d46122672da62833e97f7e7c8a13fa85cbc7445b584b297cc00dde93db"
+  },
+  {
+    "family": "tabler",
+    "commit": "53635822b021190128f32b2c198dcf1b2b66a4c7",
+    "url": "https://raw.githubusercontent.com/tabler/tabler-icons/53635822b021190128f32b2c198dcf1b2b66a4c7/icons/outline/map-pin.svg",
+    "file": "tabler-map-pin.svg",
+    "sha256": "682a0c629579341afd218175d96489747a35bf0a75e3177616f819320cb69f67"
+  },
+  {
+    "family": "tabler",
+    "commit": "53635822b021190128f32b2c198dcf1b2b66a4c7",
+    "url": "https://raw.githubusercontent.com/tabler/tabler-icons/53635822b021190128f32b2c198dcf1b2b66a4c7/icons/outline/phone.svg",
+    "file": "tabler-phone.svg",
+    "sha256": "4659f9041061912c6382c6fde8d2455105ce2f29145df862d81d22f3a73f83e6"
+  },
+  {
+    "family": "tabler",
+    "commit": "53635822b021190128f32b2c198dcf1b2b66a4c7",
+    "url": "https://raw.githubusercontent.com/tabler/tabler-icons/53635822b021190128f32b2c198dcf1b2b66a4c7/icons/outline/device-mobile.svg",
+    "file": "tabler-device-mobile.svg",
+    "sha256": "2f9d4b1a140f3b9c9057efa5964bc8a7a135ce5d32dfe4752ebdad9d086d5413"
+  },
+  {
+    "family": "tabler",
+    "commit": "53635822b021190128f32b2c198dcf1b2b66a4c7",
+    "url": "https://raw.githubusercontent.com/tabler/tabler-icons/53635822b021190128f32b2c198dcf1b2b66a4c7/icons/outline/mail.svg",
+    "file": "tabler-mail.svg",
+    "sha256": "94ca7eed1a9b89c7d3345e7c62a622060a502645b4ae10b7ed160294583d3c33"
+  },
+  {
+    "family": "tabler",
+    "commit": "53635822b021190128f32b2c198dcf1b2b66a4c7",
+    "url": "https://raw.githubusercontent.com/tabler/tabler-icons/53635822b021190128f32b2c198dcf1b2b66a4c7/icons/outline/world.svg",
+    "file": "tabler-world.svg",
+    "sha256": "d0dfc538f966d03b72a9fe872fbb567d5e84db9d24b95af032305404ef71f587"
+  },
+  {
+    "family": "tabler",
+    "commit": "53635822b021190128f32b2c198dcf1b2b66a4c7",
+    "url": "https://raw.githubusercontent.com/tabler/tabler-icons/53635822b021190128f32b2c198dcf1b2b66a4c7/icons/outline/user.svg",
+    "file": "tabler-user.svg",
+    "sha256": "63554429f551522ea578a9bf72d1d350bd0ffdb8ede3af92a05e92d71cab6b9c"
+  }
+]

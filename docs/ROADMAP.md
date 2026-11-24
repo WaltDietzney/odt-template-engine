@@ -1,5 +1,9 @@
 # Development Roadmap
 
+## P2-Status vom 24.11.2026
+
+H05–H09 sind als native Machbarkeit und Gestaltung abgenommen. Die Produktionsintegration und H10 stehen noch aus. [Konsolidierung und Implementierungspakete](architecture/cv-handoff/P2-CONSOLIDATION-2026-11-24.md) konkretisieren die verbleibenden Lücken auf Basis von H00–H04.
+
 This roadmap describes the strategic development direction of the ODT Template Engine beyond the current stable public baseline.
 
 It complements [`FUTURE_DEVELOPMENT.md`](FUTURE_DEVELOPMENT.md):

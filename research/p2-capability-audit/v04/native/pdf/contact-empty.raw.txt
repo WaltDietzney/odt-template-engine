@@ -1,0 +1,11 @@
+H07 · Ada Beispiel
+H07 · empty · dynamischer Kontaktfluss
+classic
+Leerer Kontaktblock: kein Frame, keine Zeile, kein Symbol.
+sidebar
+Leerer Kontaktblock: kein Frame, keine Zeile, kein Symbol.
+horizontal
+Leerer Kontaktblock: kein Frame, keine Zeile, kein Symbol.
+editorial
+Leerer Kontaktblock: kein Frame, keine Zeile, kein Symbol.
+ENDE KONTAKT · Kontrollmarke

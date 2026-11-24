@@ -1,0 +1,13 @@
+{
+  "name": "Ada Beispiel",
+  "street": "An der alten naturwissenschaftlichen Forschungsstation",
+  "house": "128 a",
+  "postal": "32049",
+  "city": "Bad Oeynhausen – Stadtteil Rehme",
+  "country": "Deutschland",
+  "phone": "+49 5221 123456",
+  "mobile": "+49 171 1234567",
+  "email": "ada.beispiel@example.invalid",
+  "website": "https://example.invalid/ausfuehrlichesportfolioohnetrennzeichen/beruflicherwerdegang",
+  "profile": "https://example.invalid/ada/entwicklung/forschung/coaching"
+}

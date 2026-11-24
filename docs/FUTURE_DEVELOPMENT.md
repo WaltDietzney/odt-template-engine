@@ -1,5 +1,9 @@
 # Future Development
 
+## Konsolidierte P2-Integrationslücken — 24.11.2026
+
+Native String-Feld-/Heading-Konstruktion, geordneter Inline-Inhalt, Writer-Frame-Sizing, Grafikkontext, SVG-/Ressourcen-Lifecycle und begrenzte Teilring-Geometrie sind in [P2 Change Contracts](architecture/cv-handoff/P2-CHANGE-CONTRACTS.md) abgegrenzt. Die nativen Designs H05–H09 sind bereits abgenommen; Consumer-Komposition und H10 folgen nach erforderlicher Integration. Dies zieht keine anderen Future-Themen in P2.
+
 This document is the issue-oriented backlog for known limitations, architectural debt, research topics, and possible future capabilities of the ODT Template Engine.
 
 It complements [`ROADMAP.md`](ROADMAP.md). The roadmap defines strategic sequencing; this file records individual topics without implying that every item is approved for immediate implementation.

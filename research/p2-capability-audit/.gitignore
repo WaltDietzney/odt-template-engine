@@ -1,0 +1,6 @@
+**/__pycache__/
+**/docs-build/
+**/docs-source/
+**/.cache/
+consolidation/replay/
+consolidation/checkpoints/

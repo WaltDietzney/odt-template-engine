@@ -1,0 +1,187 @@
+{
+  "v01/p2-v01-final": {
+    "available": true,
+    "pages": [
+      {
+        "page": "p2-v01-final-1.png",
+        "equal": true
+      }
+    ],
+    "equal": true
+  },
+  "v01/p2-v01-padding-spacing": {
+    "available": false
+  },
+  "v02/p2-v02-centered": {
+    "available": true,
+    "pages": [
+      {
+        "page": "p2-v02-centered-1.png",
+        "equal": true
+      }
+    ],
+    "equal": true
+  },
+  "v02/p2-v02-alternating-flow": {
+    "available": true,
+    "pages": [
+      {
+        "page": "p2-v02-alternating-flow-1.png",
+        "equal": true
+      },
+      {
+        "page": "p2-v02-alternating-flow-2.png",
+        "equal": true
+      },
+      {
+        "page": "p2-v02-alternating-flow-3.png",
+        "equal": true
+      },
+      {
+        "page": "p2-v02-alternating-flow-4.png",
+        "equal": true
+      }
+    ],
+    "equal": true
+  },
+  "v03/p2-v03-fixed": {
+    "available": true,
+    "pages": [
+      {
+        "page": "p2-v03-fixed-1.png",
+        "equal": true
+      }
+    ],
+    "equal": true
+  },
+  "v04/composition/compact": {
+    "available": true,
+    "pages": [
+      {
+        "page": "compact-1.png",
+        "equal": true
+      }
+    ],
+    "equal": true
+  },
+  "v04/composition/sidebar-round": {
+    "available": true,
+    "pages": [
+      {
+        "page": "sidebar-round-1.png",
+        "equal": true
+      }
+    ],
+    "equal": true
+  },
+  "v04/composition/sidebar-rounded": {
+    "available": true,
+    "pages": [
+      {
+        "page": "sidebar-rounded-1.png",
+        "equal": true
+      }
+    ],
+    "equal": true
+  },
+  "v04/composition/editorial": {
+    "available": true,
+    "pages": [
+      {
+        "page": "editorial-1.png",
+        "equal": true
+      }
+    ],
+    "equal": true
+  },
+  "v04/composition/strip-above": {
+    "available": true,
+    "pages": [
+      {
+        "page": "strip-above-1.png",
+        "equal": true
+      }
+    ],
+    "equal": true
+  },
+  "v04/composition/strip-inline": {
+    "available": true,
+    "pages": [
+      {
+        "page": "strip-inline-1.png",
+        "equal": true
+      }
+    ],
+    "equal": true
+  },
+  "v04/composition/long": {
+    "available": true,
+    "pages": [
+      {
+        "page": "long-1.png",
+        "equal": true
+      }
+    ],
+    "equal": true
+  },
+  "v04/composition/minimal": {
+    "available": true,
+    "pages": [
+      {
+        "page": "minimal-1.png",
+        "equal": true
+      }
+    ],
+    "equal": true
+  },
+  "v04/composition/empty": {
+    "available": true,
+    "pages": [
+      {
+        "page": "empty-1.png",
+        "equal": true
+      }
+    ],
+    "equal": true
+  },
+  "v04/composition/rebound": {
+    "available": true,
+    "pages": [
+      {
+        "page": "rebound-1.png",
+        "equal": true
+      }
+    ],
+    "equal": true
+  },
+  "v03/semantic/semantic-headings": {
+    "available": true,
+    "pages": [
+      {
+        "page": "semantic-headings-1.png",
+        "equal": true
+      }
+    ],
+    "equal": true
+  },
+  "v03/semantic/semantic-headings-repeat": {
+    "available": true,
+    "pages": [
+      {
+        "page": "semantic-headings-repeat-1.png",
+        "equal": true
+      }
+    ],
+    "equal": true
+  },
+  "v03/semantic/semantic-headings-reloaded": {
+    "available": true,
+    "pages": [
+      {
+        "page": "semantic-headings-reloaded-1.png",
+        "equal": true
+      }
+    ],
+    "equal": true
+  }
+}

@@ -1,0 +1,44 @@
+[
+  {
+    "source": "research/p2-capability-audit/consolidation/replay/run-20261124T182959734312Z/research/p2-capability-audit/v01/pdf/p2-v01-padding-spacing.txt",
+    "destination": "research/p2-capability-audit/v01/reproduced-render/run-20261124T182959734312Z/pdf/p2-v01-padding-spacing.txt",
+    "sha256": "5ed5707fb5b90701f41d8ffff90a8fdf994f2f09d3f628df476bfc7557711622",
+    "kind": "regenerated consolidation evidence"
+  },
+  {
+    "source": "research/p2-capability-audit/consolidation/replay/run-20261124T182959734312Z/research/p2-capability-audit/v01/pdf/p2-v01-padding-spacing.pdf",
+    "destination": "research/p2-capability-audit/v01/reproduced-render/run-20261124T182959734312Z/pdf/p2-v01-padding-spacing.pdf",
+    "sha256": "f116d45ba05e3341ddce69cc538f057675c3cf2b61060a5e1b371199b966000e",
+    "kind": "regenerated consolidation evidence"
+  },
+  {
+    "source": "research/p2-capability-audit/consolidation/replay/run-20261124T182959734312Z/research/p2-capability-audit/v01/pdf-rt/p2-v01-padding-spacing.txt",
+    "destination": "research/p2-capability-audit/v01/reproduced-render/run-20261124T182959734312Z/pdf-rt/p2-v01-padding-spacing.txt",
+    "sha256": "5ed5707fb5b90701f41d8ffff90a8fdf994f2f09d3f628df476bfc7557711622",
+    "kind": "regenerated consolidation evidence"
+  },
+  {
+    "source": "research/p2-capability-audit/consolidation/replay/run-20261124T182959734312Z/research/p2-capability-audit/v01/pdf-rt/p2-v01-padding-spacing.pdf",
+    "destination": "research/p2-capability-audit/v01/reproduced-render/run-20261124T182959734312Z/pdf-rt/p2-v01-padding-spacing.pdf",
+    "sha256": "2b0911fe6826de0b5e04e1e30ee12efc33bcf5665f15b3ec71ffcbf3043f1589",
+    "kind": "regenerated consolidation evidence"
+  },
+  {
+    "source": "research/p2-capability-audit/consolidation/replay/run-20261124T182959734312Z/research/p2-capability-audit/v01/images/p2-v01-padding-spacing-1.png",
+    "destination": "research/p2-capability-audit/v01/reproduced-render/run-20261124T182959734312Z/images/p2-v01-padding-spacing-1.png",
+    "sha256": "3375f14316e68ba3c8285ccfa46514c92d2a6999a6763e3a402a1175bba00082",
+    "kind": "regenerated consolidation evidence"
+  },
+  {
+    "source": "research/p2-capability-audit/consolidation/replay/run-20261124T182959734312Z/research/p2-capability-audit/v01/images-rt/p2-v01-padding-spacing-1.png",
+    "destination": "research/p2-capability-audit/v01/reproduced-render/run-20261124T182959734312Z/images-rt/p2-v01-padding-spacing-1.png",
+    "sha256": "3375f14316e68ba3c8285ccfa46514c92d2a6999a6763e3a402a1175bba00082",
+    "kind": "regenerated consolidation evidence"
+  },
+  {
+    "source": "research/p2-capability-audit/consolidation/replay/run-20261124T182959734312Z/research/p2-capability-audit/v01/roundtrip/p2-v01-padding-spacing.odt",
+    "destination": "research/p2-capability-audit/v01/reproduced-render/run-20261124T182959734312Z/roundtrip/p2-v01-padding-spacing.odt",
+    "sha256": "a2fdbba503837bcd27e66c2eda66ef24f3b27012e6efe459a664434163a9676e",
+    "kind": "regenerated consolidation evidence"
+  }
+]

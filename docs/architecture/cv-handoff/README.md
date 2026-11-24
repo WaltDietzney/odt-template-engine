@@ -1,4 +1,9 @@
 # CV Generator Pro – Eingang der Engine-Übergabe
+
+## Aktueller P2-Stand — 24.11.2026
+
+H00–H04 sind Grundlagen; H05–H09 sind als native Machbarkeit/Gestaltung abgenommen. Engine-Integration und H10 folgen. Einstieg: [P2-Konsolidierung](P2-CONSOLIDATION-2026-11-24.md), [Contracts](P2-CHANGE-CONTRACTS.md), [Implementierungsplan](P2-IMPLEMENTATION-PLAN.md). Frühere offene Statusangaben unten sind historisch und werden im ausdrücklich dokumentierten Abnahmeumfang abgelöst.
+
 17.11.2026. Projektwechsel autorisiert; keine Implementierungs-, Merge- oder Deploymentfreigabe.
 CV-Quelle: Forgejo Walt/cv-generator-pro, planning/visual-template-designer, cad1e1c8c42329ef52c92cb67f60c06e549ba3fb. Engine-Ausgangsstand: b304419efc407ab7f6277712f17c1a34d9a4c95c (feature/page-style-authoring-01). Separater Planungsworktree; Integrationsziel vor Codearbeit klären.
 ## Quellen und Nachweise

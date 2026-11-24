@@ -1,0 +1,3 @@
+H07 · Ada Beispiel
+I · Keine Kontaktangaben · kein Kontaktobjekt
+ENDE · native User Fields · keine Tabellen

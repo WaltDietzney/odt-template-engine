@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pdf2xml SYSTEM "pdf2xml.dtd">
+
+<pdf2xml producer="poppler" version="26.01.0">
+<page number="1" position="absolute" top="0" left="0" height="1262" width="892">
+	<fontspec id="0" size="18" family="BAAAAA+LiberationSerif" color="#000000"/>
+	<fontspec id="1" size="23" family="CAAAAA+LiberationSans" color="#ffffff"/>
+<text top="86" left="85" width="101" height="20" font="0">A | Plain band</text>
+<text top="133" left="96" width="176" height="25" font="1"><b>Berufserfahrung</b></text>
+<text top="183" left="85" width="346" height="20" font="0">Editable body text follows the grouped heading.</text>
+<text top="224" left="85" width="126" height="20" font="0">B | Folded ribbon</text>
+<text top="272" left="96" width="440" height="25" font="1"><b>Ausbildung und berufliche Weiterbildung</b></text>
+<text top="322" left="85" width="346" height="20" font="0">Editable body text follows the grouped heading.</text>
+<text top="363" left="85" width="127" height="20" font="0">C | Angled accent</text>
+<text top="410" left="96" width="162" height="25" font="1"><b>Qualifikationen</b></text>
+<text top="460" left="85" width="346" height="20" font="0">Editable body text follows the grouped heading.</text>
+</page>
+<outline>
+<item page="1">Berufserfahrung</item>
+<item page="1">Ausbildung und berufliche Weiterbildung</item>
+<item page="1">Qualifikationen</item>
+</outline>
+</pdf2xml>

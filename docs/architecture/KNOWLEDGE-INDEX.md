@@ -1,4 +1,9 @@
 # Forschungs- und Fähigkeitsindex
+
+## P2 — konsolidiert am 24.11.2026
+
+[H05–H09: abgenommene native Machbarkeit und offene Integration](cv-handoff/P2-CONSOLIDATION-2026-11-24.md). Bestehende Engine-Bausteine und spätere Owner-Entscheidungen sind maßgeblich; ältere Forschungsstatus nicht als erneuten Untersuchungsauftrag lesen.
+
 Stand: 17.11.2026
 
 - [Frame Layout Closeout](FRAME_LAYOUT_01_CLOSEOUT.md): COMPLETE / FINAL GO; DrawingLayout als gemeinsame Autorität, setFrameLayout und Anchor/Alignment/Offset/Wrap für DrawTextBox und ImageElement. Kein Nachweis beliebiger Zeichenobjekte.
