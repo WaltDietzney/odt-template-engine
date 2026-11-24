@@ -27,7 +27,9 @@ final class H03NativeShapeTest extends TestCase
         $node = $shape->toDomNode(new DOMDocument());
         self::assertSame('draw:custom-shape', $node->nodeName);
         self::assertSame('4cm', $node->attributes->getNamedItem('svg:width')?->nodeValue);
-        self::assertSame('rectangle', $node->firstChild?->attributes?->getNamedItem('draw:type')?->nodeValue);
+        self::assertSame('rectangle', $node->lastChild?->attributes?->getNamedItem('draw:type')?->nodeValue);
+        self::assertSame('text:p', $node->firstChild?->nodeName);
+        self::assertSame('draw:enhanced-geometry', $node->lastChild?->nodeName);
         self::assertSame(StructuredInsertionMode::PRESERVE_TEXT_CONTAINER, $shape->structuredInsertionMode());
         $style = iterator_to_array($shape->getOwnStyleRequirements())[0];
         self::assertSame('#12AB34', $style->propertyGroups()['style:graphic-properties']['draw:fill-color']);
@@ -43,8 +45,8 @@ final class H03NativeShapeTest extends TestCase
                 DrawingLayout::fromArray(['anchor' => 'paragraph', 'width' => '3cm', 'height' => '3cm'])
             );
             $node = $shape->toDomNode(new DOMDocument());
-            self::assertSame($type === 'arrow-contour' ? 'right-arrow' : $type, $node->firstChild?->attributes?->getNamedItem('draw:type')?->nodeValue);
-            self::assertNotEmpty($node->firstChild?->attributes?->getNamedItem('draw:enhanced-path')?->nodeValue);
+            self::assertSame($type === 'arrow-contour' ? 'right-arrow' : $type, $node->lastChild?->attributes?->getNamedItem('draw:type')?->nodeValue);
+            self::assertNotEmpty($node->lastChild?->attributes?->getNamedItem('draw:enhanced-path')?->nodeValue);
         }
     }
 
@@ -102,6 +104,105 @@ final class H03NativeShapeTest extends TestCase
             ->propertyGroups()['style:graphic-properties'];
         self::assertSame('run-through', $props['style:wrap']);
         self::assertSame('foreground', $props['style:run-through']);
+    }
+
+    public function testHexagonMatchesLibreOfficeReferenceGeometry(): void
+    {
+        $geometry = ShapeGeometry::preset('hexagon');
+        self::assertSame('hexagon', $geometry->type());
+        self::assertSame('0 0 21600 21600', $geometry->viewBox());
+        self::assertSame(
+            'M 5400 0 L 16200 0 21600 10800 16200 21600 5400 21600 0 10800 Z N',
+            $geometry->path()
+        );
+
+        $shape = new ShapeElement(
+            $geometry,
+            ShapeAppearance::solid('#2365B5'),
+            DrawingLayout::fromArray(['anchor' => 'paragraph', 'width' => '4cm', 'height' => '4cm'])
+        );
+        $node = $shape->toDomNode(new DOMDocument());
+        self::assertSame('hexagon', $node->lastChild?->attributes?->getNamedItem('draw:type')?->nodeValue);
+        self::assertSame($geometry->path(), $node->lastChild?->attributes?->getNamedItem('draw:enhanced-path')?->nodeValue);
+    }
+
+    public function testWriterAuthoredAdjustableShapesPreserveGeometry(): void
+    {
+        foreach (['isosceles-triangle' => [8, 1], 'ring' => [2, 1]] as $type => [$equations, $handles]) {
+            $shape = new ShapeElement(
+                ShapeGeometry::preset($type),
+                ShapeAppearance::solid('#2365B5'),
+                DrawingLayout::fromArray(['anchor' => 'paragraph', 'width' => '4cm', 'height' => '4cm'])
+            );
+            $node = $shape->toDomNode(new DOMDocument());
+            $geometry = $node->lastChild;
+            self::assertSame($type, $geometry?->attributes?->getNamedItem('draw:type')?->nodeValue);
+            self::assertNotNull($geometry?->attributes?->getNamedItem('draw:modifiers'));
+            $xml = $node->ownerDocument?->saveXML($node);
+            self::assertIsString($xml);
+            self::assertSame($equations, substr_count($xml, '<draw:equation'));
+            self::assertSame($handles, substr_count($xml, '<draw:handle'));
+        }
+    }
+
+    public function testWriterAuthoredFlowchartPresets(): void
+    {
+        foreach (['flowchart-stored-data', 'flowchart-off-page-connector', 'flowchart-punched-tape'] as $type) {
+            $shape = new ShapeElement(
+                ShapeGeometry::preset($type),
+                ShapeAppearance::solid('#2365B5'),
+                DrawingLayout::fromArray(['anchor' => 'paragraph', 'width' => '4cm', 'height' => '4cm'])
+            );
+            $geometry = $shape->toDomNode(new DOMDocument())->lastChild;
+            self::assertSame($type, $geometry?->attributes?->getNamedItem('draw:type')?->nodeValue);
+            self::assertNotEmpty($geometry?->attributes?->getNamedItem('draw:enhanced-path')?->nodeValue);
+        }
+    }
+
+    public function testCharacterizedCustomContourCandidates(): void
+    {
+        foreach (['pentagon', 'chevron', 'star5'] as $type) {
+            $shape = new ShapeElement(
+                ShapeGeometry::preset($type),
+                ShapeAppearance::solid('#2365B5'),
+                DrawingLayout::fromArray(['anchor' => 'paragraph', 'width' => '4cm', 'height' => '4cm'])
+            );
+            $geometry = $shape->toDomNode(new DOMDocument())->lastChild;
+            self::assertSame($type, $geometry?->attributes?->getNamedItem('draw:type')?->nodeValue);
+            self::assertNotEmpty($geometry?->attributes?->getNamedItem('draw:enhanced-path')?->nodeValue);
+        }
+    }
+
+    public function testLibreOfficeRoundRectangleReferenceGeometry(): void
+    {
+        $geometry = ShapeGeometry::preset('round-rectangle');
+        self::assertSame('round-rectangle', $geometry->type());
+        self::assertNotEmpty($geometry->equations());
+        self::assertNotEmpty($geometry->handles());
+        $shape = new ShapeElement(
+            $geometry,
+            ShapeAppearance::solid('#2365B5'),
+            DrawingLayout::fromArray(['anchor' => 'paragraph', 'width' => '4cm', 'height' => '4cm'])
+        );
+        $node = $shape->toDomNode(new DOMDocument());
+        self::assertSame('round-rectangle', $node->lastChild?->attributes?->getNamedItem('draw:type')?->nodeValue);
+    }
+
+    public function testRemainingSixCatalogShapesProduceNativeGeometry(): void
+    {
+        foreach (['triangle', 'cross', 'speech-bubble', 'left-arrow', 'up-arrow', 'down-arrow'] as $type) {
+            $geometry = ShapeGeometry::preset($type);
+            $shape = new ShapeElement(
+                $geometry,
+                ShapeAppearance::solid('#2365B5'),
+                DrawingLayout::fromArray(['anchor' => 'paragraph', 'width' => '4cm', 'height' => '4cm'])
+            );
+            $node = $shape->toDomNode(new DOMDocument());
+            self::assertSame($type, $node->lastChild?->attributes?->getNamedItem('draw:type')?->nodeValue);
+            self::assertSame($geometry->path(), $node->lastChild?->attributes?->getNamedItem('draw:enhanced-path')?->nodeValue);
+        }
+        self::assertNotEmpty(ShapeGeometry::preset('left-arrow')->equations());
+        self::assertNotEmpty(ShapeGeometry::preset('left-arrow')->handles());
     }
 
     public function testRejectsUnsupportedAnchor(): void

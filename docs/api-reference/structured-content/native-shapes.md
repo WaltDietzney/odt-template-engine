@@ -56,7 +56,7 @@ $template->save('shape-output.odt');
 
 | Class or method | Contract |
 | --- | --- |
-| `ShapeGeometry::preset(string $type): ShapeGeometry` | Supported: `rectangle`, `ellipse`, `diamond`, `arrow-contour` |
+| `ShapeGeometry::preset(string $type): ShapeGeometry` | Supported examples: `rectangle`, `ellipse`, `diamond`, `arrow-contour`, `hexagon`, `round-rectangle`, `left-arrow`, `ring`; additional catalog presets are supported |
 | `ShapeAppearance::solid(string $color, string $stroke = 'none')` | Solid fill; six-digit hexadecimal color |
 | `ShapeAppearance::none(string $stroke = 'solid')` | No fill |
 | `ShapeAppearance::bitmap(string $path, string $stroke = 'none')` | Bitmap fill from an existing readable file |

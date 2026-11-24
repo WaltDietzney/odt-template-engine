@@ -210,4 +210,56 @@ final class H03ShapeOdtIntegrationTest extends TestCase
             unlink($output);
         }
     }
+
+    public function testSolidAdjustableShapeHasNativeParagraphContextAndGeometryChildren(): void
+    {
+        $output = tempnam(sys_get_temp_dir(), 'h03-native-');
+        self::assertIsString($output);
+        $template = new OdtTemplate(dirname(__DIR__, 2) . '/tests/Fixtures/LegacySamples/templates/sample_textfeld.odt');
+        try {
+            $template->setElement('test1', new ShapeElement(
+                ShapeGeometry::preset('isosceles-triangle'),
+                ShapeAppearance::solid('#2365B5', 'solid'),
+                DrawingLayout::fromArray([
+                    'anchor' => 'paragraph',
+                    'width' => '4cm',
+                    'height' => '3cm',
+                    'horizontal' => ['offset' => '1cm', 'relative-to' => 'paragraph-content'],
+                    'vertical' => ['offset' => '0.5cm', 'relative-to' => 'paragraph'],
+                    'wrap' => 'parallel',
+                ])
+            ));
+            $template->save($output);
+            $zip = new ZipArchive();
+            self::assertTrue($zip->open($output) === true);
+            try {
+                $content = $zip->getFromName('content.xml');
+                self::assertIsString($content);
+                $dom = new DOMDocument();
+                self::assertTrue($dom->loadXML($content));
+                $xpath = new DOMXPath($dom);
+                $xpath->registerNamespace('draw', 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0');
+                $xpath->registerNamespace('text', 'urn:oasis:names:tc:opendocument:xmlns:text:1.0');
+                $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
+                $shape = $xpath->query('//draw:custom-shape[draw:enhanced-geometry]')->item(0);
+                self::assertNotNull($shape);
+                self::assertSame(
+                    'paragraph',
+                    $shape instanceof \DOMElement
+                        ? $shape->getAttributeNS('urn:oasis:names:tc:opendocument:xmlns:text:1.0', 'anchor-type')
+                        : null
+                );
+                self::assertSame('text:p', $shape?->firstChild?->nodeName);
+                self::assertSame('draw:enhanced-geometry', $shape?->lastChild?->nodeName);
+                self::assertSame(8, $xpath->query('//draw:enhanced-geometry/draw:equation')->length);
+                self::assertSame(1, $xpath->query('//draw:enhanced-geometry/draw:handle')->length);
+                self::assertGreaterThanOrEqual(1, $xpath->query('//style:style[@style:family="graphic"]')->length);
+            } finally {
+                $zip->close();
+            }
+        } finally {
+            $template->cleanup();
+            unlink($output);
+        }
+    }
 }

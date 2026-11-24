@@ -66,6 +66,10 @@ final class ShapeElement extends OdtElement
             $shape->setAttribute($name, $value);
         }
         $shape->setAttribute('draw:style-name', $this->styleName());
+        if ($this->paragraphs === []) {
+            // Preserve Writer-compatible empty text content for shapes without labels.
+            $shape->appendChild($dom->createElement('text:p'));
+        }
         foreach ($this->paragraphs as $index => $paragraph) {
             $paragraphNode = $paragraph->toDomNode($dom);
             if ($index === 0 && $paragraphNode->attributes?->getNamedItem('text:style-name') !== null) {
@@ -81,6 +85,23 @@ final class ShapeElement extends OdtElement
         $geometry->setAttribute('svg:viewBox', $this->geometry->viewBox());
         $geometry->setAttribute('draw:type', $this->geometry->type());
         $geometry->setAttribute('draw:enhanced-path', $this->geometry->path());
+        foreach ($this->geometry->additionalAttributes() as $name => $value) {
+            $geometry->setAttribute('draw:' . $name, $value);
+        }
+        foreach ($this->geometry->equations() as $equation) {
+            $node = $dom->createElement('draw:equation');
+            foreach ($equation as $name => $value) {
+                $node->setAttribute('draw:' . $name, $value);
+            }
+            $geometry->appendChild($node);
+        }
+        foreach ($this->geometry->handles() as $handle) {
+            $node = $dom->createElement('draw:handle');
+            foreach ($handle as $name => $value) {
+                $node->setAttribute('draw:' . $name, $value);
+            }
+            $geometry->appendChild($node);
+        }
         $shape->appendChild($geometry);
 
         return $shape;
