@@ -6,3 +6,7 @@ Im CV-Repository am genannten Commit: research/engine-handoff/UEBERGABE-AUFTRAEG
 Hier byteidentisch übernommen: [E009 ODF-Auszug](E009-ODF-EVIDENCE.json), [E011 XML](E011-ODF-EVIDENCE.xml). E009 nativer Writer-PoC mit visueller Abnahme, keine Engine-Implementierung; E011 begrenzter Roundtrip ohne visuelle Abnahme. Originale auf Patil im CV-Workspace unter research/visual-template-references/prototypes/E009/preview und E011; keine Binärdateien übernommen, Backup offen.
 ## Arbeitsstart
 H01 Section-Authoring, H02 Seitenlayout/Frames, H03 Geometrie, H04 Tabellen-Spaltenidentität sind P1-Kandidaten. H05–H09 folgen abhängig von Capability-Abgleich, H10 Integration. Vor Auswahl eines Slices Engine-Integrationsstand (develop/master/Feature), vorhandene APIs und Tests prüfen; keine bereits vorhandenen Fähigkeiten erneut entwickeln. DOE: parametrisierbare Schnittstellen, reproduzierbare Fixtures und Rendernachweise; statistische Planung und visuelle Bewertung außerhalb der Engine. Kein neuer API-Vertrag aus PoC ableiten.
+
+## H04 – Table-column identity
+- [H04-A characterization evidence](H04-A-TABLE-COLUMN-IDENTITY-EVIDENCE-2026-11-24.md)
+- [H04-B proposed change contract](H04-B-TABLE-COLUMN-IDENTITY-CHANGE-CONTRACT.md) (not approved)

@@ -134,6 +134,8 @@ Historical identifiers `TABLE-LAYOUT-02`, `TABLE-LAYOUT-03`, `TABLE-LAYOUT-04`, 
 
 ### TABLE-COLUMN-IDENTITY-01 — Generated column-style identity across multiple tables
 
+H04-A [characterization evidence](architecture/cv-handoff/H04-A-TABLE-COLUMN-IDENTITY-EVIDENCE-2026-11-24.md) and [proposed H04-B contract](architecture/cv-handoff/H04-B-TABLE-COLUMN-IDENTITY-CHANGE-CONTRACT.md) are available; this backlog item remains open.
+
 **Priority:** Post-TABLE-LAYOUT compatibility/architecture follow-up; not part of TABLE-LAYOUT-01
 
 TABLE-LAYOUT-01 manual showcase work exposed an existing naming limitation in generated `table-column` automatic styles. Column definitions currently use positional names such as:
