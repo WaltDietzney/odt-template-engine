@@ -90,7 +90,7 @@ final class TableLayout01CIntegrationPreflightTest extends TestCase
 
         self::assertSame('5cm', $this->styleProperty(
             $contentXml,
-            'co0',
+            $this->columnReference($contentXml, 0),
             'table-column',
             'table-column-properties',
             self::STYLE_NS,
@@ -98,7 +98,7 @@ final class TableLayout01CIntegrationPreflightTest extends TestCase
         ));
         self::assertSame('10cm', $this->styleProperty(
             $contentXml,
-            'co1',
+            $this->columnReference($contentXml, 1),
             'table-column',
             'table-column-properties',
             self::STYLE_NS,
@@ -181,7 +181,7 @@ final class TableLayout01CIntegrationPreflightTest extends TestCase
 
         self::assertSame('32766*', $this->styleProperty(
             $contentXml,
-            'co0',
+            $this->columnReference($contentXml, 0),
             'table-column',
             'table-column-properties',
             self::STYLE_NS,
@@ -189,7 +189,7 @@ final class TableLayout01CIntegrationPreflightTest extends TestCase
         ));
         self::assertSame('16383*', $this->styleProperty(
             $contentXml,
-            'co1',
+            $this->columnReference($contentXml, 1),
             'table-column',
             'table-column-properties',
             self::STYLE_NS,
@@ -197,7 +197,7 @@ final class TableLayout01CIntegrationPreflightTest extends TestCase
         ));
         self::assertSame('16386*', $this->styleProperty(
             $contentXml,
-            'co2',
+            $this->columnReference($contentXml, 2),
             'table-column',
             'table-column-properties',
             self::STYLE_NS,
@@ -326,6 +326,15 @@ final class TableLayout01CIntegrationPreflightTest extends TestCase
             $name,
             $family
         ))->length;
+    }
+
+    private function columnReference(string $xml, int $index): string
+    {
+        $xpath = new DOMXPath($this->dom($xml));
+        $xpath->registerNamespace('table', 'urn:oasis:names:tc:opendocument:xmlns:table:1.0');
+        $node = $xpath->query('//table:table-column/@table:style-name')->item($index);
+        self::assertNotNull($node);
+        return $node->nodeValue;
     }
 
     private function styleProperty(

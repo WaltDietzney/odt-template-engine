@@ -55,3 +55,17 @@ Render the desired sample PHP scripts first so that the corresponding ODT output
 ## Safety
 
 Before rendering an ODT, the helper removes only previously generated candidate PDF/PNG artifacts with the same basename from the two output directories above. Baseline archives and extracted baseline images are intentionally outside the script's responsibility and must remain unchanged.
+
+## H04 table-column identity regression
+
+Generate the targeted collision and geometry document outside sample outputs:
+
+```bash
+mkdir -p tmp/h04-b4
+php tools/visual-regression/h04-table-column-identity.php tmp/h04-b4/h04-candidate.odt
+tools/visual-regression/render.sh tmp/h04-b4/h04-candidate.odt
+```
+
+The document contains seven independent tables with authored and generated
+column identities, absolute and relative widths, and cross-position reuse.
+Save a copy in Writer and render that copy to compare the geometry.

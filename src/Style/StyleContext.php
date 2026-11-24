@@ -7,6 +7,7 @@ namespace OdtTemplateEngine\Style;
 use DOMDocument;
 use LogicException;
 use OdtTemplateEngine\Document\StyleRequirement;
+use OdtTemplateEngine\Document\TableColumnIdentityRegistry;
 
 /**
  * Holds pending style requirements for one logical ODT document.
@@ -35,10 +36,13 @@ final class StyleContext
     /** @var array<int, list<array<string, mixed>>> */
     private array $ambiguousReferenceCandidates = [];
 
+    private TableColumnIdentityRegistry $tableColumnIdentities;
+
     public function __construct(
         private ?DOMDocument $contentDom = null,
         private ?DOMDocument $stylesDom = null
     ) {
+        $this->tableColumnIdentities = new TableColumnIdentityRegistry($contentDom);
     }
 
     /** @var array<string, array<string, mixed>> */
@@ -60,6 +64,12 @@ final class StyleContext
     public function registerRequirement(StyleRequirement $requirement): void
     {
         if ($requirement->kind() === StyleRequirement::KIND_DEFINITION) {
+            if ($requirement->isGeneratedColumn()
+                && $requirement->family() === 'table-column'
+                && $requirement->scope() === StyleRequirement::SCOPE_AUTOMATIC
+                && $requirement->documentPart() === StyleRequirement::PART_CONTENT) {
+                $requirement = $this->tableColumnIdentities->allocate($requirement, $this->semanticDefinitions);
+            }
             $identity = $this->semanticIdentity($requirement);
             if (isset($this->semanticDefinitions[$identity])) {
                 $existing = $this->semanticDefinitions[$identity];
@@ -176,6 +186,7 @@ final class StyleContext
     {
         $this->contentDom = $contentDom;
         $this->stylesDom = $stylesDom;
+        $this->tableColumnIdentities->replaceDocument($contentDom);
         $this->refreshReferenceResolutions();
     }
 
@@ -240,6 +251,7 @@ final class StyleContext
         $this->frameStyles = [];
         $this->imageStyles = [];
         $this->fillImages = [];
+        $this->tableColumnIdentities = new TableColumnIdentityRegistry($this->contentDom);
     }
 
     /** @internal Capture document-local style requirements for a bounded rollback. */
@@ -261,6 +273,7 @@ final class StyleContext
         $this->fillImages = $snapshot->fillImages;
         $this->contentDom = $contentDom;
         $this->stylesDom = $stylesDom;
+        $this->tableColumnIdentities->replaceDocument($contentDom);
     }
 
     private function semanticIdentity(StyleRequirement $requirement): string

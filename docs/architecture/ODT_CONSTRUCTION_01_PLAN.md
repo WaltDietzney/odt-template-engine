@@ -150,6 +150,8 @@ Resolve construction-specific correctness dependencies exposed by composing larg
 
 `TABLE-COLUMN-IDENTITY-01` is a likely dependency because multiple generated tables must not collide through document-global positional style names.
 
+H04-A [characterization evidence](cv-handoff/H04-A-TABLE-COLUMN-IDENTITY-EVIDENCE-2026-11-24.md) and the [proposed H04-B contract](cv-handoff/H04-B-TABLE-COLUMN-IDENTITY-CHANGE-CONTRACT.md) document this dependency; H04 implementation and visual acceptance are complete (24 November 2026).
+
 `LIST-LAYOUT-01/02`, `DOCUMENT-DEFAULTS-01`, and other backlog topics enter this milestone only if concrete construction work proves them necessary. They are not automatically part of 1.1.
 
 ### Stage B7 — Integration showcase and acceptance

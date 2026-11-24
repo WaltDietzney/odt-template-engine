@@ -6,6 +6,7 @@ namespace OdtTemplateEngine\Tests\Integration;
 
 use DOMDocument;
 use DOMElement;
+use DOMXPath;
 use OdtTemplateEngine\Document\StyleRequirement;
 use OdtTemplateEngine\Document\StyleRequirementMaterializer;
 use OdtTemplateEngine\Elements\RichTable;
@@ -69,8 +70,7 @@ final class RichTableColumnSemanticOwnershipTest extends TestCase
 
         $xml = $dom->saveXML() ?: '';
         self::assertSame(2, substr_count($xml, '<table:table-column '));
-        self::assertSame(1, substr_count($xml, 'table:style-name="co0"'));
-        self::assertSame(1, substr_count($xml, 'table:style-name="co1"'));
+        self::assertSame(2, substr_count($xml, 'table:style-name="co'));
         self::assertStringNotContainsString('table:number-columns-repeated', $xml);
     }
 
@@ -86,12 +86,10 @@ final class RichTableColumnSemanticOwnershipTest extends TestCase
 
         $content = $this->entry($output, 'content.xml');
         $styles = $this->entry($output, 'styles.xml');
-        self::assertSame(1, $this->styleCount($content, 'co0', 'table-column'));
-        self::assertSame(1, $this->styleCount($content, 'co1', 'table-column'));
+        self::assertSame(2, $this->tableColumnStyleCount($content));
         self::assertSame(0, $this->styleCount($styles, 'co0', 'table-column'));
         self::assertSame(0, $this->styleCount($styles, 'co1', 'table-column'));
-        self::assertSame(1, substr_count($content, 'table:style-name="co0"'));
-        self::assertSame(1, substr_count($content, 'table:style-name="co1"'));
+        self::assertSame(2, substr_count($content, 'table:style-name="co'));
         self::assertStringContainsString('style:column-width="2cm"', $content);
         self::assertStringContainsString('style:column-width="4cm"', $content);
     }
@@ -132,10 +130,7 @@ final class RichTableColumnSemanticOwnershipTest extends TestCase
         $dom->documentElement->appendChild($table->toDomNode($dom));
 
         $xml = $dom->saveXML() ?: '';
-        self::assertSame(1, $this->styleCount($xml, 'co0', 'table-column'));
-        self::assertSame(1, $this->styleCount($xml, 'co1', 'table-column'));
-        self::assertStringContainsString('table:style-name="co0"', $xml);
-        self::assertStringContainsString('table:style-name="co1"', $xml);
+        self::assertSame(2, $this->tableColumnStyleCount($xml));
     }
 
     #[RunInSeparateProcess]
@@ -150,8 +145,7 @@ final class RichTableColumnSemanticOwnershipTest extends TestCase
         $template->save($first);
         $template->save($second);
 
-        self::assertSame(1, $this->styleCount($this->entry($second, 'content.xml'), 'co0', 'table-column'));
-        self::assertSame(1, $this->styleCount($this->entry($second, 'content.xml'), 'co1', 'table-column'));
+        self::assertSame(2, $this->tableColumnStyleCount($this->entry($second, 'content.xml')));
     }
 
     private const OFFICE_NS = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0';
@@ -216,5 +210,14 @@ final class RichTableColumnSemanticOwnershipTest extends TestCase
             $name,
             $family
         ))->length;
+    }
+
+    private function tableColumnStyleCount(string $xml): int
+    {
+        $dom = new DOMDocument();
+        self::assertTrue($dom->loadXML($xml));
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('style', self::STYLE_NS);
+        return $xpath->query('//style:style[@style:family="table-column"]')?->length ?? 0;
     }
 }
