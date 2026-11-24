@@ -51,12 +51,15 @@ nav = [
   ] },
   { "API Reference" = [
     { "Overview" = "api-reference/index.md" },
+    { "H00: CV Integration Baseline" = "api-reference/h00-baseline.md" },
     { "Template & Document" = [
       { "Lifecycle" = "api-reference/template-document/lifecycle.md" },
       { "Values & Repeating Data" = "api-reference/template-document/values-and-repeating.md" },
       { "Metadata" = "api-reference/template-document/metadata.md" },
       { "Images" = "api-reference/template-document/images.md" },
       { "Styles & Document Defaults" = "api-reference/template-document/styles-and-defaults.md" },
+      { "Programmatic Page Styles" = "api-reference/template-document/page-styles.md" },
+      { "Multi-page Layouts and Sidebars (H02)" = "api-reference/template-document/sidebar-composition.md" },
     ] },
     { "Structured Content" = [
       { "Overview & setElement" = "api-reference/structured-content/index.md" },
@@ -66,6 +69,9 @@ nav = [
       { "Tables & Cells" = "api-reference/structured-content/tables.md" },
       { "Images" = "api-reference/structured-content/images.md" },
       { "Frames & Text Boxes" = "api-reference/structured-content/frames-text-boxes.md" },
+      { "Native Section Authoring (H01)" = "api-reference/structured-content/section-authoring.md" },
+      { "Native Drawing Shapes (H03)" = "api-reference/structured-content/native-shapes.md" },
+      { "Skill Bars (H03)" = "api-reference/structured-content/skillbars.md" },
     ] },
     { "Writer-native Objects" = [
       { "Overview" = "api-reference/writer-native/index.md" },

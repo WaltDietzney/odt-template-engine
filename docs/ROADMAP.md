@@ -38,7 +38,7 @@ The next feature round extends the engine from template processing plus isolated
 
 SA-01 body and native Section construction is implemented on `feature/section-authoring-01` (`c31a7f2`), with C06 visual acceptance. SA-02 adds bounded Section style and column authoring, including Writer-safe unequal-width indents, balancing, separators, validation and authored-style reuse by reference. See the [SA-01 contract](architecture/SECTION_AUTHORING_01_CONTRACT.md) and [SA-02 contract](architecture/SECTION_AUTHORING_02_CONTRACT.md).
 
-H01 closeout evidence is recorded in [`architecture/H01_SECTION_AUTHORING_CLOSEOUT.md`](architecture/H01_SECTION_AUTHORING_CLOSEOUT.md). It reuses SA-01/SA-02 and SECTION-03 collection semantics; no new API is added. H02 page-layout/frame composition is implemented and visually accepted on the H02 feature branch; see [H02 closeout](architecture/H02_CLOSEOUT.md). B5 convenience mapping remains deferred.
+H01 closeout evidence is recorded in [`architecture/H01_SECTION_AUTHORING_CLOSEOUT.md`](architecture/H01_SECTION_AUTHORING_CLOSEOUT.md). It reuses SA-01/SA-02 and SECTION-03 collection semantics; no new API is added. H02 page-layout/frame composition is implemented and visually accepted on the H02 feature branch; see [H02 closeout](architecture/H02_CLOSEOUT.md). B5 convenience mapping remains deferred. H03 native SkillBarGroup has been functionally and visually accepted on its feature branch; see the [H03 closeout](architecture/H03_SKILLBAR_CLOSEOUT.md). Application-specific layout tuning and future CV Generator Pro template-generation skills remain outside this engine milestone.
 
 The planned capability sequence is:
 
