@@ -15,10 +15,10 @@ use PHPUnit\Framework\TestCase;
 use ZipArchive;
 
 /**
- * H04-A current-behavior evidence for generated table-column identities.
+ * H04-B generated table-column identity regression coverage.
  *
- * These tests preserve the observed coN behavior as a characterization
- * boundary. They do not authorize a collision-renaming implementation.
+ * H04-A evidence remains in the handoff document; these assertions cover the
+ * approved definition-derived binding.
  */
 final class H04TableColumnIdentityCharacterizationTest extends TestCase
 {
@@ -46,42 +46,42 @@ final class H04TableColumnIdentityCharacterizationTest extends TestCase
     }
 
     #[RunInSeparateProcess]
-    public function testDifferentAbsoluteDefinitionsCollideAtDocumentScope(): void
+    public function testDifferentAbsoluteDefinitionsReceiveDistinctIdentities(): void
     {
         $template = $this->template();
-        $template->setElement('tableblock', $this->tableWithAbsoluteWidths(['5cm']));
-
-        $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Table-column style "co0" is already registered with a different definition');
-        $template->setElement('tableblock', $this->tableWithAbsoluteWidths(['7cm']));
+        $template->appendBody($this->tableWithAbsoluteWidths(['5cm']));
+        $template->appendBody($this->tableWithAbsoluteWidths(['7cm']));
+        $output = $this->outputPath('different-definitions');
+        $template->save($output);
+        $content = $this->entry($output, 'content.xml');
+        self::assertCount(2, $this->tableColumnStyleReferences($content));
+        self::assertCount(2, $this->columnPropertiesByWidth($content, 'column-width'));
     }
 
     #[RunInSeparateProcess]
-    public function testAbsoluteAndRelativeDefinitionsCollideAtDocumentScope(): void
+    public function testAbsoluteAndRelativeDefinitionsReceiveDistinctIdentities(): void
     {
         $template = $this->template();
-        $template->setElement('tableblock', $this->tableWithAbsoluteWidths(['5cm']));
-
-        $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Table-column style "co0" is already registered with a different definition');
-        $template->setElement('tableblock', $this->tableWithRelativeWidths([1]));
+        $template->appendBody($this->tableWithAbsoluteWidths(['5cm']));
+        $template->appendBody($this->tableWithRelativeWidths([1]));
+        $output = $this->outputPath('mixed-definitions');
+        $template->save($output);
+        self::assertCount(2, $this->tableColumnStyleReferences($this->entry($output, 'content.xml')));
     }
 
     #[RunInSeparateProcess]
     public function testIdenticalDefinitionsAreReusedAndMaterializedOnce(): void
     {
         $template = $this->template();
-        $template->setElement('tableblock', $this->tableWithAbsoluteWidths(['2cm', '4cm']));
-        $template->setElement('tableblock', $this->tableWithAbsoluteWidths(['2cm', '4cm']));
+        $template->appendBody($this->tableWithAbsoluteWidths(['2cm', '4cm']));
+        $template->appendBody($this->tableWithAbsoluteWidths(['2cm', '4cm']));
 
         $output = $this->outputPath('identical-definitions');
         $template->save($output);
         $content = $this->entry($output, 'content.xml');
 
-        self::assertSame(1, $this->styleCount($content, 'co0', 'table-column'));
-        self::assertSame(1, $this->styleCount($content, 'co1', 'table-column'));
-        self::assertSame('2cm', $this->columnProperty($content, 'co0', 'column-width'));
-        self::assertSame('4cm', $this->columnProperty($content, 'co1', 'column-width'));
+        self::assertCount(2, $this->columnPropertiesByWidth($content, 'column-width'));
+        self::assertSame(2, count(array_unique($this->tableColumnStyleReferences($content))));
     }
 
     #[RunInSeparateProcess]
@@ -95,26 +95,23 @@ final class H04TableColumnIdentityCharacterizationTest extends TestCase
         $template->save($output);
         $content = $this->entry($output, 'content.xml');
 
-        self::assertSame(1, $this->styleCount($content, 'co0', 'table-column'));
+        self::assertContains('2cm', $this->columnPropertiesByWidth($content, 'column-width'));
         self::assertSame('9cm', $this->columnProperty($content, 'co0', 'column-width'));
-        self::assertSame(['co0'], $this->tableColumnStyleReferences($content));
+        self::assertCount(1, $this->tableColumnStyleReferences($content));
     }
 
-    public function testDirectDomUsesPositionalNamesAndEmitsResolvedAbsoluteGeometry(): void
+    public function testDirectDomEmitsResolvedAbsoluteGeometry(): void
     {
         $dom = $this->contentDom();
         $table = $this->tableWithAbsoluteWidths(['3cm', '6cm']);
         $dom->documentElement->appendChild($table->toDomNode($dom));
         $content = $dom->saveXML() ?: '';
 
-        self::assertSame(1, $this->styleCount($content, 'co0', 'table-column'));
-        self::assertSame(1, $this->styleCount($content, 'co1', 'table-column'));
-        self::assertSame(['co0', 'co1'], $this->tableColumnStyleReferences($content));
-        self::assertSame('3cm', $this->columnProperty($content, 'co0', 'column-width'));
-        self::assertSame('6cm', $this->columnProperty($content, 'co1', 'column-width'));
+        self::assertCount(2, $this->columnPropertiesByWidth($content, 'column-width'));
+        self::assertCount(2, $this->tableColumnStyleReferences($content));
     }
 
-    public function testDirectDomAppendsASecondConflictingCo0Definition(): void
+    public function testDirectDomSeparatesDifferentDefinitions(): void
     {
         $dom = $this->contentDom();
         $first = $this->tableWithAbsoluteWidths(['2cm']);
@@ -123,9 +120,8 @@ final class H04TableColumnIdentityCharacterizationTest extends TestCase
         $dom->documentElement->appendChild($second->toDomNode($dom));
         $content = $dom->saveXML() ?: '';
 
-        self::assertSame(2, $this->styleCount($content, 'co0', 'table-column'));
-        self::assertSame(['co0', 'co0'], $this->tableColumnStyleReferences($content));
-        self::assertSame(['2cm', '7cm'], $this->columnProperties($content, 'co0', 'column-width'));
+        self::assertCount(2, $this->columnPropertiesByWidth($content, 'column-width'));
+        self::assertCount(2, $this->tableColumnStyleReferences($content));
     }
 
     #[RunInSeparateProcess]
@@ -140,10 +136,7 @@ final class H04TableColumnIdentityCharacterizationTest extends TestCase
 
         foreach ([$first, $second] as $output) {
             $content = $this->entry($output, 'content.xml');
-            self::assertSame(1, $this->styleCount($content, 'co0', 'table-column'));
-            self::assertSame(1, $this->styleCount($content, 'co1', 'table-column'));
-            self::assertSame('2cm', $this->columnProperty($content, 'co0', 'column-width'));
-            self::assertSame('4cm', $this->columnProperty($content, 'co1', 'column-width'));
+            self::assertCount(2, $this->columnPropertiesByWidth($content, 'column-width'));
         }
     }
 
@@ -161,11 +154,8 @@ final class H04TableColumnIdentityCharacterizationTest extends TestCase
         $reloaded->save($second);
         $content = $this->entry($second, 'content.xml');
 
-        self::assertSame(1, $this->styleCount($content, 'co0', 'table-column'));
-        self::assertSame(1, $this->styleCount($content, 'co1', 'table-column'));
-        self::assertSame(['co0', 'co1'], $this->tableColumnStyleReferences($content));
-        self::assertSame('2cm', $this->columnProperty($content, 'co0', 'column-width'));
-        self::assertSame('4cm', $this->columnProperty($content, 'co1', 'column-width'));
+        self::assertCount(2, $this->columnPropertiesByWidth($content, 'column-width'));
+        self::assertCount(2, $this->tableColumnStyleReferences($content));
     }
 
     #[RunInSeparateProcess]
@@ -181,58 +171,48 @@ final class H04TableColumnIdentityCharacterizationTest extends TestCase
         $content = $this->entry($output, 'content.xml');
         foreach (['H04A', 'H04B'] as $name) {
             self::assertSame(1, $this->xpath($content)->query('//table:table[@table:name="' . $name . '"]')->length);
-            self::assertSame(1, $this->xpath($content)->query('//table:table[@table:name="' . $name . '"]/table:table-column[@table:style-name="co0"]')->length);
-            self::assertSame(1, $this->xpath($content)->query('//table:table[@table:name="' . $name . '"]/table:table-column[@table:style-name="co1"]')->length);
+            self::assertSame(2, $this->xpath($content)->query('//table:table[@table:name="' . $name . '"]/table:table-column')->length);
         }
-        self::assertSame(1, $this->styleCount($content, 'co0', 'table-column'));
-        self::assertSame(1, $this->styleCount($content, 'co1', 'table-column'));
-        self::assertSame('2cm', $this->columnProperty($content, 'co0', 'column-width'));
-        self::assertSame('4cm', $this->columnProperty($content, 'co1', 'column-width'));
+        self::assertCount(2, $this->columnPropertiesByWidth($content, 'column-width'));
     }
 
     #[RunInSeparateProcess]
-    public function testConstructionRejectsDifferentGeometryAndRetainsFirstTable(): void
+    public function testConstructionKeepsDifferentGeometryAndRetainsBothTables(): void
     {
         foreach ([$this->tableWithAbsoluteWidths(['7cm']), $this->tableWithRelativeWidths([1, 1])] as $second) {
             $template = $this->template();
             $template->appendBody($this->tableWithAbsoluteWidths(['5cm'])->setTableName('H04A'));
-            try {
-                $template->appendBody($second->setTableName('H04B'));
-                self::fail('Expected positional column conflict');
-            } catch (LogicException $exception) {
-                self::assertStringContainsString('co0', $exception->getMessage());
-            }
+            $template->appendBody($second->setTableName('H04B'));
             $output = $this->outputPath('construction-conflict');
             $template->save($output);
             $content = $this->entry($output, 'content.xml');
-            self::assertSame(1, $this->xpath($content)->query('//table:table[@table:name="H04A"]/table:table-column[@table:style-name="co0"]')->length);
-            self::assertSame(0, $this->xpath($content)->query('//table:table[@table:name="H04B"]')->length);
-            self::assertSame('5cm', $this->columnProperty($content, 'co0', 'column-width'));
+            self::assertSame(1, $this->xpath($content)->query('//table:table[@table:name="H04A"]')->length);
+            self::assertSame(1, $this->xpath($content)->query('//table:table[@table:name="H04B"]')->length);
+            self::assertGreaterThanOrEqual(2, count($this->tableColumnStyleReferences($content)));
         }
     }
 
-    public function testDirectRelativeReferencesAreNotMaterializedBySerializer(): void
+    public function testDirectRelativeDefinitionsAreMaterializedBySerializer(): void
     {
         $dom = $this->contentDom();
         $dom->documentElement->appendChild($this->tableWithRelativeWidths([1, 1])->toDomNode($dom));
         $content = $dom->saveXML() ?: '';
-        self::assertSame(['co0', 'co1'], $this->tableColumnStyleReferences($content));
-        self::assertSame(0, $this->styleCount($content, 'co0', 'table-column'));
-        self::assertSame(0, $this->styleCount($content, 'co1', 'table-column'));
+        self::assertCount(2, $this->tableColumnStyleReferences($content));
+        self::assertCount(2, $this->columnPropertiesByWidth($content, 'rel-column-width'));
     }
 
-    public function testDirectMixedGeometryReusesAbsoluteReference(): void
+    public function testDirectMixedGeometryUsesDistinctReferences(): void
     {
         $dom = $this->contentDom();
         $dom->documentElement->appendChild($this->tableWithAbsoluteWidths(['5cm'])->toDomNode($dom));
         $dom->documentElement->appendChild($this->tableWithRelativeWidths([1])->toDomNode($dom));
         $content = $dom->saveXML() ?: '';
-        self::assertSame(['co0', 'co0'], $this->tableColumnStyleReferences($content));
-        self::assertSame('5cm', $this->columnProperty($content, 'co0', 'column-width'));
-        self::assertNull($this->columnProperty($content, 'co0', 'rel-column-width'));
+        self::assertCount(2, $this->tableColumnStyleReferences($content));
+        self::assertCount(1, $this->columnPropertiesByWidth($content, 'column-width'));
+        self::assertCount(1, $this->columnPropertiesByWidth($content, 'rel-column-width'));
     }
 
-    public function testDirectDomReusesNamespaceConformantAuthoredDefinition(): void
+    public function testDirectDomPreservesNamespaceConformantAuthoredDefinition(): void
     {
         $dom = $this->contentDom();
         $style = $dom->createElementNS(self::STYLE_NS, 'style:style');
@@ -244,8 +224,8 @@ final class H04TableColumnIdentityCharacterizationTest extends TestCase
         $dom->getElementsByTagNameNS(self::OFFICE_NS, 'automatic-styles')->item(0)->appendChild($style);
         $dom->documentElement->appendChild($this->tableWithAbsoluteWidths(['2cm'])->toDomNode($dom));
         $content = $dom->saveXML() ?: '';
-        self::assertSame(['co0'], $this->tableColumnStyleReferences($content));
-        self::assertSame(1, $this->styleCount($content, 'co0', 'table-column'));
+        self::assertCount(1, $this->tableColumnStyleReferences($content));
+        self::assertContains('2cm', $this->columnPropertiesByWidth($content, 'column-width'));
         self::assertSame('9cm', $this->columnProperty($content, 'co0', 'column-width'));
     }
 
@@ -267,7 +247,7 @@ final class H04TableColumnIdentityCharacterizationTest extends TestCase
             $output = $this->outputPath('independent');
             $template->save($output);
             $content = $this->entry($output, 'content.xml');
-            self::assertSame($width, $this->columnProperty($content, 'co0', 'column-width'));
+            self::assertSame($width, $this->columnPropertiesByWidth($content, 'column-width')[0]);
             self::assertSame(0, $this->styleCount($this->entry($output, 'styles.xml'), 'co0', 'table-column'));
         }
     }
@@ -289,8 +269,107 @@ final class H04TableColumnIdentityCharacterizationTest extends TestCase
         $template->appendBody($this->tableWithAbsoluteWidths(['2cm']));
         $output = $this->outputPath('part-isolation');
         $template->save($output);
-        self::assertSame('2cm', $this->columnProperty($this->entry($output, 'content.xml'), 'co0', 'column-width'));
+        self::assertSame('2cm', $this->columnPropertiesByWidth($this->entry($output, 'content.xml'), 'column-width')[0]);
         self::assertSame('9cm', $this->columnProperty($this->entry($output, 'styles.xml'), 'co0', 'column-width'));
+    }
+
+    #[RunInSeparateProcess]
+    public function testReferencesResolveAcrossPositionsAndReload(): void
+    {
+        $template = $this->template();
+        $template->appendBody($this->tableWithAbsoluteWidths(['2cm', '4cm']));
+        $template->appendBody($this->tableWithAbsoluteWidths(['4cm', '2cm']));
+        $template->appendBody($this->tableWithRelativeWidths([1, 1]));
+        $first = $this->outputPath('resolved-first');
+        $template->save($first);
+        $xml = $this->entry($first, 'content.xml');
+        $refs = $this->tableColumnStyleReferences($xml);
+        self::assertSame([$refs[0], $refs[1], $refs[1], $refs[0], $refs[4], $refs[5]], $refs);
+        $this->assertResolvedGeometry($xml, ['2cm', '4cm', '4cm', '2cm', '32767*', '32768*']);
+        $reloaded = new OdtTemplate($first);
+        $this->templates[] = $reloaded;
+        $reloaded->appendBody($this->tableWithAbsoluteWidths(['2cm']));
+        $second = $this->outputPath('resolved-reload');
+        $reloaded->save($second);
+        $xml = $this->entry($second, 'content.xml');
+        self::assertSame([...$refs, $refs[0]], $this->tableColumnStyleReferences($xml));
+        $this->assertResolvedGeometry($xml, ['2cm', '4cm', '4cm', '2cm', '32767*', '32768*', '2cm']);
+    }
+
+    #[RunInSeparateProcess]
+    public function testAuthoredCandidateCollisionPreservesDefinitionAndReferences(): void
+    {
+        $probe = $this->contentDom();
+        $probe->documentElement->appendChild($this->tableWithAbsoluteWidths(['2cm'])->toDomNode($probe));
+        $candidate = $this->tableColumnStyleReferences($probe->saveXML())[0];
+        $template = $this->template();
+        $this->appendAuthoredColumnStyle($template, $candidate, '9cm');
+        $this->appendAuthoredColumnStyle($template, $candidate . '_1', '2cm');
+        $dom = $template->documentContextForTest()->contentDom();
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('style', self::STYLE_NS);
+        $xpath->query('//style:style[@style:name="' . $candidate . '_1"]')->item(0)
+            ->setAttributeNS(self::STYLE_NS, 'style:parent-style-name', 'AuthoredParent');
+        $template->appendBody($this->tableWithAbsoluteWidths(['2cm']));
+        $output = $this->outputPath('candidate-collision');
+        $template->save($output);
+        $xml = $this->entry($output, 'content.xml');
+        self::assertSame([$candidate . '_2'], $this->tableColumnStyleReferences($xml));
+        self::assertSame('9cm', $this->columnProperty($xml, $candidate, 'column-width'));
+        $this->assertResolvedGeometry($xml, ['2cm']);
+    }
+
+    public function testExplicitColumnRequirementConflictsAreNotRenamed(): void
+    {
+        $context = new \OdtTemplateEngine\Style\StyleContext();
+        $make = static fn(string $width) => new \OdtTemplateEngine\Document\StyleRequirement(
+            'definition', 'automatic', 'table-column', 'content.xml', 'explicit', null,
+            ['style:table-column-properties' => ['style:column-width' => $width]]
+        );
+        $context->registerRequirement($make('2cm'));
+        $this->expectException(\LogicException::class);
+        $context->registerRequirement($make('4cm'));
+    }
+
+    #[RunInSeparateProcess]
+    public function testLateTableRendererFailureRollsBackColumnAllocation(): void
+    {
+        $template = $this->template();
+        $before = $this->outputPath('rollback-before');
+        $template->save($before);
+        $table = new class extends RichTable {
+            public function toDomNode(DOMDocument $dom): \DOMNode
+            {
+                parent::toDomNode($dom);
+                throw new \RuntimeException('H04 late renderer failure');
+            }
+        };
+        $table->setColumnWidths(['7cm']);
+        $table->addRow(['A']);
+        try {
+            $template->appendBody($table);
+            self::fail('Expected late renderer failure');
+        } catch (\RuntimeException $exception) {
+            self::assertSame('H04 late renderer failure', $exception->getMessage());
+        }
+        $after = $this->outputPath('rollback-after');
+        $template->save($after);
+        self::assertSame($this->entry($before, 'content.xml'), $this->entry($after, 'content.xml'));
+        $template->appendBody($this->tableWithAbsoluteWidths(['7cm']));
+        $output = $this->outputPath('rollback-retry');
+        $template->save($output);
+        $this->assertResolvedGeometry($this->entry($output, 'content.xml'), ['7cm']);
+    }
+
+    private function assertResolvedGeometry(string $xml, array $expected): void
+    {
+        $refs = $this->tableColumnStyleReferences($xml);
+        self::assertCount(count($expected), $refs);
+        foreach ($refs as $index => $name) {
+            self::assertSame(1, $this->styleCount($xml, $name, 'table-column'));
+            $property = str_ends_with($expected[$index], '*') ? 'rel-column-width' : 'column-width';
+            self::assertSame($expected[$index], $this->columnProperty($xml, $name, $property));
+        }
     }
 
     private function template(): OdtTemplate
@@ -382,6 +461,21 @@ final class H04TableColumnIdentityCharacterizationTest extends TestCase
         $values = $this->columnProperties($xml, $name, $property);
 
         return $values[0] ?? null;
+    }
+
+    /** @return list<string> */
+    private function columnPropertiesByWidth(string $xml, string $property): array
+    {
+        $xpath = $this->xpath($xml);
+        $nodes = $xpath->query('//style:style[@style:family="table-column"]/style:table-column-properties/@style:' . $property);
+        $values = [];
+        if ($nodes === false) {
+            return $values;
+        }
+        foreach ($nodes as $node) {
+            $values[] = $node->nodeValue ?? '';
+        }
+        return $values;
     }
 
     /** @return list<string> */

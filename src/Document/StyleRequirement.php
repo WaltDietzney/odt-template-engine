@@ -36,7 +36,8 @@ final readonly class StyleRequirement
         private ?string $documentPart,
         private string $name,
         private ?string $parentStyleName = null,
-        private array $propertyGroups = []
+        private array $propertyGroups = [],
+        private bool $generatedColumn = false
     ) {
         $this->validate();
     }
@@ -77,6 +78,12 @@ final readonly class StyleRequirement
     public function propertyGroups(): array
     {
         return $this->propertyGroups;
+    }
+
+    /** @internal Whether this requirement is owned by the generated column path. */
+    public function isGeneratedColumn(): bool
+    {
+        return $this->generatedColumn;
     }
 
     private function validate(): void

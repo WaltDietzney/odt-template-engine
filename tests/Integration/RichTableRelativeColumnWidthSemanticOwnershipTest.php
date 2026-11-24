@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OdtTemplateEngine\Tests\Integration;
 
 use DOMDocument;
+use DOMXPath;
 use OdtTemplateEngine\Elements\RichTable;
 use OdtTemplateEngine\Elements\RichTableCell;
 use OdtTemplateEngine\Document\StyleRequirement;
@@ -82,9 +83,7 @@ final class RichTableRelativeColumnWidthSemanticOwnershipTest extends TestCase
 
         $xml = $dom->saveXML() ?: '';
         self::assertSame(3, substr_count($xml, '<table:table-column '));
-        self::assertSame(1, substr_count($xml, 'table:style-name="co0"'));
-        self::assertSame(1, substr_count($xml, 'table:style-name="co1"'));
-        self::assertSame(1, substr_count($xml, 'table:style-name="co2"'));
+        self::assertSame(3, substr_count($xml, 'table:style-name="co'));
         self::assertStringNotContainsString('table:number-columns-repeated', $xml);
         self::assertStringNotContainsString('table:number-columns-spanned', $xml);
     }
@@ -105,18 +104,14 @@ final class RichTableRelativeColumnWidthSemanticOwnershipTest extends TestCase
         $content = $this->entry($output, 'content.xml');
         $styles = $this->entry($output, 'styles.xml');
 
-        self::assertSame(1, $this->styleCount($content, 'co0', 'table-column'));
-        self::assertSame(1, $this->styleCount($content, 'co1', 'table-column'));
-        self::assertSame(1, $this->styleCount($content, 'co2', 'table-column'));
+        self::assertSame(3, $this->tableColumnStyleCount($content));
         self::assertSame(0, $this->styleCount($styles, 'co0', 'table-column'));
         self::assertSame(0, $this->styleCount($styles, 'co1', 'table-column'));
         self::assertSame(0, $this->styleCount($styles, 'co2', 'table-column'));
         self::assertStringContainsString('style:rel-column-width="32766*"', $content);
         self::assertSame(1, substr_count($content, 'style:rel-column-width="16383*"'));
         self::assertSame(1, substr_count($content, 'style:rel-column-width="16386*"'));
-        self::assertSame(1, substr_count($content, 'table:style-name="co0"'));
-        self::assertSame(1, substr_count($content, 'table:style-name="co1"'));
-        self::assertSame(1, substr_count($content, 'table:style-name="co2"'));
+        self::assertSame(3, substr_count($content, 'table:style-name="co'));
         self::assertStringNotContainsString('table:number-columns-repeated', $content);
         self::assertStringNotContainsString('table:number-columns-spanned', $content);
     }
@@ -134,9 +129,7 @@ final class RichTableRelativeColumnWidthSemanticOwnershipTest extends TestCase
         $template->save($second);
 
         $content = $this->entry($second, 'content.xml');
-        self::assertSame(1, $this->styleCount($content, 'co0', 'table-column'));
-        self::assertSame(1, $this->styleCount($content, 'co1', 'table-column'));
-        self::assertSame(1, $this->styleCount($content, 'co2', 'table-column'));
+        self::assertSame(3, $this->tableColumnStyleCount($content));
     }
 
     public function testCallerDefinedColspanRemainsStructural(): void
@@ -218,5 +211,14 @@ final class RichTableRelativeColumnWidthSemanticOwnershipTest extends TestCase
             $name,
             $family
         ))->length;
+    }
+
+    private function tableColumnStyleCount(string $xml): int
+    {
+        $dom = new DOMDocument();
+        self::assertTrue($dom->loadXML($xml));
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('style', 'urn:oasis:names:tc:opendocument:xmlns:style:1.0');
+        return $xpath->query('//style:style[@style:family="table-column"]')?->length ?? 0;
     }
 }

@@ -134,7 +134,7 @@ Historical identifiers `TABLE-LAYOUT-02`, `TABLE-LAYOUT-03`, `TABLE-LAYOUT-04`, 
 
 ### TABLE-COLUMN-IDENTITY-01 — Generated column-style identity across multiple tables
 
-H04-A [characterization evidence](architecture/cv-handoff/H04-A-TABLE-COLUMN-IDENTITY-EVIDENCE-2026-11-24.md) and [proposed H04-B contract](architecture/cv-handoff/H04-B-TABLE-COLUMN-IDENTITY-CHANGE-CONTRACT.md) are available; this backlog item remains open.
+H04-A [characterization evidence](architecture/cv-handoff/H04-A-TABLE-COLUMN-IDENTITY-EVIDENCE-2026-11-24.md) and [proposed H04-B contract](architecture/cv-handoff/H04-B-TABLE-COLUMN-IDENTITY-CHANGE-CONTRACT.md) are available; this backlog item is implemented and accepted (H04, 24 November 2026). The following describes the historical problem and design requirements.
 
 **Priority:** Post-TABLE-LAYOUT compatibility/architecture follow-up; not part of TABLE-LAYOUT-01
 
@@ -453,7 +453,7 @@ construct
 
 ### TABLE-COLUMN-IDENTITY-01 as construction dependency
 
-The existing generated table-column identity issue becomes more important once multiple PHP-owned tables are freely composed in one document. Treat it as a likely ODT-CONSTRUCTION-01 correctness dependency rather than automatically broadening the public table API.
+The existing generated table-column identity issue becomes more important once multiple PHP-owned tables are freely composed in one document. H04 resolves this ODT-CONSTRUCTION-01 correctness dependency rather than automatically broadening the public table API.
 
 ## Document defaults and state
 

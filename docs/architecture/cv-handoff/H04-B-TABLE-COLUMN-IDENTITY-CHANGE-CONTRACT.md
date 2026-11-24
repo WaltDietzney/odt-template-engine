@@ -1,10 +1,9 @@
 # H04-B — Table-column identity change contract (proposal)
 
-Status: **PROPOSED / not approved for implementation** (24 November 2026)
+Status: **ACCEPTED — H04-B1 through B4** (24 November 2026)
 
 This contract follows H04-A characterization and compares strategies for
-generated `table-column` style identity. It is a design boundary only. No H04-B
-source change is included in this slice.
+generated `table-column` style identity. It defines the implementation boundary for H04-B.
 
 ## Problem and invariants
 
@@ -155,7 +154,70 @@ H04-A has changed current behavior.
 
 ## Review gate
 
-H04-B is not approved. First agree on the exact binding between collection and
-serialization, including standalone DOM and public StyleWriter compatibility.
-Use the existing document context where possible; no generic allocator framework
-or new public API is required by this proposal.
+The Writer gate remains a separate B4 acceptance step. The B1–B3 binding below
+settles collection and serialization, including standalone DOM and public
+`StyleWriter` compatibility, without introducing a generic allocator framework
+or a new public API.
+
+## H04-B1–B3 binding decision
+
+The internal binding is a document-owned `TableColumnIdentityRegistry`
+held by `StyleContext`. During semantic collection it receives generated
+`table-column` definitions, canonicalizes the exact emitted property map, and
+returns a replacement requirement with a deterministic `co` plus SHA-256 seed
+name. Equal definitions reuse that name, while unequal definitions probe a
+stable suffix. Authored automatic styles are inspected before allocation and
+are never changed.
+
+Direct `RichTable::toDomNode()` rendering uses the same canonical property map
+and naming algorithm by inspecting the target DOM. It materializes absolute
+and relative generated definitions in the content automatic-styles container,
+so the emitted reference and definition are one result. This is the concrete
+collection/materialization/serialization binding for B1–B3; no state is stored
+on `RichTable` and no process-global allocator is used.
+
+The public `StyleWriter::writeColumnStyles()` helper remains positional and
+continues to append its legacy definitions. It is a compatibility helper, not
+the generated `RichTable` path. Consequently, generated RichTable references
+are no longer positional `coN` names, relative direct-DOM columns now resolve
+to generated definitions, and an authored `co0` remains intact while a
+different generated definition receives its own identity.
+
+
+## Implementation review correction
+
+Only explicitly marked RichTable-generated requirements enter allocation; explicit
+caller definitions retain their names and conflict semantics. The registry keeps
+no allocation cache: pending semantic definitions and the current DOM are the
+sources of truth, including after rollback. Both paths probe the same candidate
+sequence and reject ambiguous or non-equivalent authored definitions, including
+parent attributes and additional property groups. The optional internal marker
+on StyleRequirement defaults to false, preserving existing constructor calls.
+Detached DOM rendering without a document root emits references only; native
+document rendering materializes definitions. The public positional writer is
+unchanged. Header/footer cross-part semantic ownership is not expanded here.
+
+Regression coverage includes reference-to-definition geometry, cross-position
+deduplication, reload and insertion, authored candidate collisions, explicit
+conflicts and late renderer rollback. Writer acceptance remains pending.
+
+## B4 visual regression evidence (2026-11-24)
+
+LibreOffice 26.2.6.3, headless writer8 save and reopen through PDF export.
+Reproduce with tools/visual-regression/h04-table-column-identity.php and
+tools/visual-regression/render.sh. Seven tables exercise authored co0 (5cm),
+absolute 3/9 and 8/4cm, reversed 9/3cm, equal reuse, relative 1:3 and 3:1.
+The occupied generated candidate retains 9cm; the suffixed candidate has 3cm.
+All 13 column references resolve uniquely before and after Writer save.
+Writer renamed styles and converted relative widths to absolute values;
+absolute rounding differs by at most 0.001cm from the intended geometry.
+Visual inspection of the rendered page passed. Both 150 DPI PNGs have SHA-256
+e1cb0edc7094863e6006ad51e52275429fda7ee35c8ccbac03351996224749f5.
+No conversion errors were reported. Interactive GUI editing and repair-dialog
+inspection have not been performed; the human Writer gate was subsequently accepted by the project owner on 24 November 2026, with a screenshot showing the document open in Writer and the expected table geometry.
+
+Automated preflight: 1102 tests, 8935 assertions, zero errors/failures,
+1 warning, 4 deprecations, 8 PHPUnit deprecations. H04: 20 tests,
+216 assertions. PHP lint (387 source/test files plus visual generator),
+composer validate, diff check and strict documentation build passed.
+Generated ODT/PDF/PNG artifacts are local only.

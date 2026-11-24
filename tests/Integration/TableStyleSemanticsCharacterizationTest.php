@@ -145,10 +145,10 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
         $content = $this->entry($output, 'content.xml');
         $styles = $this->entry($output, 'styles.xml');
 
-        self::assertSame(1, $this->styleCount($content, 'co0', 'table-column'));
-        self::assertSame(1, $this->styleCount($content, 'co1', 'table-column'));
-        self::assertSame(0, $this->styleCount($styles, 'co0', 'table-column'));
-        self::assertSame(0, $this->styleCount($styles, 'co1', 'table-column'));
+        self::assertSame(1, $this->styleCount($content, $this->columnReference($content, 0), 'table-column'));
+        self::assertSame(1, $this->styleCount($content, $this->columnReference($content, 1), 'table-column'));
+        self::assertSame(0, $this->styleCount($styles, $this->columnReference($content, 0), 'table-column'));
+        self::assertSame(0, $this->styleCount($styles, $this->columnReference($content, 1), 'table-column'));
         self::assertStringContainsString('style:column-width="2cm"', $content);
         self::assertStringContainsString('style:column-width="4cm"', $content);
     }
@@ -208,8 +208,8 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
 
         self::assertSame(0, $this->styleCount($this->entry($first, 'styles.xml'), $cellName, 'table-cell'));
         self::assertSame(0, $this->styleCount($this->entry($second, 'styles.xml'), $cellName, 'table-cell'));
-        self::assertSame(1, $this->styleCount($this->entry($first, 'content.xml'), 'co0', 'table-column'));
-        self::assertSame(1, $this->styleCount($this->entry($second, 'content.xml'), 'co0', 'table-column'));
+        self::assertSame(1, $this->styleCount($this->entry($first, 'content.xml'), $this->columnReference($this->entry($first, 'content.xml'), 0), 'table-column'));
+        self::assertSame(1, $this->styleCount($this->entry($second, 'content.xml'), $this->columnReference($this->entry($second, 'content.xml'), 0), 'table-column'));
     }
 
     #[RunInSeparateProcess]
@@ -234,9 +234,9 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
         self::assertSame(0, $this->styleCount($styles, $secondCell->getStyleName(), 'table-cell'));
         self::assertSame(1, $this->styleCount($content, $firstCell->getStyleName(), 'table-cell'));
         self::assertSame(1, $this->styleCount($content, $secondCell->getStyleName(), 'table-cell'));
-        self::assertSame(1, $this->styleCount($content, 'co0', 'table-column'));
-        self::assertSame(1, $this->styleCount($content, 'co1', 'table-column'));
-        self::assertSame(0, $this->styleCount($styles, 'co0', 'table-column'));
+        self::assertSame(1, $this->styleCount($content, $this->columnReference($content, 0), 'table-column'));
+        self::assertSame(1, $this->styleCount($content, $this->columnReference($content, 1), 'table-column'));
+        self::assertSame(0, $this->styleCount($styles, $this->columnReference($content, 0), 'table-column'));
     }
 
     public function testStoredRowStyleIsCurrentlyDormant(): void
@@ -333,6 +333,17 @@ final class TableStyleSemanticsCharacterizationTest extends TestCase
         self::assertFileExists($path);
 
         return $path;
+    }
+
+    private function columnReference(string $xml, int $index): string
+    {
+        $dom = new \DOMDocument();
+        $dom->loadXML($xml);
+        $xpath = new \DOMXPath($dom);
+        $xpath->registerNamespace('table', 'urn:oasis:names:tc:opendocument:xmlns:table:1.0');
+        $node = $xpath->query('//table:table-column/@table:style-name')->item($index);
+        self::assertNotNull($node);
+        return $node->nodeValue;
     }
 
     private function styleCount(string $xml, string $name, string $family): int

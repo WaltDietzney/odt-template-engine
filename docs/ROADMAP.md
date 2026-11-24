@@ -64,7 +64,7 @@ Existing `Paragraph`, `RichText`, `RichTable`, `ListElement`, `ImageElement`, `C
 
 Page-break and column-break support are explicit capability requirements. No method spelling such as `addPageBreak()`, `addColumnBreak()`, or `page()->break()` is approved by this roadmap. API shape follows native Writer/ODF semantics and the existing architecture.
 
-`TABLE-COLUMN-IDENTITY-01` is a likely correctness dependency for composing multiple generated tables. Other future topics enter this round only when concrete construction work proves them necessary.
+`TABLE-COLUMN-IDENTITY-01` was a correctness dependency for composing multiple generated tables and is resolved by H04 (accepted 24 November 2026). Other future topics enter this round only when concrete construction work proves them necessary.
 
 ### Round C — later capability expansion
 

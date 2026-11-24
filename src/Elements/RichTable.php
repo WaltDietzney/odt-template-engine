@@ -6,7 +6,7 @@ use OdtTemplateEngine\Utils\StyleMapper;
 use OdtTemplateEngine\Elements\OdtElement;
 use OdtTemplateEngine\Elements\RichTableCell;
 use OdtTemplateEngine\Document\StyleRequirement;
-use OdtTemplateEngine\Utils\StyleWriter;
+use OdtTemplateEngine\Document\TableColumnIdentityRegistry;
 use DOMDocument;
 use DOMNode;
 use DOMElement;
@@ -359,12 +359,9 @@ class RichTable extends OdtElement
         $columnWidths = $this->getColumnWidths();
         $columnStyleNames = [];
         if (!empty($this->columnWidthRatios)) {
-            $columnStyleNames = $this->columnStyleNames($this->columnWidthRatios);
+            $columnStyleNames = $this->columnStyleNamesFromDefinitions($dom, $this->normalizedRelativeColumnWidths(), 'style:rel-column-width');
         } elseif (!empty($columnWidths)) {
-            $columnStyleNames = $this->columnStyleNames($columnWidths);
-            if (!$this->hasAllColumnStyles($dom, $columnStyleNames)) {
-                StyleWriter::writeColumnStyles($dom, $columnWidths);
-            }
+            $columnStyleNames = $this->columnStyleNamesFromDefinitions($dom, array_values($columnWidths), 'style:column-width');
         }
 
 
@@ -511,51 +508,15 @@ class RichTable extends OdtElement
         return false;
     }
 
-    /** @param array<int, int|string> $widths */
-    private function columnStyleNames(array $widths): array
+    /** @param list<string> $values */
+    private function columnStyleNamesFromDefinitions(DOMDocument $dom, array $values, string $property): array
     {
+        $registry = new TableColumnIdentityRegistry();
         $names = [];
-        foreach (array_values($widths) as $index => $_width) {
-            $names[] = 'co' . $index;
+        foreach ($values as $value) {
+            $names[] = $registry->resolveOrAllocate($dom, [$property => (string) $value]);
         }
         return $names;
-    }
-
-    /** @param list<string> $styleNames */
-    private function hasAllColumnStyles(DOMDocument $dom, array $styleNames): bool
-    {
-        $xpath = new \DOMXPath($dom);
-        $xpath->registerNamespace('office', 'urn:oasis:names:tc:opendocument:xmlns:office:1.0');
-        $automaticStyles = $xpath->query('//office:automatic-styles')->item(0);
-        if (!$automaticStyles instanceof DOMElement) {
-            return false;
-        }
-
-        foreach ($styleNames as $styleName) {
-            $found = false;
-            foreach ($automaticStyles->getElementsByTagName('*') as $style) {
-                if (!$style instanceof DOMElement || !in_array($style->localName, ['style', 'style:style'], true)) {
-                    continue;
-                }
-                $name = $style->getAttributeNS(
-                    'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
-                    'name'
-                ) ?: $style->getAttribute('style:name');
-                $family = $style->getAttributeNS(
-                    'urn:oasis:names:tc:opendocument:xmlns:style:1.0',
-                    'family'
-                ) ?: $style->getAttribute('style:family');
-                if ($name === $styleName && $family === 'table-column') {
-                    $found = true;
-                    break;
-                }
-            }
-            if (!$found) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     /** @return iterable<int, StyleRequirement> */
@@ -570,7 +531,8 @@ class RichTable extends OdtElement
                     StyleRequirement::PART_CONTENT,
                     'co' . $index,
                     null,
-                    ['style:table-column-properties' => ['style:rel-column-width' => $width]]
+                    ['style:table-column-properties' => ['style:rel-column-width' => $width]],
+                    true
                 );
             }
         } else {
@@ -582,7 +544,8 @@ class RichTable extends OdtElement
                     StyleRequirement::PART_CONTENT,
                     'co' . $index,
                     null,
-                    ['style:table-column-properties' => ['style:column-width' => $width]]
+                    ['style:table-column-properties' => ['style:column-width' => $width]],
+                    true
                 );
             }
         }
