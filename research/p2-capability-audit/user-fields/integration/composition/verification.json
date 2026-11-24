@@ -1,0 +1,757 @@
+{
+  "documents": {
+    "compact": {
+      "source": {
+        "declarations": {
+          "name": "Ada Beispiel",
+          "street": "Am Wissenschaftspark",
+          "house": "128 a",
+          "postal": "32049",
+          "city": "Herford",
+          "country": "Deutschland",
+          "phone": "+49 5221 123456",
+          "email": "ada.beispiel@example.invalid",
+          "website": "example.invalid/ada"
+        },
+        "references": [
+          "city",
+          "country",
+          "email",
+          "house",
+          "name",
+          "phone",
+          "postal",
+          "street",
+          "website"
+        ],
+        "image_sizes": [
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ]
+        ],
+        "frames": 9
+      },
+      "roundtrip": {
+        "declarations": {
+          "name": "Ada Beispiel",
+          "street": "Am Wissenschaftspark",
+          "house": "128 a",
+          "postal": "32049",
+          "city": "Herford",
+          "country": "Deutschland",
+          "phone": "+49 5221 123456",
+          "email": "ada.beispiel@example.invalid",
+          "website": "example.invalid/ada"
+        },
+        "references": [
+          "city",
+          "country",
+          "email",
+          "house",
+          "name",
+          "phone",
+          "postal",
+          "street",
+          "website"
+        ],
+        "image_sizes": [
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ]
+        ],
+        "frames": 9
+      },
+      "same_png_pages": [
+        true
+      ],
+      "complete_pdf": true
+    },
+    "sidebar-round": {
+      "source": {
+        "declarations": {
+          "name": "Ada Beispiel",
+          "street": "Am Wissenschaftspark",
+          "house": "128 a",
+          "postal": "32049",
+          "city": "Herford",
+          "country": "Deutschland",
+          "phone": "+49 5221 123456",
+          "email": "ada.beispiel@example.invalid",
+          "website": "example.invalid/ada"
+        },
+        "references": [
+          "city",
+          "country",
+          "email",
+          "house",
+          "name",
+          "phone",
+          "postal",
+          "street",
+          "website"
+        ],
+        "image_sizes": [
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ]
+        ],
+        "frames": 9
+      },
+      "roundtrip": {
+        "declarations": {
+          "name": "Ada Beispiel",
+          "street": "Am Wissenschaftspark",
+          "house": "128 a",
+          "postal": "32049",
+          "city": "Herford",
+          "country": "Deutschland",
+          "phone": "+49 5221 123456",
+          "email": "ada.beispiel@example.invalid",
+          "website": "example.invalid/ada"
+        },
+        "references": [
+          "city",
+          "country",
+          "email",
+          "house",
+          "name",
+          "phone",
+          "postal",
+          "street",
+          "website"
+        ],
+        "image_sizes": [
+          [
+            "0.279cm",
+            "0.279cm"
+          ],
+          [
+            "0.279cm",
+            "0.279cm"
+          ],
+          [
+            "0.279cm",
+            "0.279cm"
+          ],
+          [
+            "0.279cm",
+            "0.279cm"
+          ]
+        ],
+        "frames": 9
+      },
+      "same_png_pages": [
+        true
+      ],
+      "complete_pdf": true
+    },
+    "sidebar-rounded": {
+      "source": {
+        "declarations": {
+          "name": "Ada Beispiel",
+          "street": "Am Wissenschaftspark",
+          "house": "128 a",
+          "postal": "32049",
+          "city": "Herford",
+          "country": "Deutschland",
+          "phone": "+49 5221 123456",
+          "email": "ada.beispiel@example.invalid",
+          "website": "example.invalid/ada"
+        },
+        "references": [
+          "city",
+          "country",
+          "email",
+          "house",
+          "name",
+          "phone",
+          "postal",
+          "street",
+          "website"
+        ],
+        "image_sizes": [
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ]
+        ],
+        "frames": 9
+      },
+      "roundtrip": {
+        "declarations": {
+          "name": "Ada Beispiel",
+          "street": "Am Wissenschaftspark",
+          "house": "128 a",
+          "postal": "32049",
+          "city": "Herford",
+          "country": "Deutschland",
+          "phone": "+49 5221 123456",
+          "email": "ada.beispiel@example.invalid",
+          "website": "example.invalid/ada"
+        },
+        "references": [
+          "city",
+          "country",
+          "email",
+          "house",
+          "name",
+          "phone",
+          "postal",
+          "street",
+          "website"
+        ],
+        "image_sizes": [
+          [
+            "0.279cm",
+            "0.279cm"
+          ],
+          [
+            "0.279cm",
+            "0.279cm"
+          ],
+          [
+            "0.279cm",
+            "0.279cm"
+          ],
+          [
+            "0.279cm",
+            "0.279cm"
+          ]
+        ],
+        "frames": 9
+      },
+      "same_png_pages": [
+        true
+      ],
+      "complete_pdf": true
+    },
+    "editorial": {
+      "source": {
+        "declarations": {
+          "name": "Ada Beispiel",
+          "street": "Am Wissenschaftspark",
+          "house": "128 a",
+          "postal": "32049",
+          "city": "Herford",
+          "country": "Deutschland",
+          "phone": "+49 5221 123456",
+          "email": "ada.beispiel@example.invalid",
+          "website": "example.invalid/ada"
+        },
+        "references": [
+          "city",
+          "country",
+          "email",
+          "house",
+          "name",
+          "phone",
+          "postal",
+          "street",
+          "website"
+        ],
+        "image_sizes": [
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ]
+        ],
+        "frames": 9
+      },
+      "roundtrip": {
+        "declarations": {
+          "name": "Ada Beispiel",
+          "street": "Am Wissenschaftspark",
+          "house": "128 a",
+          "postal": "32049",
+          "city": "Herford",
+          "country": "Deutschland",
+          "phone": "+49 5221 123456",
+          "email": "ada.beispiel@example.invalid",
+          "website": "example.invalid/ada"
+        },
+        "references": [
+          "city",
+          "country",
+          "email",
+          "house",
+          "name",
+          "phone",
+          "postal",
+          "street",
+          "website"
+        ],
+        "image_sizes": [
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ]
+        ],
+        "frames": 9
+      },
+      "same_png_pages": [
+        true
+      ],
+      "complete_pdf": true
+    },
+    "strip-above": {
+      "source": {
+        "declarations": {
+          "name": "Ada Beispiel",
+          "phone": "+49 5221 123456",
+          "email": "ada.beispiel@example.invalid",
+          "website": "example.invalid/ada"
+        },
+        "references": [
+          "email",
+          "name",
+          "phone",
+          "website"
+        ],
+        "image_sizes": [
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ]
+        ],
+        "frames": 10
+      },
+      "roundtrip": {
+        "declarations": {
+          "name": "Ada Beispiel",
+          "phone": "+49 5221 123456",
+          "email": "ada.beispiel@example.invalid",
+          "website": "example.invalid/ada"
+        },
+        "references": [
+          "email",
+          "name",
+          "phone",
+          "website"
+        ],
+        "image_sizes": [
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ]
+        ],
+        "frames": 10
+      },
+      "same_png_pages": [
+        true
+      ],
+      "complete_pdf": true
+    },
+    "strip-inline": {
+      "source": {
+        "declarations": {
+          "name": "Ada Beispiel",
+          "phone": "+49 5221 123456",
+          "email": "ada.beispiel@example.invalid",
+          "website": "example.invalid/ada"
+        },
+        "references": [
+          "email",
+          "name",
+          "phone",
+          "website"
+        ],
+        "image_sizes": [
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ]
+        ],
+        "frames": 10
+      },
+      "roundtrip": {
+        "declarations": {
+          "name": "Ada Beispiel",
+          "phone": "+49 5221 123456",
+          "email": "ada.beispiel@example.invalid",
+          "website": "example.invalid/ada"
+        },
+        "references": [
+          "email",
+          "name",
+          "phone",
+          "website"
+        ],
+        "image_sizes": [
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ]
+        ],
+        "frames": 10
+      },
+      "same_png_pages": [
+        true
+      ],
+      "complete_pdf": true
+    },
+    "long": {
+      "source": {
+        "declarations": {
+          "name": "Ada Beispiel",
+          "street": "An der alten naturwissenschaftlichen Forschungsstation",
+          "house": "128 a",
+          "postal": "32049",
+          "city": "Bad Oeynhausen – Stadtteil Rehme",
+          "country": "Deutschland",
+          "phone": "+49 5221 123456",
+          "email": "ada.beispiel@example.invalid",
+          "website": "https://example.invalid/ausfuehrlichesportfolioohnetrennzeichen/beruflicherwerdegang"
+        },
+        "references": [
+          "city",
+          "country",
+          "email",
+          "house",
+          "name",
+          "phone",
+          "postal",
+          "street",
+          "website"
+        ],
+        "image_sizes": [
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ]
+        ],
+        "frames": 9
+      },
+      "roundtrip": {
+        "declarations": {
+          "name": "Ada Beispiel",
+          "street": "An der alten naturwissenschaftlichen Forschungsstation",
+          "house": "128 a",
+          "postal": "32049",
+          "city": "Bad Oeynhausen – Stadtteil Rehme",
+          "country": "Deutschland",
+          "phone": "+49 5221 123456",
+          "email": "ada.beispiel@example.invalid",
+          "website": "https://example.invalid/ausfuehrlichesportfolioohnetrennzeichen/beruflicherwerdegang"
+        },
+        "references": [
+          "city",
+          "country",
+          "email",
+          "house",
+          "name",
+          "phone",
+          "postal",
+          "street",
+          "website"
+        ],
+        "image_sizes": [
+          [
+            "0.279cm",
+            "0.279cm"
+          ],
+          [
+            "0.279cm",
+            "0.279cm"
+          ],
+          [
+            "0.279cm",
+            "0.279cm"
+          ],
+          [
+            "0.279cm",
+            "0.279cm"
+          ]
+        ],
+        "frames": 9
+      },
+      "same_png_pages": [
+        true
+      ],
+      "complete_pdf": true
+    },
+    "minimal": {
+      "source": {
+        "declarations": {
+          "name": "Ada Beispiel",
+          "email": "ada.beispiel@example.invalid"
+        },
+        "references": [
+          "email",
+          "name"
+        ],
+        "image_sizes": [
+          [
+            "0.28cm",
+            "0.28cm"
+          ]
+        ],
+        "frames": 3
+      },
+      "roundtrip": {
+        "declarations": {
+          "name": "Ada Beispiel",
+          "email": "ada.beispiel@example.invalid"
+        },
+        "references": [
+          "email",
+          "name"
+        ],
+        "image_sizes": [
+          [
+            "0.279cm",
+            "0.279cm"
+          ]
+        ],
+        "frames": 3
+      },
+      "same_png_pages": [
+        true
+      ],
+      "complete_pdf": true
+    },
+    "empty": {
+      "source": {
+        "declarations": {
+          "name": "Ada Beispiel"
+        },
+        "references": [
+          "name"
+        ],
+        "image_sizes": [],
+        "frames": 0
+      },
+      "roundtrip": {
+        "declarations": {
+          "name": "Ada Beispiel"
+        },
+        "references": [
+          "name"
+        ],
+        "image_sizes": [],
+        "frames": 0
+      },
+      "same_png_pages": [
+        true
+      ],
+      "complete_pdf": true
+    },
+    "rebound": {
+      "source": {
+        "declarations": {
+          "name": "Ada Beispiel",
+          "street": "An der alten naturwissenschaftlichen Forschungsstation",
+          "house": "128 a",
+          "postal": "32049",
+          "city": "Bad Oeynhausen mit weiterem Ortsteil und langem Zusatz",
+          "country": "Deutschland",
+          "phone": "+49 5221 123456",
+          "email": "sehrlangerkontaktnameohnemanuelletrennzeichen@example.invalid",
+          "website": "https://example.invalid/ausfuehrlichesportfolioohnetrennzeichen/beruflicherwerdegang"
+        },
+        "references": [
+          "city",
+          "country",
+          "email",
+          "house",
+          "name",
+          "phone",
+          "postal",
+          "street",
+          "website"
+        ],
+        "image_sizes": [
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ],
+          [
+            "0.28cm",
+            "0.28cm"
+          ]
+        ],
+        "frames": 9
+      },
+      "roundtrip": {
+        "declarations": {
+          "name": "Ada Beispiel",
+          "street": "An der alten naturwissenschaftlichen Forschungsstation",
+          "house": "128 a",
+          "postal": "32049",
+          "city": "Bad Oeynhausen mit weiterem Ortsteil und langem Zusatz",
+          "country": "Deutschland",
+          "phone": "+49 5221 123456",
+          "email": "sehrlangerkontaktnameohnemanuelletrennzeichen@example.invalid",
+          "website": "https://example.invalid/ausfuehrlichesportfolioohnetrennzeichen/beruflicherwerdegang"
+        },
+        "references": [
+          "city",
+          "country",
+          "email",
+          "house",
+          "name",
+          "phone",
+          "postal",
+          "street",
+          "website"
+        ],
+        "image_sizes": [
+          [
+            "0.279cm",
+            "0.279cm"
+          ],
+          [
+            "0.279cm",
+            "0.279cm"
+          ],
+          [
+            "0.279cm",
+            "0.279cm"
+          ],
+          [
+            "0.279cm",
+            "0.279cm"
+          ]
+        ],
+        "frames": 9
+      },
+      "same_png_pages": [
+        true
+      ],
+      "complete_pdf": true
+    }
+  },
+  "long_content_vertical_growth_pt": 56.400000000000006,
+  "carrier_boundary": {
+    "before": 4,
+    "after": 1,
+    "accepted_carrier": "Writer text frame; draw:g rejected for User Fields"
+  },
+  "status": "PASS"
+}

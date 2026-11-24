@@ -1,0 +1,3 @@
+Writer User Field:
+Document property: metadata-initial@example.invalid
+

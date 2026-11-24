@@ -1,0 +1,1 @@
+Initial control generator lost namespace declarations used inside attribute values when serializing the existing fixture with ElementTree. PHP emitted namespace warnings. This invalid authoring attempt is not accepted evidence. The generator now preserves original namespace bindings; corrected evidence is in the parent directory. No engine change was required.

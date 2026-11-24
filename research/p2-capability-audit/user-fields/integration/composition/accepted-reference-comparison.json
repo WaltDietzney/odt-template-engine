@@ -1,0 +1,42 @@
+{
+  "compact": {
+    "pages": 1,
+    "same_as_accepted_pixels": true
+  },
+  "sidebar-round": {
+    "pages": 1,
+    "same_as_accepted_pixels": true
+  },
+  "sidebar-rounded": {
+    "pages": 1,
+    "same_as_accepted_pixels": true
+  },
+  "editorial": {
+    "pages": 1,
+    "same_as_accepted_pixels": true
+  },
+  "strip-above": {
+    "pages": 1,
+    "same_as_accepted_pixels": true
+  },
+  "strip-inline": {
+    "pages": 1,
+    "same_as_accepted_pixels": true
+  },
+  "long": {
+    "pages": 1,
+    "same_as_accepted_pixels": true
+  },
+  "minimal": {
+    "pages": 1,
+    "same_as_accepted_pixels": true
+  },
+  "empty": {
+    "pages": 1,
+    "same_as_accepted_pixels": true
+  },
+  "rebound": {
+    "pages": 1,
+    "same_as_accepted_pixels": true
+  }
+}

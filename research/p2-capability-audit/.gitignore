@@ -4,3 +4,6 @@
 **/.cache/
 consolidation/replay/
 consolidation/checkpoints/
+
+# Local review patch; the reviewed implementation is preserved by Git history.
+user-fields/implementation.diff

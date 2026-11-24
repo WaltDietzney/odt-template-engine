@@ -1,0 +1,467 @@
+[
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-z_nhz6ud",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/control.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/control.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf/control.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-b2dgvxov",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/control.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/control.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/roundtrip/control.odt using filter : writer8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-z0q2mybn",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/roundtrip/control.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/roundtrip/control.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt/control.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf/control.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/images/control"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf/control.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf/control.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt/control.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/images-rt/control"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt/control.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt/control.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-q5ss2jl7",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/metadata.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/metadata.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf/metadata.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-llsf5shz",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/metadata.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/metadata.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/roundtrip/metadata.odt using filter : writer8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-5kj17nsp",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/roundtrip/metadata.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/roundtrip/metadata.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt/metadata.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf/metadata.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/images/metadata"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf/metadata.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf/metadata.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt/metadata.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/images-rt/metadata"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt/metadata.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt/metadata.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-svjdkh76",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/field.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/field.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf/field.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-hzo_kf8a",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/field.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/field.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/roundtrip/field.odt using filter : writer8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-izxa4b36",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/roundtrip/field.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/roundtrip/field.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt/field.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf/field.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/images/field"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf/field.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf/field.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt/field.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/images-rt/field"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt/field.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt/field.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-n0ztlu3q",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/both.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/both.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf/both.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-hrg97z51",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/both.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/both.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/roundtrip/both.odt using filter : writer8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-86x1ahi5",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/roundtrip/both.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/roundtrip/both.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt/both.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf/both.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/images/both"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf/both.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf/both.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt/both.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/images-rt/both"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt/both.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt/both.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-8scv6q1w",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/metadata-only.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/metadata-only.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf/metadata-only.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-u1gssh32",
+      "--headless",
+      "--convert-to",
+      "odt:writer8",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/roundtrip",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/metadata-only.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/metadata-only.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/roundtrip/metadata-only.odt using filter : writer8\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "libreoffice",
+      "-env:UserInstallation=file:///tmp/h07-writer-zndwut13",
+      "--headless",
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/roundtrip/metadata-only.odt"
+    ],
+    "code": 0,
+    "stdout": "convert /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/roundtrip/metadata-only.odt as a Writer document -> /srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt/metadata-only.pdf using filter : writer_pdf_Export\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf/metadata-only.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/images/metadata-only"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf/metadata-only.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf/metadata-only.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftoppm",
+      "-png",
+      "-scale-to",
+      "1400",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt/metadata-only.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/images-rt/metadata-only"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "pdftotext",
+      "-layout",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt/metadata-only.pdf",
+      "/srv/projects/odt-template-engine-p2/research/p2-capability-audit/user-fields/pdf-rt/metadata-only.txt"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

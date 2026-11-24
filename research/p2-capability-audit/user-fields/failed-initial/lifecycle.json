@@ -1,0 +1,21 @@
+{
+    "metadata": {
+        "contact.email": "metadata-updated@example.invalid"
+    },
+    "metadata_reopened": {
+        "contact.email": "metadata-updated@example.invalid"
+    },
+    "field": {
+        "contact.email": "metadata-initial@example.invalid"
+    },
+    "field_reopened": {
+        "contact.email": "metadata-initial@example.invalid"
+    },
+    "both": {
+        "contact.email": "metadata-updated@example.invalid"
+    },
+    "both_reopened": {
+        "contact.email": "metadata-updated@example.invalid"
+    },
+    "metadata_only_binding_reason": "NOT_FOUND"
+}

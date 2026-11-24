@@ -1,0 +1,49 @@
+{
+  "php_lint_files": 388,
+  "lint_failures": [],
+  "composer_validate": {
+    "exit": 0,
+    "output": "./composer.json is valid\n"
+  },
+  "diff_check": {
+    "exit": 0,
+    "output": ""
+  },
+  "accepted_research_changed": [],
+  "full_suite": {
+    "tests": 1112,
+    "assertions": 8990,
+    "exit": 0,
+    "warnings": 1,
+    "php_deprecation_sources": 4,
+    "phpunit_deprecations": 8
+  },
+  "focused_construction": {
+    "tests": 10,
+    "assertions": 55
+  },
+  "public_samples": {
+    "tests": 2,
+    "assertions": 474,
+    "exit": 0
+  },
+  "strict_docs_build": "PASS; No issues found",
+  "native_public_construction_documents": 3,
+  "native_public_construction_roundtrip_pages": 3,
+  "contact_documents": 10,
+  "contact_roundtrip_pages_identical": 10,
+  "contact_accepted_reference_pages_identical": 10,
+  "manual_writer_gui": "NOT RUN: no active desktop available in this session",
+  "php82_runtime": "NOT RUN: only PHP 8.5.4 installed",
+  "source_head": "f8679a782a23b82ca2b9a0536d7affff6554301c",
+  "source_hashes": {
+    "src/OdtTemplate.php": "d55b62b9edb2c4484e8aeb373d0f442252f1cf9f07cfc2f45588948571aca1d4",
+    "src/Elements/Paragraph.php": "690573995c157d5e71e907b25215fdf642e9bc458d9e074a966139c8bf9aabed",
+    "src/Template/UserFieldBinder.php": "1f2bcd9e6839baaff0071bd0cca34e88e2cb5174ac728ff8919f64fc8989b1ec",
+    "src/Template/UserFieldAnalyzer.php": "55614132c6cec8c208075ba29a5ca81babfec8d02d5330a527d1c3c76eb30984",
+    "tests/Integration/NativeUserFieldConstructionTest.php": "359c78b1fc0be1056c509f5259c86255619e166d1519fe429fe4d4f62058188b"
+  },
+  "commit_push_merge_deployment": "not performed",
+  "new_source_whitespace": "PASS",
+  "research_python_syntax": "PASS"
+}

@@ -83,6 +83,19 @@ public function addText(string $text, array $style = []): self
 
 Appends text and optionally defines an inline text style.
 
+### `addUserField()`
+
+```php
+public function addUserField(string $name, array $style = []): self
+```
+
+Appends a native Writer User Field reference between text parts. Declare its
+string value on the document using `declareUserField()`; update it using
+`setUserField()`. The optional style uses the text options below. Writer owns
+field evaluation; references are not flattened to literal strings. See
+[User Fields](../writer-native/user-fields.md) for declaration conflicts,
+empty display caches, document-global scope and lifecycle behavior.
+
 ### Text option contract
 
 | Key | Value | Semantics |

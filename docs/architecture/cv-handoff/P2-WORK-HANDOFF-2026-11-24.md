@@ -11,14 +11,17 @@ Konkrete Reihenfolge und erster Auftrag: [Implementierungsplan](P2-IMPLEMENTATIO
 Patil /srv/projects/odt-template-engine-p2, architecture/p2-capability-audit,
 HEAD/Forgejo develop f8679a782a23b82ca2b9a0536d7affff6554301c.
 Tatsächlichen Stand bei Fortsetzung erneut prüfen. Ziel ist develop, nicht master.
-Kein Commit/Push/Merge/Deployment freigegeben. Originalworktree und Sample-Outputs
+Owner-Freigabe vom 24.11.2026: die zwei besprochenen Commits und Push des
+Branches zu Forgejo. Kein Merge/Deployment freigegeben. Originalworktree und Sample-Outputs
 nicht verändern; unversionierte Artefakte erhalten, kein Reset/Clean.
 
-Nächster Schritt ist P2-I01a: begrenzte Konstruktion nativer String-User-Fields,
-unter Wiederverwendung vorhandener Analyzer/Binding-/Paragraph-Pfade und CC01.
-Öffentliche API konkret prüfen; Research-Adapter nicht automatisch übernehmen.
-Kontaktsemantik und Designauswahl liegen in CV Generator Pro. Abgenommene Shapes,
-Tags, Timelines und Überschriften nicht ohne konkreten neuen Grund erneut untersuchen.
+P2-I01a ist jetzt im Worktree implementiert: declareUserField und
+Paragraph::addUserField. [Abschlussbericht](P2-I01A-IMPLEMENTATION-REPORT.md)
+und aktuelle API-Dokumentation zuerst lesen. Die zehn Kontaktvarianten laufen
+in isolierten Ausgaben mit der öffentlichen Feldkonstruktion. Nächster fachlicher
+Implementierungsschritt ist P2-I01b (native Heading-Konstruktion), nach Beachtung
+der offenen Prüfgrenzen. Kein erneuter User-Field-Neuentwurf.
+Kontaktsemantik und Designauswahl bleiben in CV Generator Pro.
 
 Reproduzierbarkeit: research/p2-capability-audit/consolidation/README.md.
 19 Paketvergleiche, 18 Renderdokumente/21 Roundtrip-Seiten bestanden;

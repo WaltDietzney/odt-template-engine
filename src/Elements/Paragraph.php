@@ -110,6 +110,36 @@ class Paragraph extends OdtElement
     }
 
     /**
+     * Add a native string User Field reference in text-part order.
+     *
+     * Declare the field on the document first. Writer evaluates its value.
+     *
+     * @param array<string, mixed> $style Existing inline text style options.
+     * @return $this
+     */
+    public function addUserField(string $name, array $style = []): self
+    {
+        $validName = preg_match(
+            '/^[\x{9}\x{A}\x{D}\x{20}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]*$/uD',
+            $name
+        ) === 1;
+        if (trim($name) === '' || !$validName) {
+            throw new \InvalidArgumentException('User Field name must be a nonblank XML string.');
+        }
+        $styleName = $style === [] ? null : StyleMapper::generateStyleName($style);
+        if ($styleName !== null) {
+            $this->textStyleMap[$styleName] = $style;
+        }
+        $this->parts[] = [
+            'type' => 'user-field',
+            'name' => $name,
+            'style' => $style,
+            'styleName' => $styleName,
+        ];
+        return $this;
+    }
+
+    /**
      * Applies additional text styling to existing text-like parts.
      *
      * @internal Compatibility helper for mixed convenience style arrays.
@@ -123,7 +153,7 @@ class Paragraph extends OdtElement
         }
 
         foreach ($this->parts as &$part) {
-            if (!in_array($part['type'] ?? null, ['text', 'hyperlink', 'tab-stop'], true)) {
+            if (!in_array($part['type'] ?? null, ['text', 'hyperlink', 'tab-stop', 'user-field'], true)) {
                 continue;
             }
 
@@ -503,6 +533,26 @@ public function setParagraphStyleOptions(array $options): self
                     } else {
                         // kein Stil – Text direkt einfügen
                         $p->appendChild($node);
+                    }
+                    break;
+
+                case 'user-field':
+                    $field = $dom->createElementNS(
+                        'urn:oasis:names:tc:opendocument:xmlns:text:1.0',
+                        'text:user-field-get'
+                    );
+                    $field->setAttributeNS(
+                        'urn:oasis:names:tc:opendocument:xmlns:text:1.0',
+                        'text:name',
+                        $part['name']
+                    );
+                    if (!empty($part['styleName'])) {
+                        $span = $dom->createElement('text:span');
+                        $span->setAttribute('text:style-name', $part['styleName']);
+                        $span->appendChild($field);
+                        $p->appendChild($span);
+                    } else {
+                        $p->appendChild($field);
                     }
                     break;
 

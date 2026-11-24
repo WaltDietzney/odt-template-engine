@@ -240,6 +240,23 @@ class OdtTemplate
     }
 
     /**
+     * Declare a document-global native string User Field in the working document.
+     *
+     * Identical declarations are reused. Use setUserField() to change a value.
+     */
+    public function declareUserField(string $name, string $value): void
+    {
+        $context = $this->documentContext();
+
+        (new UserFieldBinder())->declare(
+            $context->contentDom(),
+            $context->stylesDom(),
+            $name,
+            $value
+        );
+    }
+
+    /**
      * Bind one supported Writer string User Field in the current working document.
      *
      * The authored source inspected by inspectTemplate() remains unchanged.

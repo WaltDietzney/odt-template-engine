@@ -82,6 +82,8 @@ final class UserFieldAnalyzer
 
         $fields = [];
         foreach ($groups as $name => $indexes) {
+            // PHP converts numeric string array keys to integers; field identities remain strings.
+            $name = (string) $name;
             $declarations = [];
             $references = [];
 

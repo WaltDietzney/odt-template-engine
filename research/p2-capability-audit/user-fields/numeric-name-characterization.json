@@ -1,0 +1,6 @@
+{
+  "baseline_analyzer_sha256": "ea627f00cb00e23501ec9ec6a81a692739507b1c41099a58f8bfa36f632e5665",
+  "baseline_numeric_name_failure": "OdtTemplateEngine\\Template\\UserFieldAnalyzer::fieldState(): Argument #1 ($name) must be of type string, int given, called in /tmp/p2-field-baseline-eykue2qa/UserFieldAnalyzer.php on line 96",
+  "exit": 0,
+  "current_regression_test": "NativeUserFieldConstructionTest::testNumericStringNamesRetainTheirIdentityThroughAnalysisAndBinding"
+}

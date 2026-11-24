@@ -1,0 +1,141 @@
+{
+  "status": "PASS",
+  "cases": {
+    "control": {
+      "source": {
+        "declaration": "field-initial@example.invalid",
+        "reference_cache": "field-initial@example.invalid",
+        "metadata": "metadata-initial@example.invalid",
+        "property_cache": "metadata-initial@example.invalid",
+        "reference_count": 1,
+        "property_count": 1
+      },
+      "writer_roundtrip": {
+        "declaration": "field-initial@example.invalid",
+        "reference_cache": "field-initial@example.invalid",
+        "metadata": "metadata-initial@example.invalid",
+        "property_cache": "metadata-initial@example.invalid",
+        "reference_count": 1,
+        "property_count": 1
+      },
+      "pdf_values": "PASS",
+      "roundtrip_pixels": "PASS"
+    },
+    "metadata": {
+      "source": {
+        "declaration": "field-initial@example.invalid",
+        "reference_cache": "field-initial@example.invalid",
+        "metadata": "metadata-updated@example.invalid",
+        "property_cache": "metadata-initial@example.invalid",
+        "reference_count": 1,
+        "property_count": 1
+      },
+      "writer_roundtrip": {
+        "declaration": "field-initial@example.invalid",
+        "reference_cache": "field-initial@example.invalid",
+        "metadata": "metadata-updated@example.invalid",
+        "property_cache": "metadata-updated@example.invalid",
+        "reference_count": 1,
+        "property_count": 1
+      },
+      "pdf_values": "PASS",
+      "roundtrip_pixels": "PASS"
+    },
+    "field": {
+      "source": {
+        "declaration": "field-updated@example.invalid",
+        "reference_cache": "field-initial@example.invalid",
+        "metadata": "metadata-initial@example.invalid",
+        "property_cache": "metadata-initial@example.invalid",
+        "reference_count": 1,
+        "property_count": 1
+      },
+      "writer_roundtrip": {
+        "declaration": "field-updated@example.invalid",
+        "reference_cache": "field-updated@example.invalid",
+        "metadata": "metadata-initial@example.invalid",
+        "property_cache": "metadata-initial@example.invalid",
+        "reference_count": 1,
+        "property_count": 1
+      },
+      "pdf_values": "PASS",
+      "roundtrip_pixels": "PASS"
+    },
+    "both": {
+      "source": {
+        "declaration": "field-updated@example.invalid",
+        "reference_cache": "field-initial@example.invalid",
+        "metadata": "metadata-updated@example.invalid",
+        "property_cache": "metadata-initial@example.invalid",
+        "reference_count": 1,
+        "property_count": 1
+      },
+      "writer_roundtrip": {
+        "declaration": "field-updated@example.invalid",
+        "reference_cache": "field-updated@example.invalid",
+        "metadata": "metadata-updated@example.invalid",
+        "property_cache": "metadata-updated@example.invalid",
+        "reference_count": 1,
+        "property_count": 1
+      },
+      "pdf_values": "PASS",
+      "roundtrip_pixels": "PASS"
+    },
+    "metadata-only": {
+      "source": {
+        "declaration": null,
+        "reference_cache": null,
+        "metadata": "metadata-initial@example.invalid",
+        "property_cache": "metadata-initial@example.invalid",
+        "reference_count": 0,
+        "property_count": 1
+      },
+      "writer_roundtrip": {
+        "declaration": null,
+        "reference_cache": null,
+        "metadata": "metadata-initial@example.invalid",
+        "property_cache": "metadata-initial@example.invalid",
+        "reference_count": 0,
+        "property_count": 1
+      },
+      "pdf_values": "PASS",
+      "roundtrip_pixels": "PASS"
+    }
+  },
+  "metadata_only_binding_reason": "NOT_FOUND",
+  "files": {
+    "field-repeat.odt": "45733b1a7c4e33bc1cd131e9706ca78d27b81a821a05282d56c2c900d0237dcc",
+    "control.odt": "e3c1c187bd6abde53d544da2fd4935d87095312120620094a64cef637e8d271c",
+    "field.odt": "45733b1a7c4e33bc1cd131e9706ca78d27b81a821a05282d56c2c900d0237dcc",
+    "metadata-only.odt": "c72f05dfcd135329219653c3f0c490ad886bef50431c53d86073a3429e093232",
+    "metadata-repeat.odt": "b079d50e1cb524e90ac80469e414c81f30ab086a8647d420b66597e52c238e93",
+    "metadata.odt": "b079d50e1cb524e90ac80469e414c81f30ab086a8647d420b66597e52c238e93",
+    "both.odt": "fd89972d766387d672cdb3d07e99ff1059023e88a603e98809e312336818e6f5",
+    "both-repeat.odt": "fd89972d766387d672cdb3d07e99ff1059023e88a603e98809e312336818e6f5",
+    "roundtrip/control.odt": "13ea3d715eefbc0216d91830997a771e710a926271bf613b26ad57cc243e769f",
+    "roundtrip/field.odt": "e52b06c78b14622704ec5d464166f345c3c5af1cc37b2152283e6b25d0edce22",
+    "roundtrip/metadata-only.odt": "981be286f3f0f84ddd1941672a56cf695e5177e82e0487a537c6658645899432",
+    "roundtrip/metadata.odt": "1a59f2ccc1e3f442ccb270f8504ef8706cdeb68675bebffa9521dcfd744fc5c7",
+    "roundtrip/both.odt": "70f85be2ef0a029b1ad52251f435b31a421c082159ec1bfdcc39deabd531a55a",
+    "pdf-rt/both.pdf": "f7f4df2e22fd08a6fce664fbf5fb727847ec2fba9ee55f3a02d0391e95888d36",
+    "pdf-rt/metadata.pdf": "173d8ad3ae0abd7b655b46051a43865043efeda2feb5b80484fd6bef0ea492c6",
+    "pdf-rt/control.pdf": "b459d11e06c77866ff391c1995a8242cb168c7fe808035eca65ac03522241c51",
+    "pdf-rt/field.pdf": "954a6036f1d1d1d301305dd0021da8ca1a3be6372d8f0a00b778f06b61f0f29b",
+    "pdf-rt/metadata-only.pdf": "2f0e4508e62ae4ffe3102431f3a98d8014074e8496d2972927025fbc558ddce1",
+    "pdf/both.pdf": "c07d975cc88cc2ada3e8670b6c697644cad0fcaa73f58c20420a57bff388192a",
+    "pdf/metadata.pdf": "5787fc5c3f8055a8e796d142d80de6a436f47b9e206c0326ff5da1f7a0d3f689",
+    "pdf/control.pdf": "3e2a51b1cbca9e7c135371b07acb22685e1693d85834e91ab62ca26bddca5a87",
+    "pdf/field.pdf": "16d13be686f8b13180e81adf7c19bf7024001b1d35fc810e422ff6299d02ef9f",
+    "pdf/metadata-only.pdf": "5723bce5d4cdb70b9d1be4967250cf28220228cd7ae6e8f3ba7887e8cfad4a16",
+    "images-rt/metadata-only-1.png": "dd932d64bc4c0b09e81f799052c11594c04e7871fb6d97442c295985bd569496",
+    "images-rt/both-1.png": "46830ad75696040eb4a411ad125c968b0a4a3438ebed5d41ba495ce779f56c39",
+    "images-rt/metadata-1.png": "a51f236af92669563b33eacbaf2759f441c7f88e71b55b31a06eebbb203b378f",
+    "images-rt/control-1.png": "280298153e9a2a4127800c59585a8bf339fec5d3536483d5ee3f87b63e037629",
+    "images-rt/field-1.png": "ffa09ad661d3f6fc717b5959e702cb141cc0d0570c0d33e7001bfb89b8b15bd1",
+    "images/metadata-only-1.png": "dd932d64bc4c0b09e81f799052c11594c04e7871fb6d97442c295985bd569496",
+    "images/both-1.png": "46830ad75696040eb4a411ad125c968b0a4a3438ebed5d41ba495ce779f56c39",
+    "images/metadata-1.png": "a51f236af92669563b33eacbaf2759f441c7f88e71b55b31a06eebbb203b378f",
+    "images/control-1.png": "280298153e9a2a4127800c59585a8bf339fec5d3536483d5ee3f87b63e037629",
+    "images/field-1.png": "ffa09ad661d3f6fc717b5959e702cb141cc0d0570c0d33e7001bfb89b8b15bd1"
+  }
+}

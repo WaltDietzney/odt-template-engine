@@ -2,6 +2,55 @@
 
 Writer User Fields are native Writer data declarations that can be referenced in document content. The engine supports direct binding of the bounded **string User Field** contract through `setUserField()`.
 
+## Programmatic construction
+
+```php
+use OdtTemplateEngine\Elements\Paragraph;
+
+$template->declareUserField('contact.email', 'ada@example.invalid');
+$template->appendBody((new Paragraph())
+    ->addText('E-Mail: ')
+    ->addUserField('contact.email', ['color' => '#375E80'])
+    ->addText(' / erneut: ')
+    ->addUserField('contact.email'));
+$template->setUserField('contact.email', 'neu@example.invalid');
+$template->save('output.odt');
+```
+
+```php
+public function declareUserField(string $name, string $value): void
+public function Paragraph::addUserField(string $name, array $style = []): self
+```
+
+`declareUserField()` creates a document-global string declaration in the current
+working document body. It reuses existing supported declarations across the body,
+headers and footers only when all values already equal the requested value.
+It does not overwrite another value: use `setUserField()` for an explicit update.
+Repeated identical registration is idempotent and adds no duplicate declaration.
+Conflicting declarations/values throw `UserFieldBindingException::AMBIGUOUS`;
+unsupported types and malformed/orphan definitions retain the corresponding
+existing exception reasons. Invalid XML strings or blank names throw
+`InvalidArgumentException`. Validation precedes mutation.
+
+`addUserField()` appends a native `text:user-field-get` at the current text-part
+position. Text, fields, line breaks and tabs retain their text-part order. Existing
+embedded-element ordering is unchanged. Its optional style uses the same text
+style options as `addText()`; `applyTextStyle()` also applies to field references.
+It authors an empty display cache and does not invent a declaration or resolve a
+value during serialization. Register the field before inserting its references.
+Writer evaluates the authoritative declaration on open/export and refreshes caches.
+
+References can also be used in native header/footer Paragraphs supplied to
+`PageLayoutOdtTemplate::definePageStyle()`. The field remains document-global.
+No numeric/date field authoring or foreach-local field scope is introduced.
+The original source contract returned by `inspectTemplate()` remains unchanged;
+reopen the saved document to inspect the newly authored source.
+
+Emptying a value does not remove its containing row, icon or frame. The consumer
+omits or recomposes optional contact items. Custom metadata in `meta.xml` and
+its separate `text:user-defined` display fields are not synchronized with User
+Fields, even when their names match.
+
 ## `setUserField()`
 
 **Recommended · Writer-native binding**

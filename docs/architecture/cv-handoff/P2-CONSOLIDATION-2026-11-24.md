@@ -23,6 +23,16 @@ zu abgenommenen Shapes, Skillbars, Tags, Timelines oder Überschriften.
 - Ein akzeptierter nativer ODT-Nachweis ist weder eine vorhandene öffentliche
   Engine-API noch ein vollständiger Produktions-/Release-Preflight.
 
+## Implementierungsfortschritt nach Konsolidierung
+
+P2-I01a ist im Worktree implementiert, noch uncommittet: native String-Deklaration
+über declareUserField und geordnete Paragraph-Referenzen über addUserField.
+[Abschluss und Prüfgrenzen](P2-I01A-IMPLEMENTATION-REPORT.md).
+G01 ist damit im vereinbarten Umfang integriert; die übrigen Integrationslücken
+bleiben bestehen. Die folgenden Tabellen dokumentieren den Konsolidierungsstand
+vor diesem ersten Implementierungsslice. Kontaktvarianten wurden isoliert migriert,
+nicht die abgenommenen Originalartefakte überschrieben.
+
 ## Ergebnis je Bereich
 
 | Bereich | Abgenommen und nachgewiesen | Bereits vorhandene Grundlage | Verbleibender Integrationsbedarf |

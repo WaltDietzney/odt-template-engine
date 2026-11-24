@@ -23,6 +23,9 @@ are inputs. Class/method spellings not already implemented remain undecided.
 
 ## CC01 — Bounded native string User Field construction
 
+Implementation status: P2-I01a implemented in the uncommitted worktree after explicit owner authorization of the proposed construction API; see [implementation report](P2-I01A-IMPLEMENTATION-REPORT.md). Remaining manual/runtime checks are listed separately.
+
+2026-11-24 clarification: [existing construction paths and metadata distinction](P2-I01A-USER-FIELDS-AND-METADATA.md). Custom document properties and their display fields are separate from Writer User Fields; no automatic synchronization is introduced.
 
 Evidence: H07 composition UserFieldParagraph/seed authoring and existing C0–C3
 field tests. Reuse UserFieldAnalyzer, UserFieldBinder, document context,

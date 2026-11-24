@@ -1,0 +1,268 @@
+PHPUnit 11.5.58 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /srv/projects/odt-template-engine-p2/phpunit.xml.dist
+
+.............................................................   61 / 1112 (  5%)
+.............................................................  122 / 1112 ( 10%)
+.............................................................  183 / 1112 ( 16%)
+.............................................................  244 / 1112 ( 21%)
+.............................................................  305 / 1112 ( 27%)
+.............................................................  366 / 1112 ( 32%)
+.............................................................  427 / 1112 ( 38%)
+..................DDDD..DDDD....DDDD.D.......................  488 / 1112 ( 43%)
+.............................................................  549 / 1112 ( 49%)
+............D.D...D..D...DD........DD...D........W...........  610 / 1112 ( 54%)
+................................DD..DD.........D..DD.........  671 / 1112 ( 60%)
+....................................DD..............DDDDDD...  732 / 1112 ( 65%)
+....................................................D........  793 / 1112 ( 71%)
+............DDD...............................DDDDDDDDDDDDD..  854 / 1112 ( 76%)
+...DD........D...............................DDDD..DD.DD.....  915 / 1112 ( 82%)
+.............................................................  976 / 1112 ( 87%)
+............................................................. 1037 / 1112 ( 93%)
+............................................................. 1098 / 1112 ( 98%)
+..............                                                1112 / 1112 (100%)
+
+Time: 00:37.305, Memory: 38.00 MB
+
+There were 8 PHPUnit test runner deprecations:
+
+1) Metadata found in doc-comment for method OdtTemplateEngine\Tests\Document\BookmarkTargetReplacementTest::testUnsupportedRangesFailAtomically(). Metadata in doc-comments is deprecated and will no longer be supported in PHPUnit 12. Update your test code to use attributes instead.
+
+2) Metadata found in doc-comment for method OdtTemplateEngine\Tests\Integration\D5GLegacyStructuredLifecycleCharacterizationTest::testAssignRenderSaveProducesObservableLegacyStructuredOutput(). Metadata in doc-comments is deprecated and will no longer be supported in PHPUnit 12. Update your test code to use attributes instead.
+
+3) Metadata found in doc-comment for method OdtTemplateEngine\Tests\Integration\FrameLayout01CSlice0CompatibilityCharacterizationTest::testImageElementAlignmentCompatibilityResolvesIntoCurrentFrameAttributes(). Metadata in doc-comments is deprecated and will no longer be supported in PHPUnit 12. Update your test code to use attributes instead.
+
+4) Metadata found in doc-comment for method OdtTemplateEngine\Tests\Integration\D5GLegacyStructuredLifecycleCharacterizationTest::testAssignRenderSaveProducesObservableLegacyStructuredOutput(). Metadata in doc-comments is deprecated and will no longer be supported in PHPUnit 12. Update your test code to use attributes instead.
+
+5) Metadata found in doc-comment for method OdtTemplateEngine\Tests\Integration\D5GLegacyStructuredLifecycleCharacterizationTest::testAssignRenderSaveProducesObservableLegacyStructuredOutput(). Metadata in doc-comments is deprecated and will no longer be supported in PHPUnit 12. Update your test code to use attributes instead.
+
+6) Metadata found in doc-comment for method OdtTemplateEngine\Tests\Integration\D5GLegacyStructuredLifecycleCharacterizationTest::testAssignRenderSaveProducesObservableLegacyStructuredOutput(). Metadata in doc-comments is deprecated and will no longer be supported in PHPUnit 12. Update your test code to use attributes instead.
+
+7) Metadata found in doc-comment for method OdtTemplateEngine\Tests\Integration\D5GLegacyStructuredLifecycleCharacterizationTest::testAssignRenderSaveProducesObservableLegacyStructuredOutput(). Metadata in doc-comments is deprecated and will no longer be supported in PHPUnit 12. Update your test code to use attributes instead.
+
+8) Metadata found in doc-comment for method OdtTemplateEngine\Tests\Integration\D5GLegacyStructuredLifecycleCharacterizationTest::testAssignRenderSaveProducesObservableLegacyStructuredOutput(). Metadata in doc-comments is deprecated and will no longer be supported in PHPUnit 12. Update your test code to use attributes instead.
+
+--
+
+1 test triggered 1 PHP warning:
+
+1) /srv/projects/odt-template-engine-p2/tests/Integration/S03StructuredProfessionalReportTest.php:154
+mkdir(): File exists
+
+--
+
+65 tests triggered 4 PHP deprecations:
+
+1) /srv/projects/odt-template-engine-p2/src/Elements/Paragraph.php:370
+OdtTemplateEngine\Elements\Paragraph::addKeyValueLine(): Implicitly marking parameter $style as nullable is deprecated, the explicit nullable type must be used instead
+
+Triggered by:
+
+* OdtTemplateEngineTests\Integration\H04TableColumnIdentityCharacterizationTest::testAbsoluteAndRelativeDefinitionsReceiveDistinctIdentities
+  /srv/projects/odt-template-engine-p2/tests/Integration/H04TableColumnIdentityCharacterizationTest.php:62
+
+* OdtTemplateEngineTests\Integration\H04TableColumnIdentityCharacterizationTest::testAuthoredCandidateCollisionPreservesDefinitionAndReferences
+  /srv/projects/odt-template-engine-p2/tests/Integration/H04TableColumnIdentityCharacterizationTest.php:300
+
+* OdtTemplateEngineTests\Integration\H04TableColumnIdentityCharacterizationTest::testAuthoredCo0RemainsAuthoritativeOverGeneratedDefinition
+  /srv/projects/odt-template-engine-p2/tests/Integration/H04TableColumnIdentityCharacterizationTest.php:88
+
+* OdtTemplateEngineTests\Integration\H04TableColumnIdentityCharacterizationTest::testConstructionKeepsDifferentGeometryAndRetainsBothTables
+  /srv/projects/odt-template-engine-p2/tests/Integration/H04TableColumnIdentityCharacterizationTest.php:180
+
+* OdtTemplateEngineTests\Integration\H04TableColumnIdentityCharacterizationTest::testConstructionKeepsTwoIndependentTablesWithEqualDefinitions
+  /srv/projects/odt-template-engine-p2/tests/Integration/H04TableColumnIdentityCharacterizationTest.php:162
+
+* OdtTemplateEngineTests\Integration\H04TableColumnIdentityCharacterizationTest::testDifferentAbsoluteDefinitionsReceiveDistinctIdentities
+  /srv/projects/odt-template-engine-p2/tests/Integration/H04TableColumnIdentityCharacterizationTest.php:49
+
+* OdtTemplateEngineTests\Integration\H04TableColumnIdentityCharacterizationTest::testIdenticalDefinitionsAreReusedAndMaterializedOnce
+  /srv/projects/odt-template-engine-p2/tests/Integration/H04TableColumnIdentityCharacterizationTest.php:73
+
+* OdtTemplateEngineTests\Integration\H04TableColumnIdentityCharacterizationTest::testIndependentDocumentsKeepSeparateGeometry
+  /srv/projects/odt-template-engine-p2/tests/Integration/H04TableColumnIdentityCharacterizationTest.php:241
+
+* OdtTemplateEngineTests\Integration\H04TableColumnIdentityCharacterizationTest::testLateTableRendererFailureRollsBackColumnAllocation
+  /srv/projects/odt-template-engine-p2/tests/Integration/H04TableColumnIdentityCharacterizationTest.php:335
+
+* OdtTemplateEngineTests\Integration\H04TableColumnIdentityCharacterizationTest::testReferencesResolveAcrossPositionsAndReload
+  /srv/projects/odt-template-engine-p2/tests/Integration/H04TableColumnIdentityCharacterizationTest.php:277
+
+* OdtTemplateEngineTests\Integration\H04TableColumnIdentityCharacterizationTest::testReloadedDocumentPreservesResolvedGeometry
+  /srv/projects/odt-template-engine-p2/tests/Integration/H04TableColumnIdentityCharacterizationTest.php:144
+
+* OdtTemplateEngineTests\Integration\H04TableColumnIdentityCharacterizationTest::testRepeatedSaveKeepsOneDefinitionAndResolvedGeometry
+  /srv/projects/odt-template-engine-p2/tests/Integration/H04TableColumnIdentityCharacterizationTest.php:128
+
+* OdtTemplateEngineTests\Integration\H04TableColumnIdentityCharacterizationTest::testSameNameInStylesPartDoesNotSuppressContentDefinition
+  /srv/projects/odt-template-engine-p2/tests/Integration/H04TableColumnIdentityCharacterizationTest.php:256
+
+* OdtTemplateEngineTests\Integration\RichTableRowSemanticOwnershipTest::testNormalSetElementMaterializesOneAutomaticRowDefinitionAndReference
+  /srv/projects/odt-template-engine-p2/tests/Integration/RichTableRowSemanticOwnershipTest.php:120
+
+* OdtTemplateEngineTests\Integration\RichTableRowSemanticOwnershipTest::testRepeatedSemanticSaveDoesNotDuplicateRowDefinition
+  /srv/projects/odt-template-engine-p2/tests/Integration/RichTableRowSemanticOwnershipTest.php:141
+
+* OdtTemplateEngineTests\Integration\RichTableSemanticOwnershipTest::testReferenceOnlyInsertionPreservesReferenceWithoutFabricatingDefinition
+  /srv/projects/odt-template-engine-p2/tests/Integration/RichTableSemanticOwnershipTest.php:65
+
+* OdtTemplateEngineTests\Integration\StyleApi02EBRegisterStylesRetirementTest::testParagraphNoLongerExposesLegacyRegistration
+  /srv/projects/odt-template-engine-p2/tests/Integration/StyleApi02EBRegisterStylesRetirementTest.php:17
+
+* OdtTemplateEngineTests\Integration\StyleApi02EBRegisterStylesRetirementTest::testRichTableCellNoLongerExposesLegacyRegistration
+  /srv/projects/odt-template-engine-p2/tests/Integration/StyleApi02EBRegisterStylesRetirementTest.php:26
+
+* OdtTemplateEngineTests\Integration\StyleApi02FADocumentOwnershipTest::testEmptyTableStyleProducesNoDefinitionOrPhantomReference
+  /srv/projects/odt-template-engine-p2/tests/Integration/StyleApi02FADocumentOwnershipTest.php:83
+
+* OdtTemplateEngineTests\Integration\StyleApi02FADocumentOwnershipTest::testHtmlImporterUsesSemanticParagraphAndTextOwnership
+  /srv/projects/odt-template-engine-p2/tests/Integration/StyleApi02FADocumentOwnershipTest.php:110
+
+* OdtTemplateEngineTests\Integration\StyleApi02FADocumentOwnershipTest::testParagraphStyledTextDoesNotRegisterGlobally
+  /srv/projects/odt-template-engine-p2/tests/Integration/StyleApi02FADocumentOwnershipTest.php:131
+
+* OdtTemplateEngineTests\Integration\StyleApi02FADocumentOwnershipTest::testRichTableCellOwnsCellDefinitionWithoutGlobalRegistration
+  /srv/projects/odt-template-engine-p2/tests/Integration/StyleApi02FADocumentOwnershipTest.php:102
+
+* OdtTemplateEngineTests\Integration\StyleApi02FADocumentOwnershipTest::testRichTableOwnsGeneratedTableDefinitionWithoutGlobalRegistration
+  /srv/projects/odt-template-engine-p2/tests/Integration/StyleApi02FADocumentOwnershipTest.php:33
+
+* OdtTemplateEngineTests\Integration\StyleApi02FADocumentOwnershipTest::testTableStyleNameIsReferenceOnlyWithoutOwnedDefinition
+  /srv/projects/odt-template-engine-p2/tests/Integration/StyleApi02FADocumentOwnershipTest.php:71
+
+* OdtTemplateEngineTests\Integration\TableLayout01AGeometryLifecycleCharacterizationTest::testExactRowHeightMaterializesRowStyleAndReference
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableLayout01AGeometryLifecycleCharacterizationTest.php:194
+
+* OdtTemplateEngineTests\Integration\TableLayout01AGeometryLifecycleCharacterizationTest::testMinimumHeightAndNativeVerticalAlignmentSurviveRepeatedSaveWithoutDuplication
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableLayout01AGeometryLifecycleCharacterizationTest.php:153
+
+* OdtTemplateEngineTests\Integration\TableLayout01AGeometryLifecycleCharacterizationTest::testNativeTableGeometryCoexistsWithAbsoluteColumnWidthsAfterSave
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableLayout01AGeometryLifecycleCharacterizationTest.php:36
+
+* OdtTemplateEngineTests\Integration\TableLayout01AGeometryLifecycleCharacterizationTest::testRelativeTableGeometryCoexistsWithNormalizedRelativeColumnsAfterSave
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableLayout01AGeometryLifecycleCharacterizationTest.php:94
+
+* OdtTemplateEngineTests\Integration\TableLayout01CIntegrationPreflightTest::testAbsoluteTableLayoutFeaturesMaterializeTogether
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableLayout01CIntegrationPreflightTest.php:35
+
+* OdtTemplateEngineTests\Integration\TableLayout01CIntegrationPreflightTest::testMixedRawAndFriendlyTableStyleKeepsOneAutomaticDefinition
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableLayout01CIntegrationPreflightTest.php:209
+
+* OdtTemplateEngineTests\Integration\TableLayout01CIntegrationPreflightTest::testRelativeTableLayoutPreservesWriterRatioNormalization
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableLayout01CIntegrationPreflightTest.php:144
+
+* OdtTemplateEngineTests\Integration\TableLayout01CSlice1LifecycleCharacterizationTest::testElementOwnedAutomaticTableDefinitionRemainsSingleAcrossRepeatedSave
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableLayout01CSlice1LifecycleCharacterizationTest.php:85
+
+* OdtTemplateEngineTests\Integration\TableLayout01CSlice1LifecycleCharacterizationTest::testFriendlyAbsoluteTableStyleMaterializesInContentXml
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableLayout01CSlice1LifecycleCharacterizationTest.php:222
+
+* OdtTemplateEngineTests\Integration\TableLayout01CSlice1LifecycleCharacterizationTest::testFriendlyRelativeTableStyleMaterializesInContentXml
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableLayout01CSlice1LifecycleCharacterizationTest.php:258
+
+* OdtTemplateEngineTests\Integration\TableLayout01CSlice1LifecycleCharacterizationTest::testRawAbsoluteTablePropertiesCoexistWithAbsoluteColumnRequirements
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableLayout01CSlice1LifecycleCharacterizationTest.php:130
+
+* OdtTemplateEngineTests\Integration\TableLayout01CSlice1LifecycleCharacterizationTest::testRawRelativeTablePropertiesCoexistWithRelativeColumnRequirements
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableLayout01CSlice1LifecycleCharacterizationTest.php:172
+
+* OdtTemplateEngineTests\Integration\TableLayout01CSlice1LifecycleCharacterizationTest::testSample11TableStyleMaterializesAsAutomaticStyleInContentXml
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableLayout01CSlice1LifecycleCharacterizationTest.php:38
+
+* OdtTemplateEngineTests\Integration\TableLayout01CSlice2RowHeightTest::testExactRowHeightMaterializesInContentXml
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableLayout01CSlice2RowHeightTest.php:109
+
+* OdtTemplateEngineTests\Integration\TableLayout01CSlice2RowHeightTest::testMinimumRowHeightStillMaterializesInContentXml
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableLayout01CSlice2RowHeightTest.php:146
+
+* OdtTemplateEngineTests\Integration\TableLayout01CSlice3VerticalCellAlignmentTest::testFriendlyVerticalAlignmentMaterializesInContentXml
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableLayout01CSlice3VerticalCellAlignmentTest.php:139
+
+* OdtTemplateEngine\Tests\Integration\RichTableCellSemanticOwnershipTest::testNormalSetElementUsesOneAutomaticCellDefinition
+  /srv/projects/odt-template-engine-p2/tests/Integration/RichTableCellSemanticOwnershipTest.php:93
+
+* OdtTemplateEngine\Tests\Integration\RichTableCellSemanticOwnershipTest::testRepeatedNormalSaveDoesNotDuplicateSemanticCellDefinition
+  /srv/projects/odt-template-engine-p2/tests/Integration/RichTableCellSemanticOwnershipTest.php:119
+
+* OdtTemplateEngine\Tests\Integration\RichTableColumnSemanticOwnershipTest::testNormalSetElementMaterializesEachSemanticColumnOnce
+  /srv/projects/odt-template-engine-p2/tests/Integration/RichTableColumnSemanticOwnershipTest.php:78
+
+* OdtTemplateEngine\Tests\Integration\RichTableColumnSemanticOwnershipTest::testRepeatedSemanticSaveDoesNotDuplicateColumns
+  /srv/projects/odt-template-engine-p2/tests/Integration/RichTableColumnSemanticOwnershipTest.php:137
+
+* OdtTemplateEngine\Tests\Integration\RichTableRelativeColumnWidthSemanticOwnershipTest::testNormalSetElementMaterializesRelativeColumnsInContentOnly
+  /srv/projects/odt-template-engine-p2/tests/Integration/RichTableRelativeColumnWidthSemanticOwnershipTest.php:92
+
+* OdtTemplateEngine\Tests\Integration\RichTableRelativeColumnWidthSemanticOwnershipTest::testRepeatedSaveDoesNotDuplicateRelativeColumns
+  /srv/projects/odt-template-engine-p2/tests/Integration/RichTableRelativeColumnWidthSemanticOwnershipTest.php:120
+
+* OdtTemplateEngine\Tests\Integration\StyleContextParagraphFinalizationTest::testRepeatedSaveDoesNotDuplicateStructuredParagraphStyle
+  /srv/projects/odt-template-engine-p2/tests/Integration/StyleContextParagraphFinalizationTest.php:66
+
+* OdtTemplateEngine\Tests\Integration\StyleContextParagraphFinalizationTest::testStructuredParagraphStylesRemainIsolatedInEitherSaveOrder
+  /srv/projects/odt-template-engine-p2/tests/Integration/StyleContextParagraphFinalizationTest.php:33
+
+* OdtTemplateEngine\Tests\Integration\StyleContextTextFontCharacterizationTest::testCurrentStructuredTextAndFontPathIsolatedAcrossDocuments
+  /srv/projects/odt-template-engine-p2/tests/Integration/StyleContextTextFontCharacterizationTest.php:34
+
+* OdtTemplateEngine\Tests\Integration\TableStyleSemanticsCharacterizationTest::testExplicitColumnWidthsMaterializeAutomaticColumnStylesOnlyInContentXml
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableStyleSemanticsCharacterizationTest.php:135
+
+* OdtTemplateEngine\Tests\Integration\TableStyleSemanticsCharacterizationTest::testLegacyAssignRenderUsesCurrentDocumentCellDefinitionOnly
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableStyleSemanticsCharacterizationTest.php:78
+
+* OdtTemplateEngine\Tests\Integration\TableStyleSemanticsCharacterizationTest::testNormalFinalizationKeepsSemanticCellsLocalAndFiltersLegacyResidue
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableStyleSemanticsCharacterizationTest.php:109
+
+* OdtTemplateEngine\Tests\Integration\TableStyleSemanticsCharacterizationTest::testNormalSetElementMaterializesCellDefinitionOnlyInContent
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableStyleSemanticsCharacterizationTest.php:48
+
+* OdtTemplateEngine\Tests\Integration\TableStyleSemanticsCharacterizationTest::testRepeatedSaveKeepsSemanticCellDefinitionAutomaticAndColumnsStable
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableStyleSemanticsCharacterizationTest.php:192
+
+* OdtTemplateEngine\Tests\Integration\TableStyleSemanticsCharacterizationTest::testRepeatedSetElementKeepsBothTablesAndDeduplicatesSemanticColumns
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableStyleSemanticsCharacterizationTest.php:216
+
+* OdtTemplateEngine\Tests\Integration\TableStyleSemanticsCharacterizationTest::testRichTableCellCompatibilityStyleApisExposeNativeCellDefinition
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableStyleSemanticsCharacterizationTest.php:263
+
+* OdtTemplateEngine\Tests\Integration\TableStyleSemanticsCharacterizationTest::testRichTableCompatibilityDefinitionsDoNotTraverseOwnedCells
+  /srv/projects/odt-template-engine-p2/tests/Integration/TableStyleSemanticsCharacterizationTest.php:288
+
+2) /srv/projects/odt-template-engine-p2/tests/Integration/SectionCloneTest.php:369
+Method ReflectionProperty::setAccessible() is deprecated since 8.5, as it has no effect since PHP 8.1
+
+Triggered by:
+
+* OdtTemplateEngine\Tests\Integration\SectionCloneTest::testCloneIndexUsesTheNextDocumentAvailableIndexForAllNestedIdentities
+  /srv/projects/odt-template-engine-p2/tests/Integration/SectionCloneTest.php:245
+
+* OdtTemplateEngine\Tests\Integration\SectionCloneTest::testFilterExpressionIsRewrittenAtTheVariableIdentityOnly
+  /srv/projects/odt-template-engine-p2/tests/Integration/SectionCloneTest.php:263
+
+* OdtTemplateEngine\Tests\Integration\SectionCloneTest::testTechnicalIdsAreRewrittenOnTheDetachedClone
+  /srv/projects/odt-template-engine-p2/tests/Integration/SectionCloneTest.php:306
+
+* OdtTemplateEngine\Tests\Integration\SectionCloneTest::testUnsupportedCloneExpressionFailsBeforeLiveDomInsertion
+  /srv/projects/odt-template-engine-p2/tests/Integration/SectionCloneTest.php:320
+
+3) /srv/projects/odt-template-engine-p2/tests/Integration/SectionInstantiationTest.php:187
+Method ReflectionProperty::setAccessible() is deprecated since 8.5, as it has no effect since PHP 8.1
+
+Triggered by:
+
+* OdtTemplateEngine\Tests\Integration\SectionInstantiationTest::testConditionsAndForeachRemainExplicitlyUnsupportedAndAtomic
+  /srv/projects/odt-template-engine-p2/tests/Integration/SectionInstantiationTest.php:119
+
+* OdtTemplateEngine\Tests\Integration\SectionInstantiationTest::testFilteredScalarExpressionUsesExistingProcessorSemantics
+  /srv/projects/odt-template-engine-p2/tests/Integration/SectionInstantiationTest.php:101
+
+* OdtTemplateEngine\Tests\Integration\SectionInstantiationTest::testFragmentedActivityExpressionIsBoundAndBookmarkIdentitiesRemainSeparate
+  /srv/projects/odt-template-engine-p2/tests/Integration/SectionInstantiationTest.php:46
+
+4) /srv/projects/odt-template-engine-p2/tests/Integration/StyleContextGraphicImageCharacterizationTest.php:228
+Method ReflectionMethod::setAccessible() is deprecated since 8.5, as it has no effect since PHP 8.1
+
+OK, but there were issues!
+Tests: 1112, Assertions: 8990, Warnings: 1, Deprecations: 4, PHPUnit Deprecations: 8.

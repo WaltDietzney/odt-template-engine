@@ -1,0 +1,26 @@
+{
+  "status": "PASS",
+  "documents": {
+    "constructed": {
+      "body_references": 3,
+      "header_footer_references": 2,
+      "declarations": 3,
+      "pdf_complete": true,
+      "roundtrip_pages_identical": 1
+    },
+    "constructed-repeat": {
+      "body_references": 3,
+      "header_footer_references": 2,
+      "declarations": 3,
+      "pdf_complete": true,
+      "roundtrip_pages_identical": 1
+    },
+    "constructed-reloaded": {
+      "body_references": 3,
+      "header_footer_references": 2,
+      "declarations": 3,
+      "pdf_complete": true,
+      "roundtrip_pages_identical": 1
+    }
+  }
+}

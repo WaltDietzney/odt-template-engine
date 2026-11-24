@@ -21,6 +21,13 @@ Heading-Konstruktion. I02 trennt Reihenfolge von Sizing. I04 trennt den
 konkreten SVG-Fehler von weitergehenden Ressourcenoperationen. Kein Paket
 rechtfertigt eine pauschale Neufassung der beteiligten Klassen.
 
+## Fortschritt
+
+P2-I01a ist nach explizitem Owner-Auftrag im Worktree implementiert;
+[Bericht und verbleibende Gates](P2-I01A-IMPLEMENTATION-REPORT.md).
+Der folgende ursprüngliche Auftrag bleibt als Scope-Referenz erhalten.
+Nächster Funktionsschritt: P2-I01b gemäß CC02, keine erneute Feldimplementierung.
+
 ## Erster konkreter Arbeitsauftrag: P2-I01a
 
 Arbeite ausschließlich in /srv/projects/odt-template-engine-p2 auf

@@ -7,16 +7,95 @@ namespace OdtTemplateEngine\Template;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
+use InvalidArgumentException;
 
 /**
- * Validates and atomically mutates one logical Writer User Field.
+ * Validates, declares and binds document-global native string User Fields.
  *
- * @internal Public callers use OdtTemplate::setUserField().
+ * @internal Public callers use OdtTemplate::declareUserField() and setUserField().
  */
 final class UserFieldBinder
 {
     private const OFFICE_NAMESPACE = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0';
     private const STYLE_NAMESPACE = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
+
+    /** Register a string declaration without changing any existing logical field. */
+    public function declare(
+        DOMDocument $contentDom,
+        DOMDocument $stylesDom,
+        string $name,
+        string $value
+    ): void {
+        if (trim($name) === '' || !$this->isXmlString($name) || !$this->isXmlString($value)) {
+            throw new InvalidArgumentException(
+                'User Field name and value must be valid XML strings; name must not be blank.'
+            );
+        }
+
+        $analysis = (new UserFieldAnalyzer())->analyze($this->sourceRegions($contentDom, $stylesDom));
+        foreach ($analysis['fields'] as $field) {
+            if ($field['name'] !== $name) {
+                continue;
+            }
+            if ($field['support_state'] !== 'SUPPORTED') {
+                $reason = match ($field['support_state']) {
+                    'UNSUPPORTED' => UserFieldBindingException::UNSUPPORTED_TYPE,
+                    'AMBIGUOUS' => UserFieldBindingException::AMBIGUOUS,
+                    default => UserFieldBindingException::MALFORMED,
+                };
+                throw new UserFieldBindingException($name, $reason, 'Existing User Field cannot be reused safely.');
+            }
+            foreach ($field['declaration_indexes'] as $index) {
+                if ($analysis['evidence'][$index]['value'] !== $value) {
+                    throw new UserFieldBindingException(
+                        $name,
+                        UserFieldBindingException::AMBIGUOUS,
+                        'Existing User Field has a different value; use setUserField() to change it.'
+                    );
+                }
+            }
+            return;
+        }
+
+        $xpath = new DOMXPath($contentDom);
+        $xpath->registerNamespace('office', self::OFFICE_NAMESPACE);
+        $xpath->registerNamespace('text', 'urn:oasis:names:tc:opendocument:xmlns:text:1.0');
+        $body = $xpath->query('/office:document-content/office:body/office:text')->item(0);
+        if (!$body instanceof DOMElement) {
+            throw new InvalidArgumentException('Document does not contain office:body/office:text.');
+        }
+        $textNamespace = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0';
+        $containers = $xpath->query('./text:user-field-decls', $body);
+        if ($containers->length > 1) {
+            throw new UserFieldBindingException(
+                $name,
+                UserFieldBindingException::AMBIGUOUS,
+                'Multiple declaration containers.'
+            );
+        }
+        $container = $containers->item(0);
+        $declaration = $contentDom->createElementNS($textNamespace, 'text:user-field-decl');
+        $declaration->setAttributeNS($textNamespace, 'text:name', $name);
+        $declaration->setAttributeNS(self::OFFICE_NAMESPACE, 'office:value-type', 'string');
+        $declaration->setAttributeNS(self::OFFICE_NAMESPACE, 'office:string-value', $value);
+        if ($container instanceof DOMElement) {
+            $container->appendChild($declaration);
+            return;
+        }
+        // Construct detached, then insert after variable declarations in ODF body order.
+        $container = $contentDom->createElementNS($textNamespace, 'text:user-field-decls');
+        $container->appendChild($declaration);
+        $variables = $xpath->query('./text:variable-decls', $body)->item(0);
+        $body->insertBefore($container, $variables instanceof DOMElement ? $variables->nextSibling : $body->firstChild);
+    }
+
+    private function isXmlString(string $value): bool
+    {
+        return preg_match(
+            '/^[\x{9}\x{A}\x{D}\x{20}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]*$/uD',
+            $value
+        ) === 1;
+    }
 
     public function bind(
         DOMDocument $contentDom,
