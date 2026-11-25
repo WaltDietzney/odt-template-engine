@@ -1,5 +1,14 @@
 # CV Generator Pro – Eingang der Engine-Übergabe
 
+## Aktueller Abschluss — 25.11.2026
+
+P2-I01–I07 einschließlich H10 sind im vereinbarten Umfang umgesetzt und abgenommen. Beide Review-v2-Templates sind visuell akzeptiert; der Owner bestätigt die interaktive Writer-Prüfung. Versionierung/Veröffentlichung bleiben separat offen. Verbindlicher Status: [P2-Implementierungsabschluss](P2-CLOSEOUT-2026-11-25.md) und [maschinenlesbarer Stand](P2-CLOSEOUT-STATE.json). Offene Folgepunkte werden dort ausdrücklich aufgeführt.
+
+### Historische Planung und Fortschreibung
+
+Die nachfolgenden älteren Status- und Arbeitsaufträge sind historische Quellen; aktuelle Arbeit wird vom oben verlinkten Abschluss aus gewählt.
+
+
 ## Aktueller P2-Stand — 24.11.2026
 
 H00–H04 sind Grundlagen; H05–H09 sind als native Machbarkeit/Gestaltung abgenommen. Engine-Integration und H10 folgen. Einstieg: [P2-Konsolidierung](P2-CONSOLIDATION-2026-11-24.md), [Contracts](P2-CHANGE-CONTRACTS.md), [Implementierungsplan](P2-IMPLEMENTATION-PLAN.md). Frühere offene Statusangaben unten sind historisch und werden im ausdrücklich dokumentierten Abnahmeumfang abgelöst.
@@ -15,3 +24,12 @@ H01 Section-Authoring, H02 Seitenlayout/Frames, H03 Geometrie, H04 Tabellen-Spal
 ## H04 – Table-column identity
 - [H04-A characterization evidence](H04-A-TABLE-COLUMN-IDENTITY-EVIDENCE-2026-11-24.md)
 - [H04-B proposed change contract](H04-B-TABLE-COLUMN-IDENTITY-CHANGE-CONTRACT.md) (not approved)
+
+
+P2-I03/I03R ist am 24.11.2026 im P2-Worktree implementiert: [Bericht, Evidenz und offene Gates](P2-I03-I03R-IMPLEMENTATION-REPORT.md). Grafikkontext und abgerundete Tags verwenden bestehende Shapes sowie eine neutrale DrawingGroup; Kontaktsemantik bleibt beim Consumer. Nächster Implementierungsschritt ist P2-I04. Kein neuer Commit/Push.
+
+
+Aktualisierung 25.11.2026: P2-I04 ist im P2-Worktree implementiert. [SVG-/Grafikressourcenbericht](P2-I04-IMPLEMENTATION-REPORT.md) mit freigegebener Bitmap-Austausch-API, isolierten Ressourcen, PHP-8.2-/8.5- und Writer-Nachweisen. Die neue visuelle Owner-Abnahme/interaktive Bearbeitung bleibt getrennt. Nächster Funktionsschritt: P2-I05. Kein Commit/Push.
+
+
+25.11.2026: P2-I05 technisch umgesetzt; [Teilring-Bericht](P2-I05-IMPLEMENTATION-REPORT.md). Neue Varianten stehen zur visuellen Owner-Abnahme bereit; keine automatische Freigabe. Nächster geplanter Slice: P2-I06/CC07. Kein Commit/Push.

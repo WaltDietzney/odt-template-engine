@@ -46,7 +46,10 @@ final class DrawingLayout
         private readonly ?string $verticalAlignment,
         private readonly ?string $verticalRelation,
         private readonly ?string $verticalOffset,
-        private readonly ?string $wrap
+        private readonly ?string $wrap,
+        private readonly ?string $runThrough = null,
+        private readonly ?int $zIndex = null,
+        private readonly array $margins = []
     ) {
     }
 
@@ -60,7 +63,7 @@ final class DrawingLayout
      */
     public static function fromArray(array $layout): self
     {
-        self::assertKnownKeys($layout, ['anchor', 'width', 'height', 'horizontal', 'vertical', 'wrap']);
+        self::assertKnownKeys($layout, ['anchor', 'width', 'height', 'horizontal', 'vertical', 'wrap', 'run-through', 'z-index', 'margin']);
 
         $anchor = self::nullableString($layout['anchor'] ?? null, 'anchor');
         if ($anchor !== null && !in_array($anchor, self::ANCHORS, true)) {
@@ -81,6 +84,28 @@ final class DrawingLayout
             throw new InvalidArgumentException(sprintf('Unsupported frame wrap "%s".', $wrap));
         }
 
+        $runThrough = self::nullableString($layout['run-through'] ?? null, 'run-through');
+        if ($runThrough !== null && (!in_array($runThrough, ['foreground', 'background'], true) || $wrap !== 'run-through')) {
+            throw new InvalidArgumentException('Run-through layer requires run-through wrap and foreground/background.');
+        }
+        $zIndex = $layout['z-index'] ?? null;
+        if ($zIndex !== null && (!is_int($zIndex) || $zIndex < 0)) {
+            throw new InvalidArgumentException('Drawing z-index must be a nonnegative integer.');
+        }
+        $margins = $layout['margin'] ?? [];
+        if (!is_array($margins)) {
+            throw new InvalidArgumentException('Drawing margin must be a per-side map.');
+        }
+        foreach ($margins as $side => $value) {
+            if (!in_array($side, ['top', 'right', 'bottom', 'left'], true)) {
+                throw new InvalidArgumentException('Unsupported drawing margin side.');
+            }
+            $margins[$side] = self::nullableLength($value, 'margin', false, true);
+            if ($margins[$side] === null) {
+                throw new InvalidArgumentException('Drawing margin requires a nonnegative absolute length.');
+            }
+        }
+
         return new self(
             $anchor,
             $width,
@@ -93,7 +118,10 @@ final class DrawingLayout
             $verticalAlignment,
             $verticalRelation,
             $verticalOffset,
-            $wrap
+            $wrap,
+            $runThrough,
+            $zIndex,
+            $margins
         );
     }
 
@@ -155,6 +183,22 @@ final class DrawingLayout
     public function wrap(): ?string
     {
         return $this->wrap;
+    }
+
+    public function runThrough(): ?string
+    {
+        return $this->runThrough;
+    }
+
+    public function zIndex(): ?int
+    {
+        return $this->zIndex;
+    }
+
+    /** @return array<string, string> */
+    public function margins(): array
+    {
+        return $this->margins;
     }
 
     public function withAnchor(string $anchor): self
@@ -259,6 +303,15 @@ final class DrawingLayout
             $data['wrap'] = $this->wrap;
         }
 
+        if ($this->runThrough !== null) {
+            $data['run-through'] = $this->runThrough;
+        }
+        if ($this->zIndex !== null) {
+            $data['z-index'] = $this->zIndex;
+        }
+        if ($this->margins !== []) {
+            $data['margin'] = $this->margins;
+        }
         return $data;
     }
 
@@ -402,7 +455,8 @@ final class DrawingLayout
     private static function nullableLength(
         mixed $value,
         string $label,
-        bool $allowSigned
+        bool $allowSigned,
+        bool $allowZero = false
     ): ?string {
         $value = self::nullableString($value, $label);
         if ($value === null) {
@@ -420,7 +474,7 @@ final class DrawingLayout
             ));
         }
 
-        if (!$allowSigned && (float) $value <= 0.0) {
+        if (!$allowSigned && ($allowZero ? (float) $value < 0.0 : (float) $value <= 0.0)) {
             throw new InvalidArgumentException(sprintf(
                 'Frame %s must be greater than zero.',
                 $label

@@ -153,7 +153,9 @@ final class H03NativeShapeTest extends TestCase
                 ShapeAppearance::solid('#2365B5'),
                 DrawingLayout::fromArray(['anchor' => 'paragraph', 'width' => '4cm', 'height' => '4cm'])
             );
-            $geometry = $shape->toDomNode(new DOMDocument())->lastChild;
+            $dom = new DOMDocument();
+            $node = $shape->toDomNode($dom);
+            $geometry = $node->lastChild;
             self::assertSame($type, $geometry?->attributes?->getNamedItem('draw:type')?->nodeValue);
             self::assertNotEmpty($geometry?->attributes?->getNamedItem('draw:enhanced-path')?->nodeValue);
         }
@@ -167,7 +169,9 @@ final class H03NativeShapeTest extends TestCase
                 ShapeAppearance::solid('#2365B5'),
                 DrawingLayout::fromArray(['anchor' => 'paragraph', 'width' => '4cm', 'height' => '4cm'])
             );
-            $geometry = $shape->toDomNode(new DOMDocument())->lastChild;
+            $dom = new DOMDocument();
+            $node = $shape->toDomNode($dom);
+            $geometry = $node->lastChild;
             self::assertSame($type, $geometry?->attributes?->getNamedItem('draw:type')?->nodeValue);
             self::assertNotEmpty($geometry?->attributes?->getNamedItem('draw:enhanced-path')?->nodeValue);
         }

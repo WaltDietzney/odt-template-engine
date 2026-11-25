@@ -79,15 +79,9 @@ final class FillResourceAuthoring
         string $path
     ): void {
         self::validateName($name);
-        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-        $expected = match ($extension) {
-            'png' => IMAGETYPE_PNG,
-            'jpg', 'jpeg' => IMAGETYPE_JPEG,
-            default => null,
-        };
-        if ($expected === null || !is_file($path) || !is_readable($path)
-            || (@getimagesize($path)[2] ?? null) !== $expected) {
-            throw new InvalidArgumentException('Fill image must be a readable local PNG or JPEG.');
+        $info = \OdtTemplateEngine\Utils\ImageInfo::fromPath($path);
+        if (!in_array($info->mime, ['image/png', 'image/jpeg', 'image/svg+xml'], true)) {
+            throw new InvalidArgumentException('Fill image must be a readable local PNG, JPEG or supported static SVG.');
         }
         $href = 'Pictures/' . basename($path);
         $existing = self::find($context, 'fill-image', $name);
@@ -107,6 +101,151 @@ final class FillResourceAuthoring
             $package->removePreparedPackageFiles($created);
             throw $exception;
         }
+    }
+
+    /** @internal Copy-on-write replacement of one named object's existing bitmap fill. */
+    public static function replaceBitmapByObjectName(
+        OdtDocumentContext $context,
+        OdtPackage $package,
+        string $objectName,
+        string $path
+    ): void {
+        $info = \OdtTemplateEngine\Utils\ImageInfo::fromPath($path);
+        if (!in_array($info->mime, ['image/png', 'image/jpeg', 'image/svg+xml'], true)) {
+            throw new InvalidArgumentException('Bitmap replacement supports PNG, JPEG and static SVG.');
+        }
+        $matches = [];
+        foreach ([$context->contentDom(), $context->stylesDom()] as $dom) {
+            foreach ($dom->getElementsByTagNameNS(self::DRAW, '*') as $node) {
+                if ($node->getAttributeNS(self::DRAW, 'name') === $objectName
+                    && in_array($node->localName, ['frame', 'custom-shape', 'rect', 'ellipse'], true)) {
+                    $matches[] = $node;
+                }
+            }
+        }
+        if ($objectName === '' || count($matches) !== 1) {
+            throw new InvalidArgumentException('Bitmap replacement requires one uniquely named shape or frame across both parts.');
+        }
+        $object = $matches[0];
+        $dom = $object->ownerDocument;
+        $style = self::graphicStyle($context, $dom, $object->getAttributeNS(self::DRAW, 'style-name'));
+        $effective = [];
+        $background = null;
+        $visited = [];
+        $current = $style;
+        while ($current !== null) {
+            $id = ($current->ownerDocument === $context->contentDom() ? 'content:' : 'styles:') . $current->getNodePath();
+            if (isset($visited[$id]) || count($visited) >= 32) {
+                throw new InvalidArgumentException('Cyclic or excessive graphic style inheritance.');
+            }
+            $visited[$id] = true;
+            foreach ($current->childNodes as $group) {
+                if (!$group instanceof DOMElement || $group->namespaceURI !== 'urn:oasis:names:tc:opendocument:xmlns:style:1.0'
+                    || $group->localName !== 'graphic-properties') {
+                    continue;
+                }
+                foreach (['fill', 'fill-image-name'] as $key) {
+                    if (!array_key_exists($key, $effective) && $group->hasAttributeNS(self::DRAW, $key)) {
+                        $effective[$key] = $group->getAttributeNS(self::DRAW, $key);
+                    }
+                }
+                if ($background === null) {
+                    $background = $group->getElementsByTagNameNS('urn:oasis:names:tc:opendocument:xmlns:style:1.0', 'background-image')->item(0);
+                }
+            }
+            $parent = $current->getAttributeNS('urn:oasis:names:tc:opendocument:xmlns:style:1.0', 'parent-style-name');
+            $current = $parent === '' ? null : self::graphicStyle(
+                $context, $context->stylesDom(), $parent, true,
+                isset($effective['fill'], $effective['fill-image-name'])
+            );
+        }
+        if (($effective['fill'] ?? null) !== 'bitmap' || ($effective['fill-image-name'] ?? '') === '') {
+            throw new InvalidArgumentException('Target does not have a supported existing bitmap fill.');
+        }
+        $source = self::find($context, 'fill-image', $effective['fill-image-name']);
+        if ($source === null) {
+            throw new InvalidArgumentException('Target bitmap fill declaration is missing.');
+        }
+        $href = $package->prepareImageResource($path);
+        if ($source->getAttributeNS(self::XLINK, 'href') === $href) {
+            return;
+        }
+        $identity = ($dom === $context->contentDom() ? 'content' : 'styles') . "\0" . $objectName . "\0" . $href;
+        $fillName = 'bitmap_fill_' . substr(hash('sha256', $identity), 0, 24);
+        $styleName = 'bitmap_object_' . substr(hash('sha256', $identity . $style->C14N()), 0, 24);
+        $existingFill = self::find($context, 'fill-image', $fillName);
+        if ($existingFill !== null && $existingFill->getAttributeNS(self::XLINK, 'href') !== $href) {
+            throw new LogicException('Conflicting isolated bitmap fill declaration.');
+        }
+        $styleNamespace = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
+        $clone = $dom->importNode($style->cloneNode(true), true);
+        $clone->setAttributeNS($styleNamespace, 'style:name', $styleName);
+        $clone->removeAttributeNS($styleNamespace, 'display-name');
+        $properties = $clone->getElementsByTagNameNS($styleNamespace, 'graphic-properties')->item(0);
+        if (!$properties instanceof DOMElement) {
+            $properties = $dom->createElementNS($styleNamespace, 'style:graphic-properties');
+            $clone->appendChild($properties);
+        }
+        $properties->setAttributeNS(self::DRAW, 'draw:fill', 'bitmap');
+        $properties->setAttributeNS(self::DRAW, 'draw:fill-image-name', $fillName);
+        if ($background instanceof DOMElement) {
+            $newBackground = $properties->getElementsByTagNameNS($styleNamespace, 'background-image')->item(0);
+            if (!$newBackground instanceof DOMElement) {
+                $newBackground = $dom->importNode($background->cloneNode(true), true);
+                $properties->appendChild($newBackground);
+            }
+            $newBackground->setAttributeNS(self::XLINK, 'xlink:href', $href);
+        }
+        $automatic = $dom->getElementsByTagNameNS(self::OFFICE, 'automatic-styles')->item(0);
+        if (!$automatic instanceof DOMElement) {
+            throw new LogicException('Bitmap replacement requires office:automatic-styles in the target part.');
+        }
+        foreach ($automatic->childNodes as $existingStyle) {
+            if ($existingStyle instanceof DOMElement && $existingStyle->getAttributeNS($styleNamespace, 'name') === $styleName) {
+                if ($existingStyle->C14N() !== $clone->C14N()) {
+                    throw new LogicException('Conflicting isolated bitmap graphic style.');
+                }
+                throw new LogicException('Target bitmap style identity is already occupied.');
+            }
+        }
+        $requirement = new FillImageRequirement(FillImageRequirement::PART_STYLES, $fillName, $href);
+        $context->registerFillImageRequirement($requirement);
+        (new FillImageRequirementMaterializer())->materialize($context, $requirement);
+        $automatic->appendChild($clone);
+        $object->setAttributeNS(self::DRAW, 'draw:style-name', $styleName);
+    }
+
+    private static function graphicStyle(
+        OdtDocumentContext $context,
+        \DOMDocument $dom,
+        string $name,
+        bool $commonOnly = false,
+        bool $allowMissing = false
+    ): ?DOMElement {
+        $namespace = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
+        foreach ($commonOnly ? ['styles'] : ['automatic-styles', 'styles'] as $scope) {
+            $owner = $scope === 'styles' ? $context->stylesDom() : $dom;
+            $matches = [];
+            foreach ($owner->getElementsByTagNameNS(self::OFFICE, $scope) as $container) {
+                foreach ($container->childNodes as $candidate) {
+                    if ($candidate instanceof DOMElement && $candidate->namespaceURI === $namespace
+                        && $candidate->localName === 'style' && $candidate->getAttributeNS($namespace, 'name') === $name
+                        && $candidate->getAttributeNS($namespace, 'family') === 'graphic') {
+                        $matches[] = $candidate;
+                    }
+                }
+            }
+            if (count($matches) > 1) {
+                throw new InvalidArgumentException('Ambiguous target graphic style.');
+            }
+            if ($matches !== []) {
+                return $matches[0];
+            }
+        }
+        if ($allowMissing) {
+            return null;
+        }
+        throw new InvalidArgumentException('Target graphic style is missing.');
     }
 
     public static function find(OdtDocumentContext $context, string $kind, string $name): ?DOMElement

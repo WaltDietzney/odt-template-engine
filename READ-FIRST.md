@@ -1,4 +1,9 @@
 # READ FIRST – ODT Template Engine
+
+## P2-Abschluss — 25.11.2026
+
+[Aktueller Implementierungsabschluss](docs/architecture/cv-handoff/P2-CLOSEOUT-2026-11-25.md): vereinbarter P2-/H10-Umfang umgesetzt und abgenommen, Writer-Prüfung vom Owner bestätigt; noch nicht vollständig versioniert/veröffentlicht. Offene Folgepunkte P2-F01–F05 bleiben sichtbar. Ältere P2-Statusangaben unten sind historisch und kein neuer Implementierungsauftrag. Keine Git-/Release-Freigabe.
+
 Stand: 17.11.2026
 
 Vor jedem Auftrag Branch, HEAD, Arbeitsstatus und fachlichen Slice prüfen.

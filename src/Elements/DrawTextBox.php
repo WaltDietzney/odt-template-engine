@@ -20,6 +20,11 @@ class DrawTextBox extends OdtElement
     protected string $frameStyleName = '';
     private ?DrawingLayout $drawingLayout = null;
     private DrawingLayoutProjector $drawingLayoutProjector;
+    /** @var array<string, string|bool> Explicit native bounds and drawing Auto-Grow. */
+    private array $textBoxSizing = [];
+    /** @var array<string, string> Explicit native padding and margins. */
+    private array $frameSpacing = [];
+
 
     public function __construct(string $name, array $options = [])
     {
@@ -62,7 +67,7 @@ class DrawTextBox extends OdtElement
 
     protected function registerFrameStyle(): void
     {
-        $styleDef = StyleMapper::mapFrameStyleOptions($this->frameOptions);
+        $styleDef = $this->projectedFrameStyleProperties();
         $this->frameStyleName = StyleMapper::generateStyleName($styleDef);
     }
 
@@ -70,7 +75,7 @@ class DrawTextBox extends OdtElement
     public function getFrameStyleRequirements(): array
     {
         $this->registerFrameStyle();
-        return [$this->frameStyleName => StyleMapper::mapFrameStyleOptions($this->frameOptions)];
+        return [$this->frameStyleName => $this->projectedFrameStyleProperties()];
     }
 
     /** @return array<string, array<string, mixed>> */
@@ -118,6 +123,15 @@ class DrawTextBox extends OdtElement
         }
 
         $textBox = $dom->createElement('draw:text-box');
+        foreach ($this->textBoxSizing as $key => $value) {
+            if (!str_starts_with($key, 'auto-grow-')) {
+                $textBox->setAttributeNS(
+                    'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0',
+                    'fo:' . $key,
+                    $value
+                );
+            }
+        }
         foreach ($this->paragraphs as $element) {
             $child = $element->toDomNode($dom);
             if ($child instanceof \DOMDocumentFragment) {
@@ -154,7 +168,7 @@ class DrawTextBox extends OdtElement
         $styleNode->setAttribute('style:parent-style-name', 'Frame');
 
         $props = $dom->createElement('style:graphic-properties');
-        foreach (StyleMapper::mapFrameStyleOptions($this->frameOptions) as $key => $val) {
+        foreach ($this->projectedFrameStyleProperties() as $key => $val) {
             $props->setAttribute($key, $val);
         }
         $styleNode->appendChild($props);
@@ -170,6 +184,75 @@ class DrawTextBox extends OdtElement
     {
         $this->drawingLayout = $layout === [] ? null : DrawingLayout::fromArray($layout);
 
+        return $this;
+    }
+
+    /**
+     * Replace explicit native minima and optional drawing Auto-Grow flags.
+     *
+     * Object width/height remain owned by setFrameLayout(). Empty input clears this overlay.
+     * @param array<string, mixed> $sizing
+     * @return $this
+     */
+    public function setTextBoxSizing(array $sizing): self
+    {
+        $normalized = [];
+        foreach ($sizing as $key => $value) {
+            if (in_array($key, ['auto-grow-width', 'auto-grow-height'], true)) {
+                if (!is_bool($value)) {
+                    throw new \InvalidArgumentException('Auto-Grow flags must be booleans.');
+                }
+                $normalized[$key] = $value;
+            } elseif (in_array($key, ['min-width', 'min-height'], true)) {
+                $this->absoluteLengthInPoints($value, false);
+                $normalized[$key] = $value;
+            } else {
+                throw new \InvalidArgumentException('Unsupported text-box sizing key.');
+            }
+        }
+        foreach (['width', 'height'] as $axis) {
+            if (isset($normalized['min-' . $axis])
+                && array_key_exists('auto-grow-' . $axis, $normalized)
+                && $normalized['auto-grow-' . $axis] === false) {
+                throw new \InvalidArgumentException('A native minimum selects variable size and cannot disable growth on that axis.');
+            }
+        }
+        $this->textBoxSizing = $normalized;
+        $this->registerFrameStyle();
+        return $this;
+    }
+
+    /**
+     * Replace explicit nonnegative padding/margins without changing legacy constructor options.
+     *
+     * @param array<string, mixed> $spacing e.g. padding-left or margin-bottom.
+     * @return $this
+     */
+    public function setFrameSpacing(array $spacing): self
+    {
+        $normalized = [];
+        foreach ($spacing as $key => $value) {
+            if (!is_string($key) || !preg_match('/^(padding|margin)(-(top|right|bottom|left))?$/D', $key)) {
+                throw new \InvalidArgumentException('Unsupported frame spacing key.');
+            }
+            $this->absoluteLengthInPoints($value, true);
+            $normalized['fo:' . $key] = $value;
+        }
+        foreach (['padding', 'margin'] as $kind) {
+            $shorthand = 'fo:' . $kind;
+            if (!array_key_exists($shorthand, $normalized)) {
+                continue;
+            }
+            foreach (['top', 'right', 'bottom', 'left'] as $side) {
+                $key = $shorthand . '-' . $side;
+                if (!array_key_exists($key, $normalized)) {
+                    $normalized[$key] = $normalized[$shorthand];
+                }
+            }
+            unset($normalized[$shorthand]);
+        }
+        $this->frameSpacing = $normalized;
+        $this->registerFrameStyle();
         return $this;
     }
 
@@ -304,14 +387,48 @@ class DrawTextBox extends OdtElement
     }
 
     /** @return array<string, mixed> */
+    private function projectedFrameStyleProperties(): array
+    {
+        $properties = StyleMapper::mapFrameStyleOptions($this->frameOptions);
+        foreach (['auto-grow-width', 'auto-grow-height'] as $key) {
+            if (array_key_exists($key, $this->textBoxSizing)) {
+                $properties['draw:' . $key] = $this->textBoxSizing[$key] ? 'true' : 'false';
+            }
+        }
+        return array_merge($properties, $this->frameSpacing);
+    }
+
+    private function absoluteLengthInPoints(mixed $value, bool $allowZero): float
+    {
+        if (!is_string($value)
+            || !preg_match('/^(\d+(?:\.\d+)?|\.\d+)(cm|mm|in|pt|pc)$/D', $value, $match)) {
+            throw new \InvalidArgumentException('Frame bounds and spacing require absolute ODF lengths.');
+        }
+        $scale = ['cm' => 72 / 2.54, 'mm' => 72 / 25.4, 'in' => 72, 'pt' => 1, 'pc' => 12];
+        $points = (float) $match[1] * $scale[$match[2]];
+        if (!is_finite($points) || $points < 0 || (!$allowZero && $points <= 0)) {
+            throw new \InvalidArgumentException('Frame bounds must be positive; spacing may also be zero.');
+        }
+        return $points;
+    }
+
+    /** @return array<string, mixed> */
     private function semanticGraphicProperties(): array
     {
         $semantic = [];
-        foreach (StyleMapper::mapFrameStyleOptions($this->frameOptions) as $key => $value) {
+        foreach ($this->projectedFrameStyleProperties() as $key => $value) {
             if ($this->isSemanticGraphicProperty((string) $key)) {
                 $semantic[(string) $key] = $value;
             }
         }
+
+        // Only explicit new sizing/spacing state opts into these semantic properties.
+        foreach (['auto-grow-width', 'auto-grow-height'] as $key) {
+            if (array_key_exists($key, $this->textBoxSizing)) {
+                $semantic['draw:' . $key] = $this->textBoxSizing[$key] ? 'true' : 'false';
+            }
+        }
+        $semantic = array_merge($semantic, $this->frameSpacing);
 
         if ($this->drawingLayout !== null) {
             $semantic = array_merge(
@@ -366,7 +483,7 @@ class DrawTextBox extends OdtElement
     private function requiresLegacyGraphicCarrier(): bool
     {
         $semantic = $this->semanticGraphicProperties();
-        foreach (StyleMapper::mapFrameStyleOptions($this->frameOptions) as $key => $_value) {
+        foreach ($this->projectedFrameStyleProperties() as $key => $_value) {
             $key = (string) $key;
             if (array_key_exists($key, $semantic)) {
                 continue;

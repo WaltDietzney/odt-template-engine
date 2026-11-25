@@ -1,5 +1,14 @@
 # H08 – Inline tag construction recipe
 
+## Required rounded-tag supplement — 2026-11-24
+
+Owner explicitly requires rounded auto-growing tags. The existing round-rectangle
+preset now has positive native evidence; [H08-R proof and recipe](H08-ROUNDED-TAGS-NATIVE-PROOF.md).
+Owner visually accepted the presented proof on 2026-11-24; engine integration remains pending. Older “optional/deferred” statements below are
+historical; they do not remove this new required integration scope. Rectangular
+acceptance remains unchanged; the failed hand-built path remains rejected.
+
+
 Aktueller Status 24.11.2026: native Machbarkeit/Gestaltung im dokumentierten Umfang abgenommen. [Konsolidierung](P2-CONSOLIDATION-2026-11-24.md) trennt verbleibende Engine-Integration und optionale Grenzen; ältere offene Abnahmevermerke sind historisch.
 
 Native auto-grow visually accepted; padding and rounded corners not yet accepted.

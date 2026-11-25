@@ -1,6 +1,11 @@
 # Forschungs- und Fähigkeitsindex
 
-## P2 — konsolidiert am 24.11.2026
+## P2-Abschluss — 25.11.2026
+
+[Aktueller Implementierungsabschluss](cv-handoff/P2-CLOSEOUT-2026-11-25.md): vereinbarter P2-/H10-Umfang umgesetzt und abgenommen, Writer-Prüfung vom Owner bestätigt; noch nicht vollständig versioniert/veröffentlicht. Offene Folgepunkte P2-F01–F05 bleiben sichtbar. Ältere P2-Statusangaben unten sind historisch und kein neuer Implementierungsauftrag. Keine Git-/Release-Freigabe.
+
+
+## Historischer P2-Forschungsstand — 24.11.2026
 
 [H05–H09: abgenommene native Machbarkeit und offene Integration](cv-handoff/P2-CONSOLIDATION-2026-11-24.md). Bestehende Engine-Bausteine und spätere Owner-Entscheidungen sind maßgeblich; ältere Forschungsstatus nicht als erneuten Untersuchungsauftrag lesen.
 

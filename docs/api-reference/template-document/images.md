@@ -105,3 +105,33 @@ This behavior is deliberately different from the typed/mapped Writer-native fram
 - Structured Content -> Images for `ImageElement`
 - Writer-native Objects -> Frames
 - Mapping & Automation -> native `replace-image`
+
+## Replace an object's bitmap fill
+
+```php
+$template->replaceBitmapFillByName('PortraitBackground', '/local/images/pattern.svg');
+```
+
+`replaceBitmapFillByName(string $objectName, string $imagePath): void` changes the
+existing bitmap fill of exactly one named `draw:frame`, `draw:custom-shape`,
+`draw:rect` or `draw:ellipse` across content.xml and styles.xml. Missing or ambiguous
+targets, non-bitmap fills and unresolved required style/fill definitions fail without
+partial package mutation. PNG, JPEG and the supported static SVG subset are accepted.
+
+This operation creates an isolated automatic graphic style in the target part and a
+separate named fill declaration, reusing the existing fill-image requirement/materializer.
+The source style, declaration and shared image bytes remain unchanged. Object geometry,
+anchor and unrelated style properties remain intact; parent styles are retained.
+Supported common-style inheritance is resolved with cycle/depth checks. If the bitmap
+reference is fully specified locally, an undeclared conventional parent such as Writer's
+`Frame` is preserved without requiring a synthetic definition. This is not a general
+style-flattening or page-background mutation API. Direct draw:image children are not
+replaced by this method; use `replaceImageByName()` for those.
+
+The legacy `replaceImageByName()` sizing defaults remain `5cm × 3cm` (including its
+historic one-option behavior). Shared resource bytes are protected by distinct paths;
+existing protected replacement facade calls retain their signatures and dispatch.
+Fresh `setImage()` output is namespace-correct and can immediately be targeted by name.
+Writer's image-alternative MIME hints are updated along with their replacement hrefs.
+
+See [static SVG resources and input limits](../structured-content/images.md#static-svg-resources-p2-i04).

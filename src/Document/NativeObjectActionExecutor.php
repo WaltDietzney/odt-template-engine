@@ -205,6 +205,7 @@ final class NativeObjectActionExecutor
         if (!is_file($path) || !is_readable($path)) {
             throw new \LogicException('READY frame image source is no longer available.');
         }
+        \OdtTemplateEngine\Utils\ImageInfo::fromPath($path);
         $options = $payload->options();
         foreach ($options as $name => $value) {
             if (!in_array($name, ['width', 'height'], true)
@@ -245,47 +246,12 @@ final class NativeObjectActionExecutor
 
     private function intrinsicRatio(string $path): ?float
     {
-        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-        if ($extension !== 'svg') {
-            $size = @getimagesize($path);
-            if (!is_array($size) || ($size[0] ?? 0) <= 0 || ($size[1] ?? 0) <= 0) {
-                return null;
-            }
-            return $size[0] / $size[1];
-        }
-
-        $dom = new DOMDocument();
-        if (!@$dom->load($path, LIBXML_NONET)
-            || $dom->documentElement?->localName !== 'svg'
-            || $dom->documentElement->namespaceURI !== 'http://www.w3.org/2000/svg'
-        ) {
+        try {
+            $info = \OdtTemplateEngine\Utils\ImageInfo::fromPath($path);
+            return $info->width !== null && $info->height !== null ? $info->width / $info->height : null;
+        } catch (\InvalidArgumentException) {
             return null;
         }
-        $viewBox = trim($dom->documentElement->getAttribute('viewBox'));
-        if ($viewBox !== ''
-            && preg_match('/^\s*[-+]?(?:\d+(?:\.\d*)?|\.\d+)[,\s]+[-+]?(?:\d+(?:\.\d*)?|\.\d+)[,\s]+(\d+(?:\.\d*)?|\.\d+)[,\s]+(\d+(?:\.\d*)?|\.\d+)\s*$/', $viewBox, $matches) === 1
-            && (float) $matches[1] > 0
-            && (float) $matches[2] > 0
-        ) {
-            return (float) $matches[1] / (float) $matches[2];
-        }
-
-        $dimensions = [];
-        foreach (['width', 'height'] as $attribute) {
-            $raw = trim($dom->documentElement->getAttribute($attribute));
-            if (preg_match('/^(\d+(?:\.\d+)?|\.\d+)([A-Za-z%]*)$/', $raw, $matches) !== 1
-                || (float) $matches[1] <= 0
-                || $matches[2] === '%'
-            ) {
-                return null;
-            }
-            $dimensions[] = [(float) $matches[1], strtolower($matches[2])];
-        }
-        if ($dimensions[0][1] !== $dimensions[1][1]) {
-            return null;
-        }
-
-        return $dimensions[0][0] / $dimensions[1][0];
     }
 
     /** @return array{float,string} */

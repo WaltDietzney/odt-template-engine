@@ -99,7 +99,9 @@ final class SectionMutationService
         string $sectionName
     ): array {
         $document = $context->contentDom();
-        $replacement = $content->toDomNode($document->cloneNode(true));
+        $stagingDocument = $document->cloneNode(true);
+        $replacement = $content->toDomNode($stagingDocument);
+        (new StyleRequirementCollector())->projectDrawingStyles($replacement, $document, StyleRequirement::PART_CONTENT);
         if ($replacement instanceof DOMElement) {
             $nodes = [$replacement];
         } elseif ($replacement instanceof \DOMDocumentFragment) {
@@ -140,7 +142,8 @@ final class SectionMutationService
             }
         }
 
-        return $result;
+        // Retain nodes in the live document before the staging owner is released (PHP 8.2).
+        return array_map(static fn (DOMElement $node): DOMElement => $document->importNode($node, true), $result);
     }
 
     private function validateSectionStyleReferences(
@@ -737,7 +740,7 @@ final class SectionMutationService
     private function copyNode(DOMDocument $document, DOMNode $node): DOMNode
     {
         if (!$node instanceof DOMElement) {
-            return $document->importNode($node, true);
+            return $document->importNode($node->cloneNode(true), true);
         }
 
         $namespaces = [

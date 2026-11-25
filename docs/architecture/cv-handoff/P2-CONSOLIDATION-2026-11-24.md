@@ -1,5 +1,14 @@
 # P2 — Konsolidierter Fähigkeits- und Übergabestand
 
+## Aktueller Abschluss — 25.11.2026
+
+P2-I01–I07 einschließlich H10 sind im vereinbarten Umfang umgesetzt und abgenommen. Beide Review-v2-Templates sind visuell akzeptiert; der Owner bestätigt die interaktive Writer-Prüfung. Versionierung/Veröffentlichung bleiben separat offen. Verbindlicher Status: [P2-Implementierungsabschluss](P2-CLOSEOUT-2026-11-25.md) und [maschinenlesbarer Stand](P2-CLOSEOUT-STATE.json). Offene Folgepunkte werden dort ausdrücklich aufgeführt.
+
+### Historische Planung und Fortschreibung
+
+Die nachfolgenden älteren Status- und Arbeitsaufträge sind historische Quellen; aktuelle Arbeit wird vom oben verlinkten Abschluss aus gewählt.
+
+
 Stand: 24.11.2026. **Machbarkeit und Gestaltung H05–H09 sind abgenommen;
 die notwendige Engine-Integration ist noch nicht vollständig implementiert.**
 
@@ -32,6 +41,20 @@ G01 ist damit im vereinbarten Umfang integriert; die übrigen Integrationslücke
 bleiben bestehen. Die folgenden Tabellen dokumentieren den Konsolidierungsstand
 vor diesem ersten Implementierungsslice. Kontaktvarianten wurden isoliert migriert,
 nicht die abgenommenen Originalartefakte überschrieben.
+
+P2-I01b ist ebenfalls im Worktree implementiert: explizite native Heading-
+Konstruktion über Paragraph::setOutlineLevel. [Bericht](P2-I01B-IMPLEMENTATION-REPORT.md).
+G02 ist im vereinbarten Umfang integriert; allgemeine Grafikkomposition bleibt offen.
+
+P2-I02 ist im Worktree umgesetzt: geordnete as-char-Komposition, native
+Mindestgrößen und explizite Rahmenabstände. [Bericht](P2-I02-IMPLEMENTATION-REPORT.md).
+Writer-Maximalmaße sind nach negativem Nachweis bewusst nicht als verlässliche
+API freigegeben. G03/G04 sind im beschriebenen Umfang integriert; CC04 bleibt offen.
+
+Spätere Owner-Präzisierung: abgerundete Auto-Grow-Tags sind benötigter Umfang.
+[H08-R](H08-ROUNDED-TAGS-NATIVE-PROOF.md) liefert einen positiven nativen
+Preset-Nachweis, vom Owner am 24.11.2026 visuell abgenommen. Historische Optional-Vermerke gelten
+für diese neue Anforderung nicht weiter; Engine-Integration ist noch offen.
 
 ## Ergebnis je Bereich
 
@@ -143,7 +166,9 @@ darüber adressierte replay-report.json im Konsolidierungsverzeichnis.
 - Crop/Contain/Cover nicht pauschal als unterstützt erklären; konkrete Teilfälle
   benötigen ihre eigenen begrenzten Nachweise.
 - Keine universelle freie ODF-Pfad-, SVG-, Connector- oder Chart-API.
-- Optionale Rundung plus Auto-Grow bei Tags bleibt außerhalb des Pflichtumfangs.
+- Abgerundete Auto-Grow-Tags sind inzwischen ausdrücklich benötigt. Der
+  [H08-R-Nachweis](H08-ROUNDED-TAGS-NATIVE-PROOF.md) ist technisch positiv;
+  visuelle Abnahme am 24.11.2026 erhalten; Integration nach CC09/P2-I03R bleibt offen.
 - Interaktive Writer-Bearbeitung und H10-Human-Gate sind nicht automatisiert abgenommen.
 - Herkunft/Nutzungsrechte ursprünglicher gekaufter CV-Referenzen und eine
   unabhängige externe Sicherung bleiben vor öffentlicher Weitergabe zu prüfen.
@@ -155,3 +180,9 @@ darüber adressierte replay-report.json im Konsolidierungsverzeichnis.
 Die fachlichen Abnahmen sind bestehende Vorgaben. Öffentliche API-Entscheidungen,
 konkrete Implementierungsfreigaben und spätere Merges bleiben separate Schritte.
 H10 folgt nach Integration der tatsächlich benötigten Fähigkeiten.
+
+
+P2-I03/I03R ist am 24.11.2026 im P2-Worktree implementiert: [Bericht, Evidenz und offene Gates](P2-I03-I03R-IMPLEMENTATION-REPORT.md). Grafikkontext und abgerundete Tags verwenden bestehende Shapes sowie eine neutrale DrawingGroup; Kontaktsemantik bleibt beim Consumer. Nächster Implementierungsschritt ist P2-I04. Kein neuer Commit/Push.
+
+
+Aktualisierung 25.11.2026: P2-I04 ist im P2-Worktree implementiert. [SVG-/Grafikressourcenbericht](P2-I04-IMPLEMENTATION-REPORT.md) mit freigegebener Bitmap-Austausch-API, isolierten Ressourcen, PHP-8.2-/8.5- und Writer-Nachweisen. Die neue visuelle Owner-Abnahme/interaktive Bearbeitung bleibt getrennt. Nächster Funktionsschritt: P2-I05. Kein Commit/Push.

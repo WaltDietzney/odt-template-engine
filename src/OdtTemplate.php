@@ -501,6 +501,11 @@ class OdtTemplate
         \OdtTemplateEngine\Document\FillProjection::validateElementTree($this->documentContext(), $element);
         $collector = new StyleRequirementCollector();
         $semanticRequirements = iterator_to_array($collector->collectSemantic($element), false);
+        foreach ($collector->collectSemantic($element, \OdtTemplateEngine\Document\StyleRequirement::PART_STYLES) as $requirement) {
+            if ($requirement->isDrawingProjection()) {
+                $semanticRequirements[] = $requirement;
+            }
+        }
         $fontDiscovery = new FontFaceRequirementDiscovery();
         foreach ($semanticRequirements as $requirement) {
             $this->documentContext()->styleContext()->registerRequirement($requirement);
@@ -1069,42 +1074,28 @@ class OdtTemplate
      */
     public function setImage(string $key, string $imagePath, array $options = []): void
     {
-        if (!file_exists($imagePath)) {
-            throw new Exception("Image file not found: $imagePath");
-        }
-
-        $filename = basename($imagePath);
-        $picturesDir = $this->package->path('Pictures');
-        if (!is_dir($picturesDir)) {
-            mkdir($picturesDir);
-        }
-
-        $targetPath = $picturesDir . '/' . $filename;
-        copy($imagePath, $targetPath);
-
-        [$imgWidth, $imgHeight] = getimagesize($imagePath);
-        $targetWidth = $options['width'] ?? null;
-        $targetHeight = $options['height'] ?? null;
-
-        if ($targetWidth && !$targetHeight) {
-            $cm = (float) rtrim($targetWidth, 'cm');
-            $ratio = $imgHeight / $imgWidth;
-            $targetHeight = round($cm * $ratio, 3) . 'cm';
-        } elseif (!$targetWidth && $targetHeight) {
-            $cm = (float) rtrim($targetHeight, 'cm');
-            $ratio = $imgWidth / $imgHeight;
-            $targetWidth = round($cm * $ratio, 3) . 'cm';
-        } elseif (!$targetWidth && !$targetHeight) {
+        $info = \OdtTemplateEngine\Utils\ImageInfo::fromPath($imagePath);
+        [$targetWidth, $targetHeight] = $info->completeDimensions(
+            $options['width'] ?? null, $options['height'] ?? null, 3
+        );
+        if ($targetWidth === null && $targetHeight === null) {
             $targetWidth = '5cm';
             $targetHeight = '3cm';
         }
-
         $anchor = $options['anchor'] ?? 'paragraph';
         $wrap = $options['wrap'] ?? 'none';
-
-        $context = $this->documentContext();
-        $this->replaceImageInDom($context->contentDom(), $key, $filename, $targetWidth, $targetHeight, $anchor, $wrap);
-        $this->replaceImageInDom($context->stylesDom(), $key, $filename, $targetWidth, $targetHeight, $anchor, $wrap);
+        $snapshot = $this->package->snapshotWorkingState();
+        try {
+            $filename = basename($this->package->prepareImageResource($imagePath));
+            $context = $this->documentContext();
+            $this->replaceImageInDom($context->contentDom(), $key, $filename, $targetWidth, $targetHeight, $anchor, $wrap);
+            $this->replaceImageInDom($context->stylesDom(), $key, $filename, $targetWidth, $targetHeight, $anchor, $wrap);
+        } catch (\Throwable $exception) {
+            $this->package->restoreWorkingState($snapshot);
+            throw $exception;
+        } finally {
+            $snapshot->cleanup();
+        }
     }
 
 
@@ -1156,12 +1147,12 @@ class OdtTemplate
         foreach ($nodes as $node) {
             $parent = $node->parentNode;
 
-            $draw = $dom->createElement('draw:frame');
-            $draw->setAttribute('draw:name', $key);
-            $draw->setAttribute('text:anchor-type', $anchor);
-            $draw->setAttribute('svg:width', $width);
-            $draw->setAttribute('svg:height', $height);
-            $draw->setAttribute('draw:z-index', '0');
+            $draw = $dom->createElementNS('urn:oasis:names:tc:opendocument:xmlns:drawing:1.0', 'draw:frame');
+            $draw->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:drawing:1.0', 'draw:name', $key);
+            $draw->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:text:1.0', 'text:anchor-type', $anchor);
+            $draw->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0', 'svg:width', $width);
+            $draw->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0', 'svg:height', $height);
+            $draw->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:drawing:1.0', 'draw:z-index', '0');
 
             if (in_array($wrap, ['left', 'right', 'parallel'])) {
                 $wrapTag = $dom->createElement('style:wrap');
@@ -1169,20 +1160,36 @@ class OdtTemplate
                 $draw->appendChild($wrapTag);
             }
 
-            $image = $dom->createElement('draw:image');
-            $image->setAttribute('xlink:href', 'Pictures/' . $filename);
-            $image->setAttribute('xlink:type', 'simple');
-            $image->setAttribute('xlink:show', 'embed');
-            $image->setAttribute('xlink:actuate', 'onLoad');
+            $image = $dom->createElementNS('urn:oasis:names:tc:opendocument:xmlns:drawing:1.0', 'draw:image');
+            $image->setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', 'Pictures/' . $filename);
+            $image->setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:type', 'simple');
+            $image->setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:show', 'embed');
+            $image->setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:actuate', 'onLoad');
             $draw->appendChild($image);
 
-            $framePara = $dom->createElement('text:p');
+            $framePara = $dom->createElementNS('urn:oasis:names:tc:opendocument:xmlns:text:1.0', 'text:p');
             $framePara->appendChild($draw);
 
             $parent->replaceChild($framePara, $node);
         }
     }
 
+
+    /** Replace only the existing bitmap fill of one uniquely named shape or frame. */
+    public function replaceBitmapFillByName(string $objectName, string $imagePath): void
+    {
+        $snapshot = $this->package->snapshotWorkingState();
+        try {
+            \OdtTemplateEngine\Document\FillResourceAuthoring::replaceBitmapByObjectName(
+                $this->documentContext(), $this->package, $objectName, $imagePath
+            );
+        } catch (\Throwable $exception) {
+            $this->package->restoreWorkingState($snapshot);
+            throw $exception;
+        } finally {
+            $snapshot->cleanup();
+        }
+    }
 
     /**
      * Replaces an existing image in the document by targeting a specific <draw:frame> using its draw:name attribute.
@@ -1215,34 +1222,26 @@ class OdtTemplate
      */
     public function replaceImageByName(string $name, string $imagePath, array $options = []): void
     {
-        if (!file_exists($imagePath)) {
-            throw new Exception("Image file not found: $imagePath");
-        }
-
-        $filename = basename($imagePath);
-        $picturesDir = $this->package->path('Pictures');
-        if (!is_dir($picturesDir)) {
-            mkdir($picturesDir);
-        }
-
-        $targetPath = $picturesDir . '/' . $filename;
-        copy($imagePath, $targetPath);
-
-        [$imgWidth, $imgHeight] = getimagesize($imagePath);
+        $info = \OdtTemplateEngine\Utils\ImageInfo::fromPath($imagePath);
         $width = $options['width'] ?? '5cm';
         $height = $options['height'] ?? '3cm';
-
         if ($width && !$height) {
-            $cm = (float) rtrim($width, 'cm');
-            $height = round($cm * $imgHeight / $imgWidth, 3) . 'cm';
+            [$width, $height] = $info->completeDimensions($width, null, 3);
         } elseif (!$width && $height) {
-            $cm = (float) rtrim($height, 'cm');
-            $width = round($cm * $imgWidth / $imgHeight, 3) . 'cm';
+            [$width, $height] = $info->completeDimensions(null, $height, 3);
         }
-
-        $context = $this->documentContext();
-        $this->replaceImageInNamedDom($context->contentDom(), $name, $filename, $width, $height);
-        $this->replaceImageInNamedDom($context->stylesDom(), $name, $filename, $width, $height);
+        $snapshot = $this->package->snapshotWorkingState();
+        try {
+            $filename = basename($this->package->prepareImageResource($imagePath));
+            $context = $this->documentContext();
+            $this->replaceImageInNamedDom($context->contentDom(), $name, $filename, $width, $height);
+            $this->replaceImageInNamedDom($context->stylesDom(), $name, $filename, $width, $height);
+        } catch (\Throwable $exception) {
+            $this->package->restoreWorkingState($snapshot);
+            throw $exception;
+        } finally {
+            $snapshot->cleanup();
+        }
     }
 
 

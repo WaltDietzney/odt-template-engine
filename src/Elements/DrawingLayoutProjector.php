@@ -32,6 +32,9 @@ final class DrawingLayoutProjector
             $attributes['svg:y'] = $layout->verticalOffset();
         }
 
+        if ($layout->zIndex() !== null) {
+            $attributes['draw:z-index'] = (string) $layout->zIndex();
+        }
         return $attributes;
     }
 
@@ -62,6 +65,12 @@ final class DrawingLayoutProjector
             $properties['style:wrap'] = $layout->wrap();
         }
 
+        if ($layout->runThrough() !== null) {
+            $properties['style:run-through'] = $layout->runThrough();
+        }
+        foreach ($layout->margins() as $side => $value) {
+            $properties['fo:margin-' . $side] = $value;
+        }
         return $properties;
     }
 

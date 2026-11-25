@@ -199,3 +199,60 @@ Frame style-requirement getters, DOM/style materialization methods, and related 
 - [Structured Content](index.md)
 - [Images](images.md)
 - [Paragraphs & Inline Content](paragraph.md)
+
+## Explicit Writer text flow and spacing
+
+```php
+$frame->setFrameLayout(['anchor' => 'as-char', 'width' => '4cm', 'height' => '0.1cm']);
+$frame->setTextBoxSizing(['min-height' => '0.1cm', 'auto-grow-height' => true]);
+$frame->setFrameSpacing(['padding-left' => '0.152cm', 'padding-right' => '0.152cm',
+    'padding-top' => '0.152cm', 'padding-bottom' => '0.152cm',
+    'margin-left' => '0.08cm', 'margin-right' => '0.08cm']);
+```
+
+`setTextBoxSizing(array $sizing): self` replaces an explicit sizing overlay.
+Supported keys: `min-width`, `min-height` (positive absolute lengths in cm/mm/in/
+pt/pc) and `auto-grow-width`, `auto-grow-height` (booleans). Minima are emitted
+on the native `draw:text-box`; drawing Auto-Grow flags are graphic properties.
+They are different ODF carriers. A native minimum selects variable Writer size
+on that axis; combining it with an explicit false Auto-Grow flag is rejected.
+Use `setFrameLayout()` dimensions without a native minimum for a fixed axis.
+For contacts, fixed width plus native minimum height allows text to wrap and grow.
+
+`setFrameSpacing(array $spacing): self` replaces an explicit spacing overlay.
+It accepts `padding`, `margin` and their `-top/-right/-bottom/-left` forms, with
+nonnegative absolute lengths in the same units. Shorthands expand into explicit
+sides; a specific side wins regardless of input order. New values override matching
+constructor-side options. Clearing either overlay with `[]` restores its legacy
+constructor behavior; existing raw options and protected style hooks remain available.
+Invalid keys, lengths and flags fail before changing the corresponding overlay.
+
+**Maximum bounds are not supported by this new API.** The native `fo:max-width`/
+`fo:max-height` control failed the actual Writer bound test: a nominal 4cm maximum
+was discarded and text expanded across the page. These properties are not a
+reliable clipping guard. The negative evidence is preserved in P2-I02 research.
+Choose a fixed width and growing height for a wrapping fallback; consumer render
+feedback must still reject content that exceeds its available region/page.
+The engine does not silently shrink text or guarantee unbounded frame capacity.
+
+Rectangular growing tags, explicit per-side spacing, 90 atomic tags over two pages,
+body/header/footer composition and repeat-save/Writer/PDF are covered by the P2-I02
+proof. Rounded Auto-Grow tags and general drawing composition remain separate.
+
+
+### Explicit drawing layers and margins (P2-I03)
+
+`DrawingLayout::fromArray()` additionally accepts:
+
+| Key | Values and scope |
+| --- | --- |
+| `run-through` | `foreground` or `background`; requires `wrap => run-through` |
+| `z-index` | Nonnegative integer, emitted as `draw:z-index`; group child order overrides child values |
+| `margin` | Per-side map (`top/right/bottom/left`) of nonnegative absolute ODF lengths |
+
+These options survive the immutable `with*()` updates. Changing wrap away from
+`run-through` while retaining an explicit layer is rejected as inconsistent.
+Margins control outside spacing; `ShapeTextLayout` padding controls inside spacing.
+Object z-index and foreground/background have different roles: one orders drawing
+objects, the other controls whether text appears in front of a run-through object.
+Writer may normalize numeric indexes; verify visible paint order.

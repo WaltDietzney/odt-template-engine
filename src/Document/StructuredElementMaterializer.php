@@ -64,6 +64,8 @@ final class StructuredElementMaterializer
         DOMNode $replacement,
         StructuredInsertionMode $insertionMode = StructuredInsertionMode::BLOCK
     ): void {
+        $part = $dom->documentElement?->localName === 'document-styles' ? StyleRequirement::PART_STYLES : StyleRequirement::PART_CONTENT;
+        (new StyleRequirementCollector())->projectDrawingStyles($replacement, $dom, $part);
         $xpath = new DOMXPath($dom);
 
         foreach ($xpath->query('//text()') as $textNode) {

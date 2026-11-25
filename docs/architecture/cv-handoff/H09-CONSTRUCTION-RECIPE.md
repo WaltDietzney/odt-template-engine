@@ -1,5 +1,12 @@
 # H09 – Accepted graphical heading construction recipe
 
+## Implementation update — P2-I01b
+
+Explicit native heading authoring is now implemented in Paragraph via
+setOutlineLevel(1–10 or null). [Implementation report](P2-I01B-IMPLEMENTATION-REPORT.md)
+records exact scope and remaining gates. Older construction-API-open statements
+below are historical; general drawing composition and fit policy remain separate.
+
 ## Current H09 status — closeout, 2026-11-24
 **H09 native feasibility/design is complete.** Graphical A/B/C acceptance is
 preserved; the bounded semantic probe now demonstrates native body headings

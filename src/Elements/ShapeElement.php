@@ -23,14 +23,15 @@ final class ShapeElement extends OdtElement
     private array $paragraphs = [];
 
     private ?ShapeTextLayout $textLayout = null;
+    private ?array $textAutoGrow = null;
 
     public function __construct(
         private readonly ShapeGeometry $geometry,
         private readonly ShapeAppearance $appearance,
         private readonly DrawingLayout $layout
     ) {
-        if ($layout->anchor() !== 'paragraph' || $layout->width() === null || $layout->height() === null) {
-            throw new InvalidArgumentException('Initial native shapes require paragraph anchor, width and height.');
+        if (!in_array($layout->anchor(), ['paragraph', 'as-char'], true) || $layout->width() === null || $layout->height() === null) {
+            throw new InvalidArgumentException('Native shapes require paragraph/as-char anchor, width and height.');
         }
         $this->projector = new DrawingLayoutProjector();
     }
@@ -51,6 +52,16 @@ final class ShapeElement extends OdtElement
     public function setTextLayout(ShapeTextLayout $layout): self
     {
         $this->textLayout = $layout;
+        return $this;
+    }
+
+    /** Explicit drawing-text Auto-Grow; unrelated to Writer-frame native minima. */
+    public function setTextAutoGrow(bool $width = true, bool $height = true): self
+    {
+        $this->textAutoGrow = [
+            'draw:auto-grow-width' => $width ? 'true' : 'false',
+            'draw:auto-grow-height' => $height ? 'true' : 'false',
+        ];
         return $this;
     }
 
@@ -81,6 +92,11 @@ final class ShapeElement extends OdtElement
             $shape->appendChild($paragraphNode);
         }
 
+        if ($shape->getElementsByTagName('text:user-field-get')->length > 0
+            || $shape->getElementsByTagNameNS('urn:oasis:names:tc:opendocument:xmlns:text:1.0', 'user-field-get')->length > 0) {
+            throw new InvalidArgumentException('Writer User Fields require native Writer text, not drawing shape text.');
+        }
+
         $geometry = $dom->createElement('draw:enhanced-geometry');
         $geometry->setAttribute('svg:viewBox', $this->geometry->viewBox());
         $geometry->setAttribute('draw:type', $this->geometry->type());
@@ -109,7 +125,9 @@ final class ShapeElement extends OdtElement
 
     public function structuredInsertionMode(): StructuredInsertionMode
     {
-        return StructuredInsertionMode::PRESERVE_TEXT_CONTAINER;
+        return $this->layout->anchor() === 'as-char'
+            ? StructuredInsertionMode::INLINE_TEXT_FLOW
+            : StructuredInsertionMode::PRESERVE_TEXT_CONTAINER;
     }
 
     public function getOwnStyleRequirements(): iterable
@@ -151,8 +169,11 @@ final class ShapeElement extends OdtElement
         return array_merge(
             $this->appearance->graphicProperties(),
             $this->projector->graphicLayoutProperties($this->layout),
-            $this->layout->wrap() === 'run-through' ? ['style:run-through' => 'foreground'] : [],
-            $this->textLayout?->graphicProperties() ?? []
+            $this->layout->wrap() === 'run-through' && $this->layout->runThrough() === null ? ['style:run-through' => 'foreground'] : [],
+            $this->layout->anchor() === 'as-char' && $this->layout->verticalMode() === null
+                ? ['style:vertical-pos' => 'middle', 'style:vertical-rel' => 'char'] : [],
+            $this->textLayout?->graphicProperties() ?? [],
+            $this->textAutoGrow ?? []
         );
     }
 

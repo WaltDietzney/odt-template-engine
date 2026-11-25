@@ -297,7 +297,7 @@ final class PageStyleManager
         FillProjection::validateElementTree($this->context, $element);
         $collector = new StyleRequirementCollector();
         $materializer = new StyleRequirementMaterializer();
-        foreach ($collector->collectSemantic($element) as $requirement) {
+        foreach ($collector->collectSemantic($element, StyleRequirement::PART_STYLES) as $requirement) {
             $this->context->styleContext()->registerRequirement($requirement);
             $materializer->materialize($this->context, $requirement);
         }
@@ -305,6 +305,7 @@ final class PageStyleManager
 
     private function appendElementChildren(DOMElement $parent, DOMNode $node): void
     {
+        (new StyleRequirementCollector())->projectDrawingStyles($node, $this->context->stylesDom(), StyleRequirement::PART_STYLES);
         if ($node instanceof \DOMDocumentFragment) {
             while ($node->firstChild !== null) {
                 $parent->appendChild($node->firstChild);

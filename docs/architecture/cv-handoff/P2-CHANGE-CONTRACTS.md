@@ -55,6 +55,8 @@ ownership; reference serialization belongs to native inline content. Avoid a par
 
 ## CC02 — Native heading authoring, independent of visual style names
 
+Implementation status 2026-11-24: explicit Paragraph::setOutlineLevel implemented in the uncommitted worktree; [report and remaining gates](P2-I01B-IMPLEMENTATION-REPORT.md). No new production Heading class.
+
 Evidence: H09 semantic control and three lifecycle documents, plus H01's explicit
 styled-paragraph boundary and existing authored-text:h processing.
 
@@ -75,6 +77,8 @@ binding/inline insertion, outline levels, repeat-save/reload, no duplicate label
 outlines and Writer render. PDF/UA and arbitrary overlong-heading fitting are not claimed.
 
 ## CC03 — Ordered inline content and bounded Writer text-frame sizing
+
+Implementation status 2026-11-24: ordered inline frames, native minima, drawing flags and explicit spacing implemented; [report](P2-I02-IMPLEMENTATION-REPORT.md). Reliable maxima were rejected by actual Writer evidence and are deliberately not exposed as supported API. Consumer render feedback remains required.
 
 Evidence: Paragraph parts-before-embeddedElements; H07 FlowTextBox; accepted H08
 rectangular as-char frames, explicit per-side padding and margins.
@@ -102,6 +106,8 @@ Implementation steps must separate ordering from carrier-bound support.
 
 ## CC04 — Drawing composition, style context and paint order
 
+Implementation status 2026-11-24: P2-I03 implemented in the P2 worktree; [report and separate interactive gates](P2-I03-I03R-IMPLEMENTATION-REPORT.md).
+
 Evidence: SkillBarGroup/H03, accepted H09 groups and H07 icon/backing groups.
 Reuse DrawingLayout/Projector, ShapeElement, OdtElement ownedElements,
 StyleRequirement/StyleContext and current resource collectors.
@@ -127,6 +133,8 @@ equal-definition reuse, authored-style conflict isolation, resource collection, 
 save/reload and actual rendered layer order. Native GUI selection/move remains a human gate.
 
 ## CC05 — Graphic resources and replacement consistency
+
+Implementation status 2026-11-25: P2-I04 implemented, including the explicitly owner-approved replaceBitmapFillByName API; [report, runtime evidence and separate gates](P2-I04-IMPLEMENTATION-REPORT.md).
 
 Evidence: OdtPackage SVG MIME support; PHP 8.5.4 SVG getimagesize recognition;
 mapped SVG preflight rejects that recognized SVG; named replacement and native bitmap
@@ -163,6 +171,8 @@ Contain/cover/crop is a separate bounded decision: current crop candidate is not
 No universal image-fit redesign is included without a concrete integration dependency.
 
 ## CC06 — Existing geometry reuse and bounded progress-ring completion
+
+Implementation status 2026-11-25: P2-I05 implemented after owner approval of ShapeGeometry::annularSector; [report and separate visual gates](P2-I05-IMPLEMENTATION-REPORT.md). Existing presets remain unchanged.
 
 Evidence: accepted stars/segments/full ring and native polygonal 70% annulus.
 Reuse existing shape presets/appearance/layout. SkillBarGroup remains specialized.
@@ -227,3 +237,22 @@ Block on unsupported required runtime, uncertain API/ownership, failed checks, m
 reference rights/provenance needed for distribution, or unresolved physical data loss.
 Do not turn a blocked check into PASS or expand H10 into deployment/release automation.
 Only approved feature/architecture branches target develop; master remains conservative.
+
+## CC09 — Required rounded-tag supplement after owner scope clarification
+
+Implementation status 2026-11-24: P2-I03R integrated with existing round-rectangle ShapeElement, Auto-Grow and inline flow; [report](P2-I03-I03R-IMPLEMENTATION-REPORT.md). Accepted pixels reproduced; interactive editing remains separate.
+
+Owner explicitly requires rounded auto-growing tags (2026-11-24). This supersedes
+the prior optional/deferred scope, without reaccepting the failed hand-built path.
+[Native proof and recipe](H08-ROUNDED-TAGS-NATIVE-PROOF.md) provide the input.
+Positive technical evidence uses the existing round-rectangle preset, native shape
+text, drawing-text style projection and as-char flow. Owner visual acceptance was received on 2026-11-24 for the presented native proof; implementation remains separate.
+
+After that gate, integrate with CC04/P2-I03R by extending existing components;
+no new RoundedTag class is presumed. Bound explicit shape Auto-Grow, local/context
+projection and admitted inline carriers. Keep fixed shapes/skillbars compatible.
+Respect the Writer-field-in-shape limitation; this result is for plain tag text.
+Default rounding uses the existing preset modifier, not a newly approved arbitrary
+radius/path API. Reject physical overflow through consumer render feedback.
+Test 0/1/n, fonts/colors, short/long labels, wrap/pages, lifecycle, Writer/PDF and
+record manual visual acceptance independently. No automatic public API promotion.

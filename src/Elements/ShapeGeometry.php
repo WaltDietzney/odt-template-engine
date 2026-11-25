@@ -64,8 +64,11 @@ final readonly class ShapeGeometry
         ],
     ];
 
-    private function __construct(private string $type, private string $path)
-    {
+    private function __construct(
+        private string $type,
+        private string $path,
+        private array $attributeOverrides = []
+    ) {
     }
 
     public static function preset(string $type): self
@@ -81,9 +84,62 @@ final readonly class ShapeGeometry
         return new self($type === 'arrow-contour' ? 'right-arrow' : $type, self::PRESETS[$type]);
     }
 
+    /**
+     * Construct a clockwise annular sector beginning at the top, or omit zero sweep.
+     *
+     * Angles are geometry, not percentage/rating semantics. Partial arcs use chords
+     * of at most three degrees and explicitly include the supplied endpoint.
+     */
+    public static function annularSector(float $sweepDegrees, float $innerRadiusRatio): ?self
+    {
+        if (!is_finite($sweepDegrees) || $sweepDegrees < 0 || $sweepDegrees > 360
+            || !is_finite($innerRadiusRatio) || $innerRadiusRatio <= 0 || $innerRadiusRatio >= 1) {
+            throw new InvalidArgumentException('Annular sector requires finite sweep [0,360] and inner radius ratio (0,1).');
+        }
+        $inner = round(10800 * $innerRadiusRatio, 8);
+        if ($inner <= 0 || $inner >= 10800) {
+            throw new InvalidArgumentException('Annular sector thickness collapses at the supported coordinate precision.');
+        }
+        if ($sweepDegrees === 0.0) {
+            return null;
+        }
+        if ($sweepDegrees === 360.0) {
+            $ring = self::preset('ring');
+            return new self($ring->type, $ring->path, ['modifiers' => self::coordinate(10800 - $inner)]);
+        }
+        $angles = [];
+        for ($angle = 0.0; $angle < $sweepDegrees; $angle += 3.0) {
+            $angles[] = $angle;
+        }
+        $angles[] = $sweepDegrees;
+        $point = static function (float $radius, float $angle): string {
+            $radians = deg2rad($angle);
+            return self::coordinate(10800 + $radius * sin($radians)) . ' '
+                . self::coordinate(10800 - $radius * cos($radians));
+        };
+        $outer = array_map(static fn (float $angle): string => $point(10800, $angle), $angles);
+        if ($outer[0] === $outer[count($outer) - 1]) {
+            throw new InvalidArgumentException('Annular sector endpoint collapses at the supported coordinate precision.');
+        }
+        $inside = array_map(static fn (float $angle): string => $point($inner, $angle), array_reverse($angles));
+        if ($inside[0] === $inside[count($inside) - 1]) {
+            throw new InvalidArgumentException('Inner annular sector endpoint collapses at the supported coordinate precision.');
+        }
+        return new self('non-primitive', 'M ' . implode(' L ', [...$outer, ...$inside]) . ' Z N');
+    }
+
+    private static function coordinate(float $value): string
+    {
+        $formatted = rtrim(rtrim(number_format($value, 8, '.', ''), '0'), '.');
+        return $formatted === '-0' ? '0' : $formatted;
+    }
+
     public function additionalAttributes(): array
     {
-        return self::COMPLEX_PRESETS[$this->type]['attributes'] ?? self::REFERENCE_ATTRIBUTES[$this->type] ?? [];
+        return array_replace(
+            self::COMPLEX_PRESETS[$this->type]['attributes'] ?? self::REFERENCE_ATTRIBUTES[$this->type] ?? [],
+            $this->attributeOverrides
+        );
     }
 
     public function equations(): array

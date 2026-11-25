@@ -1,6 +1,11 @@
 # Development Roadmap
 
-## P2-Status vom 24.11.2026
+## P2-Abschluss — 25.11.2026
+
+[Aktueller Implementierungsabschluss](architecture/cv-handoff/P2-CLOSEOUT-2026-11-25.md): vereinbarter P2-/H10-Umfang umgesetzt und abgenommen, Writer-Prüfung vom Owner bestätigt; noch nicht vollständig versioniert/veröffentlicht. Offene Folgepunkte P2-F01–F05 bleiben sichtbar. Ältere P2-Statusangaben unten sind historisch und kein neuer Implementierungsauftrag. Keine Git-/Release-Freigabe.
+
+
+## Historischer P2-Status vom 24.11.2026
 
 H05–H09 sind als native Machbarkeit und Gestaltung abgenommen. Die Produktionsintegration und H10 stehen noch aus. [Konsolidierung und Implementierungspakete](architecture/cv-handoff/P2-CONSOLIDATION-2026-11-24.md) konkretisieren die verbleibenden Lücken auf Basis von H00–H04.
 

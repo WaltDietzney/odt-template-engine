@@ -114,3 +114,37 @@ Image asset discovery, image/style requirement getters, DOM materialization, and
 - [Structured Content](index.md)
 - [Frames & Text Boxes](frames-text-boxes.md)
 - [Template & Document Images](../template-document/images.md)
+
+## Static SVG resources (P2-I04)
+
+`ImageElement`, `setImage()`, named image replacement and mapped frame replacement
+share the same local image metadata validation. SVG metadata does not depend on
+PHP's `getimagesize()` SVG support, which differs between PHP 8.2 and PHP 8.5.
+The manifest uses `image/svg+xml`; SVG bytes remain vector resources in the ODT.
+Writer may add PNG alternatives when it saves the document.
+
+A single explicit width or height derives the other dimension proportionally in
+the same unit (`cm`, `mm`, `in`, `pt`, `pc`, `px`). Two explicit dimensions remain
+explicit. `ImageElement` and `setImage()` retain their legacy `5cm × 3cm` fallback
+when neither dimension is supplied. The viewport ratio takes precedence when an
+SVG declares two absolute viewport dimensions; otherwise a valid viewBox supplies
+its ratio. A ratio-less SVG can be used with two explicit dimensions, but cannot
+supply a missing dimension. Native field text and image selection remain separate.
+
+The supported SVG subset is deliberately bounded: UTF-8 XML, default SVG namespace,
+static `svg/g/path/rect/circle/ellipse/line/polyline/polygon/title/desc`, and the
+allowlisted geometry/paint attributes. Limits are 1 MiB, 4096 elements, depth 32
+and 128 KiB per attribute. Scripts, event handlers, CSS/style nodes or attributes,
+DTDs/entities, processing instructions, href/use/image references, foreign content,
+paint URLs and prefixed SVG namespaces are rejected. This is validation, not a
+universal SVG sanitizer or namespace conversion service. No external icon library
+is loaded at runtime; the consumer owns icon semantics, variants and license notices.
+SVG is revalidated when prepared for packaging, including files changed after element
+construction. Existing SVG resources in an authored ODT are not globally sanitized.
+
+Identical bytes at one package path are reused. Structured insertion continues to
+reject different bytes competing for the same basename atomically. Legacy image
+insertion/replacement now preserves an occupied basename by allocating a deterministic
+hash-suffixed path for different content. This prevents changes to other objects
+sharing the old image. It does not rename every resource or promise global deduplication
+across different filenames. No crop/cover/contain API is introduced.

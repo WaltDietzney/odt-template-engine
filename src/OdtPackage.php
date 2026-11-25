@@ -201,7 +201,7 @@ final class OdtPackage
         $existingEntries = [];
         preg_match_all('/manifest:full-path="([^"]+)"/', $manifest, $matches);
         foreach ($matches[1] ?? [] as $path) {
-            $existingEntries[$path] = true;
+            $existingEntries[html_entity_decode($path, ENT_QUOTES | ENT_XML1, 'UTF-8')] = true;
         }
 
         $imageMimeTypes = [
@@ -268,6 +268,9 @@ final class OdtPackage
             throw new Exception("Image file not found: $imagePath");
         }
 
+        if (strtolower(pathinfo($imagePath, PATHINFO_EXTENSION)) === 'svg') {
+            \OdtTemplateEngine\Utils\ImageInfo::fromPath($imagePath);
+        }
         $picturesDir = $this->path('Pictures');
         if (!is_dir($picturesDir)) {
             mkdir($picturesDir);
@@ -276,10 +279,29 @@ final class OdtPackage
         copy($imagePath, $picturesDir . '/' . basename($imagePath));
     }
 
+    /** @internal Prepare without overwriting an existing shared resource; return its package href. */
+    public function prepareImageResource(string $imagePath): string
+    {
+        \OdtTemplateEngine\Utils\ImageInfo::fromPath($imagePath);
+        $hash = hash_file('sha256', $imagePath);
+        if ($hash === false) {
+            throw new RuntimeException('Unable to hash image resource.');
+        }
+        $name = basename($imagePath);
+        $relative = 'Pictures/' . $name;
+        if (file_exists($this->path($relative)) && hash_file('sha256', $this->path($relative)) !== $hash) {
+            $extension = pathinfo($name, PATHINFO_EXTENSION);
+            $stem = pathinfo($name, PATHINFO_FILENAME);
+            $relative = 'Pictures/' . $stem . '-' . $hash . '.' . $extension;
+        }
+        $this->copyImageResourcesAtomically([['path' => $imagePath, 'package-path' => $relative]]);
+        return $relative;
+    }
+
     /**
      * Copy image resources as one bounded package preparation operation.
      *
-     * @param list<array{id?: string, path: string}> $assets
+     * @param list<array{id?: string, path: string, package-path?: string}> $assets
      * @return list<string> Relative package paths created by this call.
      */
     public function copyImageResourcesAtomically(array $assets): array
@@ -293,12 +315,20 @@ final class OdtPackage
                     throw new RuntimeException(sprintf('Image resource not found or unreadable: %s', $source));
                 }
 
+                if (strtolower(pathinfo($source, PATHINFO_EXTENSION)) === 'svg') {
+                    \OdtTemplateEngine\Utils\ImageInfo::fromPath($source);
+                }
                 $sourceHash = hash_file('sha256', $source);
                 if ($sourceHash === false) {
                     throw new RuntimeException(sprintf('Unable to hash image resource: %s', $source));
                 }
 
-                $relativePath = 'Pictures/' . basename($source);
+                $relativePath = $asset['package-path'] ?? ('Pictures/' . basename($source));
+                if (!is_string($relativePath) || !str_starts_with($relativePath, 'Pictures/')
+                    || substr($relativePath, 9) !== basename($relativePath)
+                    || in_array(basename($relativePath), ['', '.', '..'], true)) {
+                    throw new RuntimeException('Image package path must name a file directly inside Pictures/.');
+                }
                 if (isset($prepared[$relativePath])) {
                     if (!hash_equals($prepared[$relativePath], $sourceHash)) {
                         throw new RuntimeException(sprintf('Conflicting image resources use package path: %s', $relativePath));

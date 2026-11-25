@@ -71,6 +71,65 @@ The following friendly keys are mapped by the current paragraph style mapper:
 
 Native-prefixed keys remain an Advanced compatibility escape hatch and should not replace the friendly API in normal application code.
 
+## Ordered inline elements
+
+```php
+public function addInlineElement(OdtElement $element): self
+
+$paragraph = (new Paragraph())->addText('Before ')
+    ->addInlineElement($inlineFrame)
+    ->addText(' / ')->addUserField('contact.email')->addText(' after');
+```
+
+Use an enabled as-character ImageElement or DrawTextBox. The new method inserts
+its frame at the current text-part position. Text, fields, tabs, line breaks and
+explicit inline frames therefore preserve their relative order. Existing
+`addElement()` behavior is unchanged: those legacy elements still follow all
+text parts. Mixing the methods does not move legacy elements between text parts.
+
+Only elements with INLINE_TEXT_FLOW insertion mode that serialize as one as-char
+frame are accepted; block content is rejected. Mutable anchors are revalidated
+before serialization. Disabled images that serialize as an empty paragraph must
+be omitted by the caller. The ownership tree, styles and package resources include
+inline elements, including frames in native headings and page header/footer text.
+getEmbeddedElements() reports explicit inline children first, then legacy children;
+objects are stored once, in their rendering-owned collection.
+
+## Native heading semantics
+
+```php
+public function setOutlineLevel(?int $level): self
+
+$heading = (new Paragraph(null, ['font-size' => '15pt', 'bold' => true]))
+    ->setOutlineLevel(1)
+    ->addText('Berufserfahrung');
+$template->appendBody($heading);
+```
+
+A level from **1 through 10** explicitly selects native `text:h` serialization
+with `text:outline-level`. `null` restores normal `text:p` serialization without
+changing text or styles. An out-of-range level throws `InvalidArgumentException`
+before changing the paragraph. The method returns the same Paragraph.
+
+Formatting and heading semantics are independent: a Paragraph styled `Heading 1`
+still serializes as `text:p` unless an outline level is explicitly selected.
+This does not rewrite existing style-defined outline defaults; Writer remains
+responsible for interpreting authored styles when reopening a document.
+The new method does not change existing list wrappers, text-box style suppression,
+subclass dispatch, text/field ordering or embedded-element ordering.
+
+Constructed body headings are preserved through appendBody, RichText, setElement,
+inline-frame insertion, render/save/reload and Writer export. Native User Field
+references can appear in heading text. Writer evaluates their declarations and
+uses the resulting visible title in the PDF outline.
+
+For decorated semantic headings, keep the visible text once in the body heading
+and use textless native drawing decoration. Text inside a drawing shape, text
+frame, header or footer is a different Writer story; serializing a heading there
+does not promise body-outline membership. No automatic decoration geometry,
+long-title fitting, group resizing, PDF/UA certification or font shrinking is
+provided by `setOutlineLevel()`.
+
 ## Text
 
 ### `addText()`
@@ -194,3 +253,17 @@ Embeds a structured child such as an image into the paragraph.
 
 - [Structured Content](index.md)
 - [RichText](richtext.md)
+
+
+### Ordered drawing carriers (P2-I03)
+
+`addInlineElement()` also accepts as-character `ShapeElement` and `DrawingGroup`
+carriers. `addDrawing(OdtElement $element): self` adds a paragraph/character-anchored
+native drawing at the current part position without replacing the surrounding
+Writer paragraph or heading. The supported serialized carriers are `draw:frame`,
+`draw:custom-shape` and `draw:g`; insertion mode and actual anchor must match.
+Legacy `addElement()` retains its previous trailing-element ordering.
+
+Use `addDrawing()` for a positioned contact symbol beside native User Field text;
+use `addInlineElement()` for a tag participating in line flow. See
+[native drawing composition](native-shapes.md#inline-rounded-tags-and-drawing-composition-p2-i03i03r).

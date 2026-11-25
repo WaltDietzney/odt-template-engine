@@ -101,20 +101,11 @@ class ImageElement extends OdtElement
         $this->filename = basename($imagePath);
 
         if ($this->enabled) {
-            [$imgWidth, $imgHeight] = getimagesize($imagePath);
-            $this->width = $options['width'] ?? null;
-            $this->height = $options['height'] ?? null;
-
-            // Auto-scale height or width if only one is provided
-            if ($this->width && !$this->height) {
-                $cm = (float) rtrim($this->width, 'cm');
-                $ratio = $imgHeight / $imgWidth;
-                $this->height = round($cm * $ratio, 3) . 'cm';
-            } elseif (!$this->width && $this->height) {
-                $cm = (float) rtrim($this->height, 'cm');
-                $ratio = $imgWidth / $imgHeight;
-                $this->width = round($cm * $ratio, 3) . 'cm';
-            } elseif (!$this->width && !$this->height) {
+            $info = \OdtTemplateEngine\Utils\ImageInfo::fromPath($imagePath);
+            [$this->width, $this->height] = $info->completeDimensions(
+                $options['width'] ?? null, $options['height'] ?? null, 3
+            );
+            if ($this->width === null && $this->height === null) {
                 $this->width = '5cm';
                 $this->height = '3cm';
             }

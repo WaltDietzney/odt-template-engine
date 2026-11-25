@@ -1,5 +1,14 @@
 # P2-A — Capability audit H05–H09
 
+## Aktueller Abschluss — 25.11.2026
+
+P2-I01–I07 einschließlich H10 sind im vereinbarten Umfang umgesetzt und abgenommen. Beide Review-v2-Templates sind visuell akzeptiert; der Owner bestätigt die interaktive Writer-Prüfung. Versionierung/Veröffentlichung bleiben separat offen. Verbindlicher Status: [P2-Implementierungsabschluss](P2-CLOSEOUT-2026-11-25.md) und [maschinenlesbarer Stand](P2-CLOSEOUT-STATE.json). Offene Folgepunkte werden dort ausdrücklich aufgeführt.
+
+### Historische Planung und Fortschreibung
+
+Die nachfolgenden älteren Status- und Arbeitsaufträge sind historische Quellen; aktuelle Arbeit wird vom oben verlinkten Abschluss aus gewählt.
+
+
 ## Aktueller Abschlussstand — 24.11.2026
 
 Diese Untersuchungshistorie wird durch die [P2-Konsolidierung](P2-CONSOLIDATION-2026-11-24.md) zusammengeführt. H05–H09 sind als Machbarkeit/Gestaltung abgenommen; Implementierungslücken bleiben ausdrücklich getrennt.

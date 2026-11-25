@@ -36,6 +36,7 @@ final readonly class ShapeAppearance
             throw new InvalidArgumentException('Shape bitmap must be an existing readable file.');
         }
 
+        \OdtTemplateEngine\Utils\ImageInfo::fromPath($path);
         self::validateStroke($stroke);
 
         return new self('bitmap', null, $path, $stroke);

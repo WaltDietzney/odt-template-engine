@@ -71,6 +71,11 @@ final class StyleRequirementMaterializer
             return;
         }
 
+        $container->appendChild($this->buildStyle($dom, $requirement));
+    }
+
+    private function buildStyle(DOMDocument $dom, StyleRequirement $requirement): DOMElement
+    {
         $style = $dom->createElementNS(self::STYLE_NAMESPACE, 'style:style');
         $this->setAttribute($style, 'style:name', $requirement->name());
         $this->setAttribute($style, 'style:family', $requirement->family());
@@ -108,7 +113,7 @@ final class StyleRequirementMaterializer
             $style->appendChild($group);
         }
 
-        $container->appendChild($style);
+        return $style;
     }
 
     /** @param array<string, mixed> $properties */
@@ -175,11 +180,33 @@ final class StyleRequirementMaterializer
         foreach ($container->getElementsByTagNameNS(self::STYLE_NAMESPACE, 'style') as $style) {
             if ($style->getAttributeNS(self::STYLE_NAMESPACE, 'name') === $requirement->name()
                 && $style->getAttributeNS(self::STYLE_NAMESPACE, 'family') === $requirement->family()) {
+                if ($requirement->isDrawingProjection()
+                    && $this->canonicalStyle($style) !== $this->canonicalStyle($this->buildStyle($container->ownerDocument, $requirement))) {
+                    throw new InvalidArgumentException('Authored drawing style conflicts with an isolated generated definition.');
+                }
                 return true;
             }
         }
 
         return false;
+    }
+
+    private function canonicalStyle(DOMElement $node): array
+    {
+        $attributes = [];
+        foreach ($node->attributes as $attribute) {
+            if ($attribute->namespaceURI !== 'http://www.w3.org/2000/xmlns/') {
+                $attributes[($attribute->namespaceURI ?? '') . ':' . $attribute->localName] = $attribute->value;
+            }
+        }
+        ksort($attributes);
+        $children = [];
+        foreach ($node->childNodes as $child) {
+            if ($child instanceof DOMElement) {
+                $children[] = $this->canonicalStyle($child);
+            }
+        }
+        return [$node->namespaceURI, $node->localName, $attributes, $children];
     }
 
     private function createQualifiedElement(DOMDocument $dom, string $qualifiedName): DOMElement

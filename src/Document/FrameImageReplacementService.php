@@ -22,13 +22,21 @@ final class FrameImageReplacementService
             }
         }
         if ($width !== null) {
-            $frame->setAttribute('svg:width', $width);
+            $frame->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0', 'svg:width', $width);
         }
         if ($height !== null) {
-            $frame->setAttribute('svg:height', $height);
+            $frame->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0', 'svg:height', $height);
         }
+        $mime = match (strtolower(pathinfo($href, PATHINFO_EXTENSION))) {
+            'svg' => 'image/svg+xml', 'png' => 'image/png', 'jpg', 'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif', 'bmp' => 'image/bmp', 'webp' => 'image/webp', default => null,
+        };
         foreach ($images as $image) {
-            $image->setAttribute('xlink:href', $href);
+            $image->setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', $href);
+            // Writer's SVG/PNG alternatives must not retain contradictory MIME hints.
+            if ($mime !== null && $image->hasAttribute('draw:mime-type')) {
+                $image->setAttributeNS('urn:oasis:names:tc:opendocument:xmlns:drawing:1.0', 'draw:mime-type', $mime);
+            }
         }
     }
 }

@@ -55,6 +55,9 @@ class Paragraph extends OdtElement
      */
     protected ?string $listStyle = null;
 
+    /** Native heading semantics are explicit and independent of paragraph style names. */
+    private ?int $outlineLevel = null;
+
     /**
      * Embedded ODT elements such as images or frames.
      *
@@ -79,6 +82,22 @@ class Paragraph extends OdtElement
         if ($paragraphStyleOptions !== []) {
             $this->setParagraphStyleOptions($paragraphStyleOptions);
         }
+    }
+
+    /**
+     * Select a native text:h outline level, or return to text:p with null.
+     *
+     * Formatting and existing list/container behavior remain independent.
+     *
+     * @return $this
+     */
+    public function setOutlineLevel(?int $level): self
+    {
+        if ($level !== null && ($level < 1 || $level > 10)) {
+            throw new \InvalidArgumentException('Heading outline level must be between 1 and 10, or null.');
+        }
+        $this->outlineLevel = $level;
+        return $this;
     }
 
     /**
@@ -301,12 +320,43 @@ class Paragraph extends OdtElement
         return $this;
     }
 
+    /**
+     * Add an as-character element at the current text-part position.
+     *
+     * Unlike legacy addElement(), this is explicit ordered inline composition.
+     * @return $this
+     */
+    public function addInlineElement(OdtElement $element): self
+    {
+        if ($element->structuredInsertionMode() !== \OdtTemplateEngine\Document\StructuredInsertionMode::INLINE_TEXT_FLOW) {
+            throw new \InvalidArgumentException('Ordered inline elements must use as-character text flow.');
+        }
+        $this->parts[] = ['type' => 'inline-element', 'element' => $element];
+        return $this;
+    }
+
+    /** Add a paragraph/character-anchored drawing at the current text position. */
+    public function addDrawing(OdtElement $element): self
+    {
+        if ($element->structuredInsertionMode() !== \OdtTemplateEngine\Document\StructuredInsertionMode::PRESERVE_TEXT_CONTAINER) {
+            throw new \InvalidArgumentException('Positioned drawing requires a text-container-preserving insertion mode.');
+        }
+        $this->parts[] = ['type' => 'drawing-element', 'element' => $element];
+        return $this;
+    }
+
     /** Returns all embedded elements.
      ** @return OdtElement[]
      */
     public function getEmbeddedElements(): array
     {
-        return $this->embeddedElements;
+        $inline = [];
+        foreach ($this->parts as $part) {
+            if (in_array($part['type'] ?? null, ['inline-element', 'drawing-element'], true)) {
+                $inline[] = $part['element'];
+            }
+        }
+        return array_merge($inline, $this->embeddedElements);
     }
 
     /**
@@ -505,7 +555,16 @@ public function setParagraphStyleOptions(array $options): self
     public function toDomNode(DOMDocument $dom, bool $insideTextBox = false): DOMNode
     {
         $style = $this->paragraphStyle ?? 'Standard';
-        $p = $dom->createElement('text:p');
+        $p = $this->outlineLevel === null
+            ? $dom->createElement('text:p')
+            : $dom->createElementNS('urn:oasis:names:tc:opendocument:xmlns:text:1.0', 'text:h');
+        if ($this->outlineLevel !== null) {
+            $p->setAttributeNS(
+                'urn:oasis:names:tc:opendocument:xmlns:text:1.0',
+                'text:outline-level',
+                (string) $this->outlineLevel
+            );
+        }
 
         if (!$insideTextBox) {
             $p->setAttribute('text:style-name', $style);
@@ -534,6 +593,29 @@ public function setParagraphStyleOptions(array $options): self
                         // kein Stil – Text direkt einfügen
                         $p->appendChild($node);
                     }
+                    break;
+
+                case 'inline-element':
+                case 'drawing-element':
+                    $element = $part['element'];
+                    $inlineFlow = $part['type'] === 'inline-element';
+                    $mode = $inlineFlow
+                        ? \OdtTemplateEngine\Document\StructuredInsertionMode::INLINE_TEXT_FLOW
+                        : \OdtTemplateEngine\Document\StructuredInsertionMode::PRESERVE_TEXT_CONTAINER;
+                    if ($element->structuredInsertionMode() !== $mode) {
+                        throw new \InvalidArgumentException('Drawing insertion mode changed after registration.');
+                    }
+                    $node = $element->toDomNode($dom);
+                    if (!$inlineFlow && $node instanceof \DOMElement && $node->nodeName === 'text:p'
+                        && $node->childNodes->length === 1) {
+                        $node = $node->firstChild;
+                    }
+                    if (!$node instanceof \DOMElement
+                        || !in_array($node->nodeName, ['draw:frame', 'draw:custom-shape', 'draw:g'], true)
+                        || !in_array($node->getAttribute('text:anchor-type'), $inlineFlow ? ['as-char'] : ['paragraph', 'char'], true)) {
+                        throw new \InvalidArgumentException('Drawing carrier does not match its declared text-flow mode.');
+                    }
+                    $p->appendChild($node);
                     break;
 
                 case 'user-field':

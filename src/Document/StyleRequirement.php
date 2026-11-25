@@ -37,7 +37,8 @@ final readonly class StyleRequirement
         private string $name,
         private ?string $parentStyleName = null,
         private array $propertyGroups = [],
-        private bool $generatedColumn = false
+        private bool $generatedColumn = false,
+        private bool $drawingProjection = false
     ) {
         $this->validate();
     }
@@ -84,6 +85,12 @@ final readonly class StyleRequirement
     public function isGeneratedColumn(): bool
     {
         return $this->generatedColumn;
+    }
+
+    /** @internal Isolated generated drawing identity; authored collisions must fail. */
+    public function isDrawingProjection(): bool
+    {
+        return $this->drawingProjection;
     }
 
     private function validate(): void

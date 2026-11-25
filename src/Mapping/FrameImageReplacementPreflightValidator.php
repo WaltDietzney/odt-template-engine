@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace OdtTemplateEngine\Mapping;
 
-use DOMDocument;
 use OdtTemplateEngine\Document\DocumentInspection;
 use OdtTemplateEngine\Document\FrameDescriptor;
 use OdtTemplateEngine\Template\NativeObjectDescriptor;
@@ -155,29 +154,12 @@ final class FrameImageReplacementPreflightValidator
 
     private function isSupportedImage(string $path): bool
     {
-        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-        if (!in_array($extension, ['png', 'jpg', 'jpeg', 'gif', 'svg', 'bmp', 'webp'], true)) {
+        try {
+            \OdtTemplateEngine\Utils\ImageInfo::fromPath($path);
+            return true;
+        } catch (\InvalidArgumentException) {
             return false;
         }
-        $image = @getimagesize($path);
-        if (is_array($image)) {
-            $expectedMime = match ($extension) {
-                'png' => 'image/png',
-                'jpg', 'jpeg' => 'image/jpeg',
-                'gif' => 'image/gif',
-                'bmp' => 'image/bmp',
-                'webp' => 'image/webp',
-                default => null,
-            };
-            return $expectedMime !== null && ($image['mime'] ?? null) === $expectedMime;
-        }
-        if ($extension !== 'svg') {
-            return false;
-        }
-        $dom = new DOMDocument();
-        return @$dom->load($path, LIBXML_NONET)
-            && $dom->documentElement?->localName === 'svg'
-            && $dom->documentElement->namespaceURI === 'http://www.w3.org/2000/svg';
     }
 
     /** @param array<string, scalar|null> $context */

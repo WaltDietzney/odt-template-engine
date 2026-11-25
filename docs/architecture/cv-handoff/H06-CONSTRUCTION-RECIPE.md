@@ -20,3 +20,8 @@ inspect SkillBarGroup for grouping and resource ownership.
 Open: zero/full progress edge cases, arbitrary values, grouping, label sizing,
 cross-part insertion and repeated save. Rating semantics belong to consumer;
 soft skills remain unscored. No new indicator class approved.
+
+
+## P2-I05 integration — 2026-11-25
+
+The owner-approved ShapeGeometry::annularSector factory now covers zero/full and arbitrary endpoints using existing native shape/group components. [Implementation report and evidence](P2-I05-IMPLEMENTATION-REPORT.md). Geometry, style-part and lifecycle gaps listed above are technically checked; new variant visual acceptance and interactive editing remain separate. Labels/rating semantics remain consumer-owned.

@@ -1,6 +1,19 @@
 # Future Development
 
-## Konsolidierte P2-Integrationslücken — 24.11.2026
+## P2-Abschluss — 25.11.2026
+
+[Aktueller Implementierungsabschluss](architecture/cv-handoff/P2-CLOSEOUT-2026-11-25.md): vereinbarter P2-/H10-Umfang umgesetzt und abgenommen, Writer-Prüfung vom Owner bestätigt; noch nicht vollständig versioniert/veröffentlicht. Offene Folgepunkte P2-F01–F05 bleiben sichtbar. Ältere P2-Statusangaben unten sind historisch und kein neuer Implementierungsauftrag. Keine Git-/Release-Freigabe.
+
+
+## Offene P2-Folgepunkte — 25.11.2026
+
+P2 ist im vereinbarten Umfang abgeschlossen; [Abschluss und Nachweisgrenzen](architecture/cv-handoff/P2-CLOSEOUT-2026-11-25.md).
+
+- **P2-F01 — Native User Fields in verschachtelten Sections:** reproduzierter Section-Identitätsfehler auf PHP 8.2/8.5, auch ohne Timeline. Minimalrepro im Consumer-Test `testCharacterizesExistingNestedSectionNativeFieldIdentityFailure`. Separater begrenzter Engine-Fix empfohlen; Ursache nicht vorschnell aus Namespace-Vermutungen ableiten. Nicht als unterstützte allgemeine Kombination veröffentlichen, solange der Fehler offen ist.
+- **P2-F02 — Spezifischer Zeichentext-Fallback im Header:** Die beobachtete Sprachzeile fiel in einer verschachtelten Zeichengruppe auf schwarze Serifenschrift zurück. Normaler Writer-Text löst den konkreten Consumer-Fall. Das ersetzt keine allgemeine Characterization/Reparatur des Engine-Zeichentextpfades.
+- **P2-F03–F05 — Veröffentlichung und Restgrenzen:** getesteten Engine-Stand versionieren/veröffentlichen und Consumer-Pin gezielt aktualisieren; Artefakt-/Ressourcenherkunft vor Veröffentlichung prüfen; bekannte Warnungen, Deprecations und Runtime-/Metadatenlücken sichtbar erhalten. Diese Aufgaben sind keine implizite Git-/Release-Freigabe.
+
+## Historische P2-Integrationslücken — 24.11.2026
 
 Native String-Feld-/Heading-Konstruktion, geordneter Inline-Inhalt, Writer-Frame-Sizing, Grafikkontext, SVG-/Ressourcen-Lifecycle und begrenzte Teilring-Geometrie sind in [P2 Change Contracts](architecture/cv-handoff/P2-CHANGE-CONTRACTS.md) abgegrenzt. Die nativen Designs H05–H09 sind bereits abgenommen; Consumer-Komposition und H10 folgen nach erforderlicher Integration. Dies zieht keine anderen Future-Themen in P2.
 
@@ -397,7 +410,7 @@ The milestone must research and then provide bounded capabilities for:
 - explicit page-break and column-break capabilities;
 - the minimum page/master-style authoring needed for generated headers and footers;
 - generated template-addressable structures such as named Sections and bookmarks;
-- optional bounded String User Field creation only if research shows it belongs naturally in the construction milestone;
+- bounded String User Field creation — implemented in P2-I01a; the earlier optional-candidate assessment is superseded for its approved string scope;
 - round-trip stability through LibreOffice and subsequent inspection/template processing.
 
 No concrete public method names are approved. Examples such as `addSection()`, `addPageBreak()`, `addColumnBreak()`, `body()->add()`, or `page()->break()` express desired capabilities only.
@@ -442,7 +455,7 @@ LibreOffice/Writer remains responsible for physical pagination and column flow.
 
 A generated document should be able to become an engine template rather than merely a final static document. Research and implementation should therefore consider creation of stable native identities that the existing inspection/template model can rediscover after save/reopen.
 
-Initial candidates are named Sections and bookmarks. Classic template expressions may already be present in generated paragraph/rich-text content. String User Field declaration/reference creation is a bounded candidate, not an automatic requirement.
+Initial candidates are named Sections and bookmarks. Classic template expressions may already be present in generated paragraph/rich-text content. String User Field declaration/reference creation was subsequently approved and implemented in P2-I01a; broader field families remain separate.
 
 The acceptance direction is:
 
@@ -704,6 +717,8 @@ This work must not be folded back into Phase C v1 without new evidence and an ex
 
 
 ## CUSTOM-SHAPE-FILL-IMAGE-REPLACEMENT-01 — Writer/custom-shape bitmap fill replacement
+
+P2 update 2026-11-25: bounded `replaceBitmapFillByName()` is implemented and approved in the worktree; see [I04](architecture/cv-handoff/P2-I04-IMPLEMENTATION-REPORT.md). The earlier problem/proposal below is historical for that implemented subset; crop/general image-layout semantics are not thereby completed.
 
 **Status:** post-1.0 architecture topic discovered during the TEMPLATE-AUTHORING-01F public API audit.
 
